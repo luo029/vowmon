@@ -98,13 +98,7 @@
     };
 
     var LOGO_SVG =
-        '<svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">' +
-        '<stop offset="0%" stop-color="#ff9a9e" /><stop offset="100%" stop-color="#fecfef" /></linearGradient></defs>' +
-        '<path d="M50,5 L90,25 L90,75 L50,95 L10,75 L10,25 Z" fill="url(#logoGrad)" stroke="#fff" stroke-width="3"/>' +
-        '<circle cx="50" cy="50" r="20" fill="#fff" opacity="0.8"/>' +
-        '<path d="M40,55 Q50,65 60,55 M35,40 Q45,30 50,45 M55,45 Q65,30 65,40" stroke="#ff6b6b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
-        '</svg>';
+        '<img class="logo-svg" src="favicon.ico" alt="" aria-hidden="true">';
 
     var SEARCH_SVG =
         '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
