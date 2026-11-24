@@ -74,12 +74,22 @@ function normalizeIndividual(v) {
     p.items = Array.isArray(p.items)
         ? p.items.map(t => String(t).trim()).filter(t => t && t.trim())
         : String(p.items == null ? '' : p.items).split(/[,，、]/).map(t => t.trim()).filter(Boolean);
+    p.contractDate = String(p.contractDate == null ? '' : p.contractDate);
+    p.contractChapter = String(p.contractChapter == null ? '' : p.contractChapter);
+    p.milestones = Array.isArray(p.milestones)
+        ? p.milestones.map(m => ({
+            chapter: String((m && m.chapter) || '').trim(),
+            title: String((m && m.title) || '').trim(),
+            date: String((m && m.date) || '').trim(),
+            note: String((m && m.note) || '').trim()
+        })).filter(m => m.title || m.chapter || m.date)
+        : [];
     p.experience = String(p.experience == null ? '' : p.experience);
     p.notes = String(p.notes == null ? '' : p.notes);
     return p;
 }
 
-VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures'], { fresh: true }).then(function () {
+VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures', 'skills'], { fresh: true }).then(function () {
 
 const app = createApp({
     setup() {
@@ -105,6 +115,7 @@ const app = createApp({
             nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
             level: 1, ownerId: '', items: [],
+            contractDate: '', contractChapter: '', milestones: [],
             experience: '', notes: ''
         });
         const form = ref(defaultForm());
@@ -230,6 +241,7 @@ const app = createApp({
             itemsInput.value = form.value.items.join(', ');
             showSpeciesModal.value = false;
             showTraitMenu.value = false;
+            activeSkillIndex.value = -1;
             showModal.value = true;
         };
         /* 模板里的「选择种族」按钮（必须是已定义的方法，见文件头注释） */
@@ -238,14 +250,16 @@ const app = createApp({
             showSpeciesModal.value = true;
         };
 
-        /* --------------------------------------------------- 特性（可搜索） */
+        /* --------------------------------------------------- 特性（输入关键词搜索图鉴） */
         const showTraitMenu = ref(false);
-        /* 输入关键词过滤图鉴特性；已添加的不重复提示；也允许自由输入图鉴里没有的 */
+        const onTraitInput = () => { showTraitMenu.value = !!traitInput.value.trim(); };
+        /* 只有输入关键词后才出候选，避免特性一多就整屏弹列表 */
         const traitSuggestions = computed(() => {
             const kw = traitInput.value.trim().toLowerCase();
+            if (!kw) return [];
             return traitNames
                 .filter(n => !form.value.traits.includes(n))
-                .filter(n => !kw || n.toLowerCase().includes(kw))
+                .filter(n => n.toLowerCase().includes(kw))
                 .slice(0, 8);
         });
         const addTrait = (e) => {
@@ -267,8 +281,29 @@ const app = createApp({
         };
         const traitFromBook = (name) => traitNames.includes(name);
 
-        /* --------------------------------------------------- 技能与熟练度 */
-        const addSkill = () => { form.value.skills.push({ name: '', level: '入门' }); };
+        /* --------------------------------------------------- 技能与熟练度（输入关键词搜技能表） */
+        const addSkill = () => {
+            activeSkillIndex.value = -1;
+            form.value.skills.push({ name: '', level: '入门' });
+        };
+        const skillNames = (typeof allSkillsData !== 'undefined' && Array.isArray(allSkillsData))
+            ? allSkillsData.map(s => String(s.name || '')).filter(Boolean) : [];
+        const activeSkillIndex = ref(-1);
+        /* 只按当前行输入的关键词过滤，最多 8 条 */
+        const skillSuggestions = computed(() => {
+            const i = activeSkillIndex.value;
+            const s = form.value.skills[i];
+            const kw = s ? String(s.name || '').trim().toLowerCase() : '';
+            if (!s || !kw) return [];
+            return skillNames.filter(n => n.toLowerCase().includes(kw)).slice(0, 8);
+        });
+        const setSkillName = (i, name) => {
+            if (form.value.skills[i]) form.value.skills[i].name = name;
+            activeSkillIndex.value = -1;
+        };
+
+        /* --------------------------------------------------- 成就经历 */
+        const addMilestone = () => { form.value.milestones.push({ chapter: '', title: '', date: '', note: '' }); };
 
         /* ------------------------------------------------------------- 保存 */
         const saveItem = () => {
@@ -327,8 +362,23 @@ const app = createApp({
             }
             return pool.slice(0, 120);
         });
+        /* 种族自带唯一特性时（ability 字段 / 图鉴特性绑定），选完种族直接自动填上 */
+        const traitsForSpecies = (pet) => {
+            if (!pet) return [];
+            const found = [pet.ability, pet.ability2, pet.hiddenAbility].filter(Boolean).map(String);
+            allTraits.forEach(t => {
+                const binds = (Array.isArray(t.pokemons) ? t.pokemons : []).concat(Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : []);
+                if (binds.includes(pet.name) && t.name) found.push(String(t.name));
+            });
+            return Array.from(new Set(found.map(n => n.trim()).filter(Boolean)));
+        };
         const pickSpecies = (pet) => {
             form.value.speciesId = pet.id;
+            const auto = traitsForSpecies(pet);
+            if (auto.length === 1 && !form.value.traits.includes(auto[0])) {
+                form.value.traits.push(auto[0]);
+                VowmonDialog.toast('已自动填入该种族的特性：' + auto[0], 'success', { duration: 2200 });
+            }
             showSpeciesModal.value = false;
         };
         const formSpeciesLabel = computed(() => {
@@ -406,10 +456,11 @@ const app = createApp({
                 if (savedConfig) config.value = Object.assign({}, config.value, JSON.parse(savedConfig));
             } catch (err) { console.warn('同步配置解析失败', err); }
 
-            /* 点击特性搜索框以外的区域时，收起特性下拉 */
+            /* 点击特性/技能搜索框以外的区域时，收起对应下拉 */
             document.addEventListener('click', (e) => {
-                const wrap = e.target && e.target.closest ? e.target.closest('.trait-wrap') : null;
-                if (!wrap) showTraitMenu.value = false;
+                const target = e.target && e.target.closest ? e.target : null;
+                if (!target || !target.closest('.trait-wrap')) showTraitMenu.value = false;
+                if (!target || !target.closest('.skill-edit-wrap')) activeSkillIndex.value = -1;
             });
 
             try {
@@ -437,7 +488,9 @@ const app = createApp({
             stageName: stageNameOf, RANK_BANDS,
             GENDERS, BLOODLINES, SKILL_LEVELS,
             natureOptions, natureHintOf, ownerOptions,
-            showTraitMenu, traitSuggestions, addTrait, pickTrait, removeTrait, traitFromBook,
+            showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, traitFromBook,
+            activeSkillIndex, skillSuggestions, setSkillName,
+            addMilestone,
             openEditor, addSkill, saveItem,
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,

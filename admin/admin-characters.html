@@ -32,7 +32,7 @@
         /* ============ 人物卡片 ============ */
         .cha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
         .cha-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 16px 14px; position: relative; transition: transform .18s, box-shadow .18s, border-color .18s; }
-        .cha-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(45,55,72,.12); border-color: var(--accent, #d69e2e); }
+        .cha-card:hover { box-shadow: 0 10px 22px rgba(45,55,72,.12); border-color: var(--accent, #d69e2e); }
         .cha-card .head { display: flex; align-items: center; gap: 12px; }
         .cha-card .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); }
         .cha-card .cha-name { font-size: 16.5px; font-weight: 900; color: #2d3748; line-height: 1.3; }
@@ -49,11 +49,11 @@
         .cha-card .pet-row img { width: 34px; height: 34px; object-fit: contain; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 9px; padding: 2px; }
         .cha-card .pet-row .pet-more { font-size: 11px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 4px 9px; }
         .cha-card .pet-row .pet-none { font-size: 11.5px; color: #cbd5e0; font-weight: 700; }
-        .cha-card .ops { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+        .cha-card .ops { position: absolute; top: 12px; right: 12px; z-index: 5; display: flex; gap: 6px; opacity: .55; transition: opacity .15s; }
         .cha-card:hover .ops { opacity: 1; }
-        .cha-card .faction-tag { transition: opacity .15s; }
+        .cha-card .faction-tag { transition: opacity .15s; pointer-events: none; }
         .cha-card:hover .faction-tag { opacity: 0; }
-        .op-btn { width: 30px; height: 30px; border-radius: 9px; border: none; cursor: pointer; font-size: 12.5px; color: #fff; display: flex; align-items: center; justify-content: center; transition: filter .15s; }
+        .op-btn { width: 34px; height: 34px; border-radius: 9px; border: none; cursor: pointer; font-size: 13px; color: #fff; display: flex; align-items: center; justify-content: center; transition: filter .15s, transform .15s; box-shadow: 0 2px 6px rgba(45,55,72,.18); }
         .op-btn:hover { filter: brightness(1.12); }
         .op-btn.edit { background: #4299e1; }
         .op-btn.del { background: #e53e3e; }
@@ -70,9 +70,18 @@
         .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .inv-row { display: grid; grid-template-columns: 1fr 1fr 34px; gap: 8px; margin-bottom: 8px; }
-        .inv-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; }
-        .inv-row .row-x:hover { background: #fee; }
+        .inv-row { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .inv-head { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .04em; padding: 0 2px 4px; }
+        .inv-row input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .inv-row input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .inv-row .row-x, .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
+        .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
+
+        /* ============ 契约 / 成就经历 ============ */
+        .ms-row { display: grid; grid-template-columns: 130px 1fr 140px 34px; gap: 8px; margin-bottom: 8px; }
+        .ms-row input { padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
+        .ms-row input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .ms-row .ms-note { grid-column: 1 / 4; }
 
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
     </style>
@@ -198,9 +207,27 @@
                     </div>
                 </div>
 
+                <!-- 契约与成就经历 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>首次契约日 <span class="opt">书内时间或现实日期均可</span></label><input v-model="form.contractDate" placeholder="如：九牧历三年·谷雨 / 2026-03-15"></div>
+                        <div class="form-group"><label>契约章节</label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
+                    </div>
+                    <div class="ms-row" v-for="(m, i) in form.milestones" :key="i">
+                        <input v-model="m.chapter" placeholder="章节，如：第 38 章">
+                        <input v-model="m.title" placeholder="事件，如：契约第二只精灵 / 晋升大冠">
+                        <input v-model="m.date" placeholder="日期（选填）">
+                        <button type="button" class="row-x" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
+                        <input class="ms-note" v-model="m.note" placeholder="补充说明（选填）">
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
+                </div>
+
                 <!-- 物品栏 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-suitcase"></i> 物品栏 <span class="opt" style="font-weight:700; color:#a0aec0;">道具名可引用物品图鉴里的名称</span></div>
+                    <div class="inv-head" v-if="form.inventory.length"><span>道具名</span><span>备注</span><span></span></div>
                     <div class="inv-row" v-for="(it, i) in form.inventory" :key="i">
                         <input v-model="it.name" placeholder="道具名">
                         <input v-model="it.note" placeholder="备注，如 ×2">
@@ -273,6 +300,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125c"></script>
+<script src="../js/admin-characters.js?v=20261125d"></script>
 </body>
 </html>

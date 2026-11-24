@@ -94,6 +94,23 @@
         .trait-drop .td-item i { color: #2b6cb0; font-size: 12px; }
         .trait-drop .td-tag { margin-left: auto; font-size: 10px; font-weight: 800; color: #a0aec0; background: #f1f5f9; padding: 2px 8px; border-radius: 999px; }
         .trait-chips input { border: 0; outline: none; background: transparent; width: 180px; font-size: 13px; font-family: inherit; }
+        .trait-input-box { position: relative; min-height: 44px; padding: 8px 12px 8px 34px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .trait-input-box:focus-within { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .trait-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #a0aec0; pointer-events: none; }
+        .td-head { font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .06em; padding: 6px 11px 4px; }
+        .td-none { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #a0aec0; }
+
+        /* ============ 技能搜索下拉 ============ */
+        .skill-edit-wrap { position: relative; }
+        .skill-drop { position: absolute; left: 0; right: 48px; top: calc(100% + 4px); z-index: 1200; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; max-height: 260px; overflow-y: auto; }
+
+        /* ============ 成就经历行 ============ */
+        .ms-row { display: grid; grid-template-columns: 130px 1fr 140px 34px; gap: 8px; margin-bottom: 8px; }
+        .ms-row input { padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
+        .ms-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .ms-row .ms-note { grid-column: 1 / 4; }
+        .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
+        .ms-row .row-x:hover { background: #fee; }
 
         /* ============ 技能行（美化） ============ */
         .skill-row { display: grid; grid-template-columns: 1fr auto 34px; gap: 10px; align-items: center; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
@@ -273,17 +290,20 @@
                         <div class="nature-hint" v-if="form.nature && natureHintOf(form.nature)">{{ form.nature }}：{{ natureHintOf(form.nature) }}</div>
                     </div>
                     <div class="form-group" style="margin-bottom: 14px;"><label>习性 <span class="opt">这只精灵的脾气秉性，自由描述</span></label><textarea v-model="form.personality" rows="2" placeholder="如：温和粘人，喜欢晒太阳…"></textarea></div>
-                    <div class="form-group"><label>特性 <span class="opt">输入关键词从图鉴特性中搜索；图鉴里没有的，回车也能自由添加</span></label>
+                    <div class="form-group"><label>特性 <span class="opt">输入关键词搜索图鉴特性，点选即可；图鉴里没有的，回车自由添加</span></label>
                         <div class="trait-wrap">
-                            <div class="trait-chips">
+                            <div class="trait-chips trait-input-box">
+                                <i class="fa-solid fa-magnifying-glass trait-search-icon"></i>
                                 <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
-                                <input v-model="traitInput" placeholder="输入特性名，回车添加" @focus="showTraitMenu = true" @keydown.enter="addTrait($event)">
+                                <input v-model="traitInput" placeholder="输入特性名搜索 / 添加" @input="onTraitInput" @keydown.enter="addTrait($event)">
                             </div>
-                            <div class="trait-drop" v-if="showTraitMenu && traitSuggestions.length">
+                            <div class="trait-drop" v-if="showTraitMenu && traitInput.trim()">
+                                <div class="td-head">图鉴特性搜索结果</div>
                                 <div class="td-item" v-for="n in traitSuggestions" :key="n" @click.stop="pickTrait(n)">
                                     <i class="fa-solid fa-crown"></i>{{ n }}
                                     <span class="td-tag">图鉴特性</span>
                                 </div>
+                                <div class="td-none" v-if="!traitSuggestions.length">没有匹配项 · 按回车可自由添加「{{ traitInput.trim() }}」</div>
                             </div>
                         </div>
                     </div>
@@ -291,15 +311,23 @@
 
                 <!-- 技能与熟练度 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-bolt"></i> 技能与熟练度</div>
-                    <div class="skill-row" v-for="(s, i) in form.skills" :key="i">
-                        <input class="sk-name" v-model="s.name" placeholder="技能名，如：水枪">
-                        <div class="skill-lv-group">
-                            <button type="button" class="skill-lv" v-for="lv in SKILL_LEVELS" :key="lv"
-                                    :class="{ on: s.level === lv }" :style="{ '--lv-c': lvColorOf(lv) }"
-                                    @click="s.level = lv">{{ lv }}</button>
+                    <div class="sect-title"><i class="fa-solid fa-bolt"></i> 技能与熟练度 <span class="opt" style="font-weight:700; color:#a0aec0;">输入关键词可搜索技能表</span></div>
+                    <div class="skill-edit-wrap" v-for="(s, i) in form.skills" :key="i">
+                        <div class="skill-row">
+                            <input class="sk-name" v-model="s.name" placeholder="输入技能名搜索技能表" @focus="activeSkillIndex = i" @input="activeSkillIndex = i">
+                            <div class="skill-lv-group">
+                                <button type="button" class="skill-lv" v-for="lv in SKILL_LEVELS" :key="lv"
+                                        :class="{ on: s.level === lv }" :style="{ '--lv-c': lvColorOf(lv) }"
+                                        @click="s.level = lv">{{ lv }}</button>
+                            </div>
+                            <button type="button" class="row-x" @click="form.skills.splice(i, 1)" title="删除该技能"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        <button type="button" class="row-x" @click="form.skills.splice(i, 1)" title="删除该技能"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="skill-drop" v-if="activeSkillIndex === i && s.name.trim() && skillSuggestions.length">
+                            <div class="td-head">技能表匹配</div>
+                            <div class="td-item" v-for="n in skillSuggestions" :key="n" @click.stop="setSkillName(i, n)">
+                                <i class="fa-solid fa-bolt"></i>{{ n }}
+                            </div>
+                        </div>
                     </div>
                     <button type="button" class="btn btn-outline btn-sm" @click="addSkill"><i class="fa-solid fa-plus"></i> 添加技能</button>
                     <div class="skill-hint">熟练度：<b style="color:#90a4ae;">入门</b>（80% 威力）→ <b style="color:#378ADD;">熟练</b>（满威力）→ <b style="color:#7F77DD;">专精</b>（不失败，可开皆传）→ <b style="color:#BA7517;">完美</b>（0.1s，可组合技）<br>皆传的两种模式（迅疾 / 刚猛）是出手时再选的，档案里不用填。</div>
@@ -322,6 +350,23 @@
                         </div>
                         <div class="form-group" style="grid-column: span 2;"><label>血脉技能 <span class="opt">属性血脉为族群授予的技能</span></label><input v-model="form.bloodlineSkill" placeholder="如：本心一击"></div>
                     </div>
+                </div>
+
+                <!-- 契约与成就经历 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>契约日 <span class="opt">书内时间或现实日期均可</span></label><input v-model="form.contractDate" placeholder="如：九牧历三年·谷雨 / 2026-03-15"></div>
+                        <div class="form-group"><label>契约章节</label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
+                    </div>
+                    <div class="ms-row" v-for="(m, i) in form.milestones" :key="i">
+                        <input v-model="m.chapter" placeholder="章节，如：第 38 章">
+                        <input v-model="m.title" placeholder="事件，如：突破升灵">
+                        <input v-model="m.date" placeholder="日期（选填）">
+                        <button type="button" class="row-x" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
+                        <input class="ms-note" v-model="m.note" placeholder="补充说明（选填），如：雨夜反杀赤焰兽，首次越阶">
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
                 </div>
 
                 <!-- 归属与道具 -->
@@ -380,6 +425,6 @@
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261125"></script>
-<script src="../js/admin-individuals.js?v=20261125c"></script>
+<script src="../js/admin-individuals.js?v=20261125d"></script>
 </body>
 </html>

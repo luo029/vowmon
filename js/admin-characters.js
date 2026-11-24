@@ -32,6 +32,16 @@ function normalizeCharacter(c) {
     p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String).filter(Boolean) : [];
     p.bio = String(p.bio == null ? '' : p.bio);
     p.notes = String(p.notes == null ? '' : p.notes);
+    p.contractDate = String(p.contractDate == null ? '' : p.contractDate);
+    p.contractChapter = String(p.contractChapter == null ? '' : p.contractChapter);
+    p.milestones = Array.isArray(p.milestones)
+        ? p.milestones.map(m => ({
+            chapter: String((m && m.chapter) || '').trim(),
+            title: String((m && m.title) || '').trim(),
+            date: String((m && m.date) || '').trim(),
+            note: String((m && m.note) || '').trim()
+        })).filter(m => m.title || m.chapter || m.date)
+        : [];
     return p;
 }
 
@@ -54,7 +64,8 @@ createApp({
 
         const defaultForm = () => ({
             id: '', name: '', title: '', faction: '', money: 0,
-            inventory: [], petIds: [], bio: '', notes: ''
+            inventory: [], petIds: [], bio: '', notes: '',
+            contractDate: '', contractChapter: '', milestones: []
         });
         const form = ref(defaultForm());
 
@@ -162,6 +173,7 @@ createApp({
         };
 
         const addInventory = () => { form.value.inventory.push({ name: '', note: '' }); };
+        const addMilestone = () => { form.value.milestones.push({ chapter: '', title: '', date: '', note: '' }); };
 
         const saveItem = () => {
             if (!form.value.name || !String(form.value.name).trim()) {
@@ -306,7 +318,7 @@ createApp({
             fmtMoney, indLabel, pickedPets, petsOf,
             speciesLabel, speciesImageOf,
             factionColor, avatarChar, avatarColor,
-            openEditor, addInventory, saveItem, openDeleteConfirm, closeModal,
+            openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
             showPetModal, petSearchInput, filteredPets, togglePet, removePet, openPetModal,
             syncToGitHub, pullFromRepo
         };

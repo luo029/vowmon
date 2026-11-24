@@ -82,6 +82,19 @@
         .nature-band { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .nature-chip { font-size: 12.5px; font-weight: 900; color: #fff; background: #d4537e; padding: 4px 14px; border-radius: 999px; box-shadow: 0 2px 6px rgba(45,55,72,.16); }
         .nature-desc { font-size: 12.5px; font-weight: 700; color: #2b6cb0; }
+        /* 契约与成就经历 */
+        .ms-card { border-left: 3px solid #d4a017; padding-left: 13px; margin: 12px 0; }
+        .ms-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .ms-contract { font-size: 13.5px; font-weight: 900; color: #9c6b0e; }
+        .ms-chapter { font-size: 11px; font-weight: 900; color: #2b6cb0; background: #ebf8ff; border: 1px solid #bee3f8; padding: 2px 9px; border-radius: 999px; }
+        .ms-list { margin-top: 10px; position: relative; }
+        .ms-list::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: #e2e8f0; }
+        .ms-item { position: relative; padding: 0 0 12px 22px; }
+        .ms-item::before { content: ''; position: absolute; left: 2px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #d4a017; box-shadow: 0 0 0 3px #fff8e6; }
+        .ms-title { font-size: 13.5px; font-weight: 900; color: #2d3748; }
+        .ms-date { font-size: 11.5px; font-weight: 700; color: #a0aec0; margin-left: 8px; }
+        .ms-note { font-size: 12px; color: #718096; line-height: 1.8; margin-top: 2px; }
+        .ms-empty { font-size: 12.5px; color: #a0aec0; font-weight: 700; margin-top: 8px; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .info-box { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 12px 14px; }
         .info-box .lbl { font-size: 11px; font-weight: 800; color: #a0aec0; margin-bottom: 4px; }
@@ -222,6 +235,25 @@
                         <span class="nature-desc" v-if="natureHint(ind.nature)">种族值倾向：{{ natureHint(ind.nature) }}</span>
                     </div>
                     <p class="personality">{{ ind.personality || '尚未记录。' }}</p>
+                </div>
+
+                <div class="info-card" v-if="ind.contractDate || ind.contractChapter || (ind.milestones && ind.milestones.length)">
+                    <h2><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</h2>
+                    <div class="ms-card" v-if="ind.contractDate || ind.contractChapter">
+                        <div class="ms-head">
+                            <span class="ms-contract">契约：{{ ind.contractDate || '日期未记录' }}</span>
+                            <span class="ms-chapter" v-if="ind.contractChapter">{{ ind.contractChapter }}</span>
+                        </div>
+                    </div>
+                    <div class="ms-list" v-if="ind.milestones && ind.milestones.length">
+                        <div class="ms-item" v-for="(m, i) in ind.milestones" :key="i">
+                            <span class="ms-chapter" v-if="m.chapter">{{ m.chapter }}</span>
+                            <span class="ms-title">{{ m.title }}</span>
+                            <span class="ms-date" v-if="m.date">{{ m.date }}</span>
+                            <div class="ms-note" v-if="m.note">{{ m.note }}</div>
+                        </div>
+                    </div>
+                    <div class="ms-empty" v-else>还没有记录突破 / 获奖等成就经历。</div>
                 </div>
 
                 <div class="info-card" v-if="ind.traits && ind.traits.length">
@@ -387,6 +419,9 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 const p = Object.assign({}, v || {});
                 p.nickname = String(p.nickname == null ? '' : p.nickname);
                 p.nature = String(p.nature == null ? '' : p.nature);
+                p.contractDate = String(p.contractDate == null ? '' : p.contractDate);
+                p.contractChapter = String(p.contractChapter == null ? '' : p.contractChapter);
+                p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 p.speciesId = String(p.speciesId == null ? '' : p.speciesId);
                 p.level = Number(p.level) || 0;
                 p.traits = Array.isArray(p.traits) ? p.traits : [];

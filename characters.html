@@ -71,6 +71,19 @@
         .info-card h2 i { color: #185FA5; font-size: 14px; }
         .info-card h2 .total-badge { margin-left: auto; font-size: 12px; color: #14538f; background: #E6F1FB; padding: 3px 13px; border-radius: 999px; }
         .bio { font-size: 14px; line-height: 2.05; color: #4a5568; white-space: pre-line; }
+        /* 契约与成就经历 */
+        .ms-card { border-left: 3px solid #d4a017; padding-left: 13px; margin: 12px 0; }
+        .ms-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .ms-contract { font-size: 13.5px; font-weight: 900; color: #9c6b0e; }
+        .ms-chapter { font-size: 11px; font-weight: 900; color: #2b6cb0; background: #ebf8ff; border: 1px solid #bee3f8; padding: 2px 9px; border-radius: 999px; }
+        .ms-list { margin-top: 10px; position: relative; }
+        .ms-list::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: #e2e8f0; }
+        .ms-item { position: relative; padding: 0 0 12px 22px; }
+        .ms-item::before { content: ''; position: absolute; left: 2px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #d4a017; box-shadow: 0 0 0 3px #fff8e6; }
+        .ms-title { font-size: 13.5px; font-weight: 900; color: #2d3748; }
+        .ms-date { font-size: 11.5px; font-weight: 700; color: #a0aec0; margin-left: 8px; }
+        .ms-note { font-size: 12px; color: #718096; line-height: 1.8; margin-top: 2px; }
+        .ms-empty { font-size: 12.5px; color: #a0aec0; font-weight: 700; margin-top: 8px; }
 
         /* 物品栏 */
         .inv-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; background: #fffdf6; border: 1px solid #f2e6cf; margin-bottom: 8px; }
@@ -158,6 +171,25 @@
                         </div>
                     </div>
                     <div class="inv-empty" v-else>暂未契约精灵，或档案尚未录入。</div>
+                </div>
+
+                <div class="info-card" v-if="cha.contractDate || cha.contractChapter || (cha.milestones && cha.milestones.length)">
+                    <h2><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</h2>
+                    <div class="ms-card" v-if="cha.contractDate || cha.contractChapter">
+                        <div class="ms-head">
+                            <span class="ms-contract">首次契约：{{ cha.contractDate || '日期未记录' }}</span>
+                            <span class="ms-chapter" v-if="cha.contractChapter">{{ cha.contractChapter }}</span>
+                        </div>
+                    </div>
+                    <div class="ms-list" v-if="cha.milestones && cha.milestones.length">
+                        <div class="ms-item" v-for="(m, i) in cha.milestones" :key="i">
+                            <span class="ms-chapter" v-if="m.chapter">{{ m.chapter }}</span>
+                            <span class="ms-title">{{ m.title }}</span>
+                            <span class="ms-date" v-if="m.date">{{ m.date }}</span>
+                            <div class="ms-note" v-if="m.note">{{ m.note }}</div>
+                        </div>
+                    </div>
+                    <div class="ms-empty" v-else>还没有记录晋升 / 获奖等成就经历。</div>
                 </div>
 
                 <div class="info-card">
@@ -273,6 +305,9 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : it)).filter(it => it && it.name)
                     : [];
                 p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String) : [];
+                p.contractDate = String(p.contractDate == null ? '' : p.contractDate);
+                p.contractChapter = String(p.contractChapter == null ? '' : p.contractChapter);
+                p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 return p;
             };
             characters.value = (allCharactersData || []).map(normalize);
