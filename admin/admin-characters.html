@@ -81,22 +81,7 @@
         .inv-row .row-x, .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
-        /* ============ 契约信息 + 成就经历卡片 ============ */
-        .contract-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: linear-gradient(150deg, #fffdf6, #fffaf0); border: 1px solid #f1e4c9; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
-        .contract-panel label { display: block; font-size: 12px; font-weight: 900; color: #9c6b0e; margin-bottom: 7px; }
-        .contract-panel label small { font-size: 10.5px; font-weight: 700; color: #b7791f; margin-left: 5px; }
-        .contract-panel input { width: 100%; padding: 9px 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; }
-        .contract-panel input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
-        .ms-head-row { display: grid; grid-template-columns: 28px minmax(100px, .8fr) minmax(150px, 1.6fr) minmax(110px, .9fr) 32px; gap: 8px; align-items: center; }
-        .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        .ms-item input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
-        .ms-item input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .ms-note { width: 100%; margin-top: 8px; }
-        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 32px; width: 32px; }
-        .ms-del:hover { background: #fee; }
-        .ms-add { margin-top: 2px; }
-
+        /* ============ 成就经历卡片 ============ */
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
     </style>
 </head>
@@ -217,28 +202,37 @@
                         <div class="form-group"><label>所属势力</label>
                             <input v-model="form.faction" placeholder="如：九牧联盟">
                         </div>
+                        <div class="form-group"><label>联盟职位 <span class="opt">没有可留空</span></label><input v-model="form.position" placeholder="如：盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君"></div>
                         <div class="form-group"><label>存款 <span class="opt">联盟币</span></label><input type="number" min="0" v-model.number="form.money"></div>
                     </div>
                 </div>
 
-                <!-- 契约与成就经历 -->
+                <!-- 御兽师个人成就 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
-                    <div class="contract-panel">
-                        <div><label>首次契约日 <small>书内时间 / 现实日期</small></label><input v-model="form.contractDate" placeholder="如：九牧历三年·谷雨"></div>
-                        <div><label>契约章节 <small>书中第几章</small></label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
-                    </div>
+                    <div class="sect-title"><i class="fa-solid fa-medal"></i> 御兽师个人成就 <span class="opt" style="font-weight:700; color:#a0aec0;">契约相关经历请写在精灵档案里</span></div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
                             <input v-model="m.chapter" placeholder="章节，如：第 38 章">
-                            <input v-model="m.title" placeholder="事件，如：契约沐沐 / 晋升戎枢">
+                            <input v-model="m.title" placeholder="事件，如：晋升戎枢 / 夺得大冠">
                             <input v-model="m.date" placeholder="日期（选填）">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                         <input class="ms-note" v-model="m.note" placeholder="补充说明（选填），如：因护城战功获破格提拔">
                     </div>
                     <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
+                </div>
+
+                <!-- 人物档案详情 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-address-book"></i> 人物档案详情</div>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <span class="opt">出身、来历、成长环境</span></label><textarea v-model="form.background" rows="3" placeholder="如：生于九牧北境的猎户之家，少年时救过一只异变精灵…"></textarea></div>
+                        <div class="form-group"><label>性格 <span class="opt">脾气秉性</span></label><textarea v-model="form.personality" rows="2" placeholder="如：外表冷淡，对熟人极其护短"></textarea></div>
+                        <div class="form-group"><label>外貌 <span class="opt">外形特征</span></label><textarea v-model="form.appearance" rows="2" placeholder="如：灰发绿瞳，常年披一件旧斗篷"></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <span class="opt">师徒、亲友、宿敌等，可用「 · 」分隔</span></label><textarea v-model="form.relations" rows="2" placeholder="如：师父 · 林殊　|　宿敌 · 赤霄　|　搭档 · 沐沐"></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <span class="opt">能力、战绩、短板</span></label><textarea v-model="form.strength" rows="3" placeholder="如：擅长控场与高速突袭；弱点是持久战与精神抗性…"></textarea></div>
+                    </div>
                 </div>
 
                 <!-- 物品栏 -->
@@ -317,6 +311,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125d"></script>
+<script src="../js/admin-characters.js?v=20261125e"></script>
 </body>
 </html>

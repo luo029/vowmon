@@ -24,6 +24,7 @@ function normalizeCharacter(c) {
     p.name = String(p.name == null ? '' : p.name);
     p.title = String(p.title == null ? '' : p.title);
     p.faction = String(p.faction == null ? '' : p.faction);
+    p.position = String(p.position == null ? '' : p.position);
     p.money = Number(p.money) || 0;
     p.inventory = Array.isArray(p.inventory)
         ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : { name: String((it && it.name) || '').trim(), note: String((it && it.note) || '') }))
@@ -31,9 +32,12 @@ function normalizeCharacter(c) {
         : [];
     p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String).filter(Boolean) : [];
     p.bio = String(p.bio == null ? '' : p.bio);
+    p.background = String(p.background == null ? '' : p.background);
+    p.personality = String(p.personality == null ? '' : p.personality);
+    p.relations = String(p.relations == null ? '' : p.relations);
+    p.appearance = String(p.appearance == null ? '' : p.appearance);
+    p.strength = String(p.strength == null ? '' : p.strength);
     p.notes = String(p.notes == null ? '' : p.notes);
-    p.contractDate = String(p.contractDate == null ? '' : p.contractDate);
-    p.contractChapter = String(p.contractChapter == null ? '' : p.contractChapter);
     p.milestones = Array.isArray(p.milestones)
         ? p.milestones.map(m => ({
             chapter: String((m && m.chapter) || '').trim(),
@@ -63,9 +67,10 @@ createApp({
         const petSearchInput = ref('');
 
         const defaultForm = () => ({
-            id: '', name: '', title: '', faction: '', money: 0,
-            inventory: [], petIds: [], bio: '', notes: '',
-            contractDate: '', contractChapter: '', milestones: []
+            id: '', name: '', title: '', faction: '', position: '', money: 0,
+            inventory: [], petIds: [],
+            bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
+            notes: '', milestones: []
         });
         const form = ref(defaultForm());
 
