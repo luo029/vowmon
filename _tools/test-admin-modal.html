@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>TEST-RUNNING</title></head>
+<body>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+(function () {
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  function set(t) { try { document.title = String(t).slice(0, 220); } catch (e) {} }
+  var errs = [];
+  (async function () {
+    try {
+      var page = new URLSearchParams(location.search).get('page') || '../admin/admin-individuals.html';
+      var f = document.getElementById('f');
+      // 轮询重挂错误捕获（iframe 导航会换 window）
+      var pollErr = setInterval(function () {
+        try {
+          var w = f.contentWindow;
+          if (w) {
+            w.onerror = function (msg) { errs.push(String(msg).slice(0, 160)); return false; };
+            if (!w.__unhandledHooked) {
+              w.__unhandledHooked = true;
+              w.addEventListener('unhandledrejection', function (e) {
+                errs.push('P:' + ((e.reason && e.reason.message) || e.reason));
+              });
+            }
+          }
+        } catch (e) {}
+      }, 8);
+      f.src = page;
+      // 等 Vue 挂载：出现表格或列表容器
+      var doc = null;
+      for (var i = 0; i < 90; i++) {
+        await sleep(500);
+        try { doc = f.contentDocument; } catch (e) { doc = null; }
+        if (doc && (doc.querySelector('.admin-table') || doc.querySelector('.toolbar input') || doc.querySelector('.cha-grid') || doc.querySelector('.ind-grid') || (doc.querySelector('#add') && doc.body.textContent.indexOf('{{') < 0))) break;
+      }
+      clearInterval(pollErr);
+      if (!doc) throw new Error('页面未就绪');
+      var rows = doc.querySelectorAll('tbody tr').length;
+      if (doc.querySelector('#add')) rows = -1; /* 最小测试页无表格 */
+      // 响应式探针：搜索框输入「沐」→ 行数应变化（前提 rows>1）
+      var probe = 'skipped-rows=' + rows;
+      if (rows > 1) {
+        var search = doc.querySelector('input[placeholder*="搜索"]');
+        if (search) {
+          var d1 = Object.getOwnPropertyDescriptor(f.contentWindow.HTMLInputElement.prototype, 'value');
+          search.value = '沐';
+          d1.set.call(search, '沐');
+          search.dispatchEvent(new f.contentWindow.Event('input', { bubbles: true }));
+          await sleep(800);
+          var rows2 = doc.querySelectorAll('tbody tr').length;
+          probe = 'filter ' + rows + '->' + rows2 + (rows2 !== rows ? ' LIVE' : ' DEAD');
+          // 还原
+          search.value = '';
+          d1.set.call(search, '');
+          search.dispatchEvent(new f.contentWindow.Event('input', { bubbles: true }));
+          await sleep(500);
+        }
+      }
+      set('STEP1 mounted ' + probe + (errs.length ? ' EARLY-ERR=' + errs.join(';').slice(0, 120) : ''));
+      await sleep(300);
+
+      var addBtn = null;
+      Array.prototype.forEach.call(doc.querySelectorAll('button'), function (b) {
+        if (!addBtn && /^添加/.test(b.textContent.trim())) addBtn = b;
+      });
+      if (!addBtn) throw new Error('找不到添加按钮' + (errs.length ? ' ERR=' + errs.join(';').slice(0, 100) : ''));
+      addBtn.click();
+      // Vue patch 在微任务中完成（微任务不受后台节流影响）
+      for (var k = 0; k < 5; k++) await Promise.resolve();
+      var overlay = doc.querySelector('.modal-overlay');
+      var txt = '';
+      try { txt = overlay.textContent.slice(0, 30); } catch (e) {}
+      set((overlay ? 'PASS-click-open' : 'FAIL-click-no-overlay') +
+          ' rows=' + rows + (errs.length ? ' ERR=' + errs.join(';').slice(0, 140) : '') + ' | ' + txt);
+    } catch (err) {
+      set('FAIL: ' + (err && err.message ? err.message : err));
+    }
+  })();
+})();
+</script>
+</body>
+</html>

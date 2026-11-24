@@ -85,6 +85,19 @@
         .info-box .val { font-size: 14px; font-weight: 800; color: #2d3748; word-break: break-all; }
         .info-box .val small { font-size: 11px; color: #a0aec0; font-weight: 700; }
 
+        /* 八阶进度条 */
+        .lv-track-wrap { grid-column: 1 / -1; margin-top: 6px; }
+        .lv-track-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+        .lv-track-head .lt-lbl { font-size: 11px; font-weight: 800; color: #a0aec0; letter-spacing: .08em; }
+        .lv-track-head .lt-cur { font-size: 12px; font-weight: 900; color: #fff; padding: 2px 12px; border-radius: 999px; }
+        .lv-track { position: relative; height: 10px; display: flex; border-radius: 999px; overflow: visible; }
+        .lv-track .seg { height: 100%; position: relative; opacity: .32; transition: opacity .2s; }
+        .lv-track .seg:first-child { border-radius: 999px 0 0 999px; }
+        .lv-track .seg:last-child { border-radius: 0 999px 999px 0; }
+        .lv-track .seg.done { opacity: 1; }
+        .lv-marker { position: absolute; top: -6px; width: 5px; height: 22px; border-radius: 4px; background: #2d3748; box-shadow: 0 2px 6px rgba(0,0,0,.35); z-index: 2; }
+        .lv-track-foot { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; font-weight: 800; color: #cbd5e0; }
+
         /* 技能与熟练度 */
         .skill-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f6; margin-bottom: 8px; flex-wrap: wrap; }
         .skill-row:last-child { margin-bottom: 0; }
@@ -183,6 +196,19 @@
                         <div class="info-box" v-if="owner"><div class="lbl">主人</div><div class="val">
                             <a :href="'characters.html?id=' + encodeURIComponent(owner.id)" style="color:#185FA5; text-decoration:none;">{{ owner.name }}</a>
                         </div></div>
+                        <div class="lv-track-wrap">
+                            <div class="lv-track-head">
+                                <span class="lt-lbl">阶段进度</span>
+                                <span class="lt-cur" :style="{ background: stageColor(ind) }">{{ stageName(ind) }} · Lv.{{ ind.level }}</span>
+                            </div>
+                            <div class="lv-track">
+                                <div class="seg" v-for="b in RANK_BANDS" :key="b.name"
+                                     :class="{ done: levelPercent(ind) >= segStart(b) }"
+                                     :style="{ width: segWidth(b) + '%', background: stageColor({ level: b.min }) }"></div>
+                                <div class="lv-marker" :style="{ left: 'calc(' + levelPercent(ind) + '% - 2px)' }"></div>
+                            </div>
+                            <div class="lv-track-foot"><span>Lv.1 初灵</span><span>Lv.100 元</span></div>
+                        </div>
                     </div>
                 </div>
 
@@ -290,7 +316,8 @@
                         <div class="ic-owner" v-if="ownerNameOf(p)"><i class="fa-solid fa-user-shield"></i> {{ ownerNameOf(p) }}</div>
                         <div class="ic-foot">
                             <span class="mini-chip" v-if="p.bloodline && p.bloodline !== '无'" :style="{ background: bloodColor(p.bloodline) }"><i class="fa-solid fa-dna"></i>{{ p.bloodline }}</span>
-                            <span class="mini-chip" v-for="t in (p.traits || []).slice(0, 2)" :key="t" style="background:#185FA5;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
+                            <span class="mini-chip" v-for="t in (p.traits || []).slice(0, 1)" :key="t" style="background:#185FA5;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
+                            <span class="mini-chip" v-for="s in (p.skills || []).slice(0, 2)" :key="'sk' + s.name" :style="{ background: lvColor(s.level) }"><i class="fa-solid fa-bolt"></i>{{ s.name }}</span>
                         </div>
                     </div>
                 </div>
@@ -402,6 +429,9 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
                 return band ? band.name : '未记录';
             };
             const stageColor = (p) => STAGE_COLORS[stageName(p)] || '#718096';
+            const levelPercent = (p) => Math.min(100, Math.max(0, Number(p.level) || 0));
+            const segWidth = (b) => (b.max === 9999 ? 1 : b.max - b.min + 1);
+            const segStart = (b) => b.min;
             const cardColor = (p) => {
                 const s = speciesOf(p);
                 const t = s && s.types && s.types[0] ? getTypeColor(s.types[0]) : '#cbd5e0';
@@ -468,6 +498,7 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
                 species, speciesTypes, speciesName, speciesImage,
                 speciesImageOf, speciesNameOf,
                 stageName, stageColor, cardColor, showcaseStyle,
+                levelPercent, segWidth, segStart,
                 owner, ownerNameOf, gotoCharacter, gotoIndividual,
                 lvColor, lvDesc, bloodColor
             };

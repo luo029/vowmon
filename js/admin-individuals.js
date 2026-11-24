@@ -7,6 +7,8 @@
      前台 individuals.html 读取生效。
    等级八阶：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 /
              灵相61-70 / 律冠71-89 / 元灵90-99 / 元100
+   注意：模板里用到的每个方法/状态都必须在 setup 的 return 里
+         （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted } = Vue;
@@ -21,7 +23,12 @@ const RANK_BANDS = [
     { name: '元灵', min: 90,  max: 99 },
     { name: '元',   min: 100, max: 9999 }
 ];
+const STAGE_COLORS = {
+    '初灵': '#8bc34a', '升灵': '#26a69a', '族尊': '#5c6bc0', '基座': '#ba7517',
+    '灵相': '#1971c2', '律冠': '#7048e8', '元灵': '#d4a017', '元': '#e24b4a'
+};
 const BLOODLINES = ['无', '异变', '黑暗', '光明', '属性'];
+const BLOOD_COLORS = { '异变': '#7F77DD', '黑暗': '#37474F', '光明': '#d4a017', '属性': '#0F6E56' };
 
 function stageNameOf(level) {
     const lv = Number(level) || 0;
@@ -90,6 +97,22 @@ createApp({
         const traitInput = ref('');
         const itemsInput = ref('');
 
+        /* ------------------------------------------------------- 图片与属性 */
+        let imgBase = '';
+        try {
+            const cfg = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {};
+            const raw = String(cfg.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            imgBase = raw ? raw + '/' : '';
+        } catch (e) { imgBase = ''; }
+        const getImgUrl = (path) => {
+            if (!path) return '';
+            if (/^(https?:)?\/\//i.test(path) || String(path).indexOf('data:') === 0) return path;
+            return imgBase + String(path).replace(/^\/+/, '');
+        };
+        const typeMap = (typeof typeData !== 'undefined' && Array.isArray(typeData))
+            ? new Map(typeData.map(t => [t.name, t])) : new Map();
+        const typeColor = (t) => (typeMap.get(t) || {}).color || '#cbd5e0';
+
         /* ------------------------------------------------------------- 工具 */
         const petById = computed(() => {
             const m = new Map();
@@ -101,16 +124,31 @@ createApp({
             (characters.value || []).forEach(c => m.set(c.id, c));
             return m;
         });
+        const speciesOf = (id) => petById.value.get(String(id)) || null;
         const speciesLabel = (id) => {
-            const s = petById.value.get(String(id));
-            return s ? (s.name + ' #' + s.id) : (id ? '#' + id : '未关联');
+            const s = speciesOf(id);
+            return s ? (s.name + ' #' + s.id) : (id ? '#' + id : '未关联种族');
+        };
+        const speciesImageOf = (item) => {
+            const s = speciesOf(item && item.speciesId);
+            return s && s.image ? getImgUrl(s.image) : '';
         };
         const ownerLabel = (id) => {
             const c = chaById.value.get(String(id));
-            return c ? c.name : (id ? '未知主人' : '—');
+            return c ? c.name : (id ? '未知主人' : '无主 / 未定');
         };
+        const cardColor = (item) => {
+            const s = speciesOf(item && item.speciesId);
+            const t = s && s.types && s.types[0] ? typeColor(s.types[0]) : '#cbd5e0';
+            return t + '4d';
+        };
+        const stageColorOf = (item) => STAGE_COLORS[stageNameOf(item && item.level)] || '#718096';
+        const stageColorOfName = (name) => STAGE_COLORS[name] || '#718096';
+        const bloodColorOf = (b) => BLOOD_COLORS[b] || '#90a4ae';
+
         const traitNames = computed(() =>
-            (typeof allTraitsData !== 'undefined' ? allTraitsData : []).map(t => t.name).filter(Boolean)
+            (typeof allTraitsData !== 'undefined' && Array.isArray(allTraitsData))
+                ? allTraitsData.map(t => t.name).filter(Boolean) : []
         );
 
         const nextId = () => {
@@ -140,6 +178,19 @@ createApp({
         });
         const indexOfItem = (item) => individuals.value.indexOf(item);
 
+        /* ------------------------------------------------------------ 统计 */
+        const avgLevel = computed(() => {
+            const arr = individuals.value.filter(p => p.level > 0);
+            if (!arr.length) return '—';
+            return Math.round(arr.reduce((a, p) => a + p.level, 0) / arr.length);
+        });
+        const bloodCount = computed(() =>
+            individuals.value.filter(p => p.bloodline && p.bloodline !== '无').length
+        );
+        const ownerCount = computed(() =>
+            individuals.value.filter(p => p.ownerId).length
+        );
+
         /* ------------------------------------------------------------- 编辑 */
         const openEditor = (item, index) => {
             if (item && typeof index === 'number') {
@@ -156,6 +207,11 @@ createApp({
             itemsInput.value = form.value.items.join(', ');
             showSpeciesModal.value = false;
             showModal.value = true;
+        };
+        /* 模板里的「选择种族」按钮（必须是已定义的方法，见文件头注释） */
+        const openSpeciesModal = () => {
+            speciesSearchInput.value = '';
+            showSpeciesModal.value = true;
         };
 
         const addTrait = () => {
@@ -204,14 +260,23 @@ createApp({
         /* --------------------------------------------------- 种族选择（单选） */
         const filteredSpecies = computed(() => {
             const kw = speciesSearchInput.value.trim().toLowerCase();
-            const pool = (pets.value || []).map(p => ({ id: String(p.id), name: String(p.name || '') })).filter(p => p.name);
-            if (!kw) return pool;
-            return pool.filter(p => p.name.toLowerCase().includes(kw) || p.id.includes(kw));
+            let pool = (pets.value || []).filter(p => p.name)
+                .map(p => ({ id: String(p.id), name: String(p.name), img: p.image ? getImgUrl(p.image) : '' }));
+            if (kw) {
+                pool = pool.filter(p => p.name.toLowerCase().includes(kw) || p.id.includes(kw));
+            }
+            return pool.slice(0, 120);
         });
         const pickSpecies = (pet) => {
             form.value.speciesId = pet.id;
             showSpeciesModal.value = false;
         };
+        const formSpeciesLabel = computed(() => {
+            const s = speciesOf(form.value.speciesId);
+            return s ? { name: s.name, id: '#' + s.id } : {};
+        });
+        const formSpeciesImage = computed(() => speciesImageOf(form.value));
+        const formStageColor = computed(() => stageColorOfName(stageNameOf(form.value.level)));
 
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
@@ -281,24 +346,32 @@ createApp({
                 if (savedConfig) config.value = Object.assign({}, config.value, JSON.parse(savedConfig));
             } catch (err) { console.warn('同步配置解析失败', err); }
 
-            const mirror = window.VowmonStore ? VowmonStore.getMirror('individuals') : null;
-            if (mirror && Array.isArray(mirror.individuals)) {
-                individuals.value = mirror.individuals.map(normalizeIndividual);
-            } else {
-                individuals.value = (allIndividualsData || []).map(normalizeIndividual);
+            try {
+                const mirror = window.VowmonStore ? VowmonStore.getMirror('individuals') : null;
+                if (mirror && Array.isArray(mirror.individuals)) {
+                    individuals.value = mirror.individuals.map(normalizeIndividual);
+                } else {
+                    individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(normalizeIndividual);
+                }
+                characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(c => Object.assign({}, c));
+                pets.value = (typeof allPetsData !== 'undefined' && allPetsData) || [];
+            } catch (err) {
+                console.error('御兽精灵档案初始化失败', err);
             }
-            characters.value = (allCharactersData || []).map(c => Object.assign({}, c));
-            pets.value = allPetsData || [];
         });
 
         return {
             config, individuals, characters, isSyncing,
             showModal, isEdit, form, traitInput, itemsInput,
             searchName, filteredList, indexOfItem,
-            speciesLabel, ownerLabel, traitNames, stageName: stageNameOf,
+            avgLevel, bloodCount, ownerCount,
+            speciesLabel, speciesImageOf, ownerLabel,
+            cardColor, stageColorOf, stageColorOfName, bloodColorOf,
+            stageName: stageNameOf, RANK_BANDS,
             openEditor, addTrait, removeTrait, addSkill, saveItem,
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,
+            openSpeciesModal, formSpeciesLabel, formSpeciesImage, formStageColor,
             syncToGitHub, pullFromRepo
         };
     }

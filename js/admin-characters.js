@@ -6,9 +6,17 @@
           -> 点「一键同步」把 characters-data.json 推到 GitHub 数据仓库
      前台 characters.html 读取生效。
    人物持有精灵通过 petIds 引用御兽精灵档案的 id。
+   注意：模板里用到的每个方法/状态都必须在 setup 的 return 里
+         （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted } = Vue;
+
+const FACTION_COLORS = {
+    '九牧联盟': '#2b6cb0',
+    '荒野': '#2f855a'
+};
+const AVATAR_COLORS = ['#d69e2e', '#2b6cb0', '#38a169', '#7F77DD', '#d4537e', '#0F6E56', '#e24b4a', '#5c6bc0'];
 
 function normalizeCharacter(c) {
     const p = Object.assign({}, c || {});
@@ -50,18 +58,51 @@ createApp({
         });
         const form = ref(defaultForm());
 
+        /* ------------------------------------------------------- 图片工具 */
+        let imgBase = '';
+        try {
+            const cfg = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {};
+            const raw = String(cfg.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            imgBase = raw ? raw + '/' : '';
+        } catch (e) { imgBase = ''; }
+        const getImgUrl = (path) => {
+            if (!path) return '';
+            if (/^(https?:)?\/\//i.test(path) || String(path).indexOf('data:') === 0) return path;
+            return imgBase + String(path).replace(/^\/+/, '');
+        };
+
         /* ------------------------------------------------------------- 工具 */
         const indById = computed(() => {
             const m = new Map();
             (individuals.value || []).forEach(p => m.set(String(p.id), p));
             return m;
         });
+        const petMap = computed(() => {
+            const m = new Map();
+            (typeof allPetsData !== 'undefined' && Array.isArray(allPetsData) ? allPetsData : [])
+                .forEach(p => m.set(String(p.id), p));
+            return m;
+        });
         const speciesLabel = (id) => {
-            const s = (typeof allPetsData !== 'undefined' ? allPetsData : []).find(x => String(x.id) === String(id));
+            const s = petMap.value.get(String(id));
             return s ? (s.name + ' #' + s.id) : (id ? '#' + id : '未关联种族');
+        };
+        const speciesImageOf = (p) => {
+            const s = petMap.value.get(String(p && p.speciesId));
+            return s && s.image ? getImgUrl(s.image) : '';
         };
         const indLabel = (p) => p.nickname + (p.speciesId ? '（' + speciesLabel(p.speciesId) + '）' : '');
         const pickedPets = computed(() => form.value.petIds.map(id => indById.value.get(String(id))).filter(Boolean));
+        const petsOf = (c) => (c.petIds || []).map(id => indById.value.get(String(id))).filter(Boolean);
+
+        const factionColor = (f) => FACTION_COLORS[f] || '#d69e2e';
+        const avatarChar = (name) => (String(name || '').trim().charAt(0) || '？');
+        const avatarColor = (name) => {
+            let h = 0;
+            const s = String(name || '');
+            for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return AVATAR_COLORS[h % AVATAR_COLORS.length];
+        };
 
         const fmtMoney = (n) => Number(n || 0).toLocaleString('zh-CN');
 
@@ -90,6 +131,14 @@ createApp({
             );
         });
         const indexOfItem = (item) => characters.value.indexOf(item);
+
+        /* ------------------------------------------------------------ 统计 */
+        const petTotal = computed(() =>
+            characters.value.reduce((a, c) => a + (c.petIds || []).length, 0)
+        );
+        const totalMoney = computed(() =>
+            characters.value.reduce((a, c) => a + (Number(c.money) || 0), 0)
+        );
 
         /* ------------------------------------------------------------- 编辑 */
         const openEditor = (item, index) => {
@@ -231,23 +280,29 @@ createApp({
                 if (savedConfig) config.value = Object.assign({}, config.value, JSON.parse(savedConfig));
             } catch (err) { console.warn('同步配置解析失败', err); }
 
-            const mirror = window.VowmonStore ? VowmonStore.getMirror('characters') : null;
-            if (mirror && Array.isArray(mirror.characters)) {
-                characters.value = mirror.characters.map(normalizeCharacter);
-            } else {
-                characters.value = (allCharactersData || []).map(normalizeCharacter);
+            try {
+                const mirror = window.VowmonStore ? VowmonStore.getMirror('characters') : null;
+                if (mirror && Array.isArray(mirror.characters)) {
+                    characters.value = mirror.characters.map(normalizeCharacter);
+                } else {
+                    characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(normalizeCharacter);
+                }
+                individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(p => Object.assign({}, p));
+            } catch (err) {
+                console.error('御兽人物档案初始化失败', err);
             }
-            individuals.value = (allIndividualsData || []).map(p => Object.assign({}, p));
         });
 
         return {
             config, characters, isSyncing,
             showModal, isEdit, form,
             searchName, filteredList, indexOfItem,
-            fmtMoney, indLabel, pickedPets,
+            petTotal, totalMoney,
+            fmtMoney, indLabel, pickedPets, petsOf,
+            speciesLabel, speciesImageOf,
+            factionColor, avatarChar, avatarColor,
             openEditor, addInventory, saveItem, openDeleteConfirm, closeModal,
             showPetModal, petSearchInput, filteredPets, togglePet, removePet, openPetModal,
-            speciesLabel,
             syncToGitHub, pullFromRepo
         };
     }

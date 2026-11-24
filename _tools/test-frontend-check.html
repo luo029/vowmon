@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>TEST-RUNNING</title></head>
+<body>
+<iframe id="f" style="width:1280px;height:900px"></iframe>
+<script>
+(function () {
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  function set(t) { try { document.title = String(t).slice(0, 200); } catch (e) {} }
+  var errs = [];
+  (async function () {
+    try {
+      var page = new URLSearchParams(location.search).get('page') || '../individuals.html';
+      var f = document.getElementById('f');
+      var pollErr = setInterval(function () {
+        try {
+          var w = f.contentWindow;
+          if (w) {
+            w.onerror = function (msg) { errs.push(String(msg).slice(0, 120)); return false; };
+          }
+        } catch (e) {}
+      }, 8);
+      f.src = page;
+      var doc = null;
+      for (var i = 0; i < 60; i++) {
+        await sleep(500);
+        try { doc = f.contentDocument; } catch (e) { doc = null; }
+        if (doc && (doc.querySelector('.filter-bar') || doc.querySelector('.detail-wrap') || doc.querySelector('.empty-state'))) break;
+      }
+      clearInterval(pollErr);
+      if (!doc) throw new Error('页面未就绪');
+      var raw = doc.body.textContent.indexOf('{{') > -1;
+      var hasDetail = !!doc.querySelector('.detail-wrap');
+      var hasList = !!doc.querySelector('.filter-bar');
+      var txt = (doc.querySelector('.header h2') || doc.querySelector('h1') || {}).textContent || '';
+      set((raw ? 'FAIL-raw-template' : (hasDetail ? 'PASS-detail' : (hasList ? 'PASS-list' : 'FAIL-unknown'))) +
+          ' | ' + txt.slice(0, 30) + (errs.length ? ' ERR=' + errs.join(';').slice(0, 100) : ''));
+    } catch (err) {
+      set('FAIL: ' + (err && err.message ? err.message : err));
+    }
+  })();
+})();
+</script>
+</body>
+</html>

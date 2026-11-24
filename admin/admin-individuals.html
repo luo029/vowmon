@@ -14,10 +14,82 @@
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
+        /* ============ 页头统计 ============ */
+        .stat-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 130px; background: linear-gradient(150deg, #fff 60%, var(--stat-c, #ebf8ff)); border: 1px solid #e8edf2; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 13px; }
+        .stat-card .st-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; background: var(--stat-c, #4299e1); flex-shrink: 0; }
+        .stat-card .st-num { font-size: 22px; font-weight: 900; color: #2d3748; line-height: 1.1; }
+        .stat-card .st-lbl { font-size: 12px; color: #a0aec0; font-weight: 700; }
+
+        /* ============ 工具条 ============ */
+        .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .toolbar .search-box { position: relative; flex: 1; min-width: 220px; max-width: 420px; }
+        .toolbar .search-box i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 13px; }
+        .toolbar .search-box input { width: 100%; padding: 10px 14px 10px 36px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 14px; font-family: inherit; transition: border-color .2s, box-shadow .2s; background: #fff; }
+        .toolbar .search-box input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.14); }
+        .toolbar .count-pill { font-size: 13px; color: #718096; font-weight: 700; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 999px; padding: 8px 16px; white-space: nowrap; }
+
+        /* ============ 卡片网格 ============ */
+        .ind-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+        .ind-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; transition: transform .18s, box-shadow .18s, border-color .18s; position: relative; }
+        .ind-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(45,55,72,.12); border-color: var(--accent, #4299e1); }
+        .ind-card .top { position: relative; height: 118px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--card-c, #e2e8f0) 0%, #f8fbfe 92%); }
+        .ind-card .top img { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(45,55,72,.16)); }
+        .ind-card .top .no-img { color: #cbd5e0; font-size: 44px; }
+        .ind-card .stage-badge { position: absolute; top: 9px; left: 9px; font-size: 11px; font-weight: 900; color: #fff; background: var(--stage-c, #718096); padding: 3px 11px; border-radius: 999px; box-shadow: 0 2px 6px rgba(45,55,72,.18); }
+        .ind-card .lv-badge { position: absolute; top: 9px; right: 9px; font-size: 11.5px; font-weight: 900; color: #4a5568; background: rgba(255,255,255,.92); border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 999px; }
+        .ind-card .body { padding: 12px 14px 13px; }
+        .ind-card .name { font-size: 15.5px; font-weight: 900; color: #2d3748; display: flex; align-items: center; gap: 7px; }
+        .ind-card .name .gender { font-size: 10.5px; font-weight: 800; color: #d4537e; background: #fbeaf0; padding: 1px 8px; border-radius: 999px; }
+        .ind-card .species { margin-top: 2px; font-size: 12px; color: #a0aec0; font-weight: 700; }
+        .ind-card .chips { margin-top: 9px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .mini-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; color: #fff; display: inline-flex; align-items: center; gap: 4px; }
+        .mini-chip.plain { background: #edf2f7; color: #718096; }
+        .ind-card .owner-line { margin-top: 8px; font-size: 12px; font-weight: 800; color: #4a5568; display: flex; align-items: center; gap: 6px; }
+        .ind-card .owner-line i { color: #a0aec0; font-size: 11px; }
+        .ind-card .ops { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+        .ind-card:hover .ops { opacity: 1; }
+        .op-btn { width: 30px; height: 30px; border-radius: 9px; border: none; cursor: pointer; font-size: 12.5px; color: #fff; display: flex; align-items: center; justify-content: center; transition: filter .15s; }
+        .op-btn:hover { filter: brightness(1.12); }
+        .op-btn.edit { background: #4299e1; }
+        .op-btn.del { background: #e53e3e; }
+        .empty-box { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; background: #fff; border: 1px dashed #dbe4ec; border-radius: 16px; }
+        .empty-box i { font-size: 34px; display: block; margin-bottom: 12px; }
+
+        /* ============ 编辑弹窗 ============ */
+        .sect { margin-bottom: 18px; }
+        .sect-title { font-size: 13px; font-weight: 900; color: #2b6cb0; letter-spacing: .06em; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+        .sect-title i { font-size: 12px; }
+        .sect-title::after { content: ''; flex: 1; height: 1px; background: #e8edf2; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 6px; display: block; }
+        .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .stage-band-row { grid-column: span 2; display: flex; gap: 4px; }
+        .stage-band { flex: 1; text-align: center; font-size: 10.5px; font-weight: 800; padding: 6px 2px; border-radius: 8px; background: #f1f5f9; color: #a0aec0; position: relative; }
+        .stage-band.on { color: #fff; box-shadow: 0 2px 8px rgba(45,55,72,.22); }
+        .species-pick { display: flex; gap: 10px; align-items: center; }
+        .species-pick .sp-view { flex: 1; display: flex; align-items: center; gap: 10px; padding: 7px 12px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; min-height: 56px; cursor: default; }
+        .species-pick .sp-view img { width: 42px; height: 42px; object-fit: contain; }
+        .species-pick .sp-view .sp-name { font-size: 14px; font-weight: 800; color: #2d3748; }
+        .species-pick .sp-view .sp-id { font-size: 11.5px; color: #a0aec0; font-weight: 700; }
+        .species-pick .sp-btn { white-space: nowrap; padding: 9px 14px; border: 1px solid #cbd5e0; background: #fff; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 13px; color: #4a5568; transition: all .15s; }
+        .species-pick .sp-btn:hover { border-color: #4299e1; color: #2b6cb0; }
+        .sub-row { display: grid; grid-template-columns: 1fr 120px 110px 34px; gap: 8px; margin-bottom: 8px; }
+        .sub-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; }
+        .sub-row .row-x:hover { background: #fee; }
+
+        /* ============ 种族选择弹窗 ============ */
+        .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 4px 6px 10px; }
+        .sp-cell { border: 2px solid transparent; border-radius: 12px; padding: 8px 6px; text-align: center; cursor: pointer; background: #f8fafc; transition: all .12s; }
+        .sp-cell:hover { background: #ebf8ff; }
+        .sp-cell.on { border-color: #4299e1; background: #ebf8ff; }
+        .sp-cell img { width: 54px; height: 54px; object-fit: contain; }
+        .sp-cell .sp-n { font-size: 12px; font-weight: 800; color: #2d3748; margin-top: 3px; }
+        .sp-cell .sp-i { font-size: 10.5px; color: #a0aec0; font-weight: 700; }
+
         .lv-tag { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: #fff; }
-        .stage-tag { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #edf2f7; color: #4a5568; }
-        .sub-row { display: grid; grid-template-columns: 1fr 130px 130px; gap: 8px; margin-bottom: 8px; }
-        .sub-row .row-x { align-self: center; }
     </style>
 </head>
 <body>
@@ -51,118 +123,178 @@
         </aside>
 
         <main class="main-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="font-size: 20px;">御兽精灵档案 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ individuals.length }} 位个体</span></h2>
-                <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽精灵</button>
+            <div class="stat-row">
+                <div class="stat-card" style="--stat-c: #4299e1;">
+                    <div class="st-icon" style="background: #4299e1;"><i class="fa-solid fa-paw"></i></div>
+                    <div><div class="st-num font-num">{{ individuals.length }}</div><div class="st-lbl">精灵个体</div></div>
+                </div>
+                <div class="stat-card" style="--stat-c: #38a169;">
+                    <div class="st-icon" style="background: #38a169;"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div><div class="st-num font-num">{{ avgLevel }}</div><div class="st-lbl">平均等级</div></div>
+                </div>
+                <div class="stat-card" style="--stat-c: #7F77DD;">
+                    <div class="st-icon" style="background: #7F77DD;"><i class="fa-solid fa-dna"></i></div>
+                    <div><div class="st-num font-num">{{ bloodCount }}</div><div class="st-lbl">血脉个体</div></div>
+                </div>
+                <div class="stat-card" style="--stat-c: #d69e2e;">
+                    <div class="st-icon" style="background: #d69e2e;"><i class="fa-solid fa-user-shield"></i></div>
+                    <div><div class="st-num font-num">{{ ownerCount }}</div><div class="st-lbl">已认主</div></div>
+                </div>
             </div>
 
-            <div style="margin-bottom: 14px;">
-                <input v-model="searchName" placeholder="搜索昵称 / 种族 / 主人 / 经历关键词..." style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit;" @focus="searchFocused = true" @blur="searchFocused = false">
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input v-model="searchName" placeholder="搜索昵称 / 种族 / 主人 / 经历关键词...">
+                </div>
+                <span class="count-pill">共 <b class="font-num">{{ filteredList.length }}</b> 位个体</span>
+                <div style="margin-left: auto;">
+                    <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽精灵</button>
+                </div>
             </div>
 
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>昵称</th><th>种族</th><th>主人</th><th>等级 / 阶段</th><th>血脉</th><th>技能</th><th style="width: 120px;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(item, index) in filteredList" :key="item.id">
-                            <td><b>{{ item.nickname }}</b><small v-if="item.gender" style="color:#a0aec0;"> · {{ item.gender }}</small></td>
-                            <td>{{ speciesLabel(item.speciesId) }}</td>
-                            <td>{{ ownerLabel(item.ownerId) }}</td>
-                            <td><span class="stage-tag">{{ stageName(item.level) }}</span> <b class="font-num">Lv.{{ item.level }}</b></td>
-                            <td>{{ item.bloodline || '无' }}</td>
-                            <td><span class="font-num">{{ (item.skills || []).length }}</span> 个</td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" @click="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-danger btn-sm" @click="openDeleteConfirm(indexOfItem(item), item.nickname)"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr v-if="!filteredList.length"><td colspan="7" style="text-align:center; color:#a0aec0; padding: 30px;">暂无御兽精灵档案</td></tr>
-                    </tbody>
-                </table>
+            <div class="ind-grid" v-if="filteredList.length">
+                <div class="ind-card" v-for="item in filteredList" :key="item.id"
+                     :style="{ '--card-c': cardColor(item), '--stage-c': stageColorOf(item), '--accent': stageColorOf(item) }">
+                    <div class="top">
+                        <span class="stage-badge">{{ stageName(item.level) }}</span>
+                        <span class="lv-badge font-num">Lv.{{ item.level }}</span>
+                        <img v-if="speciesImageOf(item)" :src="speciesImageOf(item)" :alt="item.nickname">
+                        <i v-else class="fa-solid fa-paw no-img"></i>
+                    </div>
+                    <div class="body">
+                        <div class="name">{{ item.nickname }}<span class="gender" v-if="item.gender">{{ item.gender }}</span></div>
+                        <div class="species">{{ speciesLabel(item.speciesId) }}</div>
+                        <div class="chips">
+                            <span class="mini-chip" v-if="item.bloodline && item.bloodline !== '无'" :style="{ background: bloodColorOf(item.bloodline) }"><i class="fa-solid fa-dna"></i>{{ item.bloodline }}血脉</span>
+                            <span class="mini-chip" v-for="t in (item.traits || []).slice(0, 2)" :key="t" style="background: #2b6cb0;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
+                            <span class="mini-chip plain" v-if="(item.skills || []).length"><i class="fa-solid fa-bolt"></i>{{ (item.skills || []).length }} 技能</span>
+                        </div>
+                        <div class="owner-line">
+                            <i class="fa-solid fa-user-shield"></i> {{ ownerLabel(item.ownerId) }}
+                        </div>
+                    </div>
+                    <div class="ops">
+                        <button class="op-btn edit" title="编辑" @click.stop="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
+                        <button class="op-btn del" title="删除" @click.stop="openDeleteConfirm(indexOfItem(item), item.nickname)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-box" v-else>
+                <i class="fa-solid fa-paw"></i>
+                暂无御兽精灵档案，点右上角「添加御兽精灵」开始录入书中的精灵个体。
             </div>
         </main>
     </div>
 
     <!-- 编辑弹窗 -->
     <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
-        <div class="modal" style="width: 720px; max-height: 88vh; overflow-y: auto;" @click.stop>
+        <div class="modal" style="width: 760px; max-height: 88vh; overflow-y: auto;" @click.stop>
             <div class="modal-header">
-                <h3>{{ isEdit ? '编辑御兽精灵' : '添加御兽精灵' }}</h3>
+                <h3>{{ isEdit ? '编辑御兽精灵 · ' + form.nickname : '添加御兽精灵' }}</h3>
                 <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group"><label>昵称 <span class="opt">必填</span></label><input v-model="form.nickname"></div>
-                    <div class="form-group"><label>性别</label>
-                        <select v-model="form.gender"><option value=""></option><option>雄</option><option>雌</option><option>未知</option></select>
-                    </div>
-
-                    <div class="form-group"><label>种族（精灵图鉴编号）</label>
-                        <div style="display:flex; gap:8px;">
-                            <input :value="speciesLabel(form.speciesId)" readonly placeholder="点击右侧按钮选择">
-                            <button class="btn btn-outline" @click.stop="openSpeciesModal"><i class="fa-solid fa-paw"></i> 选择</button>
+                <!-- 基本信息 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-circle-info"></i> 基本信息</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>昵称 <span class="opt">必填</span></label><input v-model="form.nickname" placeholder="如：沐沐"></div>
+                        <div class="form-group"><label>性别</label>
+                            <select v-model="form.gender"><option value="">未记录</option><option>雄</option><option>雌</option><option>未知</option></select>
                         </div>
-                    </div>
-                    <div class="form-group"><label>等级 <span class="opt">1-100，阶段自动推导</span></label>
-                        <div style="display:flex; gap:8px; align-items:center;">
+                        <div class="form-group" style="grid-column: span 2;"><label>种族 <span class="opt">从精灵图鉴选择，自动带出立绘与属性</span></label>
+                            <div class="species-pick">
+                                <div class="sp-view">
+                                    <img v-if="formSpeciesImage" :src="formSpeciesImage" alt="">
+                                    <i v-else class="fa-solid fa-paw" style="font-size: 26px; color: #cbd5e0;"></i>
+                                    <div>
+                                        <div class="sp-name">{{ formSpeciesLabel.name || '未关联种族' }}</div>
+                                        <div class="sp-id" v-if="formSpeciesLabel.id">{{ formSpeciesLabel.id }}</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="sp-btn" @click.stop="openSpeciesModal"><i class="fa-solid fa-paw"></i> 选择种族</button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>等级 <span class="opt">1-100</span></label>
                             <input type="number" min="1" max="100" v-model.number="form.level">
-                            <span class="stage-tag">{{ stageName(form.level) }}</span>
+                        </div>
+                        <div class="form-group"><label>当前阶段 <span class="opt">自动推导</span></label>
+                            <div style="padding: 8px 0;"><span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span></div>
+                        </div>
+                        <div class="stage-band-row">
+                            <div class="stage-band" v-for="b in RANK_BANDS" :key="b.name"
+                                 :class="{ on: stageName(form.level) === b.name }"
+                                 :style="stageName(form.level) === b.name ? { background: stageColorOfName(b.name) } : {}"
+                                 :title="b.name + ' Lv.' + b.min + (b.max === 9999 ? '+' : '-' + b.max)">
+                                {{ b.name }}
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group full" style="grid-column: span 2;"><label>性格</label><textarea v-model="form.personality" class="custom-textarea" rows="2"></textarea></div>
-
-                    <div class="form-group full" style="grid-column: span 2;">
-                        <label>特性 <span class="opt">点选图鉴特性或输入自定义</span></label>
+                <!-- 性格与特性 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-heart"></i> 性格与特性</div>
+                    <div class="form-group" style="margin-bottom: 14px;"><label>性格 <span class="opt">这只精灵的脾气秉性</span></label><textarea v-model="form.personality" rows="2" placeholder="如：温和粘人，喜欢晒太阳…"></textarea></div>
+                    <div class="form-group"><label>特性 <span class="opt">输入或从图鉴特性中选，回车添加</span></label>
                         <div class="trait-chips">
                             <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
-                            <input v-model="traitInput" placeholder="输入特性名，回车添加" style="border:0; outline:none; background:transparent; width: 170px; font-size: 13px;" @keydown.enter.prevent="addTrait" list="traitList">
-                            <datalist id="traitList"><option v-for="t in traitNames" :key="t" :value="t"></option></datalist>
+                            <input v-model="traitInput" placeholder="输入特性名，回车添加" style="border: 0; outline: none; background: transparent; width: 170px; font-size: 13px;" @keydown.enter.prevent="addTrait">
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group full" style="grid-column: span 2;">
-                        <label>技能与熟练度 <span class="opt">入门 / 熟练 / 专精（可开皆传） / 完美</span></label>
-                        <div class="sub-row" v-for="(s, i) in form.skills" :key="i">
-                            <input v-model="s.name" placeholder="技能名">
-                            <select v-model="s.level"><option>入门</option><option>熟练</option><option>专精</option><option>完美</option></select>
-                            <select v-model="s.mode"><option value="">无皆传</option><option>迅疾</option><option>刚猛</option></select>
-                            <button class="btn btn-danger btn-sm row-x" @click="form.skills.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
+                <!-- 技能与熟练度 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-bolt"></i> 技能与熟练度</div>
+                    <div class="sub-row" v-for="(s, i) in form.skills" :key="i">
+                        <input v-model="s.name" placeholder="技能名">
+                        <select v-model="s.level"><option>入门</option><option>熟练</option><option>专精</option><option>完美</option></select>
+                        <select v-model="s.mode"><option value="">无皆传</option><option>迅疾</option><option>刚猛</option></select>
+                        <button type="button" class="row-x" @click="form.skills.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addSkill"><i class="fa-solid fa-plus"></i> 添加技能</button>
+                    <div style="font-size: 11.5px; color: #a0aec0; margin-top: 8px; line-height: 1.8;">熟练度：入门（80% 威力）→ 熟练（满威力）→ 专精（不失败，可开皆传：迅疾 / 刚猛）→ 完美（0.1s，可组合技）</div>
+                </div>
+
+                <!-- 血脉 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-dna"></i> 血脉</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>血脉类型</label>
+                            <select v-model="form.bloodline"><option>无</option><option>异变</option><option>黑暗</option><option>光明</option><option>属性</option></select>
                         </div>
-                        <button class="btn btn-outline btn-sm" @click="addSkill"><i class="fa-solid fa-plus"></i> 添加技能</button>
+                        <div class="form-group"><label>血脉属性 <span class="opt">属性血脉时填写</span></label>
+                            <input v-model="form.bloodlineAttr" :disabled="form.bloodline !== '属性'" placeholder="如：冰">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;"><label>血脉技能 <span class="opt">属性血脉为族群授予的技能</span></label><input v-model="form.bloodlineSkill" placeholder="如：本心一击"></div>
                     </div>
+                </div>
 
-                    <div class="form-group"><label>血脉</label>
-                        <select v-model="form.bloodline"><option>无</option><option>异变</option><option>黑暗</option><option>光明</option><option>属性</option></select>
+                <!-- 归属与道具 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-user-shield"></i> 归属与道具</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>主人</label>
+                            <select v-model="form.ownerId"><option value="">（未定 / 无主）</option><option v-for="c in characters" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+                        </div>
+                        <div class="form-group"><label>携带道具 <span class="opt">逗号分隔</span></label><input v-model="itemsInput" placeholder="神秘水滴, 净化药剂"></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>经历 <span class="opt">这只精灵的故事</span></label><textarea v-model="form.experience" rows="3" placeholder="在哪里契约、经历过什么战斗…"></textarea></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
                     </div>
-                    <div class="form-group"><label>血脉属性 <span class="opt">属性血脉时填写</span></label>
-                        <input v-model="form.bloodlineAttr" :disabled="form.bloodline !== '属性'" placeholder="如：冰">
-                    </div>
-                    <div class="form-group full" style="grid-column: span 2;"><label>血脉技能 <span class="opt">属性血脉为族群授予的技能</span></label><input v-model="form.bloodlineSkill"></div>
-
-                    <div class="form-group"><label>主人</label>
-                        <select v-model="form.ownerId"><option value="">（未定 / 无主）</option><option v-for="c in characters" :key="c.id" :value="c.id">{{ c.name }}</option></select>
-                    </div>
-                    <div class="form-group"><label>携带道具 <span class="opt">逗号分隔</span></label><input v-model="itemsInput" placeholder="神秘水滴, 净化药剂"></div>
-
-                    <div class="form-group full" style="grid-column: span 2;"><label>经历</label><textarea v-model="form.experience" class="custom-textarea" rows="3"></textarea></div>
-                    <div class="form-group full" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" @click="showModal = false">取消</button>
-                <button class="btn btn-primary" @click="saveItem">保存</button>
+                <button class="btn btn-primary" @click="saveItem"><i class="fa-solid fa-check"></i> 保存</button>
             </div>
         </div>
     </div>
 
     <!-- 种族选择弹窗（单选） -->
     <div class="modal-overlay" v-if="showSpeciesModal" @vowmon:modal-close="closeModal('species')" style="z-index: 1100;">
-        <div class="selection-modal" @click.stop>
+        <div class="selection-modal" style="width: 560px;" @click.stop>
             <div class="modal-header">
                 <h3>选择种族（精灵图鉴）</h3>
                 <button class="btn-close" @click="showSpeciesModal = false"><i class="fa-solid fa-xmark"></i></button>
@@ -171,12 +303,16 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input v-model="speciesSearchInput" placeholder="输入精灵名称 / 编号搜索...">
             </div>
-            <div class="selection-list">
-                <div class="selection-item" v-for="pet in filteredSpecies" :key="pet.id"
-                     :style="form.speciesId === pet.id ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
-                     @click="pickSpecies(pet)">
-                    <div class="item-name">{{ pet.name }}</div>
-                    <div class="item-desc">#{{ pet.id }}</div>
+            <div class="selection-list" style="max-height: 52vh;">
+                <div class="sp-grid">
+                    <div class="sp-cell" v-for="pet in filteredSpecies" :key="pet.id"
+                         :class="{ on: form.speciesId === pet.id }"
+                         @click="pickSpecies(pet)">
+                        <img v-if="pet.img" :src="pet.img" alt="">
+                        <i v-else class="fa-solid fa-paw" style="font-size: 30px; color: #cbd5e0; padding: 12px 0; display: block;"></i>
+                        <div class="sp-n">{{ pet.name }}</div>
+                        <div class="sp-i font-num">#{{ pet.id }}</div>
+                    </div>
                 </div>
                 <div v-if="!filteredSpecies.length" class="empty-state">没有找到相关精灵</div>
             </div>
@@ -191,6 +327,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-individuals.js?v=20261125a"></script>
+<script src="../js/admin-individuals.js?v=20261125b"></script>
 </body>
 </html>

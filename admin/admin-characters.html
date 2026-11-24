@@ -13,6 +13,69 @@
     <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <style>
+        /* ============ 页头统计 ============ */
+        .stat-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 130px; background: linear-gradient(150deg, #fff 60%, var(--stat-c, #ebf8ff)); border: 1px solid #e8edf2; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 13px; }
+        .stat-card .st-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; background: var(--stat-c, #d69e2e); flex-shrink: 0; }
+        .stat-card .st-num { font-size: 22px; font-weight: 900; color: #2d3748; line-height: 1.1; }
+        .stat-card .st-lbl { font-size: 12px; color: #a0aec0; font-weight: 700; }
+
+        /* ============ 工具条 ============ */
+        .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .toolbar .search-box { position: relative; flex: 1; min-width: 220px; max-width: 420px; }
+        .toolbar .search-box i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 13px; }
+        .toolbar .search-box input { width: 100%; padding: 10px 14px 10px 36px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 14px; font-family: inherit; transition: border-color .2s, box-shadow .2s; background: #fff; }
+        .toolbar .search-box input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.16); }
+        .toolbar .count-pill { font-size: 13px; color: #718096; font-weight: 700; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 999px; padding: 8px 16px; white-space: nowrap; }
+
+        /* ============ 人物卡片 ============ */
+        .cha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+        .cha-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 16px 14px; position: relative; transition: transform .18s, box-shadow .18s, border-color .18s; }
+        .cha-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(45,55,72,.12); border-color: var(--accent, #d69e2e); }
+        .cha-card .head { display: flex; align-items: center; gap: 12px; }
+        .cha-card .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); }
+        .cha-card .cha-name { font-size: 16.5px; font-weight: 900; color: #2d3748; line-height: 1.3; }
+        .cha-card .cha-title { font-size: 12px; color: #a0aec0; font-weight: 700; margin-top: 1px; }
+        .cha-card .faction-tag { margin-left: auto; font-size: 11px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+        .cha-card .money-line { margin-top: 12px; display: flex; align-items: baseline; gap: 7px; background: linear-gradient(150deg, #fffdf6, #fdf6e3); border: 1px solid #f2e6cf; border-radius: 12px; padding: 9px 14px; }
+        .cha-card .money-line i { color: #d4a017; font-size: 15px; }
+        .cha-card .money-line .m-num { font-size: 17px; font-weight: 900; color: #9c6b0e; }
+        .cha-card .money-line .m-unit { font-size: 11px; color: #b7791f; font-weight: 800; }
+        .cha-card .cha-chips { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; min-height: 24px; }
+        .mini-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; color: #fff; display: inline-flex; align-items: center; gap: 4px; }
+        .mini-chip.plain { background: #edf2f7; color: #718096; }
+        .cha-card .pet-row { margin-top: 10px; display: flex; align-items: center; gap: 4px; }
+        .cha-card .pet-row img { width: 34px; height: 34px; object-fit: contain; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 9px; padding: 2px; }
+        .cha-card .pet-row .pet-more { font-size: 11px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 4px 9px; }
+        .cha-card .pet-row .pet-none { font-size: 11.5px; color: #cbd5e0; font-weight: 700; }
+        .cha-card .ops { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+        .cha-card:hover .ops { opacity: 1; }
+        .cha-card .faction-tag { transition: opacity .15s; }
+        .cha-card:hover .faction-tag { opacity: 0; }
+        .op-btn { width: 30px; height: 30px; border-radius: 9px; border: none; cursor: pointer; font-size: 12.5px; color: #fff; display: flex; align-items: center; justify-content: center; transition: filter .15s; }
+        .op-btn:hover { filter: brightness(1.12); }
+        .op-btn.edit { background: #4299e1; }
+        .op-btn.del { background: #e53e3e; }
+        .empty-box { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; background: #fff; border: 1px dashed #dbe4ec; border-radius: 16px; }
+        .empty-box i { font-size: 34px; display: block; margin-bottom: 12px; }
+
+        /* ============ 编辑弹窗 ============ */
+        .sect { margin-bottom: 18px; }
+        .sect-title { font-size: 13px; font-weight: 900; color: #b7791f; letter-spacing: .06em; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+        .sect-title i { font-size: 12px; }
+        .sect-title::after { content: ''; flex: 1; height: 1px; background: #e8edf2; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 6px; display: block; }
+        .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .inv-row { display: grid; grid-template-columns: 1fr 1fr 34px; gap: 8px; margin-bottom: 8px; }
+        .inv-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; }
+        .inv-row .row-x:hover { background: #fee; }
+
+        .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
+    </style>
 </head>
 <body>
 <div id="app" v-cloak>
@@ -45,96 +108,137 @@
         </aside>
 
         <main class="main-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="font-size: 20px;">御兽人物档案 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ characters.length }} 位人物</span></h2>
-                <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽人物</button>
+            <div class="stat-row">
+                <div class="stat-card" style="--stat-c: #d69e2e;">
+                    <div class="st-icon" style="background: #d69e2e;"><i class="fa-solid fa-users"></i></div>
+                    <div><div class="st-num font-num">{{ characters.length }}</div><div class="st-lbl">人物档案</div></div>
+                </div>
+                <div class="stat-card" style="--stat-c: #38a169;">
+                    <div class="st-icon" style="background: #38a169;"><i class="fa-solid fa-paw"></i></div>
+                    <div><div class="st-num font-num">{{ petTotal }}</div><div class="st-lbl">名下精灵总数</div></div>
+                </div>
+                <div class="stat-card" style="--stat-c: #4299e1;">
+                    <div class="st-icon" style="background: #4299e1;"><i class="fa-solid fa-coins"></i></div>
+                    <div><div class="st-num font-num">{{ fmtMoney(totalMoney) }}</div><div class="st-lbl">联盟币总和</div></div>
+                </div>
             </div>
 
-            <div style="margin-bottom: 14px;">
-                <input v-model="searchName" placeholder="搜索姓名 / 势力 / 头衔 / 简介关键词..." style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit;">
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input v-model="searchName" placeholder="搜索姓名 / 势力 / 头衔 / 简介关键词...">
+                </div>
+                <span class="count-pill">共 <b class="font-num">{{ filteredList.length }}</b> 位人物</span>
+                <div style="margin-left: auto;">
+                    <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽人物</button>
+                </div>
             </div>
 
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>姓名</th><th>势力</th><th>头衔</th><th>存款</th><th>精灵</th><th>物品</th><th style="width: 120px;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(item, index) in filteredList" :key="item.id">
-                            <td><b>{{ item.name }}</b></td>
-                            <td>{{ item.faction || '—' }}</td>
-                            <td>{{ item.title || '—' }}</td>
-                            <td><b class="font-num">{{ fmtMoney(item.money) }}</b> <small style="color:#a0aec0;">联盟币</small></td>
-                            <td><span class="font-num">{{ (item.petIds || []).length }}</span> 只</td>
-                            <td><span class="font-num">{{ (item.inventory || []).length }}</span> 件</td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" @click="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-danger btn-sm" @click="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr v-if="!filteredList.length"><td colspan="7" style="text-align:center; color:#a0aec0; padding: 30px;">暂无御兽人物档案</td></tr>
-                    </tbody>
-                </table>
+            <div class="cha-grid" v-if="filteredList.length">
+                <div class="cha-card" v-for="item in filteredList" :key="item.id"
+                     :style="{ '--accent': factionColor(item.faction) }">
+                    <div class="ops">
+                        <button class="op-btn edit" title="编辑" @click.stop="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
+                        <button class="op-btn del" title="删除" @click.stop="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="head">
+                        <div class="avatar">{{ avatarChar(item.name) }}</div>
+                        <div>
+                            <div class="cha-name">{{ item.name }}</div>
+                            <div class="cha-title">{{ item.title || '暂无头衔' }}</div>
+                        </div>
+                        <span class="faction-tag" v-if="item.faction">{{ item.faction }}</span>
+                    </div>
+                    <div class="money-line">
+                        <i class="fa-solid fa-coins"></i>
+                        <span class="m-num font-num">{{ fmtMoney(item.money) }}</span>
+                        <span class="m-unit">联盟币存款</span>
+                    </div>
+                    <div class="cha-chips">
+                        <span class="mini-chip" v-if="(item.petIds || []).length" style="background: #38a169;"><i class="fa-solid fa-paw"></i>{{ (item.petIds || []).length }} 只精灵</span>
+                        <span class="mini-chip" v-if="(item.inventory || []).length" style="background: #4299e1;"><i class="fa-solid fa-suitcase"></i>{{ (item.inventory || []).length }} 件物品</span>
+                        <span class="mini-chip plain" v-if="!(item.petIds || []).length && !(item.inventory || []).length">暂无精灵与物品</span>
+                    </div>
+                    <div class="pet-row">
+                        <template v-if="petsOf(item).length">
+                            <template v-for="p in petsOf(item).slice(0, 5)" :key="p.id">
+                                <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname" :title="p.nickname">
+                            </template>
+                            <span class="pet-more" v-if="(item.petIds || []).length > 5">+{{ (item.petIds || []).length - 5 }}</span>
+                        </template>
+                        <span class="pet-none" v-else>还没有关联的精灵</span>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-box" v-else>
+                <i class="fa-solid fa-users"></i>
+                暂无御兽人物档案，点右上角「添加御兽人物」开始录入书中角色。
             </div>
         </main>
     </div>
 
     <!-- 编辑弹窗 -->
     <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
-        <div class="modal" style="width: 680px; max-height: 88vh; overflow-y: auto;" @click.stop>
+        <div class="modal" style="width: 720px; max-height: 88vh; overflow-y: auto;" @click.stop>
             <div class="modal-header">
-                <h3>{{ isEdit ? '编辑御兽人物' : '添加御兽人物' }}</h3>
+                <h3>{{ isEdit ? '编辑御兽人物 · ' + form.name : '添加御兽人物' }}</h3>
                 <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group"><label>姓名 <span class="opt">必填</span></label><input v-model="form.name"></div>
-                    <div class="form-group"><label>头衔 / 称号</label><input v-model="form.title" placeholder="如：职业（称号）/ 首座 / 大冠"></div>
-
-                    <div class="form-group"><label>所属势力</label>
-                        <input v-model="form.faction" list="factionList" placeholder="如：九牧联盟">
-                        <datalist id="factionList"><option>九牧联盟</option><option>荒野</option></datalist>
-                    </div>
-                    <div class="form-group"><label>存款 <span class="opt">联盟币</span></label><input type="number" min="0" v-model.number="form.money"></div>
-
-                    <div class="form-group full" style="grid-column: span 2;">
-                        <label>物品栏 <span class="opt">每行一件：道具名|备注</span></label>
-                        <div class="sub-row" v-for="(it, i) in form.inventory" :key="i" style="grid-template-columns: 1fr 1fr 40px; display: grid; gap: 8px; margin-bottom: 8px;">
-                            <input v-model="it.name" placeholder="道具名（可引用物品图鉴里的名称）">
-                            <input v-model="it.note" placeholder="备注，如 ×2">
-                            <button class="btn btn-danger btn-sm" style="align-self:center;" @click="form.inventory.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
+                <!-- 基本信息 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>姓名 <span class="opt">必填</span></label><input v-model="form.name" placeholder="如：林殊"></div>
+                        <div class="form-group"><label>头衔 / 称号</label><input v-model="form.title" placeholder="如：职业（称号）/ 首座 / 大冠"></div>
+                        <div class="form-group"><label>所属势力</label>
+                            <input v-model="form.faction" placeholder="如：九牧联盟">
                         </div>
-                        <button class="btn btn-outline btn-sm" @click="addInventory"><i class="fa-solid fa-plus"></i> 添加物品</button>
+                        <div class="form-group"><label>存款 <span class="opt">联盟币</span></label><input type="number" min="0" v-model.number="form.money"></div>
                     </div>
+                </div>
 
-                    <div class="form-group full" style="grid-column: span 2;">
-                        <label>持有的御兽精灵 <span class="opt">先在「御兽精灵」页录入个体，再来关联</span></label>
-                        <div class="trait-chips">
-                            <span class="trait-chip" v-for="p in pickedPets" :key="p.id">
-                                <i class="fa-solid fa-paw" style="color: #4299e1;"></i>{{ indLabel(p) }}
-                                <i class="fa-solid fa-xmark chip-x" @click="removePet(p.id)"></i>
-                            </span>
-                            <span v-if="!pickedPets.length" class="trait-chip-empty">还没有持有精灵</span>
-                            <button type="button" class="btn btn-outline btn-sm" @click.stop="openPetModal"><i class="fa-solid fa-plus"></i> 关联精灵</button>
-                        </div>
+                <!-- 物品栏 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-suitcase"></i> 物品栏 <span class="opt" style="font-weight:700; color:#a0aec0;">道具名可引用物品图鉴里的名称</span></div>
+                    <div class="inv-row" v-for="(it, i) in form.inventory" :key="i">
+                        <input v-model="it.name" placeholder="道具名">
+                        <input v-model="it.note" placeholder="备注，如 ×2">
+                        <button type="button" class="row-x" @click="form.inventory.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
                     </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addInventory"><i class="fa-solid fa-plus"></i> 添加物品</button>
+                </div>
 
-                    <div class="form-group full" style="grid-column: span 2;"><label>人物简介</label><textarea v-model="form.bio" class="custom-textarea" rows="3"></textarea></div>
-                    <div class="form-group full" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
+                <!-- 持有精灵 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-paw"></i> 持有的御兽精灵 <span class="opt" style="font-weight:700; color:#a0aec0;">先在「御兽精灵」页录入个体，再来关联</span></div>
+                    <div class="trait-chips">
+                        <span class="trait-chip" v-for="p in pickedPets" :key="p.id">
+                            <i class="fa-solid fa-paw" style="color: #38a169;"></i>{{ indLabel(p) }}
+                            <i class="fa-solid fa-xmark chip-x" @click="removePet(p.id)"></i>
+                        </span>
+                        <span v-if="!pickedPets.length" class="trait-chip-empty">还没有持有精灵</span>
+                        <button type="button" class="btn btn-outline btn-sm" @click.stop="openPetModal"><i class="fa-solid fa-plus"></i> 关联精灵</button>
+                    </div>
+                </div>
+
+                <!-- 简介 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介</div>
+                    <div class="form-group" style="margin-bottom: 12px;"><textarea v-model="form.bio" rows="3" placeholder="这个人物的出身、经历、性格…"></textarea></div>
+                    <div class="form-group"><label>备注</label><input v-model="form.notes"></div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" @click="showModal = false">取消</button>
-                <button class="btn btn-primary" @click="saveItem">保存</button>
+                <button class="btn btn-primary" @click="saveItem"><i class="fa-solid fa-check"></i> 保存</button>
             </div>
         </div>
     </div>
 
     <!-- 精灵关联弹窗（多选） -->
     <div class="modal-overlay" v-if="showPetModal" @vowmon:modal-close="closeModal('pet')" style="z-index: 1100;">
-        <div class="selection-modal" @click.stop>
+        <div class="selection-modal" style="width: 520px;" @click.stop>
             <div class="modal-header">
                 <h3>关联持有的御兽精灵</h3>
                 <button class="btn-close" @click="showPetModal = false"><i class="fa-solid fa-xmark"></i></button>
@@ -145,10 +249,10 @@
             </div>
             <div class="selection-list">
                 <div class="selection-item" v-for="p in filteredPets" :key="p.id"
-                     :style="form.petIds.includes(p.id) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                     :style="form.petIds.includes(p.id) ? 'background:#f0fff4; border-color:#38a169;' : ''"
                      @click="togglePet(p)">
                     <div class="item-name">
-                        <i class="fa-solid" :class="form.petIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.petIds.includes(p.id) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
+                        <i class="fa-solid" :class="form.petIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.petIds.includes(p.id) ? 'color:#38a169;' : 'color:#cbd5e0;'"></i>
                         {{ p.nickname }}
                     </div>
                     <div class="item-desc">{{ speciesLabel(p.speciesId) }}</div>
@@ -156,7 +260,7 @@
                 <div v-if="!filteredPets.length" class="empty-state">暂无御兽精灵档案，请先到「御兽精灵」页录入</div>
             </div>
             <div class="selection-pagination" style="justify-content: flex-end;">
-                <span style="font-weight: bold; margin-right: 12px;">已勾选 <b style="color:#4299e1;">{{ form.petIds.length }}</b> 只</span>
+                <span style="font-weight: bold; margin-right: 12px;">已勾选 <b style="color:#38a169;">{{ form.petIds.length }}</b> 只</span>
                 <button class="btn btn-primary" style="padding: 4px 14px;" @click="showPetModal = false">完成</button>
             </div>
         </div>
@@ -169,6 +273,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125a"></script>
+<script src="../js/admin-characters.js?v=20261125b"></script>
 </body>
 </html>
