@@ -75,9 +75,7 @@
                 {
                     title: '管理',
                     links: [
-                        { label: '🛠️ 管理者后台', href: 'admin/' },
-                        { label: '🖼️ 图片管理', href: 'admin/admin-images.html' },
-                        { label: '📦 物品管理', href: 'admin/admin-items.html' }
+                        { label: '🛠️ 管理者后台', href: 'admin/' }
                     ]
                 }
             ]
