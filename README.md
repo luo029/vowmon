@@ -9,7 +9,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 
 1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allPetsData`）。禁止使用 Pokedex / Pokemon / pets 作为对外名称。
 2. **代码输出格式**：所有生成的代码必须使用 ` ```text ` 代码块，**禁止使用高亮**。代码文件名写在代码块上方。严禁使用省略号。
-3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`，`.html` 页面留在根目录；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
+3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`；前台 `.html` 页面留在根目录，**后台页面统一放 `admin/` 子目录**；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
 
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
 5. **属性统一**：所有属性的图标和颜色存放在 `js/type-config.js`，全局引用。
@@ -30,11 +30,6 @@ vowmon/
 ├── items.html              # 物品图鉴（列表 + 详情）
 ├── calculator.html         # 属性克制计算器
 ├── coverage.html           # 打击面计算器
-├── admin.html              # 后台 - 精灵管理
-├── admin-skills.html       # 后台 - 技能管理
-├── admin-traits.html       # 后台 - 特性管理
-├── admin-items.html        # 后台 - 物品管理
-├── admin-images.html       # 后台 - 图片管理
 ├── README.md               # 本文件
 ├── .nojekyll               # 让 GitHub Pages 跳过 Jekyll 处理
 ├── _headers                # Cloudflare Pages 响应头（静态资源缓存策略）
@@ -42,6 +37,13 @@ vowmon/
 │
 ├── .github/workflows/      # push 到 main 自动部署 Cloudflare Pages
 ├── functions/img/[[path]].js  # CF Pages Function：图片反向代理（见 §4.3）
+│
+├── admin/                  # 后台（子目录，资源引用带 ../ 前缀）
+│   ├── index.html          # 后台 - 精灵管理（原 admin.html，网址 /admin/）
+│   ├── admin-skills.html   # 后台 - 技能管理
+│   ├── admin-traits.html   # 后台 - 特性管理
+│   ├── admin-items.html    # 后台 - 物品管理
+│   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
 │   ├── style.css           # 前台统一样式
@@ -58,6 +60,7 @@ vowmon/
 │   ├── tag-config.js       # 技能标签配置（回血 / 先手 / 异常…：名称 / 图标 / 颜色，唯一来源）
 │   ├── item-config.js      # 物品配置（大类 Tab + 分组胶囊：名称 / 图标 / 颜色，唯一来源）
 │   ├── type-chart.js       # 18×18 属性克制表 + 组合倍率计算
+│   ├── vowmon-utils.js     # 前台数据规整（normalizeAll / total）
 │   ├── github-api.js       # GitHub API 封装
 │   ├── image-utils.js      # 图片上传前处理：压缩 / 等比缩放 / 统一输出 PNG
 │   ├── dialog.js           # 自定义弹窗 + 轻提示（window.VowmonDialog，替代 alert/confirm）
@@ -73,9 +76,10 @@ vowmon/
     └── img/[[path]].js     # /img/*  反代 vowmon_imgs 的图片
 ```
 
-**引用路径举例**（页面都在根目录，所以统一带文件夹前缀）：
+**引用路径举例**（前台页面在根目录，带文件夹前缀；后台页面在 `admin/` 里，本地资源带 `../` 前缀）：
 
 ```text
+<!-- 前台页面 -->
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/navbar.css">
 <script src="js/navbar.js" defer></script>
@@ -83,10 +87,14 @@ vowmon/
 <script src="js/category-config.js"></script>
 <script src="js/tag-config.js"></script>
 <script src="js/data-loader.js"></script>
+
+<!-- 后台页面（admin/ 子目录内） -->
+<link rel="stylesheet" href="../css/admin.css">
+<script src="../js/data-loader.js"></script>
 <!-- 数据不用再写 script 标签，页面里用 VowmonData.ready([...]) 拉取 -->
 ```
 
-> 新增页面时，放根目录；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
+> 新增前台页面放根目录，新增后台页面放 `admin/`；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
 
 ---
 
@@ -126,7 +134,7 @@ vowmon/
 
 ### 1.05.2 后台页面（维护数据用的）
 
-- **admin.html**：精灵管理 + 同步配置（同一页两个 Tab）。增删改精灵、配置「显示列」、一键同步数据到 GitHub。
+- **admin/index.html（网址 `/admin/`）**：精灵管理 + 同步配置（同一页两个 Tab）。增删改精灵、配置「显示列」、一键同步数据到 GitHub。
   - **上传即压缩 + 自动命名**：本地选图后先经 `js/image-utils.js` 处理——等比缩放（最长边不超过「同步配置 → 上传压缩尺寸」，默认 512，可选 256 / 512 / 768 / 1024），统一转成 **PNG**（保留透明底），小图不放大、不裁切（非正方形补透明边）。文件名强制按编号生成：主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png`、`_s2`、`_s3`…；原文件名与后缀一概忽略。保存时若改过编号，会把本次上传的图按新编号重传并删掉旧文件（仅限本次会话上传过的图，手填路径/刷新过页面则保持原路径）。
   - **异色图片**：表单里「精灵图片」下方多一个「异色图片」区块，可**多张**维护。支持一次选多个文件上传（串行上传），也支持手填外链 / 路径后点「添加」；缩略图按 #1、#2… 排序，可单张移除。异色图存在精灵对象的 `shiny` 数组里，**不占编号、不生成独立条目**，后台列表也不额外显示。
 - **admin-skills.html**：技能管理。增删改技能（属性单选胶囊、分类下拉、标签选择器）、配置「显示列」（含「标签」列）、一键同步。
@@ -202,7 +210,7 @@ vowmon/
 - **属性颜色/图标**：只在 `js/type-config.js` 维护，禁止在页面里写死色值。
 - **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `skills.html` 与后台 `admin-skills.html` 都引用它，禁止在页面里写死分类图标或色值。
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
-- **弹窗组件**：后台五个页面（`admin.html`、`admin-skills.html`、`admin-traits.html`、`admin-items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
+- **弹窗组件**：后台五个页面（`admin/index.html`、`admin-skills.html`、`admin-traits.html`、`admin-items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
 - **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。
   - `VowmonDialog.confirm(消息, 选项)` → `Promise<boolean>`，`VowmonDialog.alert(消息, 选项)` → `Promise`，`VowmonDialog.prompt(消息, 选项)` → `Promise<string|null>`。
   - `VowmonDialog.toast(消息, 'success' | 'warning' | 'danger')` 是右下角轻提示，用于「已保存 / 已删除 / 已同步」这类不需要用户确认的结果。

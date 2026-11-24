@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <title>Vowmon Wiki - 图片管理</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/common-ui.css">
-    <link rel="stylesheet" href="css/dialog.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/common-ui.css">
+    <link rel="stylesheet" href="../css/dialog.css">
+    <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
 <div id="app">
     <header class="topbar">
         <h1><i class="fa-solid fa-images"></i> 图片管理</h1>
         <div class="topbar-actions">
-            <button class="btn btn-outline" onclick="window.location.href='admin.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
             <button class="btn btn-primary" @click="loadAll" :disabled="isLoading">
                 <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isLoading }"></i> {{ isLoading ? '加载中...' : '刷新仓库' }}
             </button>
@@ -29,12 +29,12 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="side-nav">
-                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
                 <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
                 <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
                 <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
                 <a href="admin-images.html" class="active"><i class="fa-solid fa-images"></i> 图片管理</a>
-                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
             </div>
         </aside>
 
@@ -42,7 +42,7 @@
             <div class="alert-box">
                 <i class="fa-solid fa-circle-info"></i>
                 自动扫描「同步配置」中填写的<strong>所有图片仓库</strong>（支持多个仓库 1、2、3……）。图片缩略图按各仓库的 CDN 地址生成；仓库为空或不存在时会自动跳过。
-                <a href="admin.html?tab=settings" style="margin-left:auto;white-space:nowrap;font-weight:800;">前往配置 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a href="index.html?tab=settings" style="margin-left:auto;white-space:nowrap;font-weight:800;">前往配置 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </div>
 
             <!-- 统计卡片 -->
@@ -74,7 +74,7 @@
                 <div class="setup-hint-icon"><i class="fa-solid fa-sliders"></i></div>
                 <h2>尚未填写 GitHub 配置</h2>
                 <p>图片管理需要读取图片仓库，请先在「同步配置」中填写 Token、用户名与图片仓库名。</p>
-                <a class="btn btn-primary" href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 前往同步配置</a>
+                <a class="btn btn-primary" href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 前往同步配置</a>
             </div>
 
             <template v-if="hasConfig">
@@ -210,7 +210,7 @@
                                 <div class="pet-img-repo" v-if="row.repo"><i class="fa-solid fa-database"></i> {{ row.repo }}</div>
                                 <div class="img-actions">
                                     <button class="action-btn mini" @click="openUpload(row.pet)"><i class="fa-solid fa-cloud-arrow-up"></i> {{ row.status === 'ok' ? '替换图片' : '上传图片' }}</button>
-                                    <a class="action-btn mini" :href="'admin.html'"><i class="fa-solid fa-pen"></i> 去编辑</a>
+                                    <a class="action-btn mini" :href="'index.html'"><i class="fa-solid fa-pen"></i> 去编辑</a>
                                 </div>
                             </div>
                         </div>
@@ -336,13 +336,13 @@
     </div>
 </div>
 
-<script src="js/site-config.js"></script>
-<script src="js/type-config.js"></script>
-<script src="js/data-loader.js"></script>
-<script src="js/github-api.js"></script>
-<script src="js/image-utils.js"></script>
-<script src="js/common-ui.js"></script>
-<script src="js/dialog.js"></script>
-<script src="js/admin-images.js"></script>
+<script src="../js/site-config.js"></script>
+<script src="../js/type-config.js"></script>
+<script src="../js/data-loader.js"></script>
+<script src="../js/github-api.js"></script>
+<script src="../js/image-utils.js"></script>
+<script src="../js/common-ui.js"></script>
+<script src="../js/dialog.js"></script>
+<script src="../js/admin-images.js"></script>
 </body>
 </html>

@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <title>Vowmon Wiki - 管理者后台</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/common-ui.css">
-    <link rel="stylesheet" href="css/dialog.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/common-ui.css">
+    <link rel="stylesheet" href="../css/dialog.css">
+    <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
 <div id="app">
     <header class="topbar">
         <h1><i class="fa-solid fa-screwdriver-wrench"></i> Vowmon 后台管理</h1>
         <div class="topbar-actions">
-            <button class="btn btn-outline" @click="window.location.href='index.html'"><i class="fa-solid fa-house"></i> 返回首页</button>
+            <button class="btn btn-outline" @click="window.location.href='../index.html'"><i class="fa-solid fa-house"></i> 返回首页</button>
             <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
                 <i class="fa-brands fa-github" v-if="!isSyncing"></i>
                 <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
@@ -476,13 +476,13 @@
 
 </div>
 
-<script src="js/site-config.js"></script>
-<script src="js/type-config.js"></script>
-<script src="js/data-loader.js"></script>
-<script src="js/github-api.js"></script>
-<script src="js/image-utils.js"></script>
-<script src="js/common-ui.js"></script>
-<script src="js/dialog.js"></script>
-<script src="js/admin.js"></script>
+<script src="../js/site-config.js"></script>
+<script src="../js/type-config.js"></script>
+<script src="../js/data-loader.js"></script>
+<script src="../js/github-api.js"></script>
+<script src="../js/image-utils.js"></script>
+<script src="../js/common-ui.js"></script>
+<script src="../js/dialog.js"></script>
+<script src="../js/admin.js"></script>
 </body>
 </html>

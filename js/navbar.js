@@ -24,11 +24,15 @@
     /* ---------------------------------------------------------------- 配置 */
 
     var SITE_NAME = 'Vowmon Wiki';
-    var HOME = 'index.html';
 
-    // 导航结构：改这里就能改全站
+    // 站点根前缀：后台页面在 admin/ 子目录里，导航链接必须从站点根出发。
+    // 页面只在两层：根目录（前缀空）与 /admin/（前缀 ../）。
+    var ROOT = /\/admin\//.test(window.location.pathname) ? '../' : '';
+    var HOME = ROOT + 'index.html';
+
+    // 导航结构：改这里就能改全站（href 均相对站点根，渲染时统一加 ROOT 前缀）
     var NAV = [
-        { key: 'home', label: '首页', href: HOME },
+        { key: 'home', label: '首页', href: 'index.html' },
         {
             key: 'dex', label: '图鉴', href: 'vowdex.html',
             columns: [
@@ -71,9 +75,9 @@
                 {
                     title: '管理',
                     links: [
-                        { label: '🛠️ 管理者后台', href: 'admin.html' },
-                        { label: '🖼️ 图片管理', href: 'admin-images.html' },
-                        { label: '📦 物品管理', href: 'admin-items.html' }
+                        { label: '🛠️ 管理者后台', href: 'admin/' },
+                        { label: '🖼️ 图片管理', href: 'admin/admin-images.html' },
+                        { label: '📦 物品管理', href: 'admin/admin-items.html' }
                     ]
                 }
             ]
@@ -122,9 +126,12 @@
     }
 
     function currentFile() {
-        var parts = window.location.pathname.split('/');
-        var file = parts[parts.length - 1];
-        return (file || 'index.html').toLowerCase();
+        var path = window.location.pathname.toLowerCase();
+        var parts = path.split('/');
+        // /admin/ 或 /admin/index.html 一律按 admin.html 高亮「工具」菜单
+        if (/\/admin\/(index\.html)?$/.test(path)) return 'admin.html';
+        var file = parts[parts.length - 1] || parts[parts.length - 2] || 'index.html';
+        return file;
     }
 
     function activeKey() {
@@ -155,7 +162,7 @@
             return '<a href="javascript:void(0)" class="' + (cls || '') + ' soon" aria-disabled="true">' +
                 esc(link.label) + '<span class="soon-tag">敬请期待</span></a>';
         }
-        return '<a href="' + esc(link.href) + '" class="' + (cls || '') + '">' + esc(link.label) + '</a>';
+        return '<a href="' + esc(ROOT + link.href) + '" class="' + (cls || '') + '">' + esc(link.label) + '</a>';
     }
 
     function itemHtml(item, active) {
@@ -166,7 +173,7 @@
                 return '<a href="javascript:void(0)" class="soon" aria-disabled="true">' +
                     esc(item.label) + '<span class="soon-tag">敬请期待</span></a>';
             }
-            return '<a href="' + esc(item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
+            return '<a href="' + esc(ROOT + item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
                 esc(item.label) + '</a>';
         }
 
@@ -176,7 +183,7 @@
         }).join('');
 
         return '<div class="nav-item has-dropdown">' +
-            '<a href="' + esc(item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
+            '<a href="' + esc(ROOT + item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
             esc(item.label) + '<span class="chev">▾</span></a>' +
             '<div class="dropdown-panel">' + cols + '</div>' +
             '</div>';
@@ -220,7 +227,7 @@
             input.focus();
             return;
         }
-        window.location.href = 'list.html?q=' + encodeURIComponent(keyword);
+        window.location.href = ROOT + 'list.html?q=' + encodeURIComponent(keyword);
     }
 
     function bind() {

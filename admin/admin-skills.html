@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <title>Vowmon Wiki - 技能管理</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/common-ui.css">
-    <link rel="stylesheet" href="css/dialog.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/common-ui.css">
+    <link rel="stylesheet" href="../css/dialog.css">
+    <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
 <div id="app">
     <header class="topbar">
         <h1><i class="fa-solid fa-fire"></i> 技能管理</h1>
         <div class="topbar-actions">
-            <button class="btn btn-outline" onclick="window.location.href='admin.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
             <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
                 <i class="fa-brands fa-github" v-if="!isSyncing"></i>
                 <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
@@ -32,12 +32,12 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="side-nav">
-                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
                 <a href="admin-skills.html" class="active"><i class="fa-solid fa-fire"></i> 技能管理</a>
                 <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
                 <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
                 <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
-                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
             </div>
         </aside>
 
@@ -191,14 +191,14 @@
 </div>
 
 <!-- 统一引入 assets 目录下的文件 -->
-<script src="js/site-config.js"></script>
-<script src="js/type-config.js"></script>
-<script src="js/category-config.js"></script>
-<script src="js/tag-config.js"></script>
-<script src="js/data-loader.js"></script>
-<script src="js/github-api.js"></script>
-<script src="js/common-ui.js"></script>
-<script src="js/dialog.js"></script>
-<script src="js/admin-skills.js"></script>
+<script src="../js/site-config.js"></script>
+<script src="../js/type-config.js"></script>
+<script src="../js/category-config.js"></script>
+<script src="../js/tag-config.js"></script>
+<script src="../js/data-loader.js"></script>
+<script src="../js/github-api.js"></script>
+<script src="../js/common-ui.js"></script>
+<script src="../js/dialog.js"></script>
+<script src="../js/admin-skills.js"></script>
 </body>
 </html>
