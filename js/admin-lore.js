@@ -29,7 +29,9 @@ const FRAME_CSS = [
     '.vw-bar-btn{ border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; font-size: 12.5px; }',
     '.vw-bar-save{ background: #4c6ef5; color: #fff; }',
     '.vw-bar-cancel{ background: #374151; color: #e5e7eb; }',
-    '.vw-bar-btn:hover{ filter: brightness(1.15); }'
+    '.vw-bar-btn:hover{ filter: brightness(1.15); }',
+    /* 编辑视图里隐藏首页导航条，只保留正文内容 */
+    '#site-navbar{ display: none !important; }'
 ].join('\n');
 
 const FALLBACK_FILES = {
@@ -154,7 +156,14 @@ const app = createApp({
                     return;
                 }
                 const el = e.target.closest ? e.target.closest('[data-lore]') : null;
-                if (el) startEdit(el, doc);
+                if (el) {
+                    // 正在编辑时点了另一个文本块：先取消当前编辑再切换
+                    if (editing && el !== editing.el) cancelEdit();
+                    startEdit(el, doc);
+                } else if (editing) {
+                    // 点了文本块以外的空白区域：默认取消编辑、还原内容
+                    cancelEdit();
+                }
             }, true);
 
             doc.addEventListener('keydown', function (e) {
