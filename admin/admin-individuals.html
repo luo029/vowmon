@@ -87,41 +87,23 @@
         .seg-opt:hover { border-color: #b8cbe0; color: #4a5568; }
         .seg-opt.on { background: var(--seg-c, #4299e1); border-color: var(--seg-c, #4299e1); color: #fff; box-shadow: 0 2px 8px rgba(45,55,72,.18); }
 
-        /* ============ 特性搜索下拉 ============ */
-        .trait-wrap { position: relative; }
-        .trait-drop { position: absolute; left: 0; right: auto; width: max(100%, 240px); top: calc(100% + 6px); z-index: 1200; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; }
+        /* ============ 特性（单行输入框 + 图鉴搜索下拉） ============ */
+        .trait-wrap { position: relative; min-width: 0; }
+        .trait-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 42px; padding: 6px 10px; border: 1px solid #dbe4ec; border-radius: 11px; background: #fbfdff; cursor: text; transition: border-color .15s, background .15s, box-shadow .15s; }
+        .trait-field:hover { border-color: #c3d7e9; }
+        .trait-field:focus-within { border-color: #4299e1; background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .form-group .trait-field input.trait-native { flex: 1 1 90px; width: auto; min-width: 70px; height: 26px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: 13.5px; font-weight: 700; color: #2d3748; font-family: inherit; outline: none; }
+        .form-group .trait-field input.trait-native:focus { border: 0; background: transparent; box-shadow: none; }
+        .form-group .trait-field input.trait-native::placeholder { color: #b3c2d1; font-weight: 600; }
+        .trait-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 4px 8px 4px 11px; border-radius: 999px; background: #e8f2ff; color: #2b6cb0; font-size: 12.5px; font-weight: 900; line-height: 1.5; }
+        .trait-chip .chip-x { flex: none; font-size: 10px; opacity: .5; cursor: pointer; transition: opacity .12s, color .12s; }
+        .trait-chip .chip-x:hover { opacity: 1; color: #e53e3e; }
+        .trait-drop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 1200; max-height: 244px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; }
+        .trait-drop .td-head { font-size: 10.5px; font-weight: 900; letter-spacing: .05em; color: #a0aec0; padding: 5px 9px 4px; }
         .trait-drop .td-item { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 700; color: #2d3748; transition: background .12s; }
         .trait-drop .td-item:hover { background: #ebf8ff; }
         .trait-drop .td-item i { color: #2b6cb0; font-size: 12px; }
         .trait-drop .td-tag { margin-left: auto; font-size: 10px; font-weight: 800; color: #a0aec0; background: #f1f5f9; padding: 2px 8px; border-radius: 999px; }
-        .trait-chips input { border: 0; outline: none; background: transparent; width: 180px; font-size: 13px; font-family: inherit; }
-        .trait-input-box { position: relative; min-height: 44px; padding: 8px 12px 8px 34px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
-        .trait-input-box:focus-within { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .trait-input-box input { flex: 1 1 140px; min-width: 100px; padding: 4px 0; border: 0 !important; box-shadow: none !important; background: transparent !important; }
-        .trait-input-box input::placeholder { color: #cbd5e0; }
-        .trait-search-icon { color: #718096; font-size: 13px; }
-        .trait-list { min-height: 44px; max-height: 92px; overflow-y: auto; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; flex: 0 0 180px; width: 180px; }
-        .trait-empty { font-size: 12.5px; color: #cbd5e0; font-weight: 700; }
-        .trait-line { display: flex; align-items: stretch; gap: 8px; }
-        .trait-line .trait-list { flex: 0 0 180px; min-width: 0; }
-        .trait-edit-inline { display: flex; align-items: center; gap: 6px; flex: 1.6; min-width: 0; }
-        .trait-add-btn { flex: none; width: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed #4299e1; background: #f0f7ff; color: #2b6cb0; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; }
-        .trait-add-btn i { font-size: 15px; }
-        .trait-add-btn:hover { background: #4299e1; color: #fff; border-style: solid; }
-        .trait-add-mini { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px; background: #38a169; color: #fff; cursor: pointer; }
-        .trait-cancel { width: 34px; height: 34px; padding: 0; flex: none; }
-        .trait-add-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
-        .trait-search-wrap { position: relative; flex: 1; min-width: 0; }
-        .trait-search-wrap input { width: 100%; padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; background: #fff; }
-        .trait-search-wrap input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .trait-add, .trait-cancel { height: 34px; }
-
-        .trait-add-row input { flex: 1; min-width: 0; padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; background: #fff; }
-        .trait-add-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .trait-cancel { padding: 8px 12px; border: 1px solid #dbe4ec; background: #fff; color: #718096; border-radius: 9px; cursor: pointer; font-size: 12.5px; font-weight: 800; font-family: inherit; }
-        .trait-cancel:hover { background: #f1f5f9; }
-        .trait-add { margin-top: 9px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid #4299e1; border-radius: 9px; background: #4299e1; color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
-        .trait-add:hover { background: #2b6cb0; }
         .td-head { font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .06em; padding: 6px 11px 4px; }
         .td-none { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #a0aec0; }
 
@@ -347,28 +329,20 @@
                             <vow-select v-model="form.nature" :options="natureOptions" placeholder="（未定性格）"></vow-select>
                             <div class="nature-hint" v-if="form.nature && natureHintOf(form.nature)">{{ form.nature }}：{{ natureHintOf(form.nature) }}</div>
                         </div>
-                        <div class="form-group"><label>特性 <i class="tip" data-tip="点「添加」填写或搜索图鉴特性；已添加的可点 × 移除">?</i></label>
+                        <div class="form-group"><label>特性 <i class="tip" data-tip="直接在这里输入或搜索图鉴特性，回车即可添加；已添加的按 × 移除">?</i></label>
                             <div class="trait-wrap">
-                                <div class="trait-line">
-                                    <div class="trait-chips trait-list">
-                                        <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
-                                        <span class="trait-empty" v-if="!form.traits.length">暂未添加特性</span>
-                                    </div>
-                                <div v-if="!traitAdding && !form.traits.length" class="trait-add-btn" @click="openTraitInput"><i class="fa-solid fa-plus"></i><span>添加</span></div>
-                                <div class="trait-edit-inline" v-else-if="traitAdding">
-                                    <div class="trait-search-wrap">
-                                        <input ref="traitInputEl" v-model="traitInput" placeholder="" @input="onTraitInput" @keydown.enter="addTrait($event)">
-                                        <div class="trait-drop" v-if="showTraitMenu && traitSuggestions.length">
-                                            <div class="td-head">图鉴特性匹配</div>
-                                            <div class="td-item" v-for="n in traitSuggestions" :key="n" @click.stop="pickTrait(n)">
-                                                <i class="fa-solid fa-crown"></i>{{ n }}
-                                                <span class="td-tag">图鉴特性</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="trait-add-mini" @click="addTrait()" title="添加"><i class="fa-solid fa-check"></i></button>
-                                    <button type="button" class="trait-cancel" @click="cancelTraitInput" title="取消"><i class="fa-solid fa-xmark"></i></button>
+                                <div class="trait-field" @click="focusTraitInput">
+                                    <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click.stop="removeTrait(t)"></i></span>
+                                    <input ref="traitInputEl" class="trait-native" v-model="traitInput"
+                                           :placeholder="form.traits.length ? '更换特性…' : '暂未添加特性'"
+                                           @focus="onTraitInput" @input="onTraitInput" @keydown.enter="addTrait($event)">
                                 </div>
+                                <div class="trait-drop" v-if="showTraitMenu && traitSuggestions.length">
+                                    <div class="td-head">图鉴特性匹配</div>
+                                    <div class="td-item" v-for="n in traitSuggestions" :key="n" @click.stop="pickTrait(n)">
+                                        <i class="fa-solid fa-crown"></i>{{ n }}
+                                        <span class="td-tag">图鉴特性</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -536,6 +510,6 @@
 <script src="../js/vow-textarea.js?v=20261125c"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126e"></script>
+<script src="../js/admin-individuals.js?v=20261126f"></script>
 </body>
 </html>

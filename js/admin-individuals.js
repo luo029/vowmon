@@ -340,12 +340,12 @@ const app = createApp({
         /* 独立弹窗添加特性：列表只负责显示，不再是一条假输入框 */
         const traitAdding = ref(false);
         const traitInputEl = ref(null);
-        const openTraitInput = () => {
+        /* 「暂未添加特性」本身就是输入框：点整块空白就把光标放进输入框 */
+        const focusTraitInput = () => {
             traitAdding.value = true;
-            traitInput.value = '';
-            showTraitMenu.value = false;
             nextTick(() => { if (traitInputEl.value && traitInputEl.value.focus) traitInputEl.value.focus(); });
         };
+        const openTraitInput = () => focusTraitInput();
         const cancelTraitInput = () => { traitAdding.value = false; traitInput.value = ''; showTraitMenu.value = false; };
         const addTraitViaDialog = async () => {
             const name = await VowmonDialog.prompt('输入特性名', {
@@ -646,7 +646,7 @@ const app = createApp({
             natureOptions, natureHintOf, ownerOptions,
             attrOptions, bloodlineSkillOptions, bloodlineAttrModel, speciesFamily, effectiveFamily,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,
-            traitAdding, openTraitInput, cancelTraitInput,
+            traitAdding, openTraitInput, focusTraitInput, cancelTraitInput,
             activeSkillIndex, skillSuggestions, setSkillName,
             editingSkillIndex, skillTypeIcon, newSkill, editSkill, finishSkill, removeSkill,
             addMilestone,
