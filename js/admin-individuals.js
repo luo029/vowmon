@@ -426,8 +426,14 @@ const app = createApp({
 
         /* --------------------------------------------------- 血脉技能：属性 → 技能两级选择 */
         const attrOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData)) ? typeData.map(t => t.name) : [];
+        /* 科优先取个体自带，否则继承种族图鉴的科；决定族尊下发的十八系技能 */
+        const speciesFamily = computed(() => {
+            const s = speciesOf(form.value.speciesId);
+            return String((s && s.taxonomy && s.taxonomy.family) || '');
+        });
+        const effectiveFamily = computed(() => String(form.value.taxonomy && form.value.taxonomy.family || '') || speciesFamily.value);
         const bloodlineSkillOptions = computed(() => {
-            const fam = String(form.value.taxonomy && form.value.taxonomy.family || '');
+            const fam = effectiveFamily.value;
             const families = (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData && typeof allBloodlineFamiliesData === 'object')
                 ? allBloodlineFamiliesData : {};
             const cur = String(form.value.bloodlineSkill || '');
@@ -587,7 +593,7 @@ const app = createApp({
             stageName: stageNameOf, RANK_BANDS,
             GENDERS, BLOODLINES, SKILL_LEVELS, TAX_FIELDS, traitInputEl,
             natureOptions, natureHintOf, ownerOptions,
-            attrOptions, bloodlineSkillOptions, bloodlineAttrModel,
+            attrOptions, bloodlineSkillOptions, bloodlineAttrModel, speciesFamily, effectiveFamily,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,
             traitAdding, openTraitInput, cancelTraitInput,
             activeSkillIndex, skillSuggestions, setSkillName,

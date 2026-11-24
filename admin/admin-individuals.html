@@ -102,6 +102,12 @@
         .trait-search-icon { color: #718096; font-size: 13px; }
         .trait-list { min-height: 44px; max-height: 92px; overflow-y: auto; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; }
         .trait-empty { font-size: 12.5px; color: #cbd5e0; font-weight: 700; }
+        .trait-line { display: flex; align-items: stretch; gap: 8px; }
+        .trait-add-btn { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed #4299e1; background: #f0f7ff; color: #2b6cb0; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; }
+        .trait-add-btn i { font-size: 15px; }
+        .trait-add-btn:hover { background: #4299e1; color: #fff; border-style: solid; }
+        .trait-add-mini { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px; background: #38a169; color: #fff; cursor: pointer; }
+        .trait-cancel { width: 34px; height: 34px; padding: 0; flex: none; }
         .trait-add-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
         .trait-search-wrap { position: relative; width: 260px; flex: none; }
         .trait-search-wrap input { width: 100%; padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; background: #fff; }
@@ -168,13 +174,6 @@
 
         .lv-tag { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12px; font-weight: 900; letter-spacing: .05em; padding: 7px 18px; border-radius: 999px; color: #fff; flex-shrink: 0; }
         /* 基本信息三列紧凑排版 */
-        .tax-fold { grid-column: 1 / -1; border: 1px solid #e8edf2; border-radius: 10px; background: #fbfdff; padding: 7px 12px; }
-        .tax-fold summary { cursor: pointer; font-size: 12.5px; font-weight: 800; color: #4a5568; }
-        .tax-fold summary span { color: #2b6cb0; }
-        .tax-mini { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; max-width: 760px; margin: 10px auto 2px; }
-        .tax-mini label { display: block; font-size: 11.5px; font-weight: 900; color: #4a5568; margin-bottom: 4px; text-align: center; }
-        .tax-mini input { width: 100%; padding: 7px 6px; border: 1px solid #dbe4ec; border-radius: 8px; font-size: 12.5px; outline: none; font-family: inherit; text-align: center; background: #fff; }
-        .tax-mini input:focus { border-color: #4299e1; }
         .basic-grid { grid-template-columns: 1fr 1fr 1.25fr; }
         .basic-grid .seg-opt { padding: 8px 11px; }
         .basic-grid .species-pick { gap: 7px; }
@@ -325,21 +324,18 @@
                             <span class="lv-label">当前阶段</span>
                             <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
                         </div>
-                        <details class="tax-fold" style="grid-column: 1 / -1;">
-                            <summary><i class="fa-solid fa-sitemap"></i> 分类学 · 域界门纲目科属种 <span v-if="form.taxonomy.family">（科：{{ form.taxonomy.family }}）</span></summary>
-                            <div class="tax-mini">
-                                <div v-for="t in TAX_FIELDS" :key="t.key"><label>{{ t.label }}</label><input v-model="form.taxonomy[t.key]" placeholder=""></div>
-                            </div>
-                        </details>
                         <div class="form-group"><label>性格 <i class="tip" data-tip="图鉴性格，影响种族值成长倾向">?</i></label>
                             <vow-select v-model="form.nature" :options="natureOptions" placeholder="（未定性格）"></vow-select>
                             <div class="nature-hint" v-if="form.nature && natureHintOf(form.nature)">{{ form.nature }}：{{ natureHintOf(form.nature) }}</div>
                         </div>
-                        <div class="form-group"><label>特性 <i class="tip" data-tip="点「添加特性」填写或搜索图鉴特性；已添加的可点 × 移除">?</i></label>
+                        <div class="form-group"><label>特性 <i class="tip" data-tip="点「添加」填写或搜索图鉴特性；已添加的可点 × 移除">?</i></label>
                             <div class="trait-wrap">
-                                <div class="trait-chips trait-list">
-                                    <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
-                                    <span class="trait-empty" v-if="!form.traits.length">暂未添加特性</span>
+                                <div class="trait-line">
+                                    <div class="trait-chips trait-list">
+                                        <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
+                                        <span class="trait-empty" v-if="!form.traits.length">暂未添加特性</span>
+                                    </div>
+                                    <button type="button" class="trait-add-btn" v-if="!traitAdding" @click="openTraitInput"><i class="fa-solid fa-plus"></i><span>添加</span></button>
                                 </div>
                                 <div class="trait-add-row" v-if="traitAdding">
                                     <div class="trait-search-wrap">
@@ -352,10 +348,9 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="trait-add" @click="addTrait()"><i class="fa-solid fa-check"></i> 添加</button>
-                                    <button type="button" class="trait-cancel" @click="cancelTraitInput">取消</button>
+                                    <button type="button" class="trait-add-mini" @click="addTrait()" title="添加"><i class="fa-solid fa-check"></i></button>
+                                    <button type="button" class="trait-cancel" @click="cancelTraitInput" title="取消"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
-                                <button type="button" class="trait-add" v-else @click="openTraitInput"><i class="fa-solid fa-plus"></i> 添加特性</button>
                             </div>
                         </div>
                     </div>
@@ -420,7 +415,10 @@
                         <div class="form-group"><label>血脉技能 <i class="tip" data-tip="由族群族尊授予；每个属性一个，可在「血脉技能」页维护">?</i></label>
                             <vow-select v-model="form.bloodlineSkill" :options="bloodlineSkillOptions" placeholder="选择血脉技能" :disabled="form.bloodline !== '属性'"></vow-select>
                         </div>
-                        <div style="grid-column: 1 / -1; text-align: right;"><a href="admin-bloodline-skills.html" style="font-size:12.5px; font-weight:800; color:#2b6cb0; text-decoration:none;"><i class="fa-solid fa-gear"></i> 管理血脉技能清单</a></div>
+                        <div style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:800; color:#718096;">
+                            <span>所属科：<b style="color:#2b6cb0;">{{ effectiveFamily || '未记录' }}</b> <i class="tip" data-tip="科来自种族图鉴；同科共用族尊下发的十八系血脉技能">?</i></span>
+                            <a href="admin-bloodline-skills.html" style="color:#2b6cb0; text-decoration:none;"><i class="fa-solid fa-gear"></i> 管理血脉技能清单</a>
+                        </div>
                     </div>
                 </div>
 
