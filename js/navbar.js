@@ -56,6 +56,9 @@
                 {
                     title: '世界观',
                     links: [
+                        { label: '等级体系', href: 'ranks.html' },
+                        { label: '血脉图鉴', href: 'bloodlines.html' },
+                        { label: '御兽师图鉴', href: 'trainers.html' },
                         { label: '十八生态界', soon: true },
                         { label: '元域演化史', href: 'lore.html' }
                     ]
@@ -92,6 +95,9 @@
         'traits.html': 'dex',
         'natures.html': 'dex',
         'lore.html': 'dex',
+        'ranks.html': 'dex',
+        'bloodlines.html': 'dex',
+        'trainers.html': 'dex',
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',

@@ -9,261 +9,301 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
+        :root {
+            --accent: #9c36b5;
+            --accent-soft: #f6ecfa;
+            --accent-deep: #862e9c;
+            --ink: #243044;
+            --ink-2: #4a5872;
+            --ink-3: #8593ad;
+            --line: #e4e9f2;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-            background: #0b0e1a;
-            color: #c9d2e3;
+            background: #f6f8fc;
+            color: var(--ink-2);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* ---------------- 星空背景 ---------------- */
-        .sky {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background:
-                radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9) 50%, transparent 51%),
-                radial-gradient(1px 1px at 28% 64%, rgba(255,255,255,.65) 50%, transparent 51%),
-                radial-gradient(1.5px 1.5px at 44% 32%, rgba(214,226,255,.8) 50%, transparent 51%),
-                radial-gradient(1px 1px at 62% 78%, rgba(255,255,255,.6) 50%, transparent 51%),
-                radial-gradient(1.8px 1.8px at 76% 22%, rgba(255,244,214,.85) 50%, transparent 51%),
-                radial-gradient(1px 1px at 88% 55%, rgba(255,255,255,.55) 50%, transparent 51%),
-                radial-gradient(1.2px 1.2px at 8% 82%, rgba(214,226,255,.7) 50%, transparent 51%),
-                radial-gradient(1px 1px at 52% 8%, rgba(255,255,255,.5) 50%, transparent 51%),
-                radial-gradient(1.4px 1.4px at 92% 88%, rgba(255,244,214,.7) 50%, transparent 51%),
-                radial-gradient(1px 1px at 36% 92%, rgba(255,255,255,.5) 50%, transparent 51%),
-                radial-gradient(420px 300px at 82% 12%, rgba(111,53,252,.14), transparent 70%),
-                radial-gradient(520px 380px at 12% 88%, rgba(99,144,240,.12), transparent 70%),
-                radial-gradient(380px 300px at 50% 55%, rgba(212,175,55,.06), transparent 70%);
-        }
-        .sky::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(1200px 600px at 50% -10%, rgba(63,76,120,.35), transparent 65%);
-        }
+        .page { max-width: 920px; margin: 0 auto; padding: 30px 20px 70px; }
 
-        .page {
-            position: relative; z-index: 1;
-            max-width: 880px; margin: 0 auto;
-            padding: 34px 20px 70px;
+        /* ---------------- 页首横幅 ---------------- */
+        .banner {
+            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #862e9c 0%, #9c36b5 55%, #d6336c 100%);
+            border-radius: 22px; padding: 40px 38px 36px; color: #fff;
+            box-shadow: 0 14px 38px rgba(156,54,181,.26);
         }
-
-        /* ---------------- 卷首 ---------------- */
-        .hero { text-align: center; padding: 40px 16px 26px; }
-        .hero-tag {
+        .banner::after {
+            content: ''; position: absolute; right: -70px; top: -70px;
+            width: 240px; height: 240px; border-radius: 50%;
+            background: rgba(255,255,255,.1); pointer-events: none;
+        }
+        .banner::before {
+            content: ''; position: absolute; right: 40px; bottom: -90px;
+            width: 190px; height: 190px; border-radius: 50%;
+            background: rgba(255,255,255,.08); pointer-events: none;
+        }
+        .banner-tag {
             display: inline-flex; align-items: center; gap: 8px;
-            font-size: 12px; font-weight: 800; letter-spacing: .35em; text-indent: .35em;
-            color: #d4af37; border: 1px solid rgba(212,175,55,.4);
-            padding: 6px 16px; border-radius: 999px;
-            background: rgba(212,175,55,.07);
+            font-size: 12px; font-weight: 800; letter-spacing: .3em; text-indent: .3em;
+            background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
+            padding: 6px 15px; border-radius: 999px;
         }
-        .hero h1 {
-            margin-top: 22px; font-size: 44px; font-weight: 900; letter-spacing: .12em;
-            background: linear-gradient(180deg, #f4e9c8 20%, #d4af37 90%);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            text-shadow: 0 0 40px rgba(212,175,55,.18);
+        .banner h1 { margin-top: 16px; font-size: 38px; font-weight: 900; letter-spacing: .1em; }
+        .banner .banner-sub { margin-top: 10px; font-size: 14px; font-weight: 700; letter-spacing: .12em; opacity: .88; }
+        .banner .banner-desc { margin-top: 18px; max-width: 660px; font-size: 13.5px; line-height: 2; opacity: .9; }
+        .banner .banner-desc b { color: #ffe066; font-weight: 800; }
+
+        /* ---------------- 分区标题 ---------------- */
+        .sec { margin-top: 38px; }
+        .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .sec-no {
+            width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 900; color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            box-shadow: 0 4px 12px rgba(156,54,181,.3);
         }
-        .hero-sub { margin-top: 12px; font-size: 13px; font-weight: 700; letter-spacing: .5em; text-indent: .5em; color: #6f7ba0; }
-        .hero-desc { margin: 26px auto 0; max-width: 580px; font-size: 14px; line-height: 2.1; color: #9aa5c4; font-weight: 600; }
-        .hero-desc b { color: #e8d48b; }
-        .gold-rule { width: 220px; height: 1px; margin: 26px auto 0; background: linear-gradient(90deg, transparent, rgba(212,175,55,.75), transparent); position: relative; }
-        .gold-rule::after {
-            content: '✦'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%);
-            color: #d4af37; font-size: 13px; background: #0b0e1a; padding: 0 10px;
+        .sec-head h2 { font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: .06em; }
+        .sec-head .sec-rule { flex: 1; height: 1px; background: var(--line); }
+
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 26px; box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
 
-        /* ---------------- 石板卡 ---------------- */
-        .tablet {
-            margin-top: 34px;
-            background: linear-gradient(163deg, #2b3244 0%, #1d2331 58%, #171c28 100%);
-            border: 1px solid rgba(212,175,55,.30);
-            border-radius: 20px;
-            padding: 30px 34px 32px;
-            box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
-            position: relative;
+        /* ---------------- 先天 / 后天 ---------------- */
+        .origin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .origin-card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 22px 24px; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
-        .tablet::before {
-            content: ''; position: absolute; inset: 7px;
-            border: 1px solid rgba(212,175,55,.13); border-radius: 14px; pointer-events: none;
-        }
-        .tablet-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-        .chapter-no {
-            flex-shrink: 0; font-size: 12px; font-weight: 900; letter-spacing: .2em; text-indent: .2em;
-            color: #1d2331; background: linear-gradient(135deg, #f0dc9a, #d4af37);
-            padding: 6px 13px; border-radius: 999px;
-        }
-        .tablet-head h2 { font-size: 21px; font-weight: 900; letter-spacing: .1em; color: #f0e6c8; }
-        .tablet-head .rule { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,.45), transparent); }
-        .tablet-body p { font-size: 15px; line-height: 2.25; color: #b9c2d8; margin-bottom: 14px; font-weight: 500; }
-        .tablet-body p:last-child { margin-bottom: 0; }
+        .origin-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--oc-color, var(--accent)); }
+        .origin-card h3 { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 900; color: var(--ink); }
+        .origin-card h3 i { color: var(--oc-color, var(--accent)); }
+        .origin-card p { margin-top: 10px; font-size: 13px; line-height: 1.95; color: var(--ink-2); }
+        .origin-card p b { color: var(--oc-color, var(--accent-deep)); }
+        .origin-card .origin-foot { margin-top: 10px; font-size: 12px; font-weight: 800; color: var(--ink-3); }
 
-        /* ---------------- 关键词胶囊 ---------------- */
-        .kw { display: inline-flex; align-items: center; gap: 5px; padding: 2px 11px; border-radius: 999px; font-size: 13px; font-weight: 800; line-height: 1.7; vertical-align: 1px; white-space: nowrap; }
-        .kw i { font-size: 11px; }
-        .kw-type { color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
-        .kw-meta {
-            color: #f6efd8;
-            background: linear-gradient(135deg, rgba(139,92,246,.85), rgba(212,175,55,.85));
-            box-shadow: 0 2px 10px rgba(111,53,252,.3);
+        /* ---------------- 克制规则 ---------------- */
+        .rule-callout {
+            display: flex; gap: 12px; align-items: flex-start;
+            background: #fff; border: 1px solid #ffd8a8; border-radius: 16px;
+            padding: 20px 24px; box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
+        .rule-callout i { color: #e8590c; font-size: 20px; margin-top: 3px; flex-shrink: 0; }
+        .rule-callout .rule-txt { font-size: 13.5px; line-height: 2.05; color: var(--ink-2); }
+        .rule-callout .rule-txt b { color: var(--ink); }
+        .type-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 2px 12px; border-radius: 999px;
+            font-size: 12.5px; font-weight: 800; color: #fff; line-height: 1.7; vertical-align: 1px;
+            box-shadow: 0 2px 8px rgba(36,48,68,.18);
+        }
+        .type-pill i { font-size: 11px; }
 
         /* ---------------- 血脉卡 ---------------- */
+        .blood-list { display: grid; gap: 18px; }
         .blood-card {
-            border: 1px solid rgba(255,255,255,.1); border-radius: 16px;
-            background: rgba(11,14,26,.5); padding: 24px 26px; margin-top: 18px;
-            position: relative; overflow: hidden;
+            background: #fff; border: 1px solid var(--line); border-radius: 18px;
+            padding: 26px 28px; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
-        .blood-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: var(--blood-color, #d4af37);
-        }
-        .blood-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .blood-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: var(--bc-color, var(--accent)); }
+        .blood-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .blood-icon {
-            width: 52px; height: 52px; flex-shrink: 0;
+            width: 54px; height: 54px; flex-shrink: 0; border-radius: 15px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: #fff; border-radius: 14px;
-            background: var(--blood-color, #d4af37);
-            box-shadow: 0 4px 16px rgba(0,0,0,.45);
+            font-size: 24px; color: #fff; background: var(--bc-color, var(--accent));
+            box-shadow: 0 6px 16px var(--bc-shadow, rgba(156,54,181,.3));
         }
-        .blood-title { display: flex; flex-direction: column; gap: 3px; }
-        .blood-title h3 { font-size: 19px; font-weight: 900; letter-spacing: .08em; color: #f0e6c8; }
-        .blood-title .blood-alias { font-size: 12px; font-weight: 700; color: #8a94b8; letter-spacing: .05em; }
+        .blood-title { display: flex; flex-direction: column; gap: 4px; }
+        .blood-title h3 { font-size: 19px; font-weight: 900; letter-spacing: .06em; color: var(--ink); }
+        .blood-title .blood-alias { font-size: 12px; font-weight: 700; color: var(--ink-3); }
         .blood-stone {
-            margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
-            font-size: 12.5px; font-weight: 900; color: #1d2331;
-            background: linear-gradient(135deg, #f0dc9a, #d4af37);
-            padding: 6px 14px; border-radius: 999px; white-space: nowrap;
-            box-shadow: 0 3px 12px rgba(212,175,55,.25);
+            margin-left: auto; display: inline-flex; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 900; color: #fff;
+            background: var(--bc-color, var(--accent));
+            padding: 7px 16px; border-radius: 999px; white-space: nowrap;
+            box-shadow: 0 4px 12px var(--bc-shadow, rgba(156,54,181,.3));
         }
         .blood-stone i { font-size: 12px; }
-        .blood-desc { margin-top: 14px; font-size: 13.5px; line-height: 2.05; color: #a7b1ca; font-weight: 500; }
-        .blood-desc b { color: #e8d48b; }
-        .blood-rows { margin-top: 14px; display: grid; gap: 10px; }
+        .blood-desc { margin-top: 15px; font-size: 13.5px; line-height: 2.05; color: var(--ink-2); }
+        .blood-desc b { color: var(--bc-deep, var(--accent-deep)); }
+        .blood-rows { margin-top: 14px; display: grid; gap: 9px; }
         .blood-row {
-            padding: 11px 15px; border-radius: 10px; font-size: 13.5px; line-height: 2;
-            color: #a7b1ca; font-weight: 500;
-            background: rgba(255,255,255,.03); border-left: 3px solid var(--blood-color, #d4af37);
+            display: flex; gap: 10px; align-items: flex-start;
+            font-size: 13px; line-height: 1.9; color: var(--ink-2);
+            background: #fbfcfe; border-radius: 10px; padding: 11px 15px;
         }
-        .blood-row b.label { display: inline-block; margin-right: 8px; font-size: 12px; font-weight: 900; letter-spacing: .15em; color: var(--blood-label, #e8d48b); }
+        .blood-row b.label {
+            flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+            font-size: 11.5px; font-weight: 900; letter-spacing: .1em; margin-top: 2px;
+            color: var(--bc-deep, var(--accent-deep));
+        }
+        .blood-row b.label i { font-size: 11px; }
+        .blood-row b { color: var(--ink); }
+        .blood-tags { margin-top: 13px; display: flex; flex-wrap: wrap; gap: 8px; }
         .blood-tag {
-            display: inline-block; margin-top: 12px; margin-right: 8px;
-            font-size: 11.5px; font-weight: 800; letter-spacing: .1em;
-            color: var(--blood-label, #e8d48b);
-            border: 1px solid currentColor; border-radius: 999px; padding: 3px 12px; opacity: .9;
+            font-size: 11.5px; font-weight: 800;
+            color: var(--bc-deep, var(--accent-deep));
+            background: var(--bc-soft, #f6ecfa);
+            border-radius: 999px; padding: 4px 13px;
         }
+        .proto-chip {
+            display: inline-flex; align-items: center; gap: 7px;
+            margin-top: 14px; font-size: 11.5px; font-weight: 800; line-height: 1.6;
+            color: #9a6700; background: #fff9db; border: 1px dashed #e0b45c;
+            border-radius: 999px; padding: 5px 14px;
+        }
+        .proto-chip i { color: #d4a017; }
 
         /* 四血脉配色 */
-        .blood-mutate { --blood-color: #c86ee8; --blood-label: #ddb3ee; }
-        .blood-dark   { --blood-color: #6d5aa8; --blood-label: #b0a3d8; }
-        .blood-light  { --blood-color: #f0dc9a; --blood-label: #f4e9c8; }
-        .blood-type   { --blood-color: #4fd1c5; --blood-label: #8ce8df; }
+        .blood-mutate { --bc-color:#c86ee8; --bc-shadow:rgba(200,110,232,.3); --bc-deep:#9c36b5; --bc-soft:#f6ecfa; }
+        .blood-dark   { --bc-color:#6741d9; --bc-shadow:rgba(103,65,217,.3);  --bc-deep:#5f3dc4; --bc-soft:#efeefb; }
+        .blood-light  { --bc-color:#f59f00; --bc-shadow:rgba(245,159,0,.3);   --bc-deep:#e67700; --bc-soft:#fff4e0; }
+        .blood-type   { --bc-color:#12b886; --bc-shadow:rgba(18,184,134,.3);  --bc-deep:#0ca678; --bc-soft:#e6f7f1; }
 
-        /* ---------------- 补充说明 ---------------- */
-        .finale { border-color: rgba(212,175,55,.45); background: linear-gradient(163deg, #33294a 0%, #241f38 55%, #1a1728 100%); }
-        .finale .tablet-head h2 { color: #f4e9c8; }
+        /* ---------------- 口诀 ---------------- */
+        .motto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .motto-card {
+            background: var(--accent-soft); border: 1px solid #e3cdf0; border-radius: 14px;
+            padding: 18px 16px; text-align: center;
+        }
+        .motto-card .motto-txt { font-size: 14.5px; font-weight: 900; color: var(--accent-deep); letter-spacing: .05em; line-height: 1.8; }
+        .motto-card .motto-sub { margin-top: 8px; font-size: 12px; line-height: 1.85; color: var(--ink-2); font-weight: 600; }
 
         /* ---------------- 相关设定 ---------------- */
-        .related { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+        .related { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 38px; }
         .related a {
             display: inline-flex; align-items: center; gap: 9px;
-            font-size: 13.5px; font-weight: 800; color: #e8d48b; text-decoration: none;
-            border: 1px solid rgba(212,175,55,.35); border-radius: 999px;
-            padding: 10px 22px; background: rgba(212,175,55,.06);
+            font-size: 13.5px; font-weight: 800; color: var(--accent-deep); text-decoration: none;
+            border: 1px solid #e3cdf0; border-radius: 999px;
+            padding: 10px 22px; background: #fff;
             transition: border-color .2s ease, background .2s ease;
         }
-        .related a:hover { border-color: rgba(212,175,55,.75); background: rgba(212,175,55,.13); }
+        .related a:hover { border-color: var(--accent); background: var(--accent-soft); }
 
-        .lore-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: #586180; line-height: 2; }
+        .page-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-3); line-height: 2; }
 
         /* ---------------- 入场动画 ---------------- */
-        .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
         .reveal.in { opacity: 1; transform: none; }
         .no-anim .reveal { opacity: 1 !important; transform: none !important; }
         .no-anim .related a { transition: none !important; }
 
+        @media (max-width: 800px) {
+            .origin-grid, .motto-grid { grid-template-columns: 1fr; }
+        }
         @media (max-width: 640px) {
-            .page { padding: 22px 14px 50px; }
-            .hero { padding: 26px 6px 18px; }
-            .hero h1 { font-size: 32px; }
-            .hero-sub { letter-spacing: .3em; text-indent: .3em; }
-            .tablet { padding: 24px 20px 26px; border-radius: 16px; }
-            .tablet-body p { font-size: 14px; line-height: 2.1; }
-            .tablet-head h2 { font-size: 18px; }
+            .page { padding: 18px 14px 50px; }
+            .banner { padding: 30px 22px 28px; border-radius: 18px; }
+            .banner h1 { font-size: 30px; }
+            .card { padding: 20px 16px; }
             .blood-card { padding: 20px 16px; }
             .blood-stone { margin-left: 0; }
         }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125a" defer></script>
-    <script src="js/type-config.js"></script>
+    <script src="js/navbar.js?v=20261125b" defer></script>
     <link rel="stylesheet" href="css/responsive.css?v=20261124f">
 </head>
 <body>
 
-<div class="sky" aria-hidden="true"></div>
-
 <div class="page">
 
-    <header class="hero">
-        <span class="hero-tag"><i class="fa-solid fa-dna"></i> 世界观 · 血脉</span>
+    <header class="banner reveal in">
+        <span class="banner-tag"><i class="fa-solid fa-dna"></i> 世界观 · 血脉</span>
         <h1>血脉图鉴</h1>
-        <div class="hero-sub">石之共鸣 · 四大后天血脉</div>
-        <p class="hero-desc">
-            精灵默认有两条血脉：<b>先天血脉</b>与<b>后天血脉</b>。<br>
-            先天血脉锁死为主属性血脉（双属性则交织成一条），通过属性即可得出——一般不作讨论。<br>
-            真正改变战局、被御兽师们孜孜以求的，是可以通过<b>血脉之石</b>后天唤醒的四条血脉。
+        <div class="banner-sub">石之共鸣 · 四大后天血脉</div>
+        <p class="banner-desc">
+            精灵默认有两条血脉：<b>先天血脉</b>与<b>后天血脉</b>。真正改变战局、被御兽师们孜孜以求的，
+            是可以通过<b>血脉之石</b>后天唤醒的四条血脉。
         </p>
-        <div class="gold-rule"></div>
     </header>
 
-    <!-- 共鸣机制 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">共鸣</span>
-            <h2>血脉之石如何生效</h2>
-            <span class="rule"></span>
+    <!-- 一、先天与后天 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">壹</span>
+            <h2>先天与后天</h2>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <p>御兽师手持血脉之石，与精灵的<b>对应后天血脉</b>产生共鸣——由此唤醒精灵沉睡的力量，掌握（或催动）其强大的技能。</p>
-            <p>血脉不是属性：<span class="kw kw-type" style="background:#6390F0"><i class="fa-solid fa-droplet"></i> 水</span>克制<span class="kw kw-type" style="background:#EE8130"><i class="fa-solid fa-fire"></i> 火</span>，一只拥有【水】血脉的火系精灵，<b>依旧被水系克制</b>。血脉赋予的是「形态与技能」，不是「克制关系」。</p>
+        <div class="origin-grid">
+            <div class="origin-card" style="--oc-color:#8593ad">
+                <h3><i class="fa-solid fa-link"></i> 先天血脉</h3>
+                <p>先天血脉<b>锁死为主属性血脉</b>——如果精灵是双属性，则两条属性交织成一条血脉。</p>
+                <div class="origin-foot">通过属性即可得出，一般不作讨论。</div>
+            </div>
+            <div class="origin-card" style="--oc-color:#9c36b5">
+                <h3><i class="fa-solid fa-bolt"></i> 后天血脉</h3>
+                <p>可后天唤醒，共分<b>四类</b>：异变、黑暗、光明、属性。每一条都对应一颗<b>血脉之石</b>。</p>
+                <div class="origin-foot">设定讨论中「只考虑后天血脉」即指这四条。</div>
+            </div>
         </div>
     </section>
 
-    <!-- 异变血脉 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">其一</span>
-            <h2>异变血脉</h2>
-            <span class="rule"></span>
+    <!-- 二、共鸣机制 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">贰</span>
+            <h2>共鸣机制</h2>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
+        <div class="card">
+            <p style="font-size:13.5px;line-height:2.1;color:var(--ink-2);">
+                御兽师手持<b style="color:var(--ink);">血脉之石</b>，与精灵的<b style="color:var(--ink);">对应后天血脉</b>产生共鸣——
+                由此唤醒精灵沉睡的力量，掌握（或催动）其强大的技能。
+            </p>
+            <div class="rule-callout" style="margin-top:16px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div class="rule-txt">
+                    <b>血脉不是属性，不参与克制。</b><br>
+                    <span class="type-pill" style="background:#6390F0"><i class="fa-solid fa-droplet"></i> 水</span>
+                    克制
+                    <span class="type-pill" style="background:#EE8130"><i class="fa-solid fa-fire"></i> 火</span>——
+                    一只拥有【水】血脉的火系精灵，<b>依旧被水系克制</b>。血脉赋予的是「形态与技能」，不是「克制关系」。
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 三、四大后天血脉 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">叁</span>
+            <h2>四大后天血脉</h2>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="blood-list">
+
             <div class="blood-card blood-mutate">
                 <div class="blood-top">
                     <div class="blood-icon"><i class="fa-solid fa-bolt"></i></div>
                     <div class="blood-title">
                         <h3>异变血脉</h3>
-                        <span class="blood-alias">御兽师持【异变之石】共鸣</span>
+                        <span class="blood-alias">御兽师持【异变之石】与精灵共鸣</span>
                     </div>
                     <span class="blood-stone"><i class="fa-solid fa-gem"></i> 异变之石</span>
                 </div>
                 <div class="blood-desc">
-                    与精灵的【异变血脉】共鸣，使用掌握的强大技能。产生<b>可控、可逆</b>的异变——改变自身形态，大幅度增强战力。
+                    与精灵的【异变血脉】共鸣，使用掌握的强大技能。产生<b>可控、可逆</b>的异变。
                 </div>
                 <div class="blood-rows">
-                    <div class="blood-row"><b class="label">效 果</b>可控、可逆的异变；形态改变；战力大幅度增强。</div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-wand-magic-sparkles"></i>效果</b><span>改变自身形态；战力<b>大幅度增强</b>；异变可控且可逆，随时可以恢复原样。</span></div>
                 </div>
-                <span class="blood-tag">即 Mega 进化 · 超进化</span>
+                <div class="blood-tags">
+                    <span class="blood-tag">形态改变</span>
+                    <span class="blood-tag">战力暴涨</span>
+                    <span class="blood-tag">可控可逆</span>
+                </div>
+                <span class="proto-chip"><i class="fa-solid fa-lightbulb"></i> 原型参照：宝可梦「Mega 进化 / 超级进化」——仅助记，非世界设定</span>
             </div>
-        </div>
-    </section>
 
-    <!-- 黑暗血脉 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">其二</span>
-            <h2>黑暗血脉</h2>
-            <span class="rule"></span>
-        </div>
-        <div class="tablet-body">
             <div class="blood-card blood-dark">
                 <div class="blood-top">
                     <div class="blood-icon"><i class="fa-solid fa-moon"></i></div>
@@ -274,31 +314,26 @@
                     <span class="blood-stone"><i class="fa-solid fa-gem"></i> 黑暗之石</span>
                 </div>
                 <div class="blood-desc">
-                    御兽师持【黑暗之石】与精灵的【黑暗血脉】共鸣，使用掌握的强大技能。对应精灵被称作<b>【邪恶精灵】、【黑暗精灵】</b>。
+                    御兽师持【黑暗之石】与精灵的【黑暗血脉】共鸣，使用掌握的强大技能。
+                    对应精灵被称作<b>【邪恶精灵】、【黑暗精灵】</b>。
                 </div>
                 <div class="blood-rows">
-                    <div class="blood-row"><b class="label">技 能</b>固定四技能；必定拥有一个强大技能（Z 招式）。</div>
-                    <div class="blood-row"><b class="label">形 态</b>形态改变，散发黑暗、堕落、邪恶的气息。</div>
-                    <div class="blood-row"><b class="label">变 化</b>神智提高，招式威力提高——但<b>容易叛逆</b>。</div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-khanda"></i>技能</b><span><b>固定四技能</b>，且必定拥有一个强大技能。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-mask"></i>形态</b><span>形态改变，散发黑暗、堕落、邪恶的气息。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-brain"></i>变化</b><span>神智提高、招式威力提高——但<b>容易叛逆</b>。</span></div>
                 </div>
-                <span class="blood-tag">Z 招式</span>
-                <span class="blood-tag">月（夜）血脉</span>
-                <span class="blood-tag">黑暗精灵</span>
+                <div class="blood-tags">
+                    <span class="blood-tag">固定四技能</span>
+                    <span class="blood-tag">必带强大技能</span>
+                    <span class="blood-tag">容易叛逆</span>
+                    <span class="blood-tag">月（夜）血脉</span>
+                </div>
+                <span class="proto-chip"><i class="fa-solid fa-lightbulb"></i> 原型参照：宝可梦「Z 招式」——仅助记，非世界设定</span>
             </div>
-        </div>
-    </section>
 
-    <!-- 光明血脉 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">其三</span>
-            <h2>光明血脉</h2>
-            <span class="rule"></span>
-        </div>
-        <div class="tablet-body">
             <div class="blood-card blood-light">
                 <div class="blood-top">
-                    <div class="blood-icon" style="color:#3d2f10"><i class="fa-solid fa-sun"></i></div>
+                    <div class="blood-icon" style="color:#7c4a00"><i class="fa-solid fa-sun"></i></div>
                     <div class="blood-title">
                         <h3>光明血脉</h3>
                         <span class="blood-alias">又被叫做显血脉 · 明血脉 · 日（昼）血脉</span>
@@ -306,33 +341,28 @@
                     <span class="blood-stone"><i class="fa-solid fa-gem"></i> 光明之石</span>
                 </div>
                 <div class="blood-desc">
-                    御兽师持【光明之石】与精灵的【光明血脉】共鸣，使用掌握的强大技能。对应精灵被称作<b>【正义精灵】、【光明精灵】</b>。
+                    御兽师持【光明之石】与精灵的【光明血脉】共鸣，使用掌握的强大技能。
+                    对应精灵被称作<b>【正义精灵】、【光明精灵】</b>。
                 </div>
                 <div class="blood-rows">
-                    <div class="blood-row"><b class="label">技 能</b>固定四技能——随机其他属性技能，不一定本系；必定拥有一个强大技能（Z 招式）。</div>
-                    <div class="blood-row"><b class="label">形 态</b>形态改变，散发光明、神圣、正义的气息。</div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-khanda"></i>技能</b><span><b>固定四技能</b>——随机其他属性的技能，不一定本系；且必定拥有一个强大技能。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-mask"></i>形态</b><span>形态改变，散发光明、神圣、正义的气息。</span></div>
                 </div>
-                <span class="blood-tag">Z 招式</span>
-                <span class="blood-tag">日（昼）血脉</span>
-                <span class="blood-tag">正义精灵</span>
+                <div class="blood-tags">
+                    <span class="blood-tag">固定四技能</span>
+                    <span class="blood-tag">技能随机他系</span>
+                    <span class="blood-tag">日（昼）血脉</span>
+                    <span class="blood-tag">正义精灵</span>
+                </div>
+                <span class="proto-chip"><i class="fa-solid fa-lightbulb"></i> 原型参照：宝可梦「Z 招式」——仅助记，非世界设定</span>
             </div>
-        </div>
-    </section>
 
-    <!-- 属性血脉 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">其四</span>
-            <h2>属性血脉</h2>
-            <span class="rule"></span>
-        </div>
-        <div class="tablet-body">
             <div class="blood-card blood-type">
                 <div class="blood-top">
                     <div class="blood-icon"><i class="fa-solid fa-atom"></i></div>
                     <div class="blood-title">
                         <h3>属性血脉</h3>
-                        <span class="blood-alias">御兽师持【属性之石】共鸣</span>
+                        <span class="blood-alias">御兽师持【属性之石】与精灵共鸣</span>
                     </div>
                     <span class="blood-stone"><i class="fa-solid fa-gem"></i> 属性之石</span>
                 </div>
@@ -340,30 +370,43 @@
                     与精灵的【属性血脉】共鸣，精灵会多出<b>一个血脉技能</b>与<b>一个属性技能</b>。
                 </div>
                 <div class="blood-rows">
-                    <div class="blood-row"><b class="label">属性技能</b>【愿力冲击】——固定技能，所有精灵都有。即不改变属性的太晶化 + 太晶爆发；技能属性为属性血脉所代表的属性。</div>
-                    <div class="blood-row"><b class="label">血脉技能</b>取决于所在族群的【族尊】所给予的技能，即对应的族群技能——<b>随时有可能改变</b>，看族尊的想法。【族尊】除了本系属性技能，还需要向其他属性的精灵借技能，拿来当本族群的血脉属性技能。</div>
-                    <div class="blood-row"><b class="label">克 制</b>不改变精灵属性：假如水克制火，火精灵拥有水血脉，<b>依旧被克制</b>。</div>
-                    <div class="blood-row"><b class="label">形 态</b>小幅度改变精灵模样，偏向对应属性的特征。</div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-star"></i>属性技能</b><span>【愿力冲击】——固定技能，所有精灵都有。即<b>不改变属性的太晶化 + 太晶爆发</b>；技能属性为属性血脉所代表的属性。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-people-roof"></i>血脉技能</b><span>取决于所在族群【族尊】给予的族群技能——<b>随时有可能改变</b>，看族尊的想法。族尊除了本系技能，还需向其他属性的精灵<b>借技能</b>，拿来当本族群的血脉属性技能。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-shield-halved"></i>克制</b><span>不改变精灵属性：水克火，火精灵拥有水血脉，<b>依旧被克制</b>。</span></div>
+                    <div class="blood-row"><b class="label"><i class="fa-solid fa-wand-magic-sparkles"></i>形态</b><span>小幅度改变精灵模样，偏向对应属性的特征。</span></div>
                 </div>
-                <span class="blood-tag">愿力冲击</span>
-                <span class="blood-tag">太晶化</span>
-                <span class="blood-tag">族群技能</span>
+                <div class="blood-tags">
+                    <span class="blood-tag">愿力冲击</span>
+                    <span class="blood-tag">族群技能</span>
+                    <span class="blood-tag">不改变克制</span>
+                    <span class="blood-tag">模样微变</span>
+                </div>
+                <span class="proto-chip"><i class="fa-solid fa-lightbulb"></i> 原型参照：宝可梦「太晶化 + 太晶爆发」；「愿力冲击」名称参考《洛克王国》——仅助记，非世界设定</span>
             </div>
+
         </div>
     </section>
 
-    <!-- 补充 -->
-    <section class="tablet finale reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">补律</span>
+    <!-- 四、口诀 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">肆</span>
             <h2>血脉口诀</h2>
-            <span class="rule"></span>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <p><b style="color:#e8d48b;">先天锁主系，后天四选一。</b></p>
-            <p><b style="color:#e8d48b;">石为钥，血为门；共鸣起，形态变。</b></p>
-            <p><b style="color:#e8d48b;">血脉不渡克制——水仍灭火，火仍畏水。</b></p>
-            <p style="font-size:13px;color:#7f8aac;">* 一般不考虑先天血脉（通过属性即可得出），只考虑后天血脉。</p>
+        <div class="motto-grid">
+            <div class="motto-card">
+                <div class="motto-txt">先天锁主系<br>后天四选一</div>
+                <div class="motto-sub">先天血脉看属性即可得出，只讨论后天四条。</div>
+            </div>
+            <div class="motto-card">
+                <div class="motto-txt">石为钥 · 血为门<br>共鸣起 · 形态变</div>
+                <div class="motto-sub">血脉之石是钥匙，共鸣唤醒沉睡的力量。</div>
+            </div>
+            <div class="motto-card">
+                <div class="motto-txt">血脉不渡克制<br>水仍灭火</div>
+                <div class="motto-sub">血脉给形态与技能，不给克制关系。</div>
+            </div>
         </div>
     </section>
 
@@ -373,7 +416,7 @@
         <a href="lore.html"><i class="fa-solid fa-tablets"></i> 元域演化史</a>
     </nav>
 
-    <footer class="lore-footer">
+    <footer class="page-footer">
         本篇为世界观设定文本，辑录自「传世石板」与精灵协会内部档案，仅作设定呈现。
     </footer>
 
@@ -382,54 +425,8 @@
 <script>
 (function () {
     'use strict';
-
-    /* ---------- 关键词胶囊（与 lore.html 同款逻辑） ---------- */
-    var typeMap = {};
-    try {
-        if (typeof typeData !== 'undefined' && typeof typeData.forEach === 'function') {
-            typeData.forEach(function (t) { typeMap[t.name] = t; });
-        }
-    } catch (e) { typeMap = {}; }
-    var alias = { '岩': '岩石', '地': '地面' };
-
-    function buildPill(word) {
-        var name = alias[word] || word;
-        var t = typeMap[name];
-        var span = document.createElement('span');
-        if (t) {
-            span.className = 'kw kw-type';
-            span.style.background = t.color;
-            span.innerHTML = '<i class="' + t.icon + '"></i>' + word;
-        } else {
-            span.className = 'kw kw-meta';
-            span.innerHTML = word;
-        }
-        return span;
-    }
-
-    document.querySelectorAll('.tablet-body').forEach(function (block) {
-        var walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null);
-        var nodes = [];
-        while (walker.nextNode()) {
-            if (walker.currentNode.nodeValue.indexOf('【') > -1) nodes.push(walker.currentNode);
-        }
-        nodes.forEach(function (node) {
-            var frag = document.createDocumentFragment();
-            var rest = node.nodeValue;
-            var re = /【(.+?)】/g;
-            var m, last = 0;
-            while ((m = re.exec(rest)) !== null) {
-                if (m.index > last) frag.appendChild(document.createTextNode(rest.slice(last, m.index)));
-                frag.appendChild(buildPill(m[1]));
-                last = m.index + m[0].length;
-            }
-            if (last < rest.length) frag.appendChild(document.createTextNode(rest.slice(last)));
-            node.parentNode.replaceChild(frag, node);
-        });
-    });
-
-    /* ---------- 入场动画 ---------- */
-    var revealed = document.querySelectorAll('.reveal');
+    /* ---------- 入场动画：滚到视口内淡入（.no-anim 时 CSS 直接全显） ---------- */
+    var revealed = document.querySelectorAll('.reveal:not(.in)');
     var noAnim = false;
     try { noAnim = localStorage.getItem('vowmon_anim_on') === 'false'; } catch (e) { noAnim = false; }
     if (noAnim || !('IntersectionObserver' in window)) {
@@ -439,7 +436,7 @@
             entries.forEach(function (en) {
                 if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
             });
-        }, { threshold: 0.12 });
+        }, { threshold: 0.08 });
         revealed.forEach(function (el) { io.observe(el); });
     }
 })();

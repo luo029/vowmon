@@ -9,409 +9,456 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
+        :root {
+            --accent: #0ca678;
+            --accent-soft: #e6f7f1;
+            --accent-deep: #087f5b;
+            --ink: #243044;
+            --ink-2: #4a5872;
+            --ink-3: #8593ad;
+            --line: #e4e9f2;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-            background: #0b0e1a;
-            color: #c9d2e3;
+            background: #f6f8fc;
+            color: var(--ink-2);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* ---------------- 星空背景 ---------------- */
-        .sky {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background:
-                radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9) 50%, transparent 51%),
-                radial-gradient(1px 1px at 28% 64%, rgba(255,255,255,.65) 50%, transparent 51%),
-                radial-gradient(1.5px 1.5px at 44% 32%, rgba(214,226,255,.8) 50%, transparent 51%),
-                radial-gradient(1px 1px at 62% 78%, rgba(255,255,255,.6) 50%, transparent 51%),
-                radial-gradient(1.8px 1.8px at 76% 22%, rgba(255,244,214,.85) 50%, transparent 51%),
-                radial-gradient(1px 1px at 88% 55%, rgba(255,255,255,.55) 50%, transparent 51%),
-                radial-gradient(1.2px 1.2px at 8% 82%, rgba(214,226,255,.7) 50%, transparent 51%),
-                radial-gradient(1px 1px at 52% 8%, rgba(255,255,255,.5) 50%, transparent 51%),
-                radial-gradient(1.4px 1.4px at 92% 88%, rgba(255,244,214,.7) 50%, transparent 51%),
-                radial-gradient(1px 1px at 36% 92%, rgba(255,255,255,.5) 50%, transparent 51%),
-                radial-gradient(420px 300px at 82% 12%, rgba(111,53,252,.14), transparent 70%),
-                radial-gradient(520px 380px at 12% 88%, rgba(99,144,240,.12), transparent 70%),
-                radial-gradient(380px 300px at 50% 55%, rgba(212,175,55,.06), transparent 70%);
-        }
-        .sky::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(1200px 600px at 50% -10%, rgba(63,76,120,.35), transparent 65%);
-        }
+        .page { max-width: 960px; margin: 0 auto; padding: 30px 20px 70px; }
 
-        .page {
-            position: relative; z-index: 1;
-            max-width: 920px; margin: 0 auto;
-            padding: 34px 20px 70px;
+        /* ---------------- 页首横幅 ---------------- */
+        .banner {
+            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #087f5b 0%, #0ca678 55%, #15aabf 100%);
+            border-radius: 22px; padding: 40px 38px 36px; color: #fff;
+            box-shadow: 0 14px 38px rgba(12,166,120,.26);
         }
-
-        /* ---------------- 卷首 ---------------- */
-        .hero { text-align: center; padding: 40px 16px 26px; }
-        .hero-tag {
+        .banner::after {
+            content: ''; position: absolute; right: -70px; top: -70px;
+            width: 240px; height: 240px; border-radius: 50%;
+            background: rgba(255,255,255,.1); pointer-events: none;
+        }
+        .banner::before {
+            content: ''; position: absolute; right: 40px; bottom: -90px;
+            width: 190px; height: 190px; border-radius: 50%;
+            background: rgba(255,255,255,.08); pointer-events: none;
+        }
+        .banner-tag {
             display: inline-flex; align-items: center; gap: 8px;
-            font-size: 12px; font-weight: 800; letter-spacing: .35em; text-indent: .35em;
-            color: #d4af37; border: 1px solid rgba(212,175,55,.4);
-            padding: 6px 16px; border-radius: 999px;
-            background: rgba(212,175,55,.07);
+            font-size: 12px; font-weight: 800; letter-spacing: .3em; text-indent: .3em;
+            background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
+            padding: 6px 15px; border-radius: 999px;
         }
-        .hero h1 {
-            margin-top: 22px; font-size: 44px; font-weight: 900; letter-spacing: .12em;
-            background: linear-gradient(180deg, #f4e9c8 20%, #d4af37 90%);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            text-shadow: 0 0 40px rgba(212,175,55,.18);
+        .banner h1 { margin-top: 16px; font-size: 38px; font-weight: 900; letter-spacing: .1em; }
+        .banner .banner-sub { margin-top: 10px; font-size: 14px; font-weight: 700; letter-spacing: .12em; opacity: .88; }
+        .banner .banner-desc { margin-top: 18px; max-width: 660px; font-size: 13.5px; line-height: 2; opacity: .9; }
+        .banner .banner-desc b { color: #ffe066; font-weight: 800; }
+
+        /* ---------------- 分区标题 ---------------- */
+        .sec { margin-top: 38px; }
+        .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .sec-no {
+            width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 900; color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            box-shadow: 0 4px 12px rgba(12,166,120,.3);
         }
-        .hero-sub { margin-top: 12px; font-size: 13px; font-weight: 700; letter-spacing: .5em; text-indent: .5em; color: #6f7ba0; }
-        .hero-desc { margin: 26px auto 0; max-width: 580px; font-size: 14px; line-height: 2.1; color: #9aa5c4; font-weight: 600; }
-        .hero-desc b { color: #e8d48b; }
-        .gold-rule { width: 220px; height: 1px; margin: 26px auto 0; background: linear-gradient(90deg, transparent, rgba(212,175,55,.75), transparent); position: relative; }
-        .gold-rule::after {
-            content: '✦'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%);
-            color: #d4af37; font-size: 13px; background: #0b0e1a; padding: 0 10px;
+        .sec-head h2 { font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: .06em; }
+        .sec-head .sec-rule { flex: 1; height: 1px; background: var(--line); }
+
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 26px; box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
 
-        /* ---------------- 石板卡 ---------------- */
-        .tablet {
-            margin-top: 34px;
-            background: linear-gradient(163deg, #2b3244 0%, #1d2331 58%, #171c28 100%);
-            border: 1px solid rgba(212,175,55,.30);
-            border-radius: 20px;
-            padding: 30px 34px 32px;
-            box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
-            position: relative;
-        }
-        .tablet::before {
-            content: ''; position: absolute; inset: 7px;
-            border: 1px solid rgba(212,175,55,.13); border-radius: 14px; pointer-events: none;
-        }
-        .tablet-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-        .chapter-no {
-            flex-shrink: 0; font-size: 12px; font-weight: 900; letter-spacing: .2em; text-indent: .2em;
-            color: #1d2331; background: linear-gradient(135deg, #f0dc9a, #d4af37);
-            padding: 6px 13px; border-radius: 999px;
-        }
-        .tablet-head h2 { font-size: 21px; font-weight: 900; letter-spacing: .1em; color: #f0e6c8; }
-        .tablet-head .rule { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,.45), transparent); }
-        .tablet-body p { font-size: 15px; line-height: 2.25; color: #b9c2d8; margin-bottom: 14px; font-weight: 500; }
-        .tablet-body p:last-child { margin-bottom: 0; }
-
-        /* ---------------- 关键词胶囊 ---------------- */
-        .kw { display: inline-flex; align-items: center; gap: 5px; padding: 2px 11px; border-radius: 999px; font-size: 13px; font-weight: 800; line-height: 1.7; vertical-align: 1px; white-space: nowrap; }
-        .kw i { font-size: 11px; }
-        .kw-type { color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
-        .kw-meta {
-            color: #f6efd8;
-            background: linear-gradient(135deg, rgba(139,92,246,.85), rgba(212,175,55,.85));
-            box-shadow: 0 2px 10px rgba(111,53,252,.3);
-        }
-
-        /* ---------------- 三维卡 ---------------- */
+        /* ---------------- 三维 ---------------- */
         .dim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .dim-card {
-            border: 1px solid rgba(212,175,55,.28); border-radius: 14px;
-            background: rgba(11,14,26,.55); padding: 20px 18px;
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 22px 20px; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
-        .dim-card .dim-icon {
-            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-            font-size: 19px; color: #1d2331;
-            background: linear-gradient(135deg, #f0dc9a, #d4af37);
-            border-radius: 12px; box-shadow: 0 4px 14px rgba(212,175,55,.3);
+        .dim-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--dim-color, var(--accent)); }
+        .dim-icon {
+            width: 46px; height: 46px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; background: var(--dim-color, var(--accent));
+            box-shadow: 0 5px 14px var(--dim-shadow, rgba(12,166,120,.3));
         }
-        .dim-card h3 { margin-top: 14px; font-size: 16px; font-weight: 900; color: #f0e6c8; letter-spacing: .08em; }
-        .dim-card p { font-size: 13px; line-height: 1.95; color: #a7b1ca; margin-top: 9px; font-weight: 500; }
-        .dim-card p b { color: #e8d48b; }
+        .dim-card h3 { margin-top: 14px; font-size: 17px; font-weight: 900; color: var(--ink); }
+        .dim-card h3 small { font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--ink-3); margin-left: 8px; }
+        .dim-card p { margin-top: 10px; font-size: 13px; line-height: 1.95; color: var(--ink-2); }
+        .dim-card p b { color: var(--dim-deep, var(--accent-deep)); }
 
         /* ---------------- 表格 ---------------- */
-        .table-scroll { overflow-x: auto; border-radius: 14px; border: 1px solid rgba(212,175,55,.25); isolation: isolate; }
-        table.rank-table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        .rank-table thead { background: rgba(212,175,55,.14); }
-        .rank-table th { padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 900; letter-spacing: .12em; color: #e8d48b; white-space: nowrap; border-bottom: 1px solid rgba(212,175,55,.3); }
-        .rank-table td { padding: 12px 14px; font-size: 13.5px; color: #b9c2d8; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: middle; line-height: 1.8; }
+        .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; isolation: isolate; }
+        table.rank-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        .rank-table thead { background: var(--accent-soft); }
+        .rank-table th { padding: 13px 16px; text-align: left; font-size: 12.5px; font-weight: 900; letter-spacing: .1em; color: var(--accent-deep); white-space: nowrap; border-bottom: 1px solid #bfe8da; }
+        .rank-table td { padding: 13px 16px; font-size: 13.5px; color: var(--ink-2); border-bottom: 1px solid var(--line); vertical-align: middle; line-height: 1.8; background: #fff; }
         .rank-table tbody tr:last-child td { border-bottom: 0; }
-        .rank-table tbody tr:hover td { background: rgba(212,175,55,.05); }
+        .rank-table tbody tr:hover td { background: #f7fcfa; }
         .rank-table td.center, .rank-table th.center { text-align: center; }
         .tr-badge {
             display: inline-flex; align-items: center; gap: 7px;
             padding: 4px 13px; border-radius: 999px;
             font-size: 13px; font-weight: 900; color: #fff; white-space: nowrap;
-            box-shadow: 0 3px 12px rgba(0,0,0,.4);
+            box-shadow: 0 3px 10px rgba(36,48,68,.18);
         }
-        .tr-lv { font-size: 11px; font-weight: 800; opacity: .85; }
-        .pet-tag { display: inline-block; font-size: 12px; font-weight: 800; color: #9fc3f5; border: 1px solid rgba(99,144,240,.4); border-radius: 999px; padding: 2px 10px; background: rgba(99,144,240,.08); white-space: nowrap; }
-        .num { font-variant-numeric: tabular-nums; font-weight: 800; color: #e8d48b; }
+        .tr-lv { font-size: 11px; font-weight: 800; opacity: .88; }
+        .pet-tag {
+            display: inline-block; font-size: 12px; font-weight: 800;
+            color: var(--accent-deep); background: var(--accent-soft);
+            border: 1px solid #bfe8da; border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+        }
+        .num { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--ink); }
+        .table-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); line-height: 2; font-weight: 600; }
+        .table-note b { color: var(--ink-2); }
 
-        /* ---------------- 规则行 ---------------- */
+        /* ---------------- 规则 ---------------- */
+        .rule-list { display: grid; gap: 10px; }
         .rule-row {
-            margin-top: 12px; padding: 13px 16px; border-radius: 10px;
-            font-size: 13.5px; line-height: 2.05; color: #a7b1ca; font-weight: 500;
-            background: rgba(255,255,255,.03); border-left: 3px solid rgba(212,175,55,.45);
+            display: flex; gap: 12px; align-items: flex-start;
+            background: #fbfcfe; border: 1px solid var(--line); border-radius: 12px;
+            padding: 14px 17px;
         }
-        .rule-row b.label { display: inline-block; margin-right: 8px; font-size: 12px; font-weight: 900; letter-spacing: .15em; color: #e8d48b; }
-        .rule-row.warn { border-left-color: rgba(224,87,123,.6); }
-        .rule-row.warn b.label { color: #f2a0b5; }
-        .rule-row.tip { border-left-color: rgba(99,144,240,.55); }
-        .rule-row.tip b.label { color: #9fc3f5; }
+        .rule-row .rule-ico {
+            flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            background: var(--rule-bg, var(--accent-soft)); color: var(--rule-fg, var(--accent-deep));
+        }
+        .rule-row .rule-txt { font-size: 13.5px; line-height: 1.95; color: var(--ink-2); }
+        .rule-row .rule-txt b.label { color: var(--rule-fg, var(--accent-deep)); margin-right: 6px; }
+        .rule-row .rule-txt b { color: var(--ink); }
+        .rule-row.danger { --rule-bg: #fff0f3; --rule-fg: #c2255c; border-color: #ffd3dd; background: #fffbfc; }
+        .rule-row.tip { --rule-bg: #e7f5ff; --rule-fg: #1971c2; }
 
-        /* ---------------- 功法三卡 ---------------- */
+        /* ---------------- 测灵 ---------------- */
+        .cup-card {
+            display: flex; gap: 18px; align-items: flex-start;
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 26px; box-shadow: 0 3px 14px rgba(36,48,68,.05);
+        }
+        .cup-icon {
+            flex-shrink: 0; width: 56px; height: 56px; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: #fff;
+            background: linear-gradient(135deg, #7048e8, #9c36b5);
+            box-shadow: 0 6px 16px rgba(156,54,181,.3);
+        }
+        .cup-txt h3 { font-size: 16px; font-weight: 900; color: var(--ink); }
+        .cup-txt p { margin-top: 9px; font-size: 13px; line-height: 2; color: var(--ink-2); }
+        .cup-txt p b { color: #862e9c; }
+
+        /* ---------------- 功法 ---------------- */
         .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .method-card {
-            border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
-            background: rgba(11,14,26,.55); padding: 20px 18px; text-align: center;
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 20px; text-align: center; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(36,48,68,.05);
         }
-        .method-card .method-icon { font-size: 26px; color: #d4af37; }
-        .method-card h3 { margin-top: 12px; font-size: 16px; font-weight: 900; color: #f0e6c8; letter-spacing: .08em; }
-        .method-card p { font-size: 12.5px; line-height: 1.9; color: #a7b1ca; margin-top: 8px; font-weight: 500; }
-        .method-card .method-tier { margin-top: 10px; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; color: #8fd0b0; }
+        .method-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--mc-color, var(--accent)); }
+        .method-icon {
+            width: 48px; height: 48px; margin: 0 auto; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; background: var(--mc-color, var(--accent));
+            box-shadow: 0 5px 14px var(--mc-shadow, rgba(12,166,120,.3));
+        }
+        .method-card h3 { margin-top: 13px; font-size: 16px; font-weight: 900; color: var(--ink); letter-spacing: .06em; }
+        .method-card p { margin-top: 9px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
+        .method-card .method-tier {
+            margin-top: 12px; display: inline-block;
+            font-size: 11.5px; font-weight: 800; letter-spacing: .1em;
+            color: var(--mc-deep, var(--accent-deep));
+            background: var(--mc-soft, var(--accent-soft));
+            border-radius: 999px; padding: 4px 13px;
+        }
 
-        /* ---------------- 补充 ---------------- */
-        .finale { border-color: rgba(212,175,55,.45); background: linear-gradient(163deg, #33294a 0%, #241f38 55%, #1a1728 100%); }
-        .finale .tablet-head h2 { color: #f4e9c8; }
+        /* ---------------- 天赋 ---------------- */
+        .talent-card {
+            display: flex; gap: 16px; align-items: flex-start;
+            background: linear-gradient(135deg, #fff8e6, #fff4d6);
+            border: 1px solid #f3d9a4; border-radius: 16px; padding: 24px 26px;
+        }
+        .talent-icon {
+            flex-shrink: 0; width: 52px; height: 52px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: #8a5a00;
+            background: linear-gradient(135deg, #ffe066, #fcc419);
+            box-shadow: 0 5px 14px rgba(250,176,5,.3);
+        }
+        .talent-txt h3 { font-size: 16px; font-weight: 900; color: #8a5a00; }
+        .talent-txt p { margin-top: 9px; font-size: 13px; line-height: 2; color: #7c6335; }
+        .talent-txt p b { color: #5c4200; }
 
         /* ---------------- 相关设定 ---------------- */
-        .related { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+        .related { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 38px; }
         .related a {
             display: inline-flex; align-items: center; gap: 9px;
-            font-size: 13.5px; font-weight: 800; color: #e8d48b; text-decoration: none;
-            border: 1px solid rgba(212,175,55,.35); border-radius: 999px;
-            padding: 10px 22px; background: rgba(212,175,55,.06);
+            font-size: 13.5px; font-weight: 800; color: var(--accent-deep); text-decoration: none;
+            border: 1px solid #bfe8da; border-radius: 999px;
+            padding: 10px 22px; background: #fff;
             transition: border-color .2s ease, background .2s ease;
         }
-        .related a:hover { border-color: rgba(212,175,55,.75); background: rgba(212,175,55,.13); }
+        .related a:hover { border-color: var(--accent); background: var(--accent-soft); }
 
-        .lore-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: #586180; line-height: 2; }
+        .page-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-3); line-height: 2; }
 
         /* ---------------- 入场动画 ---------------- */
-        .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
         .reveal.in { opacity: 1; transform: none; }
         .no-anim .reveal { opacity: 1 !important; transform: none !important; }
         .no-anim .related a { transition: none !important; }
 
-        @media (max-width: 640px) {
-            .page { padding: 22px 14px 50px; }
-            .hero { padding: 26px 6px 18px; }
-            .hero h1 { font-size: 32px; }
-            .hero-sub { letter-spacing: .3em; text-indent: .3em; }
-            .tablet { padding: 24px 20px 26px; border-radius: 16px; }
-            .tablet-body p { font-size: 14px; line-height: 2.1; }
-            .tablet-head h2 { font-size: 18px; }
+        @media (max-width: 800px) {
             .dim-grid, .method-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .page { padding: 18px 14px 50px; }
+            .banner { padding: 30px 22px 28px; border-radius: 18px; }
+            .banner h1 { font-size: 30px; }
+            .card { padding: 20px 16px; }
+            .cup-card, .talent-card { padding: 20px 16px; }
         }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125a" defer></script>
-    <script src="js/type-config.js"></script>
+    <script src="js/navbar.js?v=20261125b" defer></script>
     <link rel="stylesheet" href="css/responsive.css?v=20261124f">
 </head>
 <body>
 
-<div class="sky" aria-hidden="true"></div>
-
 <div class="page">
 
-    <header class="hero">
-        <span class="hero-tag"><i class="fa-solid fa-user-shield"></i> 世界观 · 御兽师</span>
+    <header class="banner reveal in">
+        <span class="banner-tag"><i class="fa-solid fa-user-shield"></i> 世界观 · 御兽师</span>
         <h1>御兽师图鉴</h1>
-        <div class="hero-sub">肉身 · 精神 · 能量 —— 三维立身</div>
-        <p class="hero-desc">
-            御兽师与精灵签订契约，契约的是精灵的<b>【力】与【位】</b>。<br>
-            承载契约的，是御兽师自身的三维：<b>肉身</b>、<b>精神</b>、<b>能量</b>——三项必须达标，才能契约精灵，或让精灵进化。
+        <div class="banner-sub">肉身 · 精神 · 能量 —— 三维立身</div>
+        <p class="banner-desc">
+            御兽师与精灵签订契约，契约的是精灵的<b>【力】与【位】</b>。
+            承载契约的，是御兽师自身的三维——<b>肉身</b>、<b>精神</b>、<b>能量</b>，三项必须达标，
+            才能契约精灵，或让精灵进化。
         </p>
-        <div class="gold-rule"></div>
     </header>
 
-    <!-- 三维属性 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">三维</span>
-            <h2>肉身 · 精神 · 能量</h2>
-            <span class="rule"></span>
+    <!-- 一、三维 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">壹</span>
+            <h2>三维立身</h2>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <div class="dim-grid">
-                <div class="dim-card">
-                    <div class="dim-icon"><i class="fa-solid fa-dumbbell"></i></div>
-                    <h3>肉身</h3>
-                    <p>一个人<b>综合素质</b>的反映——肉体强度，基本包含了攻击、速度等。</p>
-                </div>
-                <div class="dim-card">
-                    <div class="dim-icon"><i class="fa-solid fa-brain"></i></div>
-                    <h3>精神</h3>
-                    <p>一个人的<b>灵魂强度</b>，越强越适合当御兽师，也越适合构建<b>技能核心</b>。训练家【精神】提升后，可以同步御兽，让御兽加快技能领悟。</p>
-                </div>
-                <div class="dim-card">
-                    <div class="dim-icon"><i class="fa-solid fa-battery-three-quarters"></i></div>
-                    <h3>能量</h3>
-                    <p>支撑御兽师通过<b>【契约】</b>催动精灵战斗的消耗能量，相当于<b>续航蓝条</b>——维持御兽空间就持续消耗，战斗时加剧。</p>
-                </div>
+        <div class="dim-grid">
+            <div class="dim-card" style="--dim-color:#e8590c; --dim-shadow:rgba(232,89,12,.3); --dim-deep:#d9480f">
+                <div class="dim-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                <h3>肉身 <small>BODY</small></h3>
+                <p>一个人<b>综合素质</b>的反映——肉体强度，基本包含了攻击、速度等。</p>
+            </div>
+            <div class="dim-card" style="--dim-color:#7048e8; --dim-shadow:rgba(112,72,232,.3); --dim-deep:#6741d9">
+                <div class="dim-icon"><i class="fa-solid fa-brain"></i></div>
+                <h3>精神 <small>MIND</small></h3>
+                <p>一个人的<b>灵魂强度</b>，越强越适合当御兽师，也越适合构建<b>技能核心</b>。精神提升后可同步御兽，让御兽加快技能领悟。</p>
+            </div>
+            <div class="dim-card" style="--dim-color:#1971c2; --dim-shadow:rgba(25,113,194,.3); --dim-deep:#1864ab">
+                <div class="dim-icon"><i class="fa-solid fa-battery-three-quarters"></i></div>
+                <h3>能量 <small>ENERGY</small></h3>
+                <p>支撑御兽师通过<b>【契约】</b>催动精灵战斗的消耗能量，相当于<b>续航蓝条</b>——维持御兽空间就持续消耗，战斗时加剧。</p>
             </div>
         </div>
     </section>
 
-    <!-- 等级对照 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">七档</span>
-            <h2>御兽师等级对照</h2>
-            <span class="rule"></span>
+    <!-- 二、等级对照 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">贰</span>
+            <h2>等级与契约对照表</h2>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <div class="table-scroll">
-                <table class="rank-table">
-                    <thead>
-                        <tr>
-                            <th>御兽师等级</th>
-                            <th class="center">等级区间</th>
-                            <th class="center">对应精灵段位</th>
-                            <th class="center">契约需求（肉身 / 精神）</th>
-                            <th class="center">能量上限</th>
-                            <th class="center">空间内消耗</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#8a94ad,#5f6a83)">初生 <span class="tr-lv">1-15</span></span></td>
-                            <td class="center">1 - 15 级</td>
-                            <td class="center"><span class="pet-tag">初灵 1-15</span></td>
-                            <td class="center"><span class="num">1 / 1</span></td>
-                            <td class="center"><span class="num">10</span></td>
-                            <td class="center"><span class="num">1</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#5aa2e8,#3c7fc0)">精英 <span class="tr-lv">16-35</span></span></td>
-                            <td class="center">16 - 35 级</td>
-                            <td class="center"><span class="pet-tag">升灵 16-36</span></td>
-                            <td class="center"><span class="num">10 / 10</span></td>
-                            <td class="center"><span class="num">300</span></td>
-                            <td class="center"><span class="num">10</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#48b06a,#2f8a4c)">职业 <span class="tr-lv">36-50</span></span></td>
-                            <td class="center">36 - 50 级</td>
-                            <td class="center"><span class="pet-tag">族尊 37-50</span></td>
-                            <td class="center"><span class="num">100 / 100</span></td>
-                            <td class="center"><span class="num">3,000</span></td>
-                            <td class="center"><span class="num">100</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#d4af37,#a8862a)">枢座 <span class="tr-lv">51-60</span></span></td>
-                            <td class="center">51 - 60 级</td>
-                            <td class="center"><span class="pet-tag">基座 51-60</span></td>
-                            <td class="center"><span class="num">200 / 200</span></td>
-                            <td class="center"><span class="num">5,000</span></td>
-                            <td class="center"><span class="num">200</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#e8894a,#c26a30)">承相 <span class="tr-lv">61-70</span></span></td>
-                            <td class="center">61 - 70 级</td>
-                            <td class="center"><span class="pet-tag">灵相 61-70</span></td>
-                            <td class="center"><span class="num">500 / 500</span></td>
-                            <td class="center"><span class="num">20,000</span></td>
-                            <td class="center"><span class="num">500</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#e0577b,#b83a5c)">司律 <span class="tr-lv">71-89</span></span></td>
-                            <td class="center">71 - 89 级</td>
-                            <td class="center"><span class="pet-tag">律冠 71-89</span></td>
-                            <td class="center"><span class="num">1,000 / 1,000</span></td>
-                            <td class="center"><span class="num">50,000</span></td>
-                            <td class="center"><span class="num">1,000</span> 单位 / 小时</td>
-                        </tr>
-                        <tr>
-                            <td><span class="tr-badge" style="background:linear-gradient(135deg,#a86ee8,#7d4cc0)">掌元 <span class="tr-lv">90-99</span></span></td>
-                            <td class="center">90 - 99 级</td>
-                            <td class="center"><span class="pet-tag">元灵 90-99</span></td>
-                            <td class="center"><span class="num">3,000 / 3,000</span></td>
-                            <td class="center"><span class="num">100,000</span></td>
-                            <td class="center"><span class="num">3,000</span> 单位 / 小时</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p style="margin-top:14px;font-size:12.5px;color:#7f8aac;line-height:2;font-weight:600;">
-                注：契约需求为契约该段位精灵所需的<b style="color:#e8d48b;">肉身 / 精神</b>数值；「空间内消耗」为精灵待在御兽空间时每小时消耗的能量。
-                精灵放出御兽空间（非战斗）时消耗极少——如初灵段位，放出时仅 <b style="color:#e8d48b;">1</b> 单位 / 天。
-            </p>
+        <div class="table-scroll">
+            <table class="rank-table">
+                <thead>
+                    <tr>
+                        <th>御兽师等级</th>
+                        <th class="center">等级区间</th>
+                        <th class="center">对应精灵段位</th>
+                        <th class="center">契约需求<br>（肉身 / 精神）</th>
+                        <th class="center">能量上限</th>
+                        <th class="center">空间内消耗</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b)">初生 <span class="tr-lv">1-15</span></span></td>
+                        <td class="center">1 - 15 级</td>
+                        <td class="center"><span class="pet-tag">初灵 1-15</span></td>
+                        <td class="center"><span class="num">1 / 1</span></td>
+                        <td class="center"><span class="num">10</span></td>
+                        <td class="center"><span class="num">1</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#4dabf7,#1971c2)">精英 <span class="tr-lv">16-35</span></span></td>
+                        <td class="center">16 - 35 级</td>
+                        <td class="center"><span class="pet-tag">升灵 16-36</span></td>
+                        <td class="center"><span class="num">10 / 10</span></td>
+                        <td class="center"><span class="num">300</span></td>
+                        <td class="center"><span class="num">10</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#51cf66,#2f9e44)">职业 <span class="tr-lv">36-50</span></span></td>
+                        <td class="center">36 - 50 级</td>
+                        <td class="center"><span class="pet-tag">族尊 37-50</span></td>
+                        <td class="center"><span class="num">100 / 100</span></td>
+                        <td class="center"><span class="num">3,000</span></td>
+                        <td class="center"><span class="num">100</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#fcc419,#e67700)">枢座 <span class="tr-lv">51-60</span></span></td>
+                        <td class="center">51 - 60 级</td>
+                        <td class="center"><span class="pet-tag">基座 51-60</span></td>
+                        <td class="center"><span class="num">200 / 200</span></td>
+                        <td class="center"><span class="num">5,000</span></td>
+                        <td class="center"><span class="num">200</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#ff922b,#e8590c)">承相 <span class="tr-lv">61-70</span></span></td>
+                        <td class="center">61 - 70 级</td>
+                        <td class="center"><span class="pet-tag">灵相 61-70</span></td>
+                        <td class="center"><span class="num">500 / 500</span></td>
+                        <td class="center"><span class="num">20,000</span></td>
+                        <td class="center"><span class="num">500</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#f06595,#c2255c)">司律 <span class="tr-lv">71-89</span></span></td>
+                        <td class="center">71 - 89 级</td>
+                        <td class="center"><span class="pet-tag">律冠 71-89</span></td>
+                        <td class="center"><span class="num">1,000 / 1,000</span></td>
+                        <td class="center"><span class="num">50,000</span></td>
+                        <td class="center"><span class="num">1,000</span> 单位 / 时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tr-badge" style="background:linear-gradient(135deg,#9775fa,#6741d9)">掌元 <span class="tr-lv">90-99</span></span></td>
+                        <td class="center">90 - 99 级</td>
+                        <td class="center"><span class="pet-tag">元灵 90-99</span></td>
+                        <td class="center"><span class="num">3,000 / 3,000</span></td>
+                        <td class="center"><span class="num">100,000</span></td>
+                        <td class="center"><span class="num">3,000</span> 单位 / 时</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
+        <p class="table-note">
+            注：「空间内消耗」为精灵待在御兽空间时每小时消耗的能量；精灵<b>放出御兽空间（非战斗）</b>时消耗极少——如初灵段位仅
+            <span class="num">1</span> 单位 / 天。
+        </p>
     </section>
 
-    <!-- 契约规则 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">契律</span>
+    <!-- 三、契约与反噬 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">叁</span>
             <h2>契约与反噬</h2>
-            <span class="rule"></span>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <div class="rule-row"><b class="label">达 标</b>御兽师三项（肉身 / 精神 / 能量）都必须达标，才能契约精灵，或者让精灵进化。</div>
-            <div class="rule-row warn"><b class="label">反 噬</b>不达标强行契约或进化——轻则契约断裂、神志不清；<b>重则人宠俱亡</b>。</div>
-            <div class="rule-row"><b class="label">叠 加</b>每多契约一只精灵，二维属性（肉身 / 精神）需求都要 <b>+1</b>。例：两只初灵需要肉身 2、精神 2；若两只都升灵，则需要 20 / 20——数值不够时，就只能让其中一只升阶。</div>
-            <div class="rule-row"><b class="label">来 源</b>严格来说这是「契约精灵」的要求，但由于契约精灵与相应御兽师等级一一对应，它也变成了御兽师等级的要求。</div>
-            <div class="rule-row tip"><b class="label">动 态</b>御兽师等级是动态前进的——像【大师】【天王】【冠军】，后来者绝对比旧人强。</div>
-            <div class="rule-row warn"><b class="label">耗 尽</b>当【能量】耗尽，御兽师将<b>感知不到御兽空间</b>：精灵相关的 buff 加成消失；御兽只能自主作战，或由御兽师口头下达命令；通过契约在脑海中下达命令会消耗能量——所以大部分普通御兽师会<b>喊出技能</b>来传达对战意图，减少能量消耗。</div>
-            <div class="rule-row"><b class="label">恢 复</b>御兽师每天都要修炼恢复能量；可以通过【能量】加快精灵的恢复（待在御兽空间时）。</div>
-            <div class="rule-row tip"><b class="label">增 长</b>修炼提升【能量】上限很缓慢，<b>战斗能够更快提高【能量】上限</b>——所以御兽师们经常对战。</div>
-        </div>
-    </section>
-
-    <!-- 精神测试 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">测灵</span>
-            <h2>精神强度测试</h2>
-            <span class="rule"></span>
-        </div>
-        <div class="tablet-body">
-            <p>精神上限的测试，用的是一件人人皆知的道具——<b style="color:#e8d48b;">榨精杯</b>。</p>
-            <p>它能在极短时间内榨干一个人的精神。<b>每坚持 1 秒钟，就代表 1 单位的精神强度</b>——坚持得越久，灵魂越强。</p>
-        </div>
-    </section>
-
-    <!-- 功法 -->
-    <section class="tablet reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">功法</span>
-            <h2>修炼三法</h2>
-            <span class="rule"></span>
-        </div>
-        <div class="tablet-body">
-            <div class="method-grid">
-                <div class="method-card">
-                    <div class="method-icon"><i class="fa-solid fa-fist-raised"></i></div>
-                    <h3>肉身锤炼法</h3>
-                    <p>锤炼肉体强度，抬升【肉身】上限。</p>
-                    <div class="method-tier">分品级 · 对应肉身</div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon"><i class="fa-solid fa-spa"></i></div>
-                    <h3>精神冥想法</h3>
-                    <p>冥想凝练灵魂，抬升【精神】上限。</p>
-                    <div class="method-tier">分品级 · 对应精神</div>
-                </div>
-                <div class="method-card">
-                    <div class="method-icon"><i class="fa-solid fa-fire-flame-simple"></i></div>
-                    <h3>能量吸收法</h3>
-                    <p>吸纳天地能量，抬升【能量】上限。</p>
-                    <div class="method-tier">分品级 · 对应能量</div>
-                </div>
+        <div class="rule-list">
+            <div class="rule-row">
+                <span class="rule-ico"><i class="fa-solid fa-circle-check"></i></span>
+                <div class="rule-txt"><b class="label">达标</b>御兽师三项（肉身 / 精神 / 能量）<b>必须全部达标</b>，才能契约精灵，或者让精灵进化。</div>
             </div>
-            <p style="margin-top:16px;font-size:13px;line-height:2.05;color:#a7b1ca;font-weight:500;">
-                三法均<b style="color:#e8d48b;">分品级</b>——不同等级有不同等级的三法。用低等级的功法也有效果，但很慢。
-            </p>
+            <div class="rule-row danger">
+                <span class="rule-ico"><i class="fa-solid fa-skull-crossbones"></i></span>
+                <div class="rule-txt"><b class="label">反噬</b>不达标强行契约或进化——轻则契约断裂、神志不清；<b>重则人宠俱亡</b>。</div>
+            </div>
+            <div class="rule-row">
+                <span class="rule-ico"><i class="fa-solid fa-plus"></i></span>
+                <div class="rule-txt"><b class="label">叠加</b>每多契约一只精灵，二维属性（肉身 / 精神）需求都要 <b>+1</b>。两只初灵需要 2 / 2；若两只都升灵，则需要 20 / 20——数值不够时，就只能让其中一只升阶。</div>
+            </div>
+            <div class="rule-row">
+                <span class="rule-ico"><i class="fa-solid fa-rotate"></i></span>
+                <div class="rule-txt"><b class="label">由来</b>严格来说这是「契约精灵」的要求，但由于契约精灵与相应御兽师等级一一对应，它也变成了御兽师等级的要求。</div>
+            </div>
+            <div class="rule-row tip">
+                <span class="rule-ico"><i class="fa-solid fa-arrow-trend-up"></i></span>
+                <div class="rule-txt"><b class="label">动态</b>御兽师等级是动态前进的——像【大师】【天王】【冠军】都是动态头衔，<b>后来者绝对比旧人强</b>。</div>
+            </div>
+            <div class="rule-row danger">
+                <span class="rule-ico"><i class="fa-solid fa-battery-empty"></i></span>
+                <div class="rule-txt"><b class="label">耗尽</b>当【能量】耗尽，御兽师将<b>感知不到御兽空间</b>：精灵相关 buff 全部失效；御兽只能自主作战，或由御兽师口头下令；通过契约在脑海中下令会消耗能量——所以大部分普通御兽师会<b>喊出技能</b>来传达对战意图，减少能量消耗。</div>
+            </div>
+            <div class="rule-row">
+                <span class="rule-ico"><i class="fa-solid fa-leaf"></i></span>
+                <div class="rule-txt"><b class="label">恢复</b>御兽师每天都要修炼恢复能量；也可以通过【能量】加快精灵的恢复（待在御兽空间时）。精灵不在御兽空间时（非战斗），能量消耗极少。</div>
+            </div>
+            <div class="rule-row tip">
+                <span class="rule-ico"><i class="fa-solid fa-fire"></i></span>
+                <div class="rule-txt"><b class="label">增长</b>修炼提升【能量】上限很缓慢，<b>战斗能更快提高上限</b>——所以御兽师们经常对战。</div>
+            </div>
         </div>
     </section>
 
-    <!-- 天赋 -->
-    <section class="tablet finale reveal">
-        <div class="tablet-head">
-            <span class="chapter-no">天赋</span>
-            <h2>御兽天赋</h2>
-            <span class="rule"></span>
+    <!-- 四、测灵 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">肆</span>
+            <h2>精神强度测试</h2>
+            <span class="sec-rule"></span>
         </div>
-        <div class="tablet-body">
-            <p>只有<b style="color:#e8d48b;">少部分人</b>才能拥有。</p>
-            <p>拥有的人，也只有在踏入<b style="color:#e8d48b;">【职业级】</b>之后，天赋才会激活。</p>
-            <p style="font-size:13px;color:#7f8aac;">* 御兽天赋的具体形态因人而异，此处仅作设定收录。</p>
+        <div class="cup-card">
+            <div class="cup-icon"><i class="fa-solid fa-flask"></i></div>
+            <div class="cup-txt">
+                <h3>榨精杯</h3>
+                <p>精神上限的测试道具。它能在极短时间内榨干一个人的精神——<b>每坚持 1 秒钟，就代表 1 单位的精神强度</b>，坚持得越久，灵魂越强。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 五、功法 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">伍</span>
+            <h2>修炼三法</h2>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="method-grid">
+            <div class="method-card" style="--mc-color:#e8590c; --mc-shadow:rgba(232,89,12,.3); --mc-deep:#d9480f; --mc-soft:#fff0e3">
+                <div class="method-icon"><i class="fa-solid fa-fist-raised"></i></div>
+                <h3>肉身锤炼法</h3>
+                <p>锤炼肉体强度，抬升【肉身】上限。</p>
+                <span class="method-tier">分品级 · 对应肉身</span>
+            </div>
+            <div class="method-card" style="--mc-color:#7048e8; --mc-shadow:rgba(112,72,232,.3); --mc-deep:#6741d9; --mc-soft:#f1edfc">
+                <div class="method-icon"><i class="fa-solid fa-spa"></i></div>
+                <h3>精神冥想法</h3>
+                <p>冥想凝练灵魂，抬升【精神】上限。</p>
+                <span class="method-tier">分品级 · 对应精神</span>
+            </div>
+            <div class="method-card" style="--mc-color:#1971c2; --mc-shadow:rgba(25,113,194,.3); --mc-deep:#1864ab; --mc-soft:#e7f5ff">
+                <div class="method-icon"><i class="fa-solid fa-fire-flame-simple"></i></div>
+                <h3>能量吸收法</h3>
+                <p>吸纳天地能量，抬升【能量】上限。</p>
+                <span class="method-tier">分品级 · 对应能量</span>
+            </div>
+        </div>
+        <p style="margin-top:14px;font-size:13px;line-height:2.05;color:var(--ink-2);">
+            三法均<b style="color:var(--ink);">分品级</b>——不同等级有不同等级的三法。用低等级的功法也有效果，但很慢。
+        </p>
+    </section>
+
+    <!-- 六、天赋 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">陆</span>
+            <h2>御兽天赋</h2>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="talent-card">
+            <div class="talent-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="talent-txt">
+                <h3>少数人的特权</h3>
+                <p>御兽天赋只有<b>少部分人</b>才能拥有；且拥有的人，也要在踏入<b>【职业级】</b>之后，天赋才会激活。</p>
+            </div>
         </div>
     </section>
 
@@ -421,7 +468,7 @@
         <a href="lore.html"><i class="fa-solid fa-tablets"></i> 元域演化史</a>
     </nav>
 
-    <footer class="lore-footer">
+    <footer class="page-footer">
         本篇为世界观设定文本，辑录自「传世石板」与御兽师协会公开资料，仅作设定呈现。
     </footer>
 
@@ -430,54 +477,8 @@
 <script>
 (function () {
     'use strict';
-
-    /* ---------- 关键词胶囊（与 lore.html 同款逻辑） ---------- */
-    var typeMap = {};
-    try {
-        if (typeof typeData !== 'undefined' && typeof typeData.forEach === 'function') {
-            typeData.forEach(function (t) { typeMap[t.name] = t; });
-        }
-    } catch (e) { typeMap = {}; }
-    var alias = { '岩': '岩石', '地': '地面' };
-
-    function buildPill(word) {
-        var name = alias[word] || word;
-        var t = typeMap[name];
-        var span = document.createElement('span');
-        if (t) {
-            span.className = 'kw kw-type';
-            span.style.background = t.color;
-            span.innerHTML = '<i class="' + t.icon + '"></i>' + word;
-        } else {
-            span.className = 'kw kw-meta';
-            span.innerHTML = word;
-        }
-        return span;
-    }
-
-    document.querySelectorAll('.tablet-body').forEach(function (block) {
-        var walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null);
-        var nodes = [];
-        while (walker.nextNode()) {
-            if (walker.currentNode.nodeValue.indexOf('【') > -1) nodes.push(walker.currentNode);
-        }
-        nodes.forEach(function (node) {
-            var frag = document.createDocumentFragment();
-            var rest = node.nodeValue;
-            var re = /【(.+?)】/g;
-            var m, last = 0;
-            while ((m = re.exec(rest)) !== null) {
-                if (m.index > last) frag.appendChild(document.createTextNode(rest.slice(last, m.index)));
-                frag.appendChild(buildPill(m[1]));
-                last = m.index + m[0].length;
-            }
-            if (last < rest.length) frag.appendChild(document.createTextNode(rest.slice(last)));
-            node.parentNode.replaceChild(frag, node);
-        });
-    });
-
-    /* ---------- 入场动画 ---------- */
-    var revealed = document.querySelectorAll('.reveal');
+    /* ---------- 入场动画：滚到视口内淡入（.no-anim 时 CSS 直接全显） ---------- */
+    var revealed = document.querySelectorAll('.reveal:not(.in)');
     var noAnim = false;
     try { noAnim = localStorage.getItem('vowmon_anim_on') === 'false'; } catch (e) { noAnim = false; }
     if (noAnim || !('IntersectionObserver' in window)) {
@@ -487,7 +488,7 @@
             entries.forEach(function (en) {
                 if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
             });
-        }, { threshold: 0.12 });
+        }, { threshold: 0.08 });
         revealed.forEach(function (el) { io.observe(el); });
     }
 })();
