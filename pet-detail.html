@@ -91,6 +91,12 @@
         .info-card h2 { font-size: 16px; font-weight: 900; color: #1a202c; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
         .info-card h2 i { color: #ff6b6b; font-size: 14px; }
         .info-card h2 .total-badge { margin-left: auto; font-size: 14px; color: #b7791f; background: #fefcbf; padding: 3px 14px; border-radius: 999px; }
+        .bl-skill-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #e8edf2; }
+        .bl-skill-row:last-of-type { border-bottom: 0; }
+        .bl-type { font-size: 11px; font-weight: 900; color: #fff; padding: 3px 10px; border-radius: 999px; flex-shrink: 0; }
+        .bl-skill-row b { font-size: 13.5px; color: #2d3748; }
+        .bl-note { font-size: 12px; color: #a0aec0; margin-left: auto; text-align: right; }
+        .bl-foot { font-size: 11.5px; color: #a0aec0; margin-top: 10px; line-height: 1.8; }
 
         /* 种族值条 */
         .stat-line { display: grid; grid-template-columns: 74px 1fr 52px; align-items: center; gap: 12px; padding: 6px 0; }
@@ -291,6 +297,17 @@
                     </div>
                 </div>
 
+                <!-- 血脉技能 -->
+                <div class="info-card" v-if="bloodlineSkillRows.length">
+                    <h2><i class="fa-solid fa-dna"></i> 可用血脉技能 <span class="total-badge font-num">{{ bloodlineSkillRows.length }}</span></h2>
+                    <div class="bl-skill-row" v-for="s in bloodlineSkillRows" :key="s.id">
+                        <span class="bl-type" :style="{ background: getTypeColor(s.type) }">{{ s.type }}</span>
+                        <b>{{ s.name }}</b>
+                        <span class="bl-note">{{ s.note || '族群族尊授予' }}</span>
+                    </div>
+                    <div class="bl-foot">按本种族属性匹配；实际血脉技能由所在族群的族尊决定，随时可能改变。</div>
+                </div>
+
                 <!-- 进化链 -->
                 <div class="info-card" v-if="evoNodes.length > 1">
                     <h2><i class="fa-solid fa-arrows-turn-to-dots"></i> 进化链</h2>
@@ -343,10 +360,10 @@
 <script src="js/type-chart.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/vowmon-utils.js?v=20261125a"></script>
-<script src="js/data-loader.js?v=20261125b"></script>
+<script src="js/data-loader.js?v=20261126a"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
-VowmonData.ready(['pets']).then(function () {
+VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
 
     createApp({
         setup() {
@@ -468,6 +485,19 @@ VowmonData.ready(['pets']).then(function () {
                 return rows;
             });
 
+            /* ---------------- 血脉技能（按种族属性匹配） ---------------- */
+            const bloodlineSkillRows = computed(() => {
+                if (!pet.value) return [];
+                const types = (pet.value.types || []).map(t => String(t));
+                const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
+                return all.filter(s => types.includes(String(s.type || ''))).map(s => ({
+                    id: String(s.id || s.name),
+                    name: String(s.name || ''),
+                    type: String(s.type || ''),
+                    note: String(s.note || '')
+                }));
+            });
+
             /* ---------------- 进化链 ---------------- */
             const petById = computed(() => {
                 const m = new Map();
@@ -562,7 +592,7 @@ VowmonData.ready(['pets']).then(function () {
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
                 heightText, weightText,
-                abilityRows, evoNodes,
+                abilityRows, evoNodes, bloodlineSkillRows,
                 attackGroups, defendGroups
             };
         }

@@ -56,6 +56,11 @@
             file: 'natures-data.json', label: '性格',
             keys: { natures: 'allNaturesData', stats: 'natureStats' }
         },
+        // 血脉技能（每个属性一技，后台可维护）
+        bloodlineSkills: {
+            file: 'bloodline-skills-data.json', label: '血脉技能',
+            keys: { skills: 'allBloodlineSkillsData' }
+        },
         // 书内档案：御兽精灵（书中个体，与图鉴的「种族」分开存）
         individuals: {
             file: 'individuals-data.json', label: '御兽精灵',

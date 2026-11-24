@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 血脉技能管理</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125e">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <style>
+        .bs-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 900; color: #fff; padding: 4px 12px; border-radius: 999px; }
+        .bs-note { color: #a0aec0; font-size: 12.5px; }
+        .bs-tip { margin: 10px 0 16px; padding: 11px 15px; border: 1px solid #bee3f8; background: #ebf8ff; color: #2b6cb0; border-radius: 12px; font-size: 13px; font-weight: 700; line-height: 1.8; }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-dna"></i> 血脉技能管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing"><i class="fa-brands fa-github"></i> {{ isSyncing ? '正在同步...' : '一键同步血脉技能' }}</button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-bloodline-skills.html" class="active"><i class="fa-solid fa-dna"></i> 血脉技能</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin-lore.html"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
+                <a href="admin-individuals.html"><i class="fa-solid fa-paw"></i> 御兽精灵</a>
+                <a href="admin-characters.html"><i class="fa-solid fa-users"></i> 御兽人物</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="bs-tip"><i class="fa-solid fa-circle-info"></i> 每个属性各有一个血脉技能，由族群「族尊」授予。这里维护可选清单，录入御兽精灵时先选血脉属性、再选对应技能；精灵图鉴会按种族属性展示可用血脉技能。</div>
+            <div class="toolbar">
+                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input v-model="search" placeholder=""></div>
+                <span class="count-pill">共 <b class="font-num">{{ filtered.length }}</b> 个血脉技能</span>
+                <div style="margin-left: auto;"><button class="btn btn-primary" @click="openAdd"><i class="fa-solid fa-plus"></i> 添加血脉技能</button></div>
+            </div>
+
+            <table class="admin-table">
+                <thead><tr><th>技能名</th><th>属性</th><th>备注</th><th style="text-align:right;">操作</th></tr></thead>
+                <tbody>
+                    <tr v-for="(s, i) in filtered" :key="s.id">
+                        <td><b>{{ s.name }}</b></td>
+                        <td><span class="bs-tag" :style="{ background: typeColor(s.type) }">{{ s.type }}</span></td>
+                        <td class="bs-note">{{ s.note || '—' }}</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <button class="action-btn edit-btn" @click.stop="openEdit(s, i)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                            <button class="action-btn delete-btn" @click.stop="askDelete(i, s.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" v-if="!filtered.length">还没有血脉技能，点右上角添加。</div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal">
+        <div class="modal" style="width: 520px;" @click.stop>
+            <div class="modal-header"><h3>{{ isEdit ? '编辑血脉技能' : '添加血脉技能' }}</h3><button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom:14px;"><label>技能名</label><input v-model="form.name" placeholder=""></div>
+                <div class="form-group" style="margin-bottom:14px;"><label>所属属性</label><vow-select v-model="form.type" :options="typeOptions" placeholder="选择属性"></vow-select></div>
+                <div class="form-group"><label>备注</label><vow-textarea v-model="form.note" :rows="2"></vow-textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" @click="showModal = false">取消</button><button class="btn btn-primary" @click="save"><i class="fa-solid fa-check"></i> 保存</button></div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/site-config.js?v=20261124e"></script>
+<script src="../js/type-config.js?v=20261124e"></script>
+<script src="../js/data-loader.js?v=20261126a"></script>
+<script src="../js/github-api.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/dialog.js?v=20261124e"></script>
+<script src="../js/vow-select.js?v=20261125"></script>
+<script src="../js/vow-textarea.js?v=20261125c"></script>
+<script src="../js/admin-bloodline-skills.js?v=20261126a"></script>
+</body>
+</html>

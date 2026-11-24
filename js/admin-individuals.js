@@ -89,7 +89,7 @@ function normalizeIndividual(v) {
     return p;
 }
 
-VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures', 'skills'], { fresh: true }).then(function () {
+VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures', 'skills', 'bloodlineSkills'], { fresh: true }).then(function () {
 
 const app = createApp({
     setup() {
@@ -390,6 +390,21 @@ const app = createApp({
         /* --------------------------------------------------- 主人下拉选项 */
         const ownerOptions = computed(() => characters.value.map(c => ({ value: c.id, label: c.name })));
 
+        /* --------------------------------------------------- 血脉技能：属性 → 技能两级选择 */
+        const attrOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData)) ? typeData.map(t => t.name) : [];
+        const bloodlineSkillOptions = computed(() => {
+            const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
+            const cur = String(form.value.bloodlineSkill || '');
+            const list = all.filter(s => s && s.type === form.value.bloodlineAttr).map(s => String(s.name || '')).filter(Boolean);
+            if (cur && !list.includes(cur)) list.unshift(cur);   // 兼容旧数据 / 自定义名
+            return list;
+        });
+        /* 换属性时清空已选技能，避免选到别的属性的技能 */
+        const bloodlineAttrModel = computed({
+            get: () => form.value.bloodlineAttr,
+            set: (v) => { form.value.bloodlineAttr = v; form.value.bloodlineSkill = ''; }
+        });
+
         /* --------------------------------------------------- 种族选择（单选） */
         const filteredSpecies = computed(() => {
             const kw = speciesSearchInput.value.trim().toLowerCase();
@@ -526,6 +541,7 @@ const app = createApp({
             stageName: stageNameOf, RANK_BANDS,
             GENDERS, BLOODLINES, SKILL_LEVELS,
             natureOptions, natureHintOf, ownerOptions,
+            attrOptions, bloodlineSkillOptions, bloodlineAttrModel,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,
             traitAdding, openTraitInput, cancelTraitInput,
             activeSkillIndex, skillSuggestions, setSkillName,
