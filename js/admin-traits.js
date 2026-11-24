@@ -60,6 +60,7 @@ const app = createApp({
             types: [],
             pokemons: [],        // 常规特性持有者（精灵名）
             hiddenPokemons: [],  // 隐藏特性持有者（精灵名）
+            origin: '',          // 原型 / 取材自（自由填写，默认空）
             effect: ''
         });
 
@@ -69,7 +70,8 @@ const app = createApp({
             ...t,
             types: Array.isArray(t.types) ? t.types : [],
             pokemons: Array.isArray(t.pokemons) ? t.pokemons : [],
-            hiddenPokemons: Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : []
+            hiddenPokemons: Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : [],
+            origin: String(t.origin || '').trim()
         }));
         const form = ref(defaultForm());
 
@@ -180,6 +182,7 @@ const app = createApp({
                 if (!Array.isArray(copy.types)) copy.types = [];
                 if (!Array.isArray(copy.pokemons)) copy.pokemons = [];
                 if (!Array.isArray(copy.hiddenPokemons)) copy.hiddenPokemons = [];
+                if (copy.origin == null) copy.origin = '';
                 form.value = copy;
             } else {
                 isEdit.value = false;
@@ -200,6 +203,7 @@ const app = createApp({
             if (!item.id) item.id = nextTraitId();
             if (!Array.isArray(item.pokemons)) item.pokemons = [];
             if (!Array.isArray(item.hiddenPokemons)) item.hiddenPokemons = [];
+            item.origin = String(item.origin || '').trim();   // 原型 / 取材自，默认留空
 
             if (isEdit.value && editIndex.value > -1) {
                 traits.value.splice(editIndex.value, 1, item);

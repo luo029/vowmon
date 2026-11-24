@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124g">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
     <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
@@ -463,6 +463,10 @@
                         
                         <div class="form-group"><label>身高 (m)</label><input type="number" step="0.1" v-model="form.height"></div>
                         <div class="form-group"><label>体重 (kg)</label><input type="number" step="0.1" v-model="form.weight"></div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>原型 <span class="opt">取材自哪里，可留空</span></label>
+                            <input v-model="form.origin" placeholder="例如：参考某作品中的某某 / 某神话生物 / 原创">
+                        </div>
                     </div>
                 </div>
 
@@ -580,6 +584,6 @@
 <script src="../js/image-utils.js?v=20261124d"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124d"></script>
-<script src="../js/admin.js?v=20261124d"></script>
+<script src="../js/admin.js?v=20261124i"></script>
 </body>
 </html>

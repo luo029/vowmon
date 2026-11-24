@@ -51,8 +51,9 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
 .data-table th, .data-table td { padding: 13px 16px; text-align: left; border-bottom: 1px solid #edf2f7; white-space: nowrap; font-size: 14px; }
 .data-table th { background: #f8fafc; font-weight: 800; color: #4a5568; font-size: 13px; letter-spacing: .3px; position: sticky; top: 0; z-index: 1; }
-.data-table tbody tr { transition: background .12s; }
-.data-table tbody tr:hover { background: #f7fbff; }
+.data-table tbody tr { transition: none; }
+.data-table td { background: #fff; }
+.data-table tbody tr:hover td { background: #f7fbff; }
 .data-table tbody tr:last-child td { border-bottom: none; }
 .img-cell img { width: 44px; height: 44px; object-fit: contain; border-radius: 50%; background: #f7fafc; border: 2px solid #e2e8f0; padding: 2px; }
 .type-cell { display: flex; align-items: center; gap: 14px; }

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124g">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
     <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
@@ -190,6 +190,10 @@
                         </div>
                     </div>
                     <div class="form-group full" style="grid-column: span 2;"><label>技能效果</label><textarea v-model="form.effect" class="custom-textarea" rows="3"></textarea></div>
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>原型 <span class="opt">取材自哪里，可留空</span></label>
+                        <input v-model="form.origin" placeholder="例如：参考某作品中的某某招式 / 某原型概念 / 原创">
+                    </div>
 
                     <div class="form-group full" style="grid-column: span 2;">
                         <label>可学会精灵 <span class="opt">已选 <span class="font-num">{{ (form.learners || []).length + (form.stoneLearners || []).length }}</span> 只 · 勾选默认「自学」，点「石」标记为技能石学习（无法自我领悟）</span></label>
@@ -257,6 +261,6 @@
 <script src="../js/github-api.js?v=20261124b"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124b"></script>
-<script src="../js/admin-skills.js?v=20261124h"></script>
+<script src="../js/admin-skills.js?v=20261124i"></script>
 </body>
 </html>

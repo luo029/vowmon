@@ -39,12 +39,13 @@
         .type-btn-icon.active { border-color: #ff6b6b; background: #fff5f5; color: #ff6b6b; }
         .type-icon-svg { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; }
         .type-btn-icon .count-badge { background: #edf2f7; color: #718096; font-size: 12px; padding: 2px 8px; border-radius: 12px; font-weight: normal; }
-        .table-wrapper { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .table-wrapper { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; isolation: isolate; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: #2d3748; color: #fff; }
         th { padding: 16px 15px; text-align: left; font-size: 14px; font-weight: bold; letter-spacing: 1px; }
-        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
-        tbody tr:hover { background: #f7fafc; }
+        /* td 自带白底，行 hover 只改 td 背景：重绘锁在一行内，不会透出 wrapper 白底闪一下 */
+        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; background: #fff; }
+        tbody tr:hover td { background: #f7fafc; }
         .trait-name { font-weight: 900; color: #2d3748; }
         .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 12px; margin-right: 4px;}
         .pokemon-tag { display: inline-block; background: #edf2f7; color: #4a5568; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: 5px; font-weight: bold; }

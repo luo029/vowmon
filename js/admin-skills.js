@@ -57,6 +57,7 @@ createApp({
             tags: [],
             learners: [],        // 自学（自我觉醒领悟）的精灵名列表
             stoneLearners: [],   // 技能石学习（无法自学）的精灵名列表
+            origin: '',          // 原型 / 取材自（自由填写，默认空）
             effect: ''
         });
 
@@ -73,7 +74,8 @@ createApp({
             category: normalizeCategory(item.category),
             tags: toNameList(item.tags),
             learners: toNameList(item.learners),
-            stoneLearners: toNameList(item.stoneLearners)
+            stoneLearners: toNameList(item.stoneLearners),
+            origin: String(item.origin || '').trim()
         }));
 
         /* ------------------------------------------------------------ 标签库 */
@@ -280,6 +282,7 @@ createApp({
                 form.value = JSON.parse(JSON.stringify(skill));
                 if (!Array.isArray(form.value.learners)) form.value.learners = [];
                 if (!Array.isArray(form.value.stoneLearners)) form.value.stoneLearners = [];
+                if (form.value.origin == null) form.value.origin = '';
             } else {
                 isEdit.value = false;
                 editIndex.value = -1;
@@ -306,6 +309,7 @@ createApp({
             item.tags = toNameList(item.tags);
             item.learners = toNameList(item.learners);
             item.stoneLearners = toNameList(item.stoneLearners);
+            item.origin = String(item.origin || '').trim();   // 原型 / 取材自，默认留空
             if (!item.id) item.id = nextSkillId();
 
             if (isEdit.value && editIndex.value > -1) {

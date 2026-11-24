@@ -96,16 +96,19 @@
         .col-btn.active i { color: #d69e2e; }
 
         /* 表格 */
-        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; isolation: isolate; }
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         th, td { padding: 14px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; font-size: 14px; white-space: nowrap; }
         
         thead { background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; }
         th { font-weight: bold; cursor: pointer; user-select: none; }
-        th:hover { background: #edf2f7; color: #2b6cb0; }
+        /* 表头 hover 只改文字色：sticky 表头改 background 会触发整块重绘，滚动时容易闪白 */
+        th:hover { color: #2b6cb0; }
         th i { margin-left: 5px; font-size: 12px; color: #a0aec0; }
 
-        tbody tr:hover { background: #f7fafc; }
+        /* td 自带白底，行 hover 只改 td 背景，重绘面积锁在一行内 */
+        td { background: #fff; }
+        tbody tr:hover td { background: #f7fafc; }
         
         .img-cell img { width: 48px; height: 48px; object-fit: contain; }
         .name-cell { font-weight: bold; color: #2c3e50; cursor: pointer; text-align: center; }

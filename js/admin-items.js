@@ -50,7 +50,8 @@ createApp({
             iconClass: '',
             color: '',
             desc: '',
-            obtain: []
+            obtain: [],
+            origin: ''      // 原型 / 取材自（自由填写，默认空）
         });
 
         const form = ref(defaultForm());
@@ -316,6 +317,7 @@ createApp({
             item.color = item.color || getItemFallbackColor(item);
             item.iconClass = item.iconClass || getItemFallbackIcon(item);
             item.desc = String(item.desc || '').trim();
+            item.origin = String(item.origin || '').trim();
             item.obtain = Array.isArray(item.obtain)
                 ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                 : (item.obtain ? [String(item.obtain)] : []);
@@ -459,6 +461,7 @@ createApp({
             item.iconClass = String(item.iconClass || '').trim() || getItemFallbackIcon(item);
             item.color = String(item.color || '').trim() || getItemFallbackColor(item);
             item.desc = String(item.desc || '').trim();
+            item.origin = String(item.origin || '').trim();   // 原型 / 取材自，默认留空
             item.obtain = String(obtainText.value || '')
                 .split('\n')
                 .map(line => line.trim())

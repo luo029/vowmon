@@ -113,6 +113,7 @@ createApp({
             hiddenAbility: '', hiddenAbilityEffect: '', // 隐藏特性（不填默认为空）
             evoFrom: [], evoTo: [],                     // 进化链：进化自 / 进化为（存精灵 id，可多选）
             eggGroup: '', rideable: '', height: '', weight: '',
+            origin: '',                                 // 原型 / 取材自（自由填写，默认空）
             image: '', shiny: [], description: '',
             stats: { hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 0 }
         });
@@ -680,6 +681,7 @@ createApp({
 
             const petData = JSON.parse(JSON.stringify(form));
             if (!Array.isArray(petData.shiny)) petData.shiny = [];
+            petData.origin = String(petData.origin || '').trim();   // 原型 / 取材自，默认留空
 
             if (isEdit.value) pets.value[editIndex.value] = petData;
             else pets.value.unshift(petData);

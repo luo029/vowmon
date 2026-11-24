@@ -65,17 +65,21 @@
         .filter-btn.active .filter-icon { background: rgba(255,255,255,.9) !important; }
 
         /* ---------------- 表格 ---------------- */
-        .table-wrapper { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .table-wrapper { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; isolation: isolate; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: #2d3748; color: #fff; }
         th { padding: 16px 15px; text-align: left; font-size: 14px; font-weight: bold; letter-spacing: 1px; }
-        /* 可排序表头：点击按「大小」排列，箭头指示当前方向 */
-        th.sortable { cursor: pointer; user-select: none; white-space: nowrap; transition: background .15s; }
-        th.sortable:hover { background: #3d4859; }
+        /* 可排序表头：点击按「大小」排列，箭头指示当前方向。
+           hover 只改文字颜色、不做 background 过渡——深色表头做背景过渡会重绘整张表，
+           伴随 border-radius + overflow:hidden 的合成层重光栅化，表现就是「泛白 / 表格闪白」。 */
+        th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+        th.sortable:hover { color: #fbd38d; }
         th.sortable .sort-indicator { display: inline-flex; flex-direction: column; margin-left: 5px; vertical-align: middle; line-height: 9px; font-size: 10px; color: #718096; }
         th.sortable .sort-indicator .on { color: #f6ad55; }
-        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; vertical-align: middle; }
-        tbody tr:hover { background: #f7fafc; }
+        /* 单元格自带不透明底色：行 hover 只改 td 背景，重绘面积锁在一行内，
+           不会因为 tr 背景透出 wrapper 白底而闪白。 */
+        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; vertical-align: middle; background: #fff; }
+        tbody tr:hover td { background: #f7fafc; }
 
         .skill-name { font-weight: 900; color: #2d3748; }
         .skill-link { color: inherit; text-decoration: none; cursor: pointer; border-bottom: 1px dashed #cbd5e0; padding-bottom: 1px; transition: color .15s, border-color .15s; }
