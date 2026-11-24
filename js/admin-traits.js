@@ -422,7 +422,6 @@ createApp({
             openDeleteConfirm,
             confirmDelete,
             openPokemonModal,
-            selectPokemon,
             isPokemonPicked, togglePokemonSelect, flipPokemonSlot, removePokemon,
             syncToGitHub,
             pullFromRepo
