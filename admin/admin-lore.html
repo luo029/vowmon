@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 页面内容管理</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124j">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <style>
+        /* —— 页面内容编辑器专属样式 —— */
+        .lore-editor-grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
+        .lore-page-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .lore-page-tab { cursor: pointer; user-select: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #dbe4f0; background: #fff; font-size: 13px; font-weight: 800; color: #4a5568; transition: none; }
+        .lore-page-tab:hover { border-color: #90cdf4; }
+        .lore-page-tab.active { background: #4c6ef5; border-color: #4c6ef5; color: #fff; }
+        .lore-block-list { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .lore-block-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #edf2f7; background: #f8fafc; }
+        .lore-block-search input { flex: 1; border: 1px solid #dbe4f0; border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
+        .lore-block-search input:focus { border-color: #4c6ef5; }
+        .lore-block-scroll { max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; }
+        .lore-block-item { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        .lore-block-item:last-child { border-bottom: 0; }
+        .lore-block-item:hover { background: #f0f8ff; }
+        .lore-block-item.active { background: #ebf3ff; border-left: 3px solid #4c6ef5; padding-left: 11px; }
+        .lore-block-item .lb-label { font-size: 13px; font-weight: 800; color: #2d3748; }
+        .lore-block-item.active .lb-label { color: #2b4bc0; }
+        .lore-block-item .lb-key { font-size: 11px; color: #a0aec0; font-family: Consolas, monospace; }
+        .lore-editor-pane { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+        .lore-editor-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        .lore-editor-head h3 { font-size: 15px; font-weight: 900; color: #2d3748; }
+        .lore-editor-head .le-key { font-size: 11.5px; color: #a0aec0; font-family: Consolas, monospace; }
+        .lore-html-input { width: 100%; min-height: 34vh; border: 1px solid #dbe4f0; border-radius: 10px; padding: 12px 14px; font: 13px/1.7 Consolas, "Microsoft YaHei", monospace; color: #2d3748; outline: none; resize: vertical; box-sizing: border-box; }
+        .lore-html-input:focus { border-color: #4c6ef5; box-shadow: 0 0 0 3px rgba(76,110,245,.12); }
+        .lore-preview { border: 1px dashed #cbd5e0; border-radius: 10px; padding: 14px 16px; background: #fbfcfe; font-size: 14px; line-height: 1.9; color: #4a5568; max-height: 34vh; overflow-y: auto; overscroll-behavior: contain; }
+        .lore-preview h1, .lore-preview h2, .lore-preview h3, .lore-preview h4 { margin: 10px 0 6px; color: #2d3748; }
+        .lore-preview p { margin: 6px 0; }
+        .lore-preview b { color: #2b4bc0; }
+        .lore-empty { padding: 40px; text-align: center; color: #a0aec0; }
+        .lore-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; line-height: 1.8; }
+        .unsaved-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-left: 6px; }
+        @media (max-width: 900px) {
+            .lore-editor-grid { grid-template-columns: 1fr; }
+            .lore-block-scroll { max-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-file-pen"></i> 页面内容管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing || !loaded">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步页面内容' }}
+            </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin-lore.html" class="active"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="lore-warn" v-if="loadError" style="margin-bottom: 16px;">
+                <b><i class="fa-solid fa-circle-exclamation"></i> 还没有页面内容数据。</b>
+                请确认 lore-data.json 已发布到数据仓库，或点右上角「从仓库拉取」。
+                在此之前，前台四页（等级体系 / 血脉 / 御兽师 / 元域演化史）会显示内置文本。
+            </div>
+
+            <div class="lore-warn" v-if="hasUnsaved" style="margin-bottom: 16px; background:#fff7ed; border-color:#fdba74; color:#9a3412;">
+                <b><i class="fa-solid fa-triangle-exclamation"></i> 有未保存的修改。</b>
+                编辑只在本页生效，点「保存到本机」后前台立即更新；「一键同步」才会推到数据仓库（其他设备 / 其他人可见）。
+            </div>
+
+            <div class="lore-editor-grid" v-if="loaded">
+                <div>
+                    <div class="lore-page-tabs">
+                        <span class="lore-page-tab" v-for="p in data.pages" :key="p.id"
+                              :class="{ active: activePage === p.id }" @click="pickPage(p.id)">
+                            {{ p.title }}
+                        </span>
+                    </div>
+                    <div class="lore-block-list">
+                        <div class="lore-block-search">
+                            <i class="fa-solid fa-magnifying-glass" style="color:#a0aec0"></i>
+                            <input v-model="searchQuery" placeholder="搜索文本块（标题 / 内容 / 键名）…">
+                        </div>
+                        <div class="lore-block-scroll">
+                            <div class="lore-block-item" v-for="key in pageBlockKeys" :key="key"
+                                 :class="{ active: activeKey === key }" @click="pickBlock(key)">
+                                <div class="lb-label">{{ data.blocks[key].label }}<span class="unsaved-dot" v-if="activeKey === key && hasUnsaved"></span></div>
+                                <div class="lb-key">{{ key }}</div>
+                            </div>
+                            <div class="lore-empty" v-if="!pageBlockKeys.length">没有匹配的文本块</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lore-editor-pane">
+                    <template v-if="currentBlock">
+                        <div class="lore-editor-head">
+                            <h3>{{ currentLabel }}</h3>
+                            <span class="le-key">{{ activeKey }}</span>
+                        </div>
+                        <textarea class="lore-html-input" v-model="currentHtml"
+                                  spellcheck="false" placeholder="在这里编辑文本…"></textarea>
+                        <div style="margin: 12px 0 8px; display:flex; justify-content: space-between; align-items:center;">
+                            <span style="font-size:12px; color:#a0aec0;">
+                                <i class="fa-solid fa-eye"></i> 实时预览（下方）
+                                <span style="margin-left:12px;">&lt;b&gt;加粗、&lt;br/&gt;换行、&lt;i class=&quot;fa-…&quot;&gt;图标 可用</span>
+                            </span>
+                            <button class="btn btn-primary" @click="saveLocal" :disabled="saving">
+                                <i class="fa-solid fa-floppy-disk"></i> 保存到本机
+                            </button>
+                        </div>
+                        <div class="lore-preview" v-html="currentHtml"></div>
+                    </template>
+                    <div class="lore-empty" v-else>从左侧选择一个文本块开始编辑</div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="../js/data-loader.js?v=20261125a"></script>
+<script src="../js/github-api.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/dialog.js?v=20261124e"></script>
+<script src="../js/admin-lore.js?v=20261125a"></script>
+</body>
+</html>

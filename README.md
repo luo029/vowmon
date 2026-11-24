@@ -45,6 +45,7 @@ vowmon/
 │   ├── admin-skills.html   # 后台 - 技能管理
 │   ├── admin-traits.html   # 后台 - 特性管理
 │   ├── admin-items.html    # 后台 - 物品管理
+│   ├── admin-lore.html     # 后台 - 页面内容管理（世界观文本块）
 │   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
@@ -171,6 +172,12 @@ vowmon/
   - 图标上传走和精灵图一致的压缩流程（`js/image-utils.js`），存为 `items/{id}.png`；不传图片就用图标字体，`颜色` 决定图标颜色。
   - 名称会做重复校验；新建时 id 自动生成为 `i001`、`i002`…，仅用于深链和图标命名，不在前台显示。
 - **admin-images.html**：图片管理。双标签设计——「仓库图片」扫描并管理所有图片仓库里的图（异色图会计入使用方，标注为「某某（异色）」，不会误报成未使用）；「精灵图片」核对每只精灵的图片是否真实存在，卡片标题上会带「异色 ×N」角标，支持上传 / 删除 / 绑定到精灵。
+- **admin-lore.html**：页面内容管理。世界观四页（ranks / bloodlines / trainers / lore）的**全部正文文本块**在这里编辑：
+  - 左侧按页签列出文本块（带中文标签与键名），右侧 textarea 编辑 + 实时预览；支持按标题 / 内容 / 键名搜索；
+  - 「保存到本机」= `VowmonStore.save('lore', …)` 写镜像，前台**立即**生效；「一键同步」= 推 `lore-data.json` 到数据仓库（其他设备 / 协作者可见）；「从仓库拉取」覆盖本机草稿；
+  - 文本里可用 `<b>加粗</b>`、`<br/>` 换行、`<i class="fa-…"></i>` 图标；元域演化史里的【属性】关键词在替换后会自动重新渲染成属性胶囊（监听 `vowmon:lore-applied`）；
+  - **机制**：四页正文的文本元素带 `data-lore="页.序"` 键，`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容；数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
+  - **改页面结构必须重跑 `_tools/lore_gen.py`**（需要 `pip install beautifulsoup4`）：它会按 DOM 顺序重新注入 data-lore 键并重新生成 lore-data.json——脚本按「文档顺序 + 序号」编键，增删元素后老键会错位，必须重新对齐。
 
 ### 1.05.3 数据里的分类口径
 
@@ -333,6 +340,7 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 | `traits-data.json` | `traits` → `allTraitsData` |
 | `items-data.json` | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData` |
 | `natures-data.json` | `natures` → `allNaturesData`、`stats` → `natureStats` |
+| `lore-data.json` | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块） |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
 

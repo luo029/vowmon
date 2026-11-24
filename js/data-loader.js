@@ -55,6 +55,12 @@
         natures: {
             file: 'natures-data.json', label: '性格',
             keys: { natures: 'allNaturesData', stats: 'natureStats' }
+        },
+        // 页面内容（世界观四页的文本块）：blocks 是「页.序 → {label, html}」的扁平映射，
+        // 前台 js/lore-apply.js 拿它替换 [data-lore] 元素的内容
+        lore: {
+            file: 'lore-data.json', label: '页面内容',
+            keys: { pages: 'allLorePages', blocks: 'allLoreBlocks' }
         }
     };
 
@@ -414,6 +420,11 @@
         },
         /** 强制回源（后台用） */
         reload: function (keys) { return load(keys, { fresh: true }); },
+        /**
+         * 静默加载（可选增强数据用）：不显示加载遮罩、失败不弹错误页。
+         * 适合「有内置兜底内容、数据只是覆盖」的场景，比如世界观页面的文本块。
+         */
+        softReady: function (keys, opts) { return load(keys, opts); },
         get: function (key) {
             const meta = FILES[key];
             if (!meta) return undefined;

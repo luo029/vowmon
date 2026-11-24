@@ -243,8 +243,8 @@
     <header class="banner reveal in">
         <span class="banner-tag"><i class="fa-solid fa-layer-group"></i> 世界观 · 等级体系</span>
         <h1>精灵阶元与权限</h1>
-        <div class="banner-sub">力 · 位 · 权 —— 三律之下，万物有序</div>
-        <p class="banner-desc">
+        <div class="banner-sub" data-lore="ranks.c1">力 · 位 · 权 —— 三律之下，万物有序</div>
+        <p class="banner-desc" data-lore="ranks.c2">
             精灵与御兽师的等级，本质上是<b>「在生态界中占据的地位」</b>。
             高阶精灵形态不变，改变的是权限、法则与技能特效——蟋蟀永远是蟋蟀，龙永远是龙。
         </p>
@@ -262,17 +262,17 @@
             <div class="law-card" style="--law-color:#4c6ef5; --law-shadow:rgba(76,110,245,.35)">
                 <div class="law-icon"><i class="fa-solid fa-fist-raised"></i></div>
                 <h3>力 <small>战力</small></h3>
-                <p>精灵自身的<b>数值面板与技能</b>，是纯粹的实力。有【力】不需要争夺，修炼就能增长。</p>
+                <p data-lore="ranks.c3">精灵自身的<b>数值面板与技能</b>，是纯粹的实力。有【力】不需要争夺，修炼就能增长。</p>
             </div>
             <div class="law-card" style="--law-color:#12b886; --law-shadow:rgba(18,184,134,.35)">
                 <div class="law-icon"><i class="fa-solid fa-mountain-sun"></i></div>
                 <h3>位 <small>生态位</small></h3>
-                <p>精灵在<b>生态界中占据的位置</b>。多数情况是先占据生态位，才有相应的【力】，之后才谈得上争夺【权】。</p>
+                <p data-lore="ranks.c4">精灵在<b>生态界中占据的位置</b>。多数情况是先占据生态位，才有相应的【力】，之后才谈得上争夺【权】。</p>
             </div>
             <div class="law-card" style="--law-color:#e8590c; --law-shadow:rgba(232,89,12,.3)">
                 <div class="law-icon"><i class="fa-solid fa-crown"></i></div>
                 <h3>权 <small>权柄</small></h3>
-                <p>生态界的<b>「唯一管理员账号」</b>：对应的精灵全服只有一只，只能通过战斗争夺。掌权者可以修改规则、给下位精灵增幅。</p>
+                <p data-lore="ranks.c5">生态界的<b>「唯一管理员账号」</b>：对应的精灵全服只有一只，只能通过战斗争夺。掌权者可以修改规则、给下位精灵增幅。</p>
             </div>
         </div>
     </section>
@@ -287,16 +287,16 @@
         <div class="card">
             <div class="combo-row">
                 <div class="combo" style="--combo-color:#4c6ef5">
-                    <div class="combo-title"><span class="dot"></span>【力】【位】</div>
-                    <p>常态。被御兽师正常契约，随时带在身边。</p>
+                    <div class="combo-title" data-lore="ranks.c6"><span class="dot"></span>【力】【位】</div>
+                    <p data-lore="ranks.c7">常态。被御兽师正常契约，随时带在身边。</p>
                 </div>
                 <div class="combo" style="--combo-color:#e8590c">
-                    <div class="combo-title"><span class="dot"></span>【力】【位】【权】</div>
-                    <p>最强形态。但御兽师根本承受不住，见下方循环。</p>
+                    <div class="combo-title" data-lore="ranks.c8"><span class="dot"></span>【力】【位】【权】</div>
+                    <p data-lore="ranks.c9">最强形态。但御兽师根本承受不住，见下方循环。</p>
                 </div>
                 <div class="combo" style="--combo-color:#9c36b5">
-                    <div class="combo-title"><span class="dot"></span>仅【力】</div>
-                    <p>最稀少：拥有升灵的形态、等级、数值，【位】却是初灵甚至没有。</p>
+                    <div class="combo-title" data-lore="ranks.c10"><span class="dot"></span>仅【力】</div>
+                    <p data-lore="ranks.c11">最稀少：拥有升灵的形态、等级、数值，【位】却是初灵甚至没有。</p>
                 </div>
             </div>
             <div class="proto-note" style="margin-top:16px;">
@@ -307,15 +307,15 @@
 
         <div class="card" style="margin-top:16px;">
             <div class="cycle">
-                <div class="cycle-step"><div class="step-no">STEP 1</div><div class="step-name">解契</div><div class="step-desc">精灵要夺权，御兽师必须放生</div></div>
+                <div class="cycle-step"><div class="step-no">STEP 1</div><div class="step-name" data-lore="ranks.c12">解契</div><div class="step-desc" data-lore="ranks.c13">精灵要夺权，御兽师必须放生</div></div>
                 <span class="cycle-arrow">→</span>
-                <div class="cycle-step"><div class="step-no">STEP 2</div><div class="step-name">争夺权柄</div><div class="step-desc">打赢现任掌权者</div></div>
+                <div class="cycle-step"><div class="step-no">STEP 2</div><div class="step-name" data-lore="ranks.c14">争夺权柄</div><div class="step-desc" data-lore="ranks.c15">打赢现任掌权者</div></div>
                 <span class="cycle-arrow">→</span>
-                <div class="cycle-step"><div class="step-no">STEP 3</div><div class="step-name">晋位进化</div><div class="step-desc">借权柄完成进化</div></div>
+                <div class="cycle-step"><div class="step-no">STEP 3</div><div class="step-name" data-lore="ranks.c16">晋位进化</div><div class="step-desc" data-lore="ranks.c17">借权柄完成进化</div></div>
                 <span class="cycle-arrow">→</span>
-                <div class="cycle-step"><div class="step-no">STEP 4</div><div class="step-name">主动放权</div><div class="step-desc">把权柄扔给野生精灵</div></div>
+                <div class="cycle-step"><div class="step-no">STEP 4</div><div class="step-name" data-lore="ranks.c18">主动放权</div><div class="step-desc" data-lore="ranks.c19">把权柄扔给野生精灵</div></div>
                 <span class="cycle-arrow">→</span>
-                <div class="cycle-step"><div class="step-no">STEP 5</div><div class="step-name">重新契约</div><div class="step-desc">负担消失，永远在一起</div></div>
+                <div class="cycle-step"><div class="step-no">STEP 5</div><div class="step-name" data-lore="ranks.c20">重新契约</div><div class="step-desc" data-lore="ranks.c21">负担消失，永远在一起</div></div>
             </div>
             <div class="mech-rows">
                 <div class="mech-row"><i class="fa-solid fa-weight-hanging"></i><div class="mech-txt"><b>托举机制</b>：掌权精灵会抽取下位同属性精灵的力量来维持统治——下位托举上位，所以掌权的负担极其沉重，御兽师会被瞬间抽干。</div></div>
@@ -337,74 +337,74 @@
             <table class="rank-table">
                 <thead>
                     <tr>
-                        <th>精灵等级</th>
-                        <th class="center">阶元</th>
-                        <th>御兽师等级</th>
-                        <th>核心表现（形态不变）</th>
-                        <th>掌权权限</th>
+                        <th data-lore="ranks.c22">精灵等级</th>
+                        <th class="center" data-lore="ranks.c23">阶元</th>
+                        <th data-lore="ranks.c24">御兽师等级</th>
+                        <th data-lore="ranks.c25">核心表现（形态不变）</th>
+                        <th data-lore="ranks.c26">掌权权限</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b)">初灵 <span class="tier-lv">1-15</span></span></td>
+                        <td data-lore="ranks.c27"><span class="tier-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b)">初灵 <span class="tier-lv" data-lore="ranks.c28">1-15</span></span></td>
                         <td class="center"><span class="taxon">种</span></td>
-                        <td>初生 1-15</td>
-                        <td>基础觉醒：掌握本能技能，纯看数值。</td>
-                        <td class="perm-no">无权限</td>
+                        <td data-lore="ranks.c29">初生 1-15</td>
+                        <td data-lore="ranks.c30">基础觉醒：掌握本能技能，纯看数值。</td>
+                        <td class="perm-no" data-lore="ranks.c31">无权限</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#4dabf7,#1971c2)">升灵 <span class="tier-lv">16-36</span></span></td>
+                        <td data-lore="ranks.c32"><span class="tier-badge" style="background:linear-gradient(135deg,#4dabf7,#1971c2)">升灵 <span class="tier-lv" data-lore="ranks.c33">16-36</span></span></td>
                         <td class="center"><span class="taxon">属</span></td>
-                        <td>精英 16-35</td>
-                        <td>形态跃迁：完成进化，技能体系成型。</td>
-                        <td class="perm-no">无权限</td>
+                        <td data-lore="ranks.c34">精英 16-35</td>
+                        <td data-lore="ranks.c35">形态跃迁：完成进化，技能体系成型。</td>
+                        <td class="perm-no" data-lore="ranks.c36">无权限</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#51cf66,#2f9e44)">族尊 <span class="tier-lv">37-50</span></span></td>
+                        <td data-lore="ranks.c37"><span class="tier-badge" style="background:linear-gradient(135deg,#51cf66,#2f9e44)">族尊 <span class="tier-lv" data-lore="ranks.c38">37-50</span></span></td>
                         <td class="center"><span class="taxon">科</span></td>
-                        <td>职业 36-50</td>
-                        <td>种群之主：统御同科，技能产生共鸣。</td>
-                        <td class="perm-yes">同族借力</td>
+                        <td data-lore="ranks.c39">职业 36-50</td>
+                        <td data-lore="ranks.c40">种群之主：统御同科，技能产生共鸣。</td>
+                        <td class="perm-yes" data-lore="ranks.c41">同族借力</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#fcc419,#e67700)">基座 <span class="tier-lv">51-60</span></span></td>
+                        <td data-lore="ranks.c42"><span class="tier-badge" style="background:linear-gradient(135deg,#fcc419,#e67700)">基座 <span class="tier-lv" data-lore="ranks.c43">51-60</span></span></td>
                         <td class="center"><span class="taxon">目</span></td>
-                        <td>枢座 51-60</td>
-                        <td>生命支点：统合多科特征，技能绝对特效。</td>
-                        <td class="perm-yes">修改技能特效</td>
+                        <td data-lore="ranks.c44">枢座 51-60</td>
+                        <td data-lore="ranks.c45">生命支点：统合多科特征，技能绝对特效。</td>
+                        <td class="perm-yes" data-lore="ranks.c46">修改技能特效</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#ff922b,#e8590c)">灵相 <span class="tier-lv">61-70</span></span></td>
+                        <td data-lore="ranks.c47"><span class="tier-badge" style="background:linear-gradient(135deg,#ff922b,#e8590c)">灵相 <span class="tier-lv" data-lore="ranks.c48">61-70</span></span></td>
                         <td class="center"><span class="taxon">纲</span></td>
-                        <td>承相 61-70</td>
-                        <td>自然之踪：行为与现象的极致概念。</td>
-                        <td class="perm-yes">修改环境规则</td>
+                        <td data-lore="ranks.c49">承相 61-70</td>
+                        <td data-lore="ranks.c50">自然之踪：行为与现象的极致概念。</td>
+                        <td class="perm-yes" data-lore="ranks.c51">修改环境规则</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#f06595,#c2255c)">律冠 <span class="tier-lv">71-89</span></span></td>
+                        <td data-lore="ranks.c52"><span class="tier-badge" style="background:linear-gradient(135deg,#f06595,#c2255c)">律冠 <span class="tier-lv" data-lore="ranks.c53">71-89</span></span></td>
                         <td class="center"><span class="taxon">门</span></td>
-                        <td>司律 71-89</td>
-                        <td>生态化身：生态界的外在表现。</td>
-                        <td class="perm-yes">反转全图克制</td>
+                        <td data-lore="ranks.c54">司律 71-89</td>
+                        <td data-lore="ranks.c55">生态化身：生态界的外在表现。</td>
+                        <td class="perm-yes" data-lore="ranks.c56">反转全图克制</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#9775fa,#6741d9)">元灵 <span class="tier-lv">90-99</span></span></td>
+                        <td data-lore="ranks.c57"><span class="tier-badge" style="background:linear-gradient(135deg,#9775fa,#6741d9)">元灵 <span class="tier-lv" data-lore="ranks.c58">90-99</span></span></td>
                         <td class="center"><span class="taxon">界</span></td>
-                        <td>掌元 90-99</td>
-                        <td>界主：生态界本身。</td>
-                        <td class="perm-yes">重写底层法则</td>
+                        <td data-lore="ranks.c59">掌元 90-99</td>
+                        <td data-lore="ranks.c60">界主：生态界本身。</td>
+                        <td class="perm-yes" data-lore="ranks.c61">重写底层法则</td>
                     </tr>
                     <tr>
-                        <td><span class="tier-badge" style="background:linear-gradient(135deg,#ffd43b,#f59f00);color:#5c4200">元 <span class="tier-lv">100</span></span></td>
+                        <td data-lore="ranks.c62"><span class="tier-badge" style="background:linear-gradient(135deg,#ffd43b,#f59f00);color:#5c4200">元 <span class="tier-lv" data-lore="ranks.c63">100</span></span></td>
                         <td class="center"><span class="taxon">域</span></td>
                         <td>—</td>
-                        <td>创世神：最初精灵，已失踪。</td>
-                        <td class="perm-no">不可达（上限 99 级）</td>
+                        <td data-lore="ranks.c64">创世神：最初精灵，已失踪。</td>
+                        <td class="perm-no" data-lore="ranks.c65">不可达（上限 99 级）</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p class="table-note">注：掌权权限仅限<b>掌权时</b>生效，战力本身无权限限制。若元灵沉睡，大量低阶精灵的高胜率引发「生态界震动」，也能强制重写克制。</p>
+        <p class="table-note" data-lore="ranks.c66">注：掌权权限仅限<b>掌权时</b>生效，战力本身无权限限制。若元灵沉睡，大量低阶精灵的高胜率引发「生态界震动」，也能强制重写克制。</p>
     </section>
 
     <!-- 四、逐阶详解 -->
@@ -420,11 +420,11 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b)">初灵 1-15</span>
                     <span class="taxon-tag">种</span>
-                    <span class="trainer-tag">御兽师 · 初生 1-15</span>
+                    <span class="trainer-tag" data-lore="ranks.c67">御兽师 · 初生 1-15</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>底层基石。纯靠自身面板（六维）和【技能核心】打输出，打不过就是数值不够。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>正常契约，随时带在身边。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c68"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>底层基石。纯靠自身面板（六维）和【技能核心】打输出，打不过就是数值不够。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c69"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>正常契约，随时带在身边。</div>
                 </div>
             </div>
 
@@ -432,12 +432,12 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#4dabf7,#1971c2)">升灵 16-36</span>
                     <span class="taxon-tag">属</span>
-                    <span class="trainer-tag">御兽师 · 精英 16-35</span>
+                    <span class="trainer-tag" data-lore="ranks.c70">御兽师 · 精英 16-35</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#1971c2"><b class="label"><i class="fa-solid fa-arrows-up-down"></i>形态</b>初灵到升灵会经历一次形态进化（如圆法师进化为音箱蟀）。种族值低的精灵可能没有升灵期。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-lock"></i>权限</b>无。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>正常契约，随时带在身边。</div>
+                    <div class="tier-row" style="--row-color:#1971c2" data-lore="ranks.c71"><b class="label"><i class="fa-solid fa-arrows-up-down"></i>形态</b>初灵到升灵会经历一次形态进化（如圆法师进化为音箱蟀）。种族值低的精灵可能没有升灵期。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c72"><b class="label"><i class="fa-solid fa-lock"></i>权限</b>无。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c73"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>正常契约，随时带在身边。</div>
                 </div>
             </div>
 
@@ -445,14 +445,14 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#51cf66,#2f9e44)">族尊 37-50</span>
                     <span class="taxon-tag">科</span>
-                    <span class="trainer-tag">御兽师 · 职业 36-50</span>
+                    <span class="trainer-tag" data-lore="ranks.c74">御兽师 · 职业 36-50</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#2f9e44"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>本科目族群的绝对老大。完成最终形态进化，此后形态不再改变。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>只是一只面板极高、技能极强的散修，不影响环境。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【同族借力】：它一吼，同科小弟的力量全借给它，或它把力量分给全科精灵。代价是背负整个「科」的托举重量。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契 → 争夺科权 → 赢下后进化 / 晋位 → 主动放权给同族其他精灵 → 重新契约带走。</div>
-                    <div class="tier-row" style="--row-color:#9c36b5"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>虫系某科族尊掌权，一声令下，周围所有虫系技能全部共鸣，形成声浪海啸。</div>
+                    <div class="tier-row" style="--row-color:#2f9e44" data-lore="ranks.c75"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>本科目族群的绝对老大。完成最终形态进化，此后形态不再改变。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c76"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>只是一只面板极高、技能极强的散修，不影响环境。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c77"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【同族借力】：它一吼，同科小弟的力量全借给它，或它把力量分给全科精灵。代价是背负整个「科」的托举重量。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c78"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契 → 争夺科权 → 赢下后进化 / 晋位 → 主动放权给同族其他精灵 → 重新契约带走。</div>
+                    <div class="tier-row" style="--row-color:#9c36b5" data-lore="ranks.c79"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>虫系某科族尊掌权，一声令下，周围所有虫系技能全部共鸣，形成声浪海啸。</div>
                 </div>
             </div>
 
@@ -460,14 +460,14 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#fcc419,#e67700)">基座 51-60</span>
                     <span class="taxon-tag">目</span>
-                    <span class="trainer-tag">御兽师 · 枢座 51-60</span>
+                    <span class="trainer-tag" data-lore="ranks.c80">御兽师 · 枢座 51-60</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#e67700"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>多个科的统御者，生命形态的聚合概念。形态不再改变。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自己打架时，技能自带一种极端的「法则特效」。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改技能 · 特效覆盖】：将自己掌握的「特效法则」强行覆盖给全境同目的精灵。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契夺权 → 晋位基座 → 放权 → 重新契约。</div>
-                    <div class="tier-row" style="--row-color:#9c36b5"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>火系基座定下【不灭法则】——它掌权期间，全大陆所有火系技能都变成「毒火 / 粘火」，被水浇灭后依然继续燃烧。</div>
+                    <div class="tier-row" style="--row-color:#e67700" data-lore="ranks.c81"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>多个科的统御者，生命形态的聚合概念。形态不再改变。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c82"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自己打架时，技能自带一种极端的「法则特效」。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c83"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改技能 · 特效覆盖】：将自己掌握的「特效法则」强行覆盖给全境同目的精灵。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c84"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契夺权 → 晋位基座 → 放权 → 重新契约。</div>
+                    <div class="tier-row" style="--row-color:#9c36b5" data-lore="ranks.c85"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>火系基座定下【不灭法则】——它掌权期间，全大陆所有火系技能都变成「毒火 / 粘火」，被水浇灭后依然继续燃烧。</div>
                 </div>
             </div>
 
@@ -475,14 +475,14 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#ff922b,#e8590c)">灵相 61-70</span>
                     <span class="taxon-tag">纲</span>
-                    <span class="trainer-tag">御兽师 · 承相 61-70</span>
+                    <span class="trainer-tag" data-lore="ranks.c86">御兽师 · 承相 61-70</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>行为与自然现象的极致（如光合作用、燃烧行为）。形态不再改变。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自身输出极度恐怖，但不影响外界。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改环境 / 主场规则】：修改特定地形或天气规则，让本系精灵获得极高增幅，甚至局部反克制。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契打地盘 → 拿下环境权 → 放权 → 重新契约。</div>
-                    <div class="tier-row" style="--row-color:#9c36b5"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>火系灵相在火山地形打赢了水系。从此只要是火山地形或它开辟的晴天天气，全大陆火系在这里都能把水烧干——在这里，火克水。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c87"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>行为与自然现象的极致（如光合作用、燃烧行为）。形态不再改变。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c88"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自身输出极度恐怖，但不影响外界。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c89"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改环境 / 主场规则】：修改特定地形或天气规则，让本系精灵获得极高增幅，甚至局部反克制。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c90"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契打地盘 → 拿下环境权 → 放权 → 重新契约。</div>
+                    <div class="tier-row" style="--row-color:#9c36b5" data-lore="ranks.c91"><b class="label"><i class="fa-solid fa-circle-info"></i>案例</b>火系灵相在火山地形打赢了水系。从此只要是火山地形或它开辟的晴天天气，全大陆火系在这里都能把水烧干——在这里，火克水。</div>
                 </div>
             </div>
 
@@ -490,13 +490,13 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#f06595,#c2255c)">律冠 71-89</span>
                     <span class="taxon-tag">门</span>
-                    <span class="trainer-tag">御兽师 · 司律 71-89</span>
+                    <span class="trainer-tag" data-lore="ranks.c92">御兽师 · 司律 71-89</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#c2255c"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>生态界外在表现的最高代行者（如火系的「燃烧」「热量」「爆炸」）。形态不再改变。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自身如同一座移动的天灾，但不干涉世界法则。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改外在表现与全图克制】（全图广播）：① 修改本系技能表现——把「燃烧」改成「爆炸」，全天下火系技能全变成爆炸；② 临时反转克制关系——火系律冠正面击败水系律冠并夺权成功，全图立刻变成火克水，直到水系律冠重新打赢。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契 → 争夺全图法则 → 赢下后放权 → 重新契约。</div>
+                    <div class="tier-row" style="--row-color:#c2255c" data-lore="ranks.c93"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>生态界外在表现的最高代行者（如火系的「燃烧」「热量」「爆炸」）。形态不再改变。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c94"><b class="label"><i class="fa-solid fa-moon"></i>无权时</b>自身如同一座移动的天灾，但不干涉世界法则。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c95"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改外在表现与全图克制】（全图广播）：① 修改本系技能表现——把「燃烧」改成「爆炸」，全天下火系技能全变成爆炸；② 临时反转克制关系——火系律冠正面击败水系律冠并夺权成功，全图立刻变成火克水，直到水系律冠重新打赢。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c96"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>解契 → 争夺全图法则 → 赢下后放权 → 重新契约。</div>
                 </div>
             </div>
 
@@ -504,14 +504,14 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#9775fa,#6741d9)">元灵 90-99</span>
                     <span class="taxon-tag">界</span>
-                    <span class="trainer-tag">御兽师 · 掌元 90-99</span>
+                    <span class="trainer-tag" data-lore="ranks.c97">御兽师 · 掌元 90-99</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#6741d9"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>生态界本身，即「界主 / 精灵王」。形态不再改变。</div>
-                    <div class="tier-row" style="--row-color:#64748b"><b class="label"><i class="fa-solid fa-ban"></i>无权时</b>不可被契约——即使不掌权，本身也是行走的宇宙真理。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改底层代码 · 绝对免疫】：直接重写宇宙根目录。微调是「火能蒸发水」，大改是「火免疫水」，永久生效。</div>
-                    <div class="tier-row" style="--row-color:#4c6ef5"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>无法契约，只能作为世界观背景板或信仰。</div>
-                    <div class="tier-row" style="--row-color:#9c36b5"><b class="label"><i class="fa-solid fa-circle-info"></i>补充</b>若元灵不出手，大量低阶精灵（如全大陆火系胜率碾压水系）引发「生态界震动」，也能强制更改底层克制。</div>
+                    <div class="tier-row" style="--row-color:#6741d9" data-lore="ranks.c98"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>生态界本身，即「界主 / 精灵王」。形态不再改变。</div>
+                    <div class="tier-row" style="--row-color:#64748b" data-lore="ranks.c99"><b class="label"><i class="fa-solid fa-ban"></i>无权时</b>不可被契约——即使不掌权，本身也是行走的宇宙真理。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c100"><b class="label"><i class="fa-solid fa-crown"></i>掌权后</b>【修改底层代码 · 绝对免疫】：直接重写宇宙根目录。微调是「火能蒸发水」，大改是「火免疫水」，永久生效。</div>
+                    <div class="tier-row" style="--row-color:#4c6ef5" data-lore="ranks.c101"><b class="label"><i class="fa-solid fa-user-shield"></i>御兽师</b>无法契约，只能作为世界观背景板或信仰。</div>
+                    <div class="tier-row" style="--row-color:#9c36b5" data-lore="ranks.c102"><b class="label"><i class="fa-solid fa-circle-info"></i>补充</b>若元灵不出手，大量低阶精灵（如全大陆火系胜率碾压水系）引发「生态界震动」，也能强制更改底层克制。</div>
                 </div>
             </div>
 
@@ -519,11 +519,11 @@
                 <div class="tier-top">
                     <span class="tier-badge" style="background:linear-gradient(135deg,#ffd43b,#f59f00);color:#5c4200">元 100</span>
                     <span class="taxon-tag">域</span>
-                    <span class="trainer-tag">御兽师 · 无对应</span>
+                    <span class="trainer-tag" data-lore="ranks.c103">御兽师 · 无对应</span>
                 </div>
                 <div class="tier-rows">
-                    <div class="tier-row" style="--row-color:#e67700"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>创造了一切的最初精灵，即创世神【元】。自身不知所踪。</div>
-                    <div class="tier-row" style="--row-color:#e8590c"><b class="label"><i class="fa-solid fa-lock"></i>权限</b>不可达。等级上限即为 99 级元灵，100 级【元】只存在于传说之中。</div>
+                    <div class="tier-row" style="--row-color:#e67700" data-lore="ranks.c104"><b class="label"><i class="fa-solid fa-location-dot"></i>定位</b>创造了一切的最初精灵，即创世神【元】。自身不知所踪。</div>
+                    <div class="tier-row" style="--row-color:#e8590c" data-lore="ranks.c105"><b class="label"><i class="fa-solid fa-lock"></i>权限</b>不可达。等级上限即为 99 级元灵，100 级【元】只存在于传说之中。</div>
                 </div>
             </div>
 
@@ -540,11 +540,11 @@
         <div class="iron-grid">
             <div class="iron-card">
                 <h3><i class="fa-solid fa-scale-balanced"></i> 战斗逻辑</h3>
-                <p>低级打高级，哪怕克制，也打不过——<b>数值碾压</b>。但同级别打架，看的是环境、特效和战术（技能核心组合）。</p>
+                <p data-lore="ranks.c106">低级打高级，哪怕克制，也打不过——<b>数值碾压</b>。但同级别打架，看的是环境、特效和战术（技能核心组合）。</p>
             </div>
             <div class="iron-card">
                 <h3><i class="fa-solid fa-dragon"></i> 形态原则</h3>
-                <p>无论精灵升到多高等级，它始终保留<b>生物形态</b>——一只火鸟到了律冠，它依然是一只鸟，只是它的羽毛可以引发核爆。</p>
+                <p data-lore="ranks.c107">无论精灵升到多高等级，它始终保留<b>生物形态</b>——一只火鸟到了律冠，它依然是一只鸟，只是它的羽毛可以引发核爆。</p>
             </div>
         </div>
     </section>
@@ -560,6 +560,9 @@
     </footer>
 
 </div>
+
+<script src="js/data-loader.js?v=20261125a"></script>
+<script src="js/lore-apply.js?v=20261125a"></script>
 
 <script>
 (function () {
