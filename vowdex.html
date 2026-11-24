@@ -221,6 +221,8 @@
         <!-- 卡片网格 -->
         <div class="vowdex-grid" v-if="paginatedPets.length > 0">
             <div class="pet-card" :class="{ 'has-shiny': hasShiny(pet) }" v-for="pet in paginatedPets" :key="pet.id"
+                 :title="'点击查看 ' + pet.name + ' 的图鉴详情'"
+                 @click="gotoDetail(pet)"
                  @mouseenter="startShiny(pet)" @mouseleave="stopShiny(pet)">
                 <div class="card-top">
                     <span class="id font-num">{{ pet.id }}</span>
@@ -363,6 +365,11 @@ VowmonData.ready(['pets']).then(function () {
             };
 
 
+            const gotoDetail = (pet) => {
+                if (!pet || !pet.id) return;
+                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(pet.id);
+            };
+
             // 计数逻辑
             const stageCounts = computed(() => {
                 const counts = { '一阶': 0, '二阶': 0, '三阶': 0 };
@@ -436,7 +443,7 @@ VowmonData.ready(['pets']).then(function () {
                 stageCounts, formCounts, typeCounts,
                 toggleType, toggleFilter, clearFilters,
                 getImgUrl, getTypeColor, getTypeIcon,
-                hasShiny, shinySrc, startShiny, stopShiny
+                hasShiny, shinySrc, startShiny, stopShiny, gotoDetail
             };
         }
     }).mount('#app');

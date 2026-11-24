@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Vowmon Wiki - 精灵详情</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
+
+        /* ---------------- 顶部条 ---------------- */
+        .crumb-bar { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .crumb-left a { display: inline-flex; align-items: center; gap: 6px; color: #718096; text-decoration: none; font-size: 13px; font-weight: 800; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #e2e8f0; transition: color .15s, border-color .15s; }
+        .crumb-left a:hover { color: #ff6b6b; border-color: #ff6b6b; }
+        .neighbor-nav { display: flex; gap: 8px; }
+        .neighbor-chip { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 6px 12px; cursor: pointer; user-select: none; transition: border-color .15s, box-shadow .15s, transform .15s; max-width: 180px; }
+        .neighbor-chip:hover { border-color: #ff6b6b; box-shadow: 0 4px 10px rgba(255,107,107,.12); transform: translateY(-1px); }
+        .neighbor-chip:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; border-color: #e2e8f0; }
+        .neighbor-chip img { width: 34px; height: 34px; object-fit: contain; }
+        .neighbor-chip .nc-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; min-width: 0; }
+        .neighbor-chip .nc-id { font-size: 10.5px; color: #a0aec0; }
+        .neighbor-chip .nc-name { font-size: 13px; font-weight: 900; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 92px; }
+        .neighbor-chip i { color: #a0aec0; font-size: 12px; }
+
+        .container { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
+
+        /* ---------------- 左列：精灵展示台 ---------------- */
+        .pet-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .pet-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 15px; padding: 6px 14px; border-radius: 10px; letter-spacing: .04em; }
+        .pet-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; letter-spacing: .02em; }
+        .pet-name-bar .form-tag { font-size: 12px; font-weight: 800; color: #718096; background: #edf2f7; border-radius: 999px; padding: 4px 12px; }
+        .pet-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
+        .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
+        .type-pill i { font-size: 10px; }
+
+        /* 展示台：属性色渐变底 + 两层缓慢流动的纹样背景 + 精灵上下浮动 */
+        .showcase { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.6); box-shadow: 0 12px 32px rgba(45,55,72,.14); background: linear-gradient(160deg, var(--sc-c1, #bee3f8) 0%, var(--sc-c2, #e8f4fd) 58%, #f7fbfe 100%); }
+        .showcase .stage { position: relative; height: 340px; display: flex; align-items: center; justify-content: center; }
+
+        /* 流动背景：两层大尺寸纹样分别向两个方向缓慢平移（只动 transform，GPU 合成，流畅） */
+        .showcase .drift { position: absolute; inset: -60%; pointer-events: none; will-change: transform; }
+        .showcase .drift.a { background-image: radial-gradient(circle at center, rgba(255,255,255,.55) 0 7px, transparent 8px); background-size: 74px 74px; animation: driftA 26s linear infinite; }
+        .showcase .drift.b { background-image: radial-gradient(circle at center, rgba(255,255,255,.32) 0 4px, transparent 5px); background-size: 38px 38px; animation: driftB 34s linear infinite; }
+        @keyframes driftA { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-74px, 74px, 0); } }
+        @keyframes driftB { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(76px, -38px, 0); } }
+
+        .pet-figure { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+        .pet-figure img { width: 250px; max-width: 70vw; height: 250px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.22)); animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
+        @keyframes petFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
+        /* 地面影子随浮动同步缩放，更像真的悬浮 */
+        .pet-shadow { width: 130px; height: 16px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.26) 0%, transparent 68%); animation: shadowPulse 3.2s ease-in-out infinite; }
+        @keyframes shadowPulse { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.72); opacity: .55; } }
+
+        .showcase .stage-actions { position: relative; z-index: 3; display: flex; justify-content: center; gap: 8px; padding: 0 0 16px; }
+        .stage-btn { display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 800; padding: 8px 18px; border-radius: 999px; background: rgba(255,255,255,.85); color: #4a5568; box-shadow: 0 2px 8px rgba(45,55,72,.12); transition: transform .15s, box-shadow .15s, background .15s, color .15s; }
+        .stage-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(45,55,72,.18); }
+        .stage-btn.active { background: #2d3748; color: #ffd76e; }
+
+        /* 图鉴记载 */
+        .dex-note { background: #fff; border: 1px solid #e8edf2; border-radius: 18px; padding: 18px 20px; margin-top: 14px; }
+        .dex-note h3 { font-size: 13px; font-weight: 900; color: #c08a2a; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dex-note p { font-size: 14px; line-height: 1.9; color: #4a5568; }
+
+        /* ---------------- 右列：资料卡 ---------------- */
+        .info-card { background: #fff; border: 1px solid #e8edf2; border-radius: 18px; padding: 20px 22px; margin-bottom: 16px; }
+        .info-card h2 { font-size: 16px; font-weight: 900; color: #1a202c; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .info-card h2 i { color: #ff6b6b; font-size: 14px; }
+        .info-card h2 .total-badge { margin-left: auto; font-size: 14px; color: #b7791f; background: #fefcbf; padding: 3px 14px; border-radius: 999px; }
+
+        /* 种族值条 */
+        .stat-line { display: grid; grid-template-columns: 74px 1fr 52px; align-items: center; gap: 12px; padding: 6px 0; }
+        .stat-line .s-label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #4a5568; }
+        .stat-line .s-label i { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 10.5px; color: #fff; }
+        .stat-bar-track { height: 12px; background: #edf2f7; border-radius: 999px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.22,1,.36,1); }
+        .stat-line .s-num { font-size: 15px; color: #2d3748; text-align: right; }
+
+        /* 基本信息 */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .info-box { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 12px 14px; }
+        .info-box .lbl { font-size: 11px; font-weight: 800; color: #a0aec0; margin-bottom: 4px; }
+        .info-box .val { font-size: 14px; font-weight: 800; color: #2d3748; word-break: break-all; }
+        .origin-note { margin-top: 10px; font-size: 11.5px; color: #a0aec0; line-height: 1.6; }
+        .origin-note b { color: #718096; }
+
+        /* 特性 */
+        .ability-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f6; margin-bottom: 8px; }
+        .ability-row:last-child { margin-bottom: 0; }
+        .ability-ico { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+        .ability-row.normal .ability-ico { background: #ebf8ff; color: #2b6cb0; }
+        .ability-row.alt .ability-ico { background: #f0fff4; color: #38a169; }
+        .ability-row.hidden .ability-ico { background: #fefcbf; color: #b7791f; }
+        .ability-txt { flex: 1; min-width: 0; }
+        .ability-txt b { font-size: 14px; color: #2d3748; display: block; margin-bottom: 2px; }
+        .ability-txt span { font-size: 12.5px; color: #718096; line-height: 1.7; }
+        .ability-tag { font-size: 10.5px; font-weight: 800; color: #fff; border-radius: 999px; padding: 2px 9px; margin-left: 8px; vertical-align: 1px; }
+
+        /* 进化链 */
+        .evo-chain { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+        .evo-node { background: #f8fafc; border: 1.5px solid #eef2f6; border-radius: 14px; padding: 10px 12px 8px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; min-width: 92px; }
+        .evo-node:hover { transform: translateY(-2px); border-color: #ff6b6b; box-shadow: 0 6px 14px rgba(45,55,72,.12); }
+        .evo-node img { width: 62px; height: 62px; object-fit: contain; }
+        .evo-node .e-name { font-size: 12.5px; font-weight: 900; color: #2d3748; }
+        .evo-node .e-id { font-size: 10px; color: #a0aec0; }
+        .evo-node.cur { border-color: #ff6b6b; background: #fff5f5; }
+        .evo-arrow { color: #cbd5e0; font-size: 16px; }
+
+        /* 系别克制 */
+        .chart-sub { font-size: 12.5px; font-weight: 900; color: #718096; margin: 12px 0 8px; display: flex; align-items: center; gap: 6px; }
+        .chart-sub:first-of-type { margin-top: 0; }
+        .chart-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .mul-badge { font-size: 11px; font-weight: 900; padding: 3px 9px; border-radius: 8px; min-width: 38px; text-align: center; }
+        .mul-badge.strong { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+        .mul-badge.weak { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
+        .mul-badge.zero { background: #edf2f7; color: #718096; border: 1px solid #cbd5e0; }
+        .chart-type { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 5px; border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #fff; }
+        .chart-type i { font-size: 9.5px; }
+        .chart-empty { font-size: 12.5px; color: #a0aec0; padding: 4px 0 0 44px; }
+
+        .empty-state { text-align: center; color: #a0aec0; padding: 70px 20px; font-weight: 700; background: #fff; border-radius: 18px; border: 1px solid #e8edf2; max-width: 720px; margin: 40px auto; }
+        .empty-state i { font-size: 34px; display: block; margin-bottom: 14px; }
+
+        /* 动画开关：关 = 全站无动画（浮动 / 流动背景 / 过渡全部停掉，背景保留为静态） */
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; gap: 14px; padding: 0 12px; }
+            .crumb-bar { flex-wrap: wrap; padding: 0 12px; }
+            .neighbor-chip { max-width: 140px; }
+            .showcase .stage { height: 280px; }
+            .pet-figure img { width: 200px; height: 200px; }
+            .pet-name-bar h1 { font-size: 21px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
+    <script src="js/navbar.js?v=20261125b" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <template v-if="pet">
+        <!-- 顶部：返回 + 上/下一只 -->
+        <div class="crumb-bar">
+            <div class="crumb-left">
+                <a href="vowdex.html"><i class="fa-solid fa-table-cells-large"></i> 图鉴总览</a>
+            </div>
+            <div class="neighbor-nav">
+                <button class="neighbor-chip" :disabled="!prevPet" @click="gotoId(prevPet && prevPet.id)" title="上一只">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <img v-if="prevPet && prevPet.image" :src="getImgUrl(prevPet.image)" alt="">
+                    <span class="nc-txt"><span class="nc-id font-num">{{ prevPet ? prevPet.id : '' }}</span><span class="nc-name">{{ prevPet ? prevPet.name : '没有上一只' }}</span></span>
+                </button>
+                <button class="neighbor-chip" :disabled="!nextPet" @click="gotoId(nextPet && nextPet.id)" title="下一只">
+                    <span class="nc-txt" style="align-items: flex-end;"><span class="nc-id font-num">{{ nextPet ? nextPet.id : '' }}</span><span class="nc-name">{{ nextPet ? nextPet.name : '没有下一只' }}</span></span>
+                    <img v-if="nextPet && nextPet.image" :src="getImgUrl(nextPet.image)" alt="">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- 左列：展示台 -->
+            <div>
+                <div class="pet-name-bar">
+                    <span class="id-badge font-num">{{ pet.id }}</span>
+                    <h1>{{ pet.name }}</h1>
+                    <span class="form-tag" v-if="pet.form">{{ pet.form }}</span>
+                    <div class="type-icons">
+                        <span class="type-pill" v-for="t in pet.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
+                    </div>
+                </div>
+
+                <div class="showcase" :style="showcaseStyle">
+                    <div class="drift a"></div>
+                    <div class="drift b"></div>
+                    <div class="stage">
+                        <div class="pet-figure">
+                            <img :src="displayImg" :alt="pet.name" decoding="async">
+                            <div class="pet-shadow"></div>
+                        </div>
+                    </div>
+                    <div class="stage-actions" v-if="pet.shiny && pet.shiny.length">
+                        <button class="stage-btn" :class="{ active: !isShiny }" @click="isShiny = false"><i class="fa-solid fa-paw"></i> 普通</button>
+                        <button class="stage-btn" :class="{ active: isShiny }" @click="isShiny = true"><i class="fa-solid fa-star"></i> 异色</button>
+                    </div>
+                </div>
+
+                <div class="dex-note">
+                    <h3><i class="fa-solid fa-book-open"></i> 图鉴记载</h3>
+                    <p>{{ pet.description || '这只精灵还没有留下任何图鉴记载……' }}</p>
+                </div>
+            </div>
+
+            <!-- 右列：资料 -->
+            <div>
+                <!-- 种族资质 -->
+                <div class="info-card" v-if="hasStats">
+                    <h2><i class="fa-solid fa-chart-simple"></i> 种族资质 <span class="total-badge font-num">{{ statsTotal }}</span></h2>
+                    <div class="stat-line" v-for="s in statLines" :key="s.key">
+                        <span class="s-label"><i :class="s.icon" :style="{ background: s.color }"></i>{{ s.label }}</span>
+                        <div class="stat-bar-track"><div class="stat-bar-fill" :style="{ width: s.pct + '%', background: 'linear-gradient(90deg,' + s.color + 'aa,' + s.color + ')' }"></div></div>
+                        <span class="s-num font-num">{{ s.value }}</span>
+                    </div>
+                </div>
+
+                <!-- 基本信息 -->
+                <div class="info-card">
+                    <h2><i class="fa-solid fa-circle-info"></i> 资料</h2>
+                    <div class="info-grid">
+                        <div class="info-box" v-if="pet.stage"><div class="lbl">阶数</div><div class="val">{{ pet.stage }}</div></div>
+                        <div class="info-box" v-if="pet.form"><div class="lbl">形态</div><div class="val">{{ pet.form }}</div></div>
+                        <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
+                        <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
+                        <div class="info-box" v-if="pet.eggGroup"><div class="lbl">蛋组</div><div class="val">{{ pet.eggGroup }}</div></div>
+                        <div class="info-box" v-if="pet.rideable"><div class="lbl">可骑乘</div><div class="val">{{ pet.rideable }}</div></div>
+                    </div>
+                    <div class="origin-note" v-if="pet.origin"><b>原型参照（仅助记，非世界设定）</b>：{{ pet.origin }}</div>
+                </div>
+
+                <!-- 特性 -->
+                <div class="info-card" v-if="abilityRows.length">
+                    <h2><i class="fa-solid fa-crown"></i> 特性</h2>
+                    <div class="ability-row" v-for="a in abilityRows" :key="a.name" :class="a.cls">
+                        <div class="ability-ico"><i :class="a.icon"></i></div>
+                        <div class="ability-txt">
+                            <b>{{ a.name }}<span class="ability-tag" :style="{ background: a.tagColor }">{{ a.tag }}</span></b>
+                            <span>{{ a.effect || '暂无效果说明' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 进化链 -->
+                <div class="info-card" v-if="evoNodes.length > 1">
+                    <h2><i class="fa-solid fa-arrows-turn-to-dots"></i> 进化链</h2>
+                    <div class="evo-chain">
+                        <template v-for="(n, i) in evoNodes" :key="n.id + i">
+                            <span class="evo-arrow" v-if="i > 0"><i class="fa-solid fa-angle-right"></i></span>
+                            <div class="evo-node" :class="{ cur: n.id === pet.id }" @click="gotoId(n.id)">
+                                <img v-if="n.image" :src="getImgUrl(n.image)" :alt="n.name">
+                                <div class="e-name">{{ n.name }}</div>
+                                <div class="e-id font-num">{{ n.id }}</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 系别克制 -->
+                <div class="info-card" v-if="pet.types.length">
+                    <h2><i class="fa-solid fa-scale-balanced"></i> 系别克制</h2>
+                    <div class="chart-sub"><i class="fa-solid fa-bolt"></i> 本系进攻</div>
+                    <template v-for="grp in attackGroups">
+                        <div class="chart-row" :key="'atk' + grp.key">
+                            <span class="mul-badge" :class="grp.cls">{{ grp.label }}</span>
+                            <span class="chart-type" v-for="t in grp.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
+                        </div>
+                    </template>
+                    <div class="chart-sub"><i class="fa-solid fa-shield-halved"></i> 承受攻击</div>
+                    <template v-for="grp in defendGroups">
+                        <div class="chart-row" :key="grp.key">
+                            <span class="mul-badge" :class="grp.cls">{{ grp.label }}</span>
+                            <span class="chart-type" v-for="t in grp.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
+                        </div>
+                    </template>
+                    <div class="chart-empty" v-if="!defendGroups.length">所有系别攻击均为正常倍率</div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div class="container" v-else>
+        <div class="empty-state">
+            <i class="fa-solid fa-paw"></i>
+            <template v-if="notFound">没有找到这只精灵，可能已被删除或链接有误</template>
+            <template v-else>正在加载精灵数据…</template>
+            <div style="margin-top: 14px;"><a href="vowdex.html" style="color:#ff6b6b; font-weight:800; text-decoration:none;">← 返回图鉴总览</a></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/type-config.js?v=20261124"></script>
+<script src="js/type-chart.js?v=20261124"></script>
+<script src="js/site-config.js?v=20261124"></script>
+<script src="js/vowmon-utils.js?v=20261125a"></script>
+<script src="js/data-loader.js?v=20261125a"></script>
+<script>
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+VowmonData.ready(['pets']).then(function () {
+
+    createApp({
+        setup() {
+            /* ---------------- URL 参数：?id=279 ---------------- */
+            const params = new URLSearchParams(window.location.search);
+            const urlId = (params.get('id') || '').trim();
+            const notFound = ref(false);
+
+            // 精灵数据（本地镜像秒开；后台改动实时刷新；统一按编号升序）
+            const pets = ref(VowmonUtils.normalizeAll(allPetsData));
+            VowmonData.onChange('pets', (data) => {
+                pets.value = VowmonUtils.normalizeAll((data && data.pets) || allPetsData);
+            });
+
+            const pet = computed(() => pets.value.find(p => p.id === urlId) || null);
+            const petIndex = computed(() => pet.value ? pets.value.indexOf(pet.value) : -1);
+            const prevPet = computed(() => petIndex.value > 0 ? pets.value[petIndex.value - 1] : null);
+            const nextPet = computed(() => (petIndex.value > -1 && petIndex.value < pets.value.length - 1) ? pets.value[petIndex.value + 1] : null);
+
+            const gotoId = (id) => {
+                if (!id) return;
+                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(id);
+            };
+
+            /* ---------------- 图片 ---------------- */
+            let siteConfig = {};
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {}; } catch (e) { siteConfig = {}; }
+            const IMG_RAW = String(siteConfig.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            const IMG_BASE = IMG_RAW ? IMG_RAW + '/' : '';
+            const getImgUrl = (path) => {
+                if (!path) return '';
+                if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) return path;
+                return IMG_BASE + String(path).replace(/^\/+/, '');
+            };
+
+            /* ---------------- 属性 ---------------- */
+            const typeMap = new Map(typeData.map(t => [t.name, t]));
+            const getTypeColor = (type) => (typeMap.get(type) || {}).color || '#ccc';
+            const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
+
+            /* ---------------- 展示台：属性色背景 + 异色切换 ---------------- */
+            const isShiny = ref(false);
+            watch(pet, () => { isShiny.value = false; });   // 切换精灵时回到普通形态
+            const displayImg = computed(() => {
+                if (!pet.value) return '';
+                if (isShiny.value && pet.value.shiny && pet.value.shiny.length) {
+                    return getImgUrl(pet.value.shiny[0]);
+                }
+                return getImgUrl(pet.value.image);
+            });
+            // 背景渐变取第一个属性的颜色（浅色端由 CSS 固定）
+            const showcaseStyle = computed(() => {
+                if (!pet.value || !pet.value.types.length) return {};
+                const c = getTypeColor(pet.value.types[0]);
+                return { '--sc-c1': c + 'cc', '--sc-c2': c + '33' };
+            });
+
+            /* ---------------- 动画开关（关 = 浮动/流动背景全停，异色不轮播） ---------------- */
+            const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
+            const updateBodyClass = () => {
+                if (isAnimOn.value) document.body.classList.remove('no-anim');
+                else document.body.classList.add('no-anim');
+            };
+            document.addEventListener('vowmon:anim-changed', (e) => {
+                isAnimOn.value = e && e.detail ? !!e.detail.on : (localStorage.getItem('vowmon_anim_on') !== 'false');
+                updateBodyClass();
+            });
+
+            /* ---------------- 种族值 ---------------- */
+            const STAT_META = [
+                { key: 'hp', label: '生命', icon: 'fa-solid fa-heart', color: '#e53e3e' },
+                { key: 'atk', label: '攻击', icon: 'fa-solid fa-hand-fist', color: '#dd6b20' },
+                { key: 'def', label: '防御', icon: 'fa-solid fa-shield-halved', color: '#3182ce' },
+                { key: 'spAtk', label: '特攻', icon: 'fa-solid fa-wand-magic-sparkles', color: '#805ad5' },
+                { key: 'spDef', label: '特防', icon: 'fa-solid fa-shield-heart', color: '#38b2ac' },
+                { key: 'spd', label: '速度', icon: 'fa-solid fa-wind', color: '#38a169' }
+            ];
+            const statLines = computed(() => {
+                if (!pet.value) return [];
+                const s = pet.value.stats || {};
+                return STAT_META.map(m => {
+                    const value = Number(s[m.key]) || 0;
+                    return { ...m, value, pct: Math.min(100, Math.round(value / 220 * 100)) };
+                });
+            });
+            const hasStats = computed(() => {
+                if (!pet.value) return false;
+                const s = pet.value.stats || {};
+                return STAT_META.some(m => (Number(s[m.key]) || 0) > 0);
+            });
+            const statsTotal = computed(() => pet.value ? VowmonUtils.total(pet.value.stats) : 0);
+
+            /* ---------------- 基本信息 ---------------- */
+            const fmtNum = (v, unit) => {
+                if (v === '' || v === null || v === undefined) return '';
+                const n = Number(v);
+                return isNaN(n) ? String(v) + ' ' + unit : n + ' ' + unit;
+            };
+            const heightText = computed(() => pet.value ? fmtNum(pet.value.height, 'm') : '');
+            const weightText = computed(() => pet.value ? fmtNum(pet.value.weight, 'kg') : '');
+
+            /* ---------------- 特性 ---------------- */
+            const abilityRows = computed(() => {
+                if (!pet.value) return [];
+                const rows = [];
+                const p = pet.value;
+                if (p.ability) rows.push({ name: p.ability, effect: p.abilityEffect, cls: 'normal', icon: 'fa-solid fa-crown', tag: '特性', tagColor: '#2b6cb0' });
+                if (p.ability2) rows.push({ name: p.ability2, effect: p.ability2Effect, cls: 'alt', icon: 'fa-solid fa-crown', tag: '特性', tagColor: '#38a169' });
+                if (p.hiddenAbility) rows.push({ name: p.hiddenAbility, effect: p.hiddenAbilityEffect, cls: 'hidden', icon: 'fa-solid fa-gem', tag: '隐藏特性', tagColor: '#b7791f' });
+                return rows;
+            });
+
+            /* ---------------- 进化链 ---------------- */
+            const petById = computed(() => {
+                const m = new Map();
+                pets.value.forEach(p => m.set(p.id, p));
+                return m;
+            });
+            const evoNodes = computed(() => {
+                if (!pet.value) return [];
+                const p = pet.value;
+                const fromIds = Array.isArray(p.evoFrom) ? p.evoFrom : [];
+                const toIds = Array.isArray(p.evoTo) ? p.evoTo : [];
+                const nodes = [];
+                fromIds.forEach(id => { const q = petById.value.get(String(id)); if (q) nodes.push({ id: q.id, name: q.name, image: q.image }); });
+                nodes.push({ id: p.id, name: p.name, image: p.image });
+                toIds.forEach(id => { const q = petById.value.get(String(id)); if (q) nodes.push({ id: q.id, name: q.name, image: q.image }); });
+                return nodes;
+            });
+
+            /* ---------------- 系别克制 ---------------- */
+            const fmtMul = (m) => m === 0 ? '×0' : ('×' + m);
+            // 进攻：本系攻击 18 系的倍率（每种属性单独一组）
+            const attackGroups = computed(() => {
+                if (!pet.value) return [];
+                const out = [];
+                pet.value.types.forEach(myType => {
+                    const strong = [], weak = [], zero = [];
+                    typeData.forEach(t => {
+                        const m = getTypeMultiplier(myType, t.name);
+                        if (m > 1) strong.push(t.name);
+                        else if (m === 0) zero.push(t.name);
+                        else if (m < 1) weak.push(t.name);
+                    });
+                    if (strong.length) out.push({ key: myType + '-s', cls: 'strong', label: '克制', types: strong });
+                    if (weak.length) out.push({ key: myType + '-w', cls: 'weak', label: '减半', types: weak });
+                    if (zero.length) out.push({ key: myType + '-z', cls: 'zero', label: '无效', types: zero });
+                });
+                return out;
+            });
+            // 防守：18 系打过来的双系合成倍率
+            const defendGroups = computed(() => {
+                if (!pet.value || !pet.value.types.length) return [];
+                const byMul = new Map();   // 倍率 -> [攻方属性]
+                typeData.forEach(t => {
+                    const m = getComboMultiplier(t.name, pet.value.types);
+                    if (m === 1) return;
+                    if (!byMul.has(m)) byMul.set(m, []);
+                    byMul.get(m).push(t.name);
+                });
+                const muls = Array.from(byMul.keys()).sort((a, b) => b - a);
+                const out = [];
+                muls.forEach(m => {
+                    const cls = m > 1 ? 'strong' : (m === 0 ? 'zero' : 'weak');
+                    out.push({ key: 'def' + m, cls, label: fmtMul(m), types: byMul.get(m) });
+                });
+                return out;
+            });
+
+            onMounted(() => {
+                updateBodyClass();
+                if (!urlId) notFound.value = true;
+                setTimeout(() => { if (urlId && !pet.value) notFound.value = true; }, 0);
+            });
+
+            return {
+                pet, notFound, prevPet, nextPet, gotoId,
+                getImgUrl, getTypeColor, getTypeIcon,
+                isShiny, displayImg, showcaseStyle,
+                statLines, hasStats, statsTotal,
+                heightText, weightText,
+                abilityRows, evoNodes,
+                attackGroups, defendGroups
+            };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

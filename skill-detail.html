@@ -204,8 +204,8 @@
 
             <div class="learner-grid" v-if="pagedEntries.length">
                 <div class="learner-card" :class="entry.mode" v-for="entry in pagedEntries" :key="entry.pet.id + entry.mode"
-                     :title="'点击在精灵列表中查看 ' + entry.pet.name"
-                     @click="gotoPet(entry.pet.name)">
+                     :title="'点击查看 ' + entry.pet.name + ' 的图鉴详情'"
+                     @click="gotoPet(entry.pet)">
                     <div class="lc-top">
                         <span class="lc-no font-num">NO.{{ entry.pet.id }}</span>
                         <span class="lc-mode" :title="entry.mode === 'stone' ? '技能石学习' : '自学领悟'">
@@ -370,8 +370,9 @@ VowmonData.ready(['skills', 'pets']).then(function () {
             watch([modeFilter, searchName], () => { page.value = 1; });
             watch(filteredEntries, () => { if (page.value > totalPages.value) page.value = totalPages.value; });
 
-            const gotoPet = (name) => {
-                window.location.href = 'list.html?q=' + encodeURIComponent(name);
+            const gotoPet = (pet) => {
+                if (!pet || !pet.id) return;
+                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(pet.id);
             };
 
             onMounted(() => {
