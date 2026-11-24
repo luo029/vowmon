@@ -1,6 +1,13 @@
 // items-data.js
 // 物品图鉴数据。字段说明见 README「物品（item）」一节，改完可在后台「物品管理」一键同步。
 // 注意：id 仅用于详情页深链（items.html?id=i001）与图标命名，不对外展示编号。
+//
+// 下面三组是「自定义类型 / 分组 / 细分类」。留空（或删掉）就用 js/item-config.js 的内置默认；
+// 后台改过之后点「一键同步」，会把当前列表整份写回这里——所以删掉某一项就是真的删掉。
+const itemKindsData = [];
+const itemGroupsData = [];
+const itemCategoriesData = [];
+
 const allItemsData = [
     {
         id: 'i001',

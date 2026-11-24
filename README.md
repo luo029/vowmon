@@ -13,6 +13,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
 5. **属性统一**：所有属性的图标和颜色存放在 `js/type-config.js`，全局引用。
+6. **禁止系统弹窗**：任何 `alert()` / `confirm()` / `prompt()` 都不允许出现，统一换成自定义弹窗 `VowmonDialog`（`js/dialog.js` + `css/dialog.css`，用法见 1.2）。
 
 ---
 
@@ -40,6 +41,7 @@ vowmon/
 │   ├── style.css           # 前台统一样式
 │   ├── navbar.css          # 全站导航栏样式（唯一来源）
 │   ├── common-ui.css       # 通用组件样式（弹窗、表单、选择器）
+│   ├── dialog.css          # 自定义弹窗 / 轻提示样式（配套 js/dialog.js）
 │   ├── admin.css           # 后台布局样式
 │   └── responsive.css      # 全站移动端适配（最后引入，唯一来源）
 │
@@ -52,6 +54,7 @@ vowmon/
 │   ├── type-chart.js       # 18×18 属性克制表 + 组合倍率计算
 │   ├── github-api.js       # GitHub API 封装
 │   ├── image-utils.js      # 图片上传前处理：压缩 / 等比缩放 / 统一输出 PNG
+│   ├── dialog.js           # 自定义弹窗 + 轻提示（window.VowmonDialog，替代 alert/confirm）
 │   ├── admin.js            # 精灵后台逻辑
 │   ├── admin-skills.js     # 技能后台逻辑
 │   ├── admin-traits.js     # 特性后台逻辑
@@ -195,6 +198,14 @@ vowmon/
 - **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `skills.html` 与后台 `admin-skills.html` 都引用它，禁止在页面里写死分类图标或色值。
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
 - **弹窗组件**：后台五个页面（`admin.html`、`admin-skills.html`、`admin-traits.html`、`admin-items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
+- **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。
+  - `VowmonDialog.confirm(消息, 选项)` → `Promise<boolean>`，`VowmonDialog.alert(消息, 选项)` → `Promise`，`VowmonDialog.prompt(消息, 选项)` → `Promise<string|null>`。
+  - `VowmonDialog.toast(消息, 'success' | 'warning' | 'danger')` 是右下角轻提示，用于「已保存 / 已删除 / 已同步」这类不需要用户确认的结果。
+  - 选项：`type`（`info` / `success` / `warning` / `danger`）、`title`、`okText`、`cancelText`、`detail`（长错误信息，等宽小字块）、`html`（消息里要用 `<strong>` 时必须开，变量用 `VowmonDialog.esc()` 转义）、`duration`（仅 toast）。
+  - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
+  - 它不复用 `.modal-overlay`，遮罩与键盘（Esc 取消 / Enter 确认）逻辑自管，因此 Esc 关弹窗时不会把后面的表单弹窗一起关掉；同时遵循 `vowmon_anim_on` 开关。
+- **表格列宽**：`admin-items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
+- **后台搜索框**：图片管理工具栏统一用 `.search-field`（放大镜图标 + 内嵌清空按钮，清空按钮 `v-if` 只在有内容时出现）与 `.filter-select`（`appearance: none` + SVG 箭头），两者都是 40px 高 / 11px 圆角。不要再退回 `input-with-btn` + 独立 `btn` 的写法，也不要用默认 `<select>`。
 - **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `items.html` 的 Tab 与筛选胶囊、后台 `admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。

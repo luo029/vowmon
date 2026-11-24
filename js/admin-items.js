@@ -33,7 +33,6 @@ createApp({
         const editIndex = ref(-1);
         const activeDropdown = ref('');
 
-        const showDeleteModal = ref(false);
         const deleteTargetIndex = ref(-1);
         const deleteTargetName = ref('');
 
@@ -55,6 +54,243 @@ createApp({
 
         const form = ref(defaultForm());
         const obtainText = ref('');
+
+        /* ----------------------------------- 类型 / 分组 / 细分类（可自定义列表） */
+        // 存的是「完整列表」，所以删掉就是真删掉；同步时会整份写回 data/items-data.js。
+        const KINDS_KEY = 'vowmon_item_kinds';
+        const GROUPS_KEY = 'vowmon_item_groups';
+        const CATS_KEY = 'vowmon_item_categories';
+
+        const kinds = ref([]);
+        const groups = ref([]);
+        const categories = ref([]);
+        const pickQuery = ref({ kind: '', group: '', category: '' });
+        // 分组图标：选中的图标（新建分组时用它，已有分组时点一下直接改）
+        const iconDraft = ref(ITEM_DEFAULT_GROUP_ICON);
+        const groupIconPresets = ITEM_GROUP_ICONS;
+
+        const readStoredList = (key) => {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw === null) return null;
+                const val = JSON.parse(raw);
+                return Array.isArray(val) ? val : null;
+            } catch (err) {
+                console.warn('自定义列表解析失败：' + key, err);
+                return null;
+            }
+        };
+
+        // 写盘 + 同步给 item-config 的 helper（图标 / 配色 / 归一都依赖它）
+        const persistPickers = () => {
+            localStorage.setItem(KINDS_KEY, JSON.stringify(kinds.value));
+            localStorage.setItem(GROUPS_KEY, JSON.stringify(groups.value));
+            localStorage.setItem(CATS_KEY, JSON.stringify(categories.value));
+            setItemKinds(kinds.value);
+            setItemGroups(groups.value);
+            setItemCategories(categories.value);
+        };
+
+        const initPickers = () => {
+            const storedKinds = readStoredList(KINDS_KEY);
+            kinds.value = (storedKinds && storedKinds.length ? storedKinds : itemKinds)
+                .map(k => String(k == null ? '' : k).trim()).filter(Boolean);
+
+            const storedGroups = readStoredList(GROUPS_KEY);
+            const srcGroups = storedGroups && storedGroups.length ? storedGroups : itemGroups;
+            groups.value = srcGroups.map(g => {
+                if (typeof g === 'string') return makeItemGroup(g);
+                const name = String((g && g.name) || '').trim();
+                if (!name) return null;
+                return {
+                    name,
+                    icon: (g && g.icon) || ITEM_DEFAULT_GROUP_ICON,
+                    color: (g && g.color) || makeItemGroup(name).color
+                };
+            }).filter(Boolean);
+
+            // 细分类没有内置值：首次从现有物品里收集一遍，之后以列表为准
+            const storedCats = readStoredList(CATS_KEY);
+            categories.value = storedCats
+                ? storedCats.map(c => String(c).trim()).filter(Boolean)
+                : Array.from(new Set(items.value.map(it => it.category).filter(Boolean)));
+
+            if (!kinds.value.length) kinds.value = ITEM_BUILTIN_KINDS.slice();
+            if (!groups.value.length) groups.value = ITEM_BUILTIN_GROUPS.map(g => Object.assign({}, g));
+
+            persistPickers();
+        };
+
+        /* ------------------------------- 选择器交互 */
+        const closePick = () => {
+            activeDropdown.value = '';
+            pickQuery.value = { kind: '', group: '', category: '' };
+        };
+
+        const togglePick = (name) => {
+            if (activeDropdown.value === name) { closePick(); return; }
+            activeDropdown.value = name;
+            pickQuery.value = { kind: '', group: '', category: '' };
+            if (name === 'group') iconDraft.value = getItemGroupIcon(form.value.group);
+        };
+
+        const matchQuery = (text, q) => !q || String(text).toLowerCase().includes(q);
+
+        const filteredKinds = computed(() => {
+            const q = pickQuery.value.kind.trim().toLowerCase();
+            return kinds.value.filter(k => matchQuery(k, q));
+        });
+        const filteredGroups = computed(() => {
+            const q = pickQuery.value.group.trim().toLowerCase();
+            return groups.value.filter(g => matchQuery(g.name, q));
+        });
+        const filteredCategories = computed(() => {
+            const q = pickQuery.value.category.trim().toLowerCase();
+            return categories.value.filter(c => matchQuery(c, q));
+        });
+
+        const canCreateKind = computed(() => {
+            const name = pickQuery.value.kind.trim();
+            return !!name && !kinds.value.includes(name);
+        });
+        const canCreateGroup = computed(() => {
+            const name = pickQuery.value.group.trim();
+            return !!name && !groups.value.some(g => g.name === name);
+        });
+        const canCreateCategory = computed(() => {
+            const name = pickQuery.value.category.trim();
+            return !!name && !categories.value.includes(name);
+        });
+
+        const kindUsage = (name) => items.value.filter(it => it.kind === name).length;
+        const groupUsage = (name) => items.value.filter(it => it.group === name).length;
+
+        /* ------------------------------------- 类型 */
+        const addKind = () => {
+            const name = pickQuery.value.kind.trim();
+            if (!name) return;
+            if (!kinds.value.includes(name)) {
+                kinds.value = kinds.value.concat(name);
+                persistPickers();
+            }
+            form.value.kind = name;
+            closePick();
+        };
+
+        const removeKind = async (name) => {
+            if (kinds.value.length <= 1) {
+                VowmonDialog.toast('至少要保留一个类型', 'warning');
+                return;
+            }
+            const used = kindUsage(name);
+            const rest = kinds.value.filter(k => k !== name);
+            const label = VowmonDialog.esc(name);
+            if (used) {
+                const ok = await VowmonDialog.confirm(
+                    `「${label}」下还有 <strong>${used}</strong> 个物品，删除后它们会归到「${VowmonDialog.esc(rest[0])}」。`,
+                    { type: 'danger', title: '删除类型', okText: '删除', html: true }
+                );
+                if (!ok) return;
+                items.value.forEach(it => { if (it.kind === name) it.kind = rest[0]; });
+                saveLocal();
+            } else {
+                const ok = await VowmonDialog.confirm(`确定删除类型「${label}」？`, {
+                    type: 'danger', title: '删除类型', okText: '删除', html: true
+                });
+                if (!ok) return;
+            }
+            kinds.value = rest;
+            if (form.value.kind === name) form.value.kind = rest[0];
+            persistPickers();
+            VowmonDialog.toast('类型已删除', 'success');
+        };
+
+        /* ------------------------------------- 分组 */
+        // 当前分组用的图标：已有分组读它自己的，新建时读刚选的
+        const currentGroupIcon = computed(() => {
+            const hit = groups.value.find(g => g.name === form.value.group);
+            return hit ? hit.icon : iconDraft.value;
+        });
+
+        // 点图标：已有分组直接改并落盘；新建分组先记着，等 addGroup 用
+        const chooseGroupIcon = (icon) => {
+            iconDraft.value = icon;
+            const idx = groups.value.findIndex(g => g.name === form.value.group);
+            if (idx > -1) {
+                const old = groups.value[idx].icon;
+                groups.value = groups.value.map((g, i) => (i === idx ? Object.assign({}, g, { icon }) : g));
+                persistPickers();
+                if (form.value.iconClass === old) form.value.iconClass = icon;
+            } else {
+                form.value.iconClass = icon;
+            }
+        };
+
+        const addGroup = () => {
+            const name = pickQuery.value.group.trim();
+            if (!name) return;
+            if (!groups.value.some(g => g.name === name)) {
+                const grp = makeItemGroup(name);
+                grp.icon = iconDraft.value || grp.icon;
+                groups.value = groups.value.concat(grp);
+                persistPickers();
+            }
+            form.value.group = name;
+            resetIconFont();
+            closePick();
+        };
+
+        const removeGroup = async (name) => {
+            if (groups.value.length <= 1) {
+                VowmonDialog.toast('至少要保留一个分组', 'warning');
+                return;
+            }
+            const used = groupUsage(name);
+            const rest = groups.value.filter(g => g.name !== name);
+            const fallback = (rest.find(g => g.name === ITEM_FALLBACK_GROUP.name) || rest[0]).name;
+            const label = VowmonDialog.esc(name);
+            if (used) {
+                const ok = await VowmonDialog.confirm(
+                    `「${label}」下还有 <strong>${used}</strong> 个物品，删除后它们会归到「${VowmonDialog.esc(fallback)}」。`,
+                    { type: 'danger', title: '删除分组', okText: '删除', html: true }
+                );
+                if (!ok) return;
+                items.value.forEach(it => { if (it.group === name) it.group = fallback; });
+                saveLocal();
+            } else {
+                const ok = await VowmonDialog.confirm(`确定删除分组「${label}」？`, {
+                    type: 'danger', title: '删除分组', okText: '删除', html: true
+                });
+                if (!ok) return;
+            }
+            groups.value = rest;
+            if (form.value.group === name) {
+                form.value.group = fallback;
+                resetIconFont();
+            }
+            persistPickers();
+            VowmonDialog.toast('分组已删除', 'success');
+        };
+
+        /* ------------------------------------- 细分类 */
+        const addCategory = () => {
+            const name = pickQuery.value.category.trim();
+            if (!name) return;
+            if (!categories.value.includes(name)) {
+                categories.value = categories.value.concat(name);
+                persistPickers();
+            }
+            form.value.category = name;
+            closePick();
+        };
+
+        // 从建议列表里移除，不动已经有这个细分类的物品
+        const removeCategory = (name) => {
+            categories.value = categories.value.filter(c => c !== name);
+            if (form.value.category === name) form.value.category = '';
+            persistPickers();
+            VowmonDialog.toast('细分类已移除', 'success');
+        };
 
         /* -------------------------------------------------------------- 规整 */
         const normalizeItems = (list) => (list || []).map(raw => {
@@ -152,7 +388,9 @@ createApp({
         /* ------------------------------------------------------------ 图标上传 */
         const triggerIconUpload = () => {
             if (!config.value.token || !config.value.owner || !config.value.imgRepos) {
-                alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和图片仓库名');
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和图片仓库名。', {
+                    type: 'warning', title: '还没配置好'
+                });
                 return;
             }
             if (!String(form.value.id || '').trim()) form.value.id = nextItemId();
@@ -176,9 +414,13 @@ createApp({
                     path, img.base64, `Upload item icon: ${path}`, true
                 );
                 form.value.icon = path;
-                alert(`✅ 图标已上传：${path}\n已压缩为 ${img.canvasSize}×${img.canvasSize}（${ImageUtils.formatBytes(img.bytes)}）`);
+                VowmonDialog.toast(`图标已上传：${path}\n已压缩为 ${img.canvasSize}×${img.canvasSize}（${ImageUtils.formatBytes(img.bytes)}）`, 'success', { duration: 3600 });
             } catch (err) {
-                alert('❌ 图标上传失败：\n' + err.message);
+                VowmonDialog.alert('图标上传失败，请检查 Token 权限 / 图片仓库名。', {
+                    type: 'danger',
+                    title: '上传失败',
+                    detail: err && err.message ? err.message : String(err)
+                });
             } finally {
                 isUploading.value = false;
                 event.target.value = '';
@@ -188,7 +430,10 @@ createApp({
         /* ---------------------------------------------------------------- 保存 */
         const saveItem = () => {
             const name = String(form.value.name || '').trim();
-            if (!name) return alert('请填写物品名称');
+            if (!name) {
+                VowmonDialog.toast('请填写物品名称', 'warning');
+                return;
+            }
 
             const item = JSON.parse(JSON.stringify(form.value));
             item.name = name;
@@ -208,12 +453,25 @@ createApp({
             // 名称去重，避免图鉴里出现两个同名物品
             const dup = items.value.find((it, i) =>
                 it.name === item.name && !(isEdit.value && i === editIndex.value));
-            if (dup) return alert(`已经有一个叫「${item.name}」的物品了，改个名字或直接编辑那一条。`);
+            if (dup) {
+                VowmonDialog.alert(`已经有一个叫「${VowmonDialog.esc(item.name)}」的物品了，改个名字或直接编辑那一条。`, {
+                    type: 'warning',
+                    title: '名称重复',
+                    html: true
+                });
+                return;
+            }
 
             if (isEdit.value && editIndex.value > -1) {
                 items.value.splice(editIndex.value, 1, item);
             } else {
                 items.value.unshift(item);
+            }
+
+            // 手输的新细分类自动进建议列表，下次可以直接选
+            if (item.category && !categories.value.includes(item.category)) {
+                categories.value = categories.value.concat(item.category);
+                persistPickers();
             }
 
             saveLocal();
@@ -224,28 +482,35 @@ createApp({
         const openDeleteConfirm = (index, name) => {
             deleteTargetIndex.value = index;
             deleteTargetName.value = name;
-            showDeleteModal.value = true;
+            VowmonDialog.confirm(
+                `确定要删除物品 <strong>${VowmonDialog.esc(name)}</strong> 吗？`,
+                { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
+            ).then((ok) => {
+                if (ok) confirmDelete();
+            });
         };
 
         const confirmDelete = () => {
             if (deleteTargetIndex.value > -1) {
                 items.value.splice(deleteTargetIndex.value, 1);
                 saveLocal();
+                VowmonDialog.toast('已删除', 'success');
             }
-            showDeleteModal.value = false;
+            deleteTargetIndex.value = -1;
         };
 
         // 弹窗关闭统一收口：遮罩点击 / Esc / 关闭按钮 都走这里（见 js/common-ui.js）
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
-            else if (target === 'delete') showDeleteModal.value = false;
         };
 
         /* ---------------------------------------------------------------- 同步 */
         const syncToGitHub = async () => {
             const cfg = config.value;
             if (!cfg.token || !cfg.owner) {
-                alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名');
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名。', {
+                    type: 'warning', title: '还没配置好'
+                });
                 return;
             }
 
@@ -254,12 +519,16 @@ createApp({
                 .map(s => s.trim())
                 .filter(Boolean);
             if (!repos.length) {
-                alert('请先在「精灵管理 → 同步配置」里填写数据仓库名');
+                VowmonDialog.toast('请先在「精灵管理 → 同步配置」里填写数据仓库名', 'warning', { duration: 3400 });
                 return;
             }
 
             isSyncing.value = true;
+            // 自定义列表跟着数据一起同步，否则前台读不到新加的类型 / 分组
             const content = '// items-data.js\n' +
+                'const itemKindsData = ' + JSON.stringify(kinds.value, null, 4) + ';\n' +
+                'const itemGroupsData = ' + JSON.stringify(groups.value, null, 4) + ';\n' +
+                'const itemCategoriesData = ' + JSON.stringify(categories.value, null, 4) + ';\n\n' +
                 'const allItemsData = ' + JSON.stringify(items.value, null, 4) + ';\n';
 
             try {
@@ -269,9 +538,13 @@ createApp({
                         content, 'update items data'
                     );
                 }
-                alert('物品数据同步成功，共 ' + repos.length + ' 个仓库');
+                VowmonDialog.toast('物品数据同步成功，共 ' + repos.length + ' 个仓库', 'success');
             } catch (err) {
-                alert('同步失败：' + (err && err.message ? err.message : err));
+                VowmonDialog.alert('物品数据同步失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '同步失败',
+                    detail: err && err.message ? err.message : String(err)
+                });
             } finally {
                 isSyncing.value = false;
             }
@@ -301,11 +574,16 @@ createApp({
                 items.value = normalizeItems(typeof allItemsData !== 'undefined' ? allItemsData : []);
             }
 
+            // 物品载入之后再初始化自定义列表：细分类首次要从现有物品里收集
+            initPickers();
+
             // 点击「显示列」面板以外的地方时收起面板。
             // 必须自己判断是否点在面板内，否则复选框的勾选会被当成外部点击打断（详见 README）。
             document.addEventListener('click', (e) => {
                 const el = e.target && e.target.closest ? e.target : null;
                 if (!(el && el.closest('.col-settings-wrap'))) showColSettings.value = false;
+                // 可搜索选择器同理：点在 .pick 内部不关，点外面才关
+                if (!(el && el.closest('.pick'))) activeDropdown.value = '';
             }, true);
         });
 
@@ -316,9 +594,18 @@ createApp({
             showColSettings, allColumns, visibleCols,
             showModal, isEdit, form, obtainText, activeDropdown, displayIcon,
             isUploading, iconFileInput,
-            showDeleteModal, deleteTargetName,
+            deleteTargetName,
             openEditor, saveItem, openDeleteConfirm, confirmDelete, closeModal,
             triggerIconUpload, handleIconUpload, resetIconFont,
+            // 可自定义的类型 / 分组 / 细分类
+            kinds, groups, categories, pickQuery,
+            filteredKinds, filteredGroups, filteredCategories,
+            canCreateKind, canCreateGroup, canCreateCategory,
+            kindUsage, groupUsage,
+            togglePick, closePick,
+            addKind, removeKind, addGroup, removeGroup, addCategory, removeCategory,
+            // 分组图标
+            groupIconPresets, currentGroupIcon, chooseGroupIcon,
             syncToGitHub
         };
     }

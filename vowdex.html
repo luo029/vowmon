@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 精灵图鉴</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -223,8 +226,8 @@
                     <span class="name">{{ pet.name }}</span>
                 </div>
                 <div class="card-img">
-                    <img class="base" :src="getImgUrl(pet.image)" :alt="pet.name" loading="lazy">
-                    <img v-if="hasShiny(pet)" class="shiny" :src="shinySrc(pet)" :alt="pet.name + '（异色）'" loading="lazy">
+                    <img class="base" :src="getImgUrl(pet.image)" :alt="pet.name" loading="lazy" decoding="async" fetchpriority="high">
+                    <img v-if="hasShiny(pet)" class="shiny" :src="shinySrc(pet)" :alt="pet.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
                 </div>
                 <div class="card-bottom">
                     <span class="type-icon" v-for="t in pet.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
@@ -237,7 +240,7 @@
 
         <!-- 分页 -->
         <div class="pagination" v-if="filteredPets.length > 0">
-            <div class="page-info">显示 <span class="font-num">{{ startIndex + 1 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredPets.length }}</span> 条</div>
+            <div class="page-info">显示 <span class="font-num">{{ filteredPets.length ? startIndex + 1 : 0 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredPets.length }}</span> 条</div>
             <div class="page-buttons">
                 <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">上一页</button>
                 <button class="page-btn font-num" v-for="p in totalPages" :key="p" :class="{active: currentPage === p}" @click="currentPage = p">{{ p }}</button>
@@ -247,6 +250,7 @@
     </div>
 </div>
 
+<script src="js/site-config.js"></script>
 <script src="js/type-config.js"></script>
 <script src="data/vow-data.js"></script>
 <script>
@@ -276,17 +280,22 @@
             });
 
             // 配置获取
+            // 图片基础路径：本机后台配置（localStorage）> 仓库里的 js/site-config.js
+            // 访客浏览器里没有 localStorage，只会用到 site-config.js 的值。
             let siteConfig = {};
-            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}'); } catch(e){}
-            const IMG_BASE = siteConfig.imgCdnBase ? siteConfig.imgCdnBase.replace(/\/$/, '') + '/' : '';
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {}; } catch(e){ siteConfig = {}; }
+            const IMG_RAW = String(siteConfig.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            const IMG_BASE = IMG_RAW ? IMG_RAW + '/' : '';
 
             const getImgUrl = (path) => {
                 if (!path) return 'https://via.placeholder.com/150?text=No+Image';
-                if (path.startsWith('http')) return path;
-                return IMG_BASE + path;
+                if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) return path;
+                return IMG_BASE + String(path).replace(/^\/+/, '');
             };
-            const getTypeColor = (type) => typeData.find(t => t.name === type)?.color || '#ccc';
-            const getTypeIcon = (type) => typeData.find(t => t.name === type)?.icon || '';
+            // 属性查找走 Map：列表里每条都要取色 / 取图标，避免每次 find 扫一遍 typeData
+            const typeMap = new Map(typeData.map(t => [t.name, t]));
+            const getTypeColor = (type) => (typeMap.get(type) || {}).color || '#ccc';
+            const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
 
             /* ---------------------------------------------------------- 异色 */
             // 异色是精灵自己的一个图片数组（shiny），不占编号、不单独成卡片。

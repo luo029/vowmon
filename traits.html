@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 特性大全</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         /* 复用 skills.html 的大部分样式，仅做微调 */
@@ -128,8 +131,10 @@
                 if (!isAnimOn) document.body.classList.add('no-anim');
             });
 
-            const getTypeColor = (type) => typeData.find(t => t.name === type)?.color || '#ccc';
-            const getTypeIcon = (type) => typeData.find(t => t.name === type)?.icon || '';
+            // 属性查找走 Map：列表里每条都要取色 / 取图标，避免每次 find 扫一遍 typeData
+            const typeMap = new Map(typeData.map(t => [t.name, t]));
+            const getTypeColor = (type) => (typeMap.get(type) || {}).color || '#ccc';
+            const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
 
             const toggleType = (name) => {
                 const i = selectedTypes.value.indexOf(name);

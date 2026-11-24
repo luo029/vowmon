@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 图片管理</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/dialog.css">
     <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -99,9 +103,10 @@
                     <!-- 工具栏 -->
                     <div class="img-toolbar">
                         <div class="toolbar-left">
-                            <div class="input-with-btn" style="width:260px;">
+                            <div class="search-field">
+                                <i class="fa-solid fa-magnifying-glass sf-icon"></i>
                                 <input v-model="repoSearch" placeholder="搜索文件名 / 路径 / 精灵名">
-                                <button class="btn btn-outline btn-icon" @click="repoSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
+                                <button class="sf-clear" v-if="repoSearch" @click="repoSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                             <select v-model="repoFilter" class="filter-select">
                                 <option value="all">全部仓库</option>
@@ -154,9 +159,10 @@
                 <section v-if="currentTab === 'pets'">
                     <div class="img-toolbar">
                         <div class="toolbar-left">
-                            <div class="input-with-btn" style="width:260px;">
+                            <div class="search-field">
+                                <i class="fa-solid fa-magnifying-glass sf-icon"></i>
                                 <input v-model="petSearch" placeholder="搜索编号 / 名称">
-                                <button class="btn btn-outline btn-icon" @click="petSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
+                                <button class="sf-clear" v-if="petSearch" @click="petSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                             <select v-model="petStatusFilter" class="filter-select">
                                 <option value="all">全部状态</option>
@@ -242,21 +248,6 @@
     </div>
 
     <!-- 删除确认弹窗 -->
-    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="showDeleteModal = false">
-        <div class="delete-modal" @click.stop>
-            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3>确认删除图片</h3>
-            <p>您确定要从仓库 <strong>{{ deleteTarget ? deleteTarget.repo : '' }}</strong> 永久删除图片 <strong>{{ deleteTarget ? deleteTarget.name : '' }}</strong> 吗？<br>此操作不可撤销。</p>
-            <p v-if="deleteTarget && deleteTarget.usedBy.length" style="color:#e53e3e;">
-                <i class="fa-solid fa-circle-exclamation"></i> 该图片正被精灵「{{ deleteTarget.usedBy.join('、') }}」使用，删除后这些精灵的图片将失效。
-            </p>
-            <div class="delete-actions">
-                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
-                <button class="btn btn-danger" @click="confirmDelete" :disabled="isDeleting">{{ isDeleting ? '删除中...' : '确认删除' }}</button>
-            </div>
-        </div>
-    </div>
-
     <!-- 设为精灵图片弹窗 -->
     <div class="modal-overlay" v-if="showBindModal" @vowmon:modal-close="showBindModal = false">
         <div class="modal" style="max-width:480px;" @click.stop>
@@ -288,9 +279,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 轻提示 -->
-    <div class="toast" v-if="toastMsg" :class="toastType"><i class="fa-solid" :class="toastType === 'ok' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i> {{ toastMsg }}</div>
 </div>
 
 <script src="js/type-config.js"></script>
@@ -298,6 +286,7 @@
 <script src="js/github-api.js"></script>
 <script src="js/image-utils.js"></script>
 <script src="js/common-ui.js"></script>
+<script src="js/dialog.js"></script>
 <script src="js/admin-images.js"></script>
 </body>
 </html>

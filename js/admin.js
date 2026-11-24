@@ -73,8 +73,7 @@ createApp({
         const selectionPage = ref(1);
         const selectionPageSize = 10;
 
-        // 删除确认状态
-        const showDeleteModal = ref(false);
+        // 删除确认状态（弹窗本身由 VowmonDialog 负责显示）
         const deleteTargetIndex = ref(-1);
         const deleteTargetName = ref('');
 
@@ -143,9 +142,10 @@ createApp({
             return pets.value.slice(start, start + listPageSize);
         });
 
-        // 辅助获取图标和颜色
-        const getTypeIcon = (name) => typeData.find(t => t.name === name)?.icon || '';
-        const getTypeColor = (name) => typeData.find(t => t.name === name)?.color || '#ccc';
+        // 辅助获取图标和颜色（Map 缓存，避免每行都扫一遍 typeData）
+        const adminTypeMap = new Map(typeData.map(t => [t.name, t]));
+        const getTypeIcon = (name) => (adminTypeMap.get(name) || {}).icon || '';
+        const getTypeColor = (name) => (adminTypeMap.get(name) || {}).color || '#ccc';
 
         // 生成缩略图路径
         const getThumbUrl = (path) => {
@@ -241,7 +241,7 @@ createApp({
         const saveConfig = () => {
             localStorage.setItem('vowmon_sync_config', JSON.stringify(config.value));
             saveToLocal();
-            alert('配置已保存！');
+            VowmonDialog.toast('同步配置已保存', 'success');
         };
 
         const openEditor = (pet = null, index = -1) => {
@@ -319,12 +319,15 @@ createApp({
 
         const triggerFileUpload = () => {
             if (!config.value.token || !config.value.owner || !config.value.imgRepos) {
-                alert('请先在【同步配置】中完整填写 Token、用户名和图片仓库名，才能上传图片。');
-                switchTab('settings');
+                VowmonDialog.alert('请先在【同步配置】中完整填写 Token、用户名和图片仓库名，才能上传图片。', {
+                    type: 'warning',
+                    title: '还没配置好',
+                    okText: '去配置'
+                }).then(() => switchTab('settings'));
                 return;
             }
             if (!String(form.id || '').trim()) {
-                alert('请先填写编号，图片会按编号自动命名。');
+                VowmonDialog.toast('请先填写编号，图片会按编号自动命名', 'warning');
                 return;
             }
             fileInput.value.click();
@@ -335,7 +338,8 @@ createApp({
             if (!file) return;
             if (!String(form.id || '').trim()) {
                 event.target.value = '';
-                return alert('请先填写编号，图片会按编号自动命名。');
+                VowmonDialog.toast('请先填写编号，图片会按编号自动命名', 'warning');
+                return;
             }
 
             isUploading.value = true;
@@ -343,10 +347,14 @@ createApp({
                 .then(({ path, img }) => {
                     form.image = path;
                     previewImageUrl.value = `data:image/png;base64,${img.base64}`;
-                    alert(`✅ 上传成功：${path}\n已压缩为 ${img.canvasSize}×${img.canvasSize}（${ImageUtils.formatBytes(img.bytes)}）`);
+                    VowmonDialog.toast(`上传成功：${path}\n已压缩为 ${img.canvasSize}×${img.canvasSize}（${ImageUtils.formatBytes(img.bytes)}）`, 'success', { duration: 3600 });
                 })
                 .catch((err) => {
-                    alert('❌ 上传失败：\n' + err.message);
+                    VowmonDialog.alert('上传失败，请检查 Token 权限 / 图片仓库名。', {
+                        type: 'danger',
+                        title: '上传失败',
+                        detail: err && err.message ? err.message : String(err)
+                    });
                 })
                 .finally(() => {
                     isUploading.value = false;
@@ -378,7 +386,10 @@ createApp({
             const val = shinyInput.value.trim();
             if (!val) return;
             if (!Array.isArray(form.shiny)) form.shiny = [];
-            if (form.shiny.includes(val)) return alert('这张图已经在列表里了。');
+            if (form.shiny.includes(val)) {
+                VowmonDialog.toast('这张图已经在列表里了', 'warning');
+                return;
+            }
             form.shiny.push(val);
             shinyInput.value = '';
         };
@@ -390,12 +401,15 @@ createApp({
 
         const triggerShinyUpload = () => {
             if (!config.value.token || !config.value.owner || !config.value.imgRepos) {
-                alert('请先在【同步配置】中完整填写 Token、用户名和图片仓库名，才能上传图片。');
-                switchTab('settings');
+                VowmonDialog.alert('请先在【同步配置】中完整填写 Token、用户名和图片仓库名，才能上传图片。', {
+                    type: 'warning',
+                    title: '还没配置好',
+                    okText: '去配置'
+                }).then(() => switchTab('settings'));
                 return;
             }
             if (!String(form.id || '').trim()) {
-                alert('请先填写编号，异色图会按编号自动命名。');
+                VowmonDialog.toast('请先填写编号，异色图会按编号自动命名', 'warning');
                 return;
             }
             if (shinyFileInput.value) shinyFileInput.value.click();
@@ -407,7 +421,8 @@ createApp({
             if (!files.length) return;
             if (!String(form.id || '').trim()) {
                 event.target.value = '';
-                return alert('请先填写编号，异色图会按编号自动命名。');
+                VowmonDialog.toast('请先填写编号，异色图会按编号自动命名', 'warning');
+                return;
             }
 
             if (!Array.isArray(form.shiny)) form.shiny = [];
@@ -434,9 +449,16 @@ createApp({
             shinyProgress.value = '';
             event.target.value = '';
 
-            if (ok && !fail) alert(`✅ 已上传 ${ok} 张异色图片\n已压缩为 ${config.value.imgSize || 512}px 以内的 PNG（${ImageUtils.formatBytes(bytes)}）`);
-            else if (ok && fail) alert(`⚠️ 成功 ${ok} 张，失败 ${fail} 张（详见控制台）`);
-            else alert('❌ 异色图片上传失败，请检查 Token 权限 / 图片仓库名。');
+            if (ok && !fail) {
+                VowmonDialog.toast(`已上传 ${ok} 张异色图片\n已压缩为 ${config.value.imgSize || 512}px 以内的 PNG（${ImageUtils.formatBytes(bytes)}）`, 'success', { duration: 3600 });
+            } else if (ok && fail) {
+                VowmonDialog.toast(`成功 ${ok} 张，失败 ${fail} 张（详见控制台）`, 'warning', { duration: 3600 });
+            } else {
+                VowmonDialog.alert('异色图片上传失败，请检查 Token 权限 / 图片仓库名。', {
+                    type: 'danger',
+                    title: '上传失败'
+                });
+            }
         };
 
         // 编号被改过时，把本次会话上传过的图按新编号重传，并删掉旧文件
@@ -491,17 +513,26 @@ createApp({
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
             else if (target === 'selection') showSelectionModal.value = false;
-            else if (target === 'delete') showDeleteModal.value = false;
         };
 
         const savePet = async () => {
             const id = String(form.id || '').trim();
             const name = String(form.name || '').trim();
-            if (!id || !name) return alert('编号和名称不能为空！');
+            if (!id || !name) {
+                VowmonDialog.toast('编号和名称不能为空', 'warning');
+                return;
+            }
 
             // 编号唯一性校验（编辑时排除自己）
             const dup = pets.value.find((p, i) => String(p.id || '').trim() === id && !(isEdit.value && i === editIndex.value));
-            if (dup) return alert(`编号 ${id} 已被「${dup.name}」占用，请换一个编号。`);
+            if (dup) {
+                VowmonDialog.alert(`编号 <strong>${VowmonDialog.esc(id)}</strong> 已被「${VowmonDialog.esc(dup.name)}」占用，请换一个编号。`, {
+                    type: 'warning',
+                    title: '编号重复',
+                    html: true
+                });
+                return;
+            }
 
             form.id = id;
             form.name = name;
@@ -526,11 +557,16 @@ createApp({
             showModal.value = false;
         };
 
-        // 删除逻辑
+        // 删除逻辑：确认弹窗走统一的 VowmonDialog（js/dialog.js + css/dialog.css）
         const openDeleteConfirm = (index, name) => {
             deleteTargetIndex.value = index;
             deleteTargetName.value = name;
-            showDeleteModal.value = true;
+            VowmonDialog.confirm(
+                `您确定要永久删除精灵 <strong>${VowmonDialog.esc(name)}</strong> 吗？此操作不可撤销。`,
+                { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
+            ).then((ok) => {
+                if (ok) confirmDelete();
+            });
         };
 
         const confirmDelete = () => {
@@ -540,15 +576,19 @@ createApp({
                     listPage.value--;
                 }
                 saveToLocal();
+                VowmonDialog.toast('已删除', 'success');
             }
-            showDeleteModal.value = false;
+            deleteTargetIndex.value = -1;
         };
 
         // 同步到多个仓库
         const syncToGitHub = async () => {
             if (!config.value.token || !config.value.owner || !config.value.dataRepos) {
-                alert('请先在【同步配置】中填写信息！');
-                switchTab('settings');
+                VowmonDialog.alert('请先在【同步配置】中填写信息。', {
+                    type: 'warning',
+                    title: '还没配置好',
+                    okText: '去配置'
+                }).then(() => switchTab('settings'));
                 return;
             }
             isSyncing.value = true;
@@ -564,9 +604,13 @@ createApp({
                     );
                 }
                 
-                alert('✅ 数据已成功同步到所有配置的仓库！');
+                VowmonDialog.toast('数据已成功同步到所有配置的仓库', 'success', { duration: 3200 });
             } catch (error) {
-                alert('❌ 同步失败：\n' + error.message);
+                VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '同步失败',
+                    detail: error && error.message ? error.message : String(error)
+                });
             } finally {
                 isSyncing.value = false;
             }
@@ -583,7 +627,7 @@ createApp({
             showSelectionModal, selectionType, selectionSearchQuery, selectionPage,
             filteredSelectionList, paginatedSelectionList,
             listPage, listPageSize, paginatedPets,
-            showDeleteModal, deleteTargetName,
+            deleteTargetName,
             closeModal,
             closeAllDropdowns, toggleDropdown, selectOption, openSelectionModal, selectFromModal,
             openEditor, savePet, openDeleteConfirm, confirmDelete, saveConfig, syncToGitHub, toggleType, 

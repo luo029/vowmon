@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 技能打击面计算器</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: '微软雅黑', -apple-system, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
@@ -49,7 +52,10 @@
         .box-mult { font-size: 18px; font-weight: 900; }
         .box-desc { font-size: 13px; margin-bottom: 15px; display: block; color: #718096; }
         .box-content { display: flex; flex-wrap: wrap; gap: 8px; }
-        .mini-type { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; color: #fff; font-size: 13px; font-weight: bold; }
+        .mini-type { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; color: #fff; font-size: 13px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,.22); }
+        .mini-type i { font-size: 11px; }
+        .mini-type i + i { margin-left: -3px; }
+        .mini-type span { white-space: nowrap; }
         
         .bg-green-deep { background: #e6fffa; border-color: #b2f5ea; } .bg-green-deep .box-title, .bg-green-deep .box-mult { color: #319795; }
         .bg-green-light { background: #f0fff4; border-color: #c6f6d5; } .bg-green-light .box-title, .bg-green-light .box-mult { color: #38a169; }
@@ -97,41 +103,41 @@
         </div>
 
         <div class="panel" v-if="selectedTypes.length > 0">
-            <div class="panel-header"><h2>打击面详细报告</h2><span class="panel-hint">统计范围：{{ coverageStats.totalCount }} 种属性组合（18 单系 + 153 双系）</span></div>
+            <div class="panel-header"><h2>打击面详细报告</h2><span class="panel-hint">统计范围：仅单属性系别（18 种），双属性组合不参与统计</span></div>
             <div class="coverage-grid">
-                <div class="coverage-box bg-green-deep" v-if="coverageData.hit4.length > 0">
+                <div class="coverage-box bg-green-deep" v-if="listOf(coverageData.hit4).length > 0">
                     <div class="box-header"><span class="box-title">强力克制面</span><span class="box-mult">×4 倍</span></div>
                     <span class="box-desc">至少有一种已选技能能打出 4 倍伤害。</span>
                     <div class="box-content">
-                        <span v-for="t in coverageData.hit4" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                        <span v-for="t in listOf(coverageData.hit4)" :key="t" class="mini-type" :style="comboStyle(t)"><i v-for="p in parts(t)" :key="p" :class="getIcon(p)"></i> <span>{{ t }}</span></span>
                     </div>
                 </div>
-                <div class="coverage-box bg-green-light" v-if="coverageData.hit2.length > 0">
+                <div class="coverage-box bg-green-light" v-if="listOf(coverageData.hit2).length > 0">
                     <div class="box-header"><span class="box-title">普通克制面</span><span class="box-mult">×2 倍</span></div>
                     <span class="box-desc">有技能能造成2倍伤害。</span>
                     <div class="box-content">
-                        <span v-for="t in coverageData.hit2" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                        <span v-for="t in listOf(coverageData.hit2)" :key="t" class="mini-type" :style="comboStyle(t)"><i v-for="p in parts(t)" :key="p" :class="getIcon(p)"></i> <span>{{ t }}</span></span>
                     </div>
                 </div>
-                <div class="coverage-box bg-gray-light" v-if="coverageData.resist0.length > 0">
+                <div class="coverage-box bg-gray-light" v-if="listOf(coverageData.resist0).length > 0">
                     <div class="box-header"><span class="box-title">完全盲点 (免疫)</span><span class="box-mult">×0 倍</span></div>
                     <span class="box-desc">所有已选技能都被该组合免疫。</span>
                     <div class="box-content">
-                        <span v-for="t in coverageData.resist0" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                        <span v-for="t in listOf(coverageData.resist0)" :key="t" class="mini-type" :style="comboStyle(t)"><i v-for="p in parts(t)" :key="p" :class="getIcon(p)"></i> <span>{{ t }}</span></span>
                     </div>
                 </div>
-                <div class="coverage-box bg-red-deep" v-if="coverageData.resist025.length > 0">
+                <div class="coverage-box bg-red-deep" v-if="listOf(coverageData.resist025).length > 0">
                     <div class="box-header"><span class="box-title">严重盲点</span><span class="box-mult">×0.25 倍</span></div>
                     <span class="box-desc">所有已选技能都被该组合双重抵抗。</span>
                     <div class="box-content">
-                        <span v-for="t in coverageData.resist025" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                        <span v-for="t in listOf(coverageData.resist025)" :key="t" class="mini-type" :style="comboStyle(t)"><i v-for="p in parts(t)" :key="p" :class="getIcon(p)"></i> <span>{{ t }}</span></span>
                     </div>
                 </div>
-                <div class="coverage-box bg-red-light" v-if="coverageData.resist05.length > 0">
+                <div class="coverage-box bg-red-light" v-if="listOf(coverageData.resist05).length > 0">
                     <div class="box-header"><span class="box-title">普通盲点</span><span class="box-mult">×0.5 倍</span></div>
                     <span class="box-desc">所有已选技能都被该组合抵抗。</span>
                     <div class="box-content">
-                        <span v-for="t in coverageData.resist05" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                        <span v-for="t in listOf(coverageData.resist05)" :key="t" class="mini-type" :style="comboStyle(t)"><i v-for="p in parts(t)" :key="p" :class="getIcon(p)"></i> <span>{{ t }}</span></span>
                     </div>
                 </div>
             </div>
@@ -150,11 +156,32 @@
             const allTypes = typeData;
             const selectedTypes = ref(['火']);
 
+            const typeMap = new Map(allTypes.map(item => [item.name, item]));
+
             // 18 个单系 + 153 个双系 = 171 种防守端组合
             const defenderCombos = buildDefenderCombos(allTypes.map(item => item.name));
 
-            const getColor = (name) => allTypes.find(item => item.name === name)?.color || '#ccc';
-            const getIcon = (name) => allTypes.find(item => item.name === name)?.icon || '';
+            const getColor = (name) => (typeMap.get(name) || {}).color || '#cbd5e0';
+            const getIcon = (name) => (typeMap.get(name) || {}).icon || '';
+
+            // "虫 / 钢" → ['虫', '钢']
+            const parts = (label) => String(label).split('/').map(s => s.trim()).filter(Boolean);
+
+            /* 只保留单属性条目：双属性（如「一般 / 钢」）整条不显示 */
+            const listOf = (labels) => (labels || []).filter(label => {
+                const ps = parts(label);
+                return ps.length === 1 && typeMap.has(ps[0]);
+            });
+
+            /* 单系用纯色；双系用两个属性的颜色各占一半，避免出现灰色「未上色」的胶囊 */
+            const comboStyle = (label) => {
+                const ps = parts(label);
+                if (ps.length <= 1) return { backgroundColor: getColor(ps[0]) };
+                return {
+                    background: 'linear-gradient(100deg, ' + getColor(ps[0]) + ' 0 50%, ' +
+                        getColor(ps[1]) + ' 50% 100%)'
+                };
+            };
 
             const toggleType = (name) => {
                 const index = selectedTypes.value.indexOf(name);
@@ -191,14 +218,18 @@
             });
 
             const coverageStats = computed(() => {
+                const d = coverageData.value;
                 return {
-                    hitCount: coverageData.value.hit4.length + coverageData.value.hit2.length,
-                    resistCount: coverageData.value.resist0.length + coverageData.value.resist025.length + coverageData.value.resist05.length,
+                    hitCount: listOf(d.hit4).length + listOf(d.hit2).length,
+                    resistCount: listOf(d.resist0).length + listOf(d.resist025).length + listOf(d.resist05).length,
                     totalCount: defenderCombos.length
                 };
             });
 
-            return { allTypes, selectedTypes, getColor, getIcon, toggleType, reset, coverageData, coverageStats };
+            return {
+                allTypes, selectedTypes, getColor, getIcon, parts, listOf, comboStyle,
+                toggleType, reset, coverageData, coverageStats
+            };
         }
     }).mount('#app');
 </script>

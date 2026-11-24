@@ -39,8 +39,7 @@ createApp({
         const uploadFileInput = ref(null);
         const isUploading = ref(false);
 
-        // 删除
-        const showDeleteModal = ref(false);
+        // 删除（确认弹窗由 VowmonDialog 负责显示）
         const deleteTarget = ref(null);
         const isDeleting = ref(false);
 
@@ -49,16 +48,9 @@ createApp({
         const bindImage = ref(null);
         const bindSearch = ref('');
 
-        // 提示
-        const toastMsg = ref('');
-        const toastType = ref('ok');
-        let toastTimer = null;
-
+        // 提示：统一走 VowmonDialog 的轻提示（js/dialog.js），不再自己维护一份 toast
         const showToast = (msg, type = 'ok') => {
-            toastMsg.value = msg;
-            toastType.value = type;
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { toastMsg.value = ''; }, 3200);
+            VowmonDialog.toast(msg, type === 'err' ? 'danger' : 'success', { duration: 3200 });
         };
 
         /* ------------------------------ 配置 / 数据 ------------------------------ */
@@ -317,8 +309,19 @@ createApp({
 
         /* ------------------------------ 删除 ------------------------------ */
         const openDelete = (img) => {
-            deleteTarget.value = img;
-            showDeleteModal.value = true;
+            if (!img) return;
+            const usedBy = Array.isArray(img.usedBy) ? img.usedBy : [];
+            const extra = usedBy.length
+                ? `<br><span class="vdlg-mark">该图片正被精灵「${VowmonDialog.esc(usedBy.join('、'))}」使用，删除后这些精灵的图片将失效。</span>`
+                : '';
+            VowmonDialog.confirm(
+                `确定要从仓库 <strong>${VowmonDialog.esc(img.repo)}</strong> 永久删除图片 <strong>${VowmonDialog.esc(img.name)}</strong> 吗？此操作不可撤销。${extra}`,
+                { type: 'danger', title: '确认删除图片', okText: '确认删除', cancelText: '取消', html: true }
+            ).then((ok) => {
+                if (!ok) return;
+                deleteTarget.value = img;
+                confirmDelete();
+            });
         };
 
         const confirmDelete = async () => {
@@ -331,7 +334,6 @@ createApp({
                     img.path, img.sha, `Delete image: ${img.path}`
                 );
                 showToast('图片已删除');
-                showDeleteModal.value = false;
                 deleteTarget.value = null;
                 await loadAll();
             } catch (err) {
@@ -394,10 +396,10 @@ createApp({
             petSearch, petStatusFilter, filteredPetRows, linkedCount, missingPets,
             showUploadModal, uploadPet, uploadRepo, uploadPath, uploadPreview,
             uploadFileInput, isUploading, openUpload, handleUpload,
-            showDeleteModal, deleteTarget, isDeleting, openDelete, confirmDelete,
+            deleteTarget, isDeleting, openDelete, confirmDelete,
             showBindModal, bindImage, bindSearch, filteredBindPets, replacePetWith, confirmBind,
             getPetUrl, statusText, shortRepo, onImgError, copyPath, shinyCount,
-            toastMsg, toastType, window
+            window
         };
     }
 }).mount('#app');

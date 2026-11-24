@@ -43,7 +43,6 @@ createApp({
         const editIndex = ref(-1);
         const activeDropdown = ref('');
 
-        const showDeleteModal = ref(false);
         const deleteTargetIndex = ref(-1);
         const deleteTargetName = ref('');
 
@@ -112,14 +111,20 @@ createApp({
 
         // 从标签库删除标签，并同步清理所有技能中已使用该标签的记录
         const deleteTag = (name) => {
-            if (!window.confirm('确定删除标签「' + name + '」吗？\n该标签会从标签库和所有已使用它的技能中移除。')) return;
-            tagLibrary.value = tagLibrary.value.filter(t => t.name !== name);
-            persistTagLibrary();
-            skills.value.forEach(s => {
-                if (Array.isArray(s.tags)) s.tags = s.tags.filter(t => t !== name);
+            VowmonDialog.confirm(
+                `确定删除标签「${VowmonDialog.esc(name)}」吗？<br>该标签会从标签库和所有已使用它的技能中移除。`,
+                { type: 'danger', title: '删除标签', okText: '删除', html: true }
+            ).then((ok) => {
+                if (!ok) return;
+                tagLibrary.value = tagLibrary.value.filter(t => t.name !== name);
+                persistTagLibrary();
+                skills.value.forEach(s => {
+                    if (Array.isArray(s.tags)) s.tags = s.tags.filter(t => t !== name);
+                });
+                if (form.value.tags) form.value.tags = form.value.tags.filter(t => t !== name);
+                saveLocal();
+                VowmonDialog.toast('标签已删除', 'success');
             });
-            if (form.value.tags) form.value.tags = form.value.tags.filter(t => t !== name);
-            saveLocal();
         };
 
         // 标签多选：点选切换
@@ -198,7 +203,7 @@ createApp({
 
         const saveSkill = () => {
             if (!form.value.name || !String(form.value.name).trim()) {
-                alert('请填写技能名称');
+                VowmonDialog.toast('请填写技能名称', 'warning');
                 return;
             }
             const item = JSON.parse(JSON.stringify(form.value));
@@ -225,28 +230,35 @@ createApp({
         const openDeleteConfirm = (index, name) => {
             deleteTargetIndex.value = index;
             deleteTargetName.value = name;
-            showDeleteModal.value = true;
+            VowmonDialog.confirm(
+                `确定要删除技能 <strong>${VowmonDialog.esc(name)}</strong> 吗？`,
+                { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
+            ).then((ok) => {
+                if (ok) confirmDelete();
+            });
         };
 
         const confirmDelete = () => {
             if (deleteTargetIndex.value > -1) {
                 skills.value.splice(deleteTargetIndex.value, 1);
                 saveLocal();
+                VowmonDialog.toast('已删除', 'success');
             }
-            showDeleteModal.value = false;
+            deleteTargetIndex.value = -1;
         };
 
         // 弹窗关闭统一收口：遮罩点击 / Esc / 关闭按钮 都走这里（见 js/common-ui.js）
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
-            else if (target === 'delete') showDeleteModal.value = false;
         };
 
         /* ---------------------------------------------------------------- 同步 */
         const syncToGitHub = async () => {
             const cfg = config.value;
             if (!cfg.token || !cfg.owner) {
-                alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名');
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名。', {
+                    type: 'warning', title: '还没配置好'
+                });
                 return;
             }
 
@@ -261,7 +273,7 @@ createApp({
 
             if (repos.length === 0) {
                 isSyncing.value = false;
-                alert('请先在「精灵管理 → 同步配置」里填写数据仓库名');
+                VowmonDialog.toast('请先在「精灵管理 → 同步配置」里填写数据仓库名', 'warning', { duration: 3400 });
                 return;
             }
 
@@ -272,9 +284,13 @@ createApp({
                         content, 'update skills data'
                     );
                 }
-                alert('技能数据同步成功，共 ' + repos.length + ' 个仓库');
+                VowmonDialog.toast('技能数据同步成功，共 ' + repos.length + ' 个仓库', 'success');
             } catch (err) {
-                alert('同步失败：' + (err && err.message ? err.message : err));
+                VowmonDialog.alert('技能数据同步失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '同步失败',
+                    detail: err && err.message ? err.message : String(err)
+                });
             } finally {
                 isSyncing.value = false;
             }
@@ -335,7 +351,6 @@ createApp({
             isEdit,
             form,
             activeDropdown,
-            showDeleteModal,
             deleteTargetName,
             closeModal,
             openEditor,

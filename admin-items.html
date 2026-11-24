@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 物品管理</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/dialog.css">
     <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -62,18 +66,18 @@
                 <table class="data-table items-table">
                     <thead>
                         <tr>
-                            <th v-if="visibleCols.includes('icon')" style="width: 64px;">图标</th>
-                            <th v-if="visibleCols.includes('name')" style="width: 150px;">物品名称</th>
-                            <th v-if="visibleCols.includes('kind')" style="width: 88px;">类型</th>
-                            <th v-if="visibleCols.includes('group')" style="width: 120px;">分组</th>
-                            <th v-if="visibleCols.includes('obtain')" style="width: 190px;">获取方式</th>
+                            <th v-if="visibleCols.includes('icon')" class="col-icon" style="width: 78px;">图标</th>
+                            <th v-if="visibleCols.includes('name')" style="width: 140px;">物品名称</th>
+                            <th v-if="visibleCols.includes('kind')" style="width: 96px;">类型</th>
+                            <th v-if="visibleCols.includes('group')" style="width: 124px;">分组</th>
+                            <th v-if="visibleCols.includes('obtain')" style="width: 170px;">获取方式</th>
                             <th v-if="visibleCols.includes('desc')">描述</th>
-                            <th style="text-align: right; width: 150px;">操作</th>
+                            <th class="col-actions" style="text-align: right; width: 176px;">操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(item, index) in items" :key="item.id || index">
-                            <td v-if="visibleCols.includes('icon')">
+                            <td v-if="visibleCols.includes('icon')" class="col-icon">
                                 <span class="item-icon-cell">
                                     <img v-if="item.icon" :src="item.icon" :alt="item.name">
                                     <i v-else :class="item.iconClass" :style="{ color: item.color }"></i>
@@ -88,12 +92,12 @@
                                     <i :class="getItemGroupIcon(item.group)"></i> {{ item.group }}
                                 </span>
                             </td>
-                            <td v-if="visibleCols.includes('obtain')" style="max-width: 220px; color: #718096;">
+                            <td v-if="visibleCols.includes('obtain')" style="max-width: 220px; color: #718096;" :title="(item.obtain || []).join('、')">
                                 <span v-if="(item.obtain || []).length">{{ (item.obtain || []).join('、') }}</span>
                                 <span v-else style="color:#cbd5e0;">-</span>
                             </td>
                             <td v-if="visibleCols.includes('desc')" style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.desc }}</td>
-                            <td style="text-align: right; white-space: nowrap;">
+                            <td class="col-actions" style="text-align: right; white-space: nowrap;">
                                 <button class="action-btn edit-btn" @click.stop="openEditor(item, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
                                 <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(index, item.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
                             </td>
@@ -120,32 +124,106 @@
                     </div>
 
                     <div class="form-group">
-                        <label>类型（图鉴顶部 Tab）</label>
-                        <div class="custom-select" :class="{ 'is-open': activeDropdown === 'kind' }" @click.stop="activeDropdown = activeDropdown === 'kind' ? '' : 'kind'" @vowmon-dropdown-close="activeDropdown = ''">
-                            <div class="select-display">{{ form.kind }} <i class="fa-solid fa-chevron-down"></i></div>
-                            <div class="dropdown-options" v-show="activeDropdown === 'kind'">
-                                <div class="dropdown-item" v-for="k in itemKinds" :key="k" @click.stop="form.kind = k; activeDropdown = ''">{{ k }}</div>
+                        <label>类型 <span class="opt">图鉴顶部 Tab，可增删</span></label>
+                        <div class="pick" @click.stop>
+                            <button type="button" class="pick-trigger" :class="{ open: activeDropdown === 'kind' }" @click="togglePick('kind')">
+                                <span class="pick-value">{{ form.kind || '请选择类型' }}</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="pick-panel" v-show="activeDropdown === 'kind'">
+                                <div class="pick-search">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input v-model="pickQuery.kind" placeholder="搜索或输入新类型…" @keydown.enter.prevent="canCreateKind && addKind()">
+                                </div>
+                                <div class="pick-list">
+                                    <button type="button" class="pick-item" :class="{ active: form.kind === k }"
+                                            v-for="k in filteredKinds" :key="k" @click="form.kind = k; closePick()">
+                                        <i class="fa-solid fa-check pick-check" :class="{ invisible: form.kind !== k }"></i>
+                                        <span class="pick-text">{{ k }}</span>
+                                        <span class="pick-count" v-if="kindUsage(k)">{{ kindUsage(k) }}</span>
+                                        <span class="pick-del" title="删除该类型" @click.stop="removeKind(k)"><i class="fa-solid fa-xmark"></i></span>
+                                    </button>
+                                    <div class="pick-empty" v-if="!filteredKinds.length">没有匹配的类型</div>
+                                    <button type="button" class="pick-create" v-if="canCreateKind" @click="addKind()">
+                                        <i class="fa-solid fa-plus"></i> 新建类型「{{ pickQuery.kind.trim() }}」
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>分组（筛选胶囊）</label>
-                        <div class="custom-select" :class="{ 'is-open': activeDropdown === 'group' }" @click.stop="activeDropdown = activeDropdown === 'group' ? '' : 'group'" @vowmon-dropdown-close="activeDropdown = ''">
-                            <div class="select-display">
-                                <span><span class="group-dot" :style="{ backgroundColor: getItemGroupColor(form.group) }"><i :class="getItemGroupIcon(form.group)"></i></span>{{ form.group }}</span>
+                        <label>分组 <span class="opt">筛选胶囊，可增删</span></label>
+                        <div class="pick" @click.stop>
+                            <button type="button" class="pick-trigger" :class="{ open: activeDropdown === 'group' }" @click="togglePick('group')">
+                                <span class="pick-value">
+                                    <span class="group-dot" :style="{ backgroundColor: getItemGroupColor(form.group) }"><i :class="getItemGroupIcon(form.group)"></i></span>{{ form.group || '请选择分组' }}
+                                </span>
                                 <i class="fa-solid fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-options" v-show="activeDropdown === 'group'">
-                                <div class="dropdown-item" v-for="g in itemGroups" :key="g.name" @click.stop="form.group = g.name; activeDropdown = ''">
-                                    <span class="group-dot" :style="{ backgroundColor: g.color }"><i :class="g.icon"></i></span>{{ g.name }}
+                            </button>
+                            <div class="pick-panel" v-show="activeDropdown === 'group'">
+                                <div class="pick-search">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input v-model="pickQuery.group" placeholder="搜索或输入新分组…" @keydown.enter.prevent="canCreateGroup && addGroup()">
+                                </div>
+                                <div class="pick-list">
+                                    <button type="button" class="pick-item" :class="{ active: form.group === g.name }"
+                                            v-for="g in filteredGroups" :key="g.name" @click="form.group = g.name; resetIconFont(); closePick()">
+                                        <span class="group-dot" :style="{ backgroundColor: g.color }"><i :class="g.icon"></i></span>
+                                        <span class="pick-text">{{ g.name }}</span>
+                                        <span class="pick-count" v-if="groupUsage(g.name)">{{ groupUsage(g.name) }}</span>
+                                        <span class="pick-del" title="删除该分组" @click.stop="removeGroup(g.name)"><i class="fa-solid fa-xmark"></i></span>
+                                    </button>
+                                    <div class="pick-empty" v-if="!filteredGroups.length">没有匹配的分组</div>
+                                    <button type="button" class="pick-create" v-if="canCreateGroup" @click="addGroup()">
+                                        <i class="fa-solid fa-plus"></i> 新建分组「{{ pickQuery.group.trim() }}」
+                                    </button>
+                                </div>
+                                <div class="pick-icons">
+                                    <div class="pick-icons-head">
+                                        <span><i class="fa-solid fa-icons"></i> 分组图标</span>
+                                        <span class="pick-icons-hint">{{ form.group ? '点一下即更换「' + form.group + '」的图标' : '选好后新建分组' }}</span>
+                                    </div>
+                                    <div class="pick-icon-grid">
+                                        <button type="button" class="pick-icon-opt" v-for="ic in groupIconPresets" :key="ic"
+                                                :class="{ active: currentGroupIcon === ic }" :title="ic.replace('fa-solid ', '')"
+                                                @click.stop="chooseGroupIcon(ic)">
+                                            <i :class="ic"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group full" style="grid-column: span 2;">
-                        <label>细分类 <span class="opt">选填，显示在详情页描述上方</span></label>
-                        <input v-model="form.category" placeholder="如：传说精灵挑战道具">
+                        <label>细分类 <span class="opt">选填，显示在详情页描述上方，可增删</span></label>
+                        <div class="pick" @click.stop>
+                            <button type="button" class="pick-trigger" :class="{ open: activeDropdown === 'category' }" @click="togglePick('category')">
+                                <span class="pick-value" :class="{ muted: !form.category }">{{ form.category || '不填（显示为空）' }}</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="pick-panel" v-show="activeDropdown === 'category'">
+                                <div class="pick-search">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input v-model="pickQuery.category" placeholder="搜索或输入新细分类…" @keydown.enter.prevent="canCreateCategory && addCategory()">
+                                </div>
+                                <div class="pick-list">
+                                    <button type="button" class="pick-item" @click="form.category = ''; closePick()">
+                                        <span class="pick-text muted">不填（清空细分类）</span>
+                                    </button>
+                                    <button type="button" class="pick-item" :class="{ active: form.category === c }"
+                                            v-for="c in filteredCategories" :key="c" @click="form.category = c; closePick()">
+                                        <i class="fa-solid fa-check pick-check" :class="{ invisible: form.category !== c }"></i>
+                                        <span class="pick-text">{{ c }}</span>
+                                        <span class="pick-del" title="从建议里删除" @click.stop="removeCategory(c)"><i class="fa-solid fa-xmark"></i></span>
+                                    </button>
+                                    <div class="pick-empty" v-if="!filteredCategories.length && !pickQuery.category.trim()">还没有细分类，输入后即可新建</div>
+                                    <button type="button" class="pick-create" v-if="canCreateCategory" @click="addCategory()">
+                                        <i class="fa-solid fa-plus"></i> 新建细分类「{{ pickQuery.category.trim() }}」
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group full" style="grid-column: span 2;">
@@ -202,25 +280,16 @@
         </div>
     </div>
 
-    <!-- 删除确认 -->
-    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
-        <div class="delete-modal" @click.stop>
-            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3>确认删除</h3>
-            <p>确定要删除物品 <strong>{{ deleteTargetName }}</strong> 吗？</p>
-            <div class="delete-actions">
-                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
-                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
-            </div>
-        </div>
-    </div>
 </div>
 
-<script src="js/item-config.js"></script>
+<script src="js/site-config.js"></script>
+<!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
 <script src="data/items-data.js"></script>
+<script src="js/item-config.js"></script>
 <script src="js/github-api.js"></script>
 <script src="js/image-utils.js"></script>
 <script src="js/common-ui.js"></script>
+<script src="js/dialog.js"></script>
 <script src="js/admin-items.js"></script>
 </body>
 </html>

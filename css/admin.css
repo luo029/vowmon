@@ -229,8 +229,20 @@ body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; back
 /* 工具栏 */
 .img-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.filter-select { padding: 9px 12px; border: 1px solid #cbd5e0; border-radius: 9px; background: #fff; color: #4a5568; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; outline: none; }
-.filter-select:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.15); }
+/* 工具栏：搜索框（图片管理 / 精灵图片共用，替代原来的 input + 独立清空按钮） */
+.search-field { position: relative; display: flex; align-items: center; width: 268px; height: 40px; background: #fff; border: 1px solid #dde5ef; border-radius: 11px; transition: border-color .16s, box-shadow .16s; }
+.search-field:hover { border-color: #c4d3e6; }
+.search-field:focus-within { border-color: #6fa8e6; box-shadow: 0 0 0 3px rgba(66,153,225,.14); }
+.search-field > .sf-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #a7b3c4; pointer-events: none; transition: color .16s; }
+.search-field:focus-within > .sf-icon { color: #4a90d9; }
+.search-field input { width: 100%; height: 100%; padding: 0 36px 0 35px; border: none; background: transparent; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #2d3748; outline: none; box-shadow: none; }
+.search-field input::placeholder { color: #a9b5c6; font-weight: 600; }
+.search-field .sf-clear { position: absolute; right: 6px; width: 26px; height: 26px; border: none; border-radius: 8px; background: #eef2f8; color: #8d9aab; font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s, color .15s; }
+.search-field .sf-clear:hover { background: #e2e9f3; color: #c53030; }
+
+.filter-select { height: 40px; padding: 0 34px 0 13px; border: 1px solid #dde5ef; border-radius: 11px; background-color: #fff; color: #4a5568; font-family: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%2394a3b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 11px; transition: border-color .16s, box-shadow .16s; }
+.filter-select:hover { border-color: #c4d3e6; }
+.filter-select:focus { border-color: #6fa8e6; box-shadow: 0 0 0 3px rgba(66,153,225,.14); }
 .toolbar-tip { font-size: 12px; color: #a0aec0; font-weight: 700; }
 
 /* 状态提示 */
@@ -301,11 +313,7 @@ body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; back
 .bind-name { flex: 1; font-size: 13px; font-weight: 800; color: #2d3748; }
 .bind-item > i:last-child { color: #cbd5e0; font-size: 12px; }
 
-/* 轻提示 */
-.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #2d3748; color: #fff; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 3000; display: flex; align-items: center; gap: 9px; animation: toastIn .2s ease-out; }
-.toast.ok { background: #2f855a; }
-.toast.err { background: #c53030; }
-@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+/* 轻提示已统一到 css/dialog.css 的 .vdlg-toast（见 js/dialog.js），此处不再自定义 */
 
 @media (max-width: 760px) {
     .stat-cards { grid-template-columns: repeat(2, 1fr); }
@@ -555,9 +563,126 @@ body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; back
 
 /* 物品表格：固定列宽，描述列自适应并把超出内容省略，避免把「操作」列挤出屏幕 */
 .items-table { table-layout: fixed; }
+/* 用双类压过 responsive.css 里给 .data-table 设的 min-width（760/800），
+   否则窄屏下列宽被压缩，操作列按钮又会被裁成「…」 */
+.data-table.items-table { min-width: 860px; }
 .items-table td { overflow: hidden; text-overflow: ellipsis; }
 .items-table td[style*="white-space: nowrap"] { white-space: nowrap; }
+
+/* 图标列：42px 的图标框 + 单元格左右内边距，宽度不够会被 ellipsis 裁成「…」，
+   这里放开裁切，并把列宽提到 78px（见 admin-items.html）。 */
+.items-table .col-icon { overflow: visible; text-overflow: clip; }
+
+/* 操作列：宽度不足时按钮会被 td 的 ellipsis 裁成「…」，这里放开裁切并把按钮收紧 */
+.items-table .col-actions { overflow: visible; text-overflow: clip; }
+.items-table .col-actions .action-btn { padding: 5px 10px; font-size: 12.5px; gap: 5px; }
+.items-table .col-actions .edit-btn { margin-right: 6px; }
 
 /* flex 布局里的主内容区必须允许收缩，否则长文本表格（nowrap）会把整页撑宽，
    表现为表格右侧的「操作」列被挤出屏幕。 */
 .main-content { min-width: 0; }
+
+/* ================= 可搜索 / 可增删的选择器（物品管理表单） ================= */
+.pick { position: relative; }
+
+.pick-trigger {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 8px; background: #fff;
+    font-family: inherit; font-size: 13.5px; font-weight: 700; color: #2d3748;
+    cursor: pointer; text-align: left; transition: border-color .15s, box-shadow .15s;
+}
+.pick-trigger:hover { border-color: #a0aec0; }
+.pick-trigger.open { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.15); }
+.pick-trigger > i { color: #a0aec0; font-size: 11px; flex: 0 0 auto; transition: transform .15s; }
+.pick-trigger.open > i { transform: rotate(180deg); }
+.pick-value {
+    display: inline-flex; align-items: center; gap: 6px; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pick-value.muted { color: #a0aec0; font-weight: 600; }
+
+.pick-panel {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 80;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(45,55,72,.14); padding: 6px;
+}
+
+/* 搜索框：必须带 .form-group 前缀，否则内边距会被 common-ui 的通用 input 规则覆盖 */
+.pick-search {
+    display: flex; align-items: center; position: relative;
+    padding: 2px 2px 8px; margin-bottom: 6px; border-bottom: 1px solid #f0f4f8;
+}
+.pick-search > i {
+    position: relative; z-index: 1; margin-right: -24px; padding-left: 12px;
+    color: #a0aec0; font-size: 12px; line-height: 1; pointer-events: none;
+}
+.form-group .pick-search input {
+    flex: 1; min-width: 0; box-sizing: border-box;
+    padding: 8px 10px 8px 32px; border: 1px solid #e2e8f0; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: #2d3748;
+    outline: none; background: #fafbfc;
+}
+.form-group .pick-search input::placeholder { color: #a0aec0; font-weight: 600; }
+.form-group .pick-search input:focus {
+    border-color: #4299e1; background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,.15);
+}
+
+.pick-list { max-height: 216px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+
+.pick-item {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 7px 6px; border: 0; border-radius: 7px; background: transparent;
+    font-family: inherit; font-size: 13px; font-weight: 700; color: #4a5568;
+    text-align: left; cursor: pointer;
+}
+.pick-item:hover { background: #f7fafc; }
+.pick-item.active { background: #ebf8ff; color: #2b6cb0; }
+.pick-check { flex: 0 0 12px; width: 12px; color: #3182ce; font-size: 10px; }
+.pick-check.invisible { visibility: hidden; }
+.pick-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-text.muted { color: #a0aec0; font-weight: 600; }
+.pick-count {
+    flex: 0 0 auto; font-size: 11px; font-weight: 800; color: #a0aec0;
+    background: #f1f5f9; border-radius: 999px; padding: 1px 7px;
+}
+.pick-del {
+    flex: 0 0 20px; display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 6px; color: #cbd5e0;
+    opacity: .5; transition: opacity .12s, background .12s, color .12s;
+}
+.pick-item:hover .pick-del { opacity: 1; }
+.pick-del:hover { background: #fff5f5; color: #e53e3e; }
+@media (hover: none) { .pick-del { opacity: .8; } }
+
+.pick-empty { padding: 10px 8px; font-size: 12px; font-weight: 600; color: #a0aec0; text-align: center; }
+.pick-create {
+    display: flex; align-items: center; gap: 6px; width: 100%; margin-top: 4px;
+    padding: 8px; border: 1px dashed #bee3f8; border-radius: 8px; background: #f5fbff;
+    font-family: inherit; font-size: 12.5px; font-weight: 800; color: #2b6cb0;
+    text-align: left; cursor: pointer;
+}
+.pick-create:hover { background: #ebf8ff; border-color: #90cdf4; }
+
+/* 分组图标选择：面板底部的小图标网格 */
+.pick-icons { margin-top: 6px; padding-top: 8px; border-top: 1px solid #f0f4f8; }
+.pick-icons-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-size: 11.5px; font-weight: 800; color: #718096; margin-bottom: 7px;
+}
+.pick-icons-head > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
+.pick-icons-hint {
+    flex: 1; min-width: 0; text-align: right; font-weight: 600; color: #a0aec0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pick-icon-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 5px;
+    max-height: 110px; overflow-y: auto; padding-right: 2px;
+}
+.pick-icon-opt {
+    height: 30px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e2e8f0; border-radius: 7px; background: #f8fafc;
+    color: #4a5568; font-size: 12.5px; cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.pick-icon-opt:hover { border-color: #90cdf4; background: #ebf8ff; color: #2b6cb0; }
+.pick-icon-opt.active { border-color: #4299e1; background: #ebf8ff; color: #2b6cb0; box-shadow: 0 0 0 2px rgba(66,153,225,.18); }

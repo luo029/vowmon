@@ -32,7 +32,6 @@ createApp({
         const isEdit = ref(false);
         const editIndex = ref(-1);
 
-        const showDeleteModal = ref(false);
         const deleteTargetIndex = ref(-1);
         const deleteTargetName = ref('');
 
@@ -154,7 +153,7 @@ createApp({
 
         const saveTrait = () => {
             if (!form.value.name || !String(form.value.name).trim()) {
-                alert('请填写特性名称');
+                VowmonDialog.toast('请填写特性名称', 'warning');
                 return;
             }
             const item = JSON.parse(JSON.stringify(form.value));
@@ -175,15 +174,21 @@ createApp({
         const openDeleteConfirm = (index, name) => {
             deleteTargetIndex.value = index;
             deleteTargetName.value = name;
-            showDeleteModal.value = true;
+            VowmonDialog.confirm(
+                `确定要删除特性 <strong>${VowmonDialog.esc(name)}</strong> 吗？`,
+                { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
+            ).then((ok) => {
+                if (ok) confirmDelete();
+            });
         };
 
         const confirmDelete = () => {
             if (deleteTargetIndex.value > -1) {
                 traits.value.splice(deleteTargetIndex.value, 1);
                 saveLocal();
+                VowmonDialog.toast('已删除', 'success');
             }
-            showDeleteModal.value = false;
+            deleteTargetIndex.value = -1;
         };
 
         /* ------------------------------------------------------------ 选精灵 */
@@ -204,7 +209,9 @@ createApp({
         const syncToGitHub = async () => {
             const cfg = config.value;
             if (!cfg.token || !cfg.owner) {
-                alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名');
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token 和用户名。', {
+                    type: 'warning', title: '还没配置好'
+                });
                 return;
             }
 
@@ -214,7 +221,7 @@ createApp({
                 .filter(Boolean);
 
             if (repos.length === 0) {
-                alert('请先在「精灵管理 → 同步配置」里填写数据仓库名');
+                VowmonDialog.toast('请先在「精灵管理 → 同步配置」里填写数据仓库名', 'warning', { duration: 3400 });
                 return;
             }
 
@@ -229,9 +236,13 @@ createApp({
                         content, 'update traits data'
                     );
                 }
-                alert('特性数据同步成功，共 ' + repos.length + ' 个仓库');
+                VowmonDialog.toast('特性数据同步成功，共 ' + repos.length + ' 个仓库', 'success');
             } catch (err) {
-                alert('同步失败：' + (err && err.message ? err.message : err));
+                VowmonDialog.alert('特性数据同步失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '同步失败',
+                    detail: err && err.message ? err.message : String(err)
+                });
             } finally {
                 isSyncing.value = false;
             }
@@ -285,7 +296,6 @@ createApp({
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
             else if (target === 'pokemon') showPokemonSearchModal.value = false;
-            else if (target === 'delete') showDeleteModal.value = false;
         };
 
         return {
@@ -298,7 +308,6 @@ createApp({
             isEdit,
             form,
             pokemonsStr,
-            showDeleteModal,
             deleteTargetName,
             showPokemonSearchModal,
             pokemonSearchQuery,

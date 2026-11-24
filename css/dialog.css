@@ -1,0 +1,327 @@
+/* ==========================================================================
+   Vowmon 自定义弹窗样式（唯一来源）
+   --------------------------------------------------------------------------
+   配套脚本：js/dialog.js（window.VowmonDialog）
+   提供两种形态：
+       1. 对话框 .vdlg-*  —— alert / confirm / prompt（替代系统 alert()、confirm()）
+       2. 轻提示 .vdlg-toast —— 成功 / 提示类消息，不打断操作
+   约定：
+       - 全部类名以 vdlg- 开头，不与页面原有 .modal-overlay / .modal 冲突，
+         因此 js/common-ui.js 的遮罩关闭、Esc 逻辑不会误伤它（自己管理键盘）。
+       - 颜色跟随后台既有色板（#2d3748 / #4299e1 / #e53e3e）。
+       - 遵循全局动画开关 vowmon_anim_on = 'false' 时由 JS 加 .is-static 关动画。
+   ========================================================================== */
+
+.vdlg-root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.vdlg-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(23, 29, 41, 0.46);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.vdlg-card {
+    --vdlg-c: #3182ce;
+    --vdlg-bg: #ebf4ff;
+    --vdlg-shadow: rgba(49, 130, 206, 0.38);
+    position: relative;
+    width: 396px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 22px;
+    padding: 30px 26px 22px;
+    text-align: center;
+    box-shadow: 0 32px 70px -22px rgba(15, 23, 42, 0.42), 0 2px 10px rgba(15, 23, 42, 0.05);
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+/* 顶部一条极淡的类型色光带，提升质感又不喧哗 */
+.vdlg-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    border-radius: 22px 22px 0 0;
+    background: linear-gradient(180deg, var(--vdlg-bg) 0%, rgba(255, 255, 255, 0) 100%);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.vdlg-card[data-type="success"] { --vdlg-c: #2f9e6e; --vdlg-bg: #e9f8f1; --vdlg-shadow: rgba(47, 158, 110, 0.36); }
+.vdlg-card[data-type="warning"] { --vdlg-c: #c76a15; --vdlg-bg: #fdf3e6; --vdlg-shadow: rgba(199, 106, 21, 0.36); }
+.vdlg-card[data-type="danger"]  { --vdlg-c: #dd4a48; --vdlg-bg: #fdeded; --vdlg-shadow: rgba(221, 74, 72, 0.36); }
+
+.vdlg-root.is-show .vdlg-mask { opacity: 1; }
+.vdlg-root.is-show .vdlg-card { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------ 图标 */
+.vdlg-icon {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 18px;
+    border-radius: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--vdlg-c);
+    background: var(--vdlg-bg);
+    box-shadow: 0 10px 22px -12px var(--vdlg-shadow);
+    flex: none;
+}
+
+.vdlg-root.is-show .vdlg-icon {
+    animation: vdlg-pop 0.42s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+@keyframes vdlg-pop {
+    0% { transform: scale(0.55); opacity: 0; }
+    62% { transform: scale(1.07); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ 文字 */
+.vdlg-title {
+    position: relative;
+    font-size: 17px;
+    font-weight: 900;
+    color: #1a202c;
+    letter-spacing: 0.2px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.vdlg-message {
+    position: relative;
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: #67758a;
+    white-space: pre-line;
+    word-break: break-word;
+    overflow-y: auto;
+    max-height: 42vh;
+}
+
+.vdlg-message strong,
+.vdlg-message b {
+    color: #2d3748;
+    font-weight: 900;
+}
+
+.vdlg-message .vdlg-mark {
+    color: var(--vdlg-c);
+    font-weight: 900;
+}
+
+/* 长错误信息 / 路径等技术细节 */
+.vdlg-detail {
+    position: relative;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #f7f9fc;
+    border: 1px solid #e9eef6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #6b7a90;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 152px;
+    overflow-y: auto;
+}
+
+/* ------------------------------------------------------------------ 按钮 */
+.vdlg-actions {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.vdlg-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 13px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.18s, transform 0.18s, box-shadow 0.18s, color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.vdlg-btn:active { transform: scale(0.975); }
+.vdlg-btn:focus-visible { box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.28); }
+
+.vdlg-btn-cancel {
+    background: #f1f4f9;
+    color: #5b6a7d;
+}
+.vdlg-btn-cancel:hover { background: #e7ecf4; color: #41505f; }
+
+.vdlg-btn-ok {
+    color: #fff;
+    background: var(--vdlg-c);
+    box-shadow: 0 10px 22px -12px var(--vdlg-shadow);
+}
+.vdlg-btn-ok:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.vdlg-btn-ok:active { transform: translateY(0) scale(0.975); }
+.vdlg-btn-ok[disabled] { opacity: 0.6; cursor: default; transform: none; filter: none; }
+
+/* 单按钮（纯提示）时左右等宽已经很好看，无需额外样式 */
+
+/* --------------------------------------------------------------- 输入框 */
+.vdlg-input {
+    position: relative;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #dbe3ee;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #2d3748;
+    background: #f9fbfe;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+.vdlg-input:focus {
+    background: #fff;
+    border-color: #7fb2e8;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.16);
+}
+
+/* -------------------------------------------------------------- 轻提示 */
+.vdlg-toasts {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 3100;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+    max-width: calc(100vw - 40px);
+}
+
+.vdlg-toast {
+    --vdlg-c: #3182ce;
+    --vdlg-bg: #ebf4ff;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 210px;
+    max-width: 340px;
+    padding: 12px 16px 12px 13px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 18px 44px -18px rgba(15, 23, 42, 0.34), 0 1px 3px rgba(15, 23, 42, 0.05);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateX(18px) scale(0.98);
+    transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vdlg-toast[data-type="success"] { --vdlg-c: #2f9e6e; --vdlg-bg: #e9f8f1; }
+.vdlg-toast[data-type="warning"] { --vdlg-c: #c76a15; --vdlg-bg: #fdf3e6; }
+.vdlg-toast[data-type="danger"]  { --vdlg-c: #dd4a48; --vdlg-bg: #fdeded; }
+
+.vdlg-toast.is-show { opacity: 1; transform: none; }
+
+.vdlg-toast-icon {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--vdlg-c);
+    background: var(--vdlg-bg);
+}
+
+.vdlg-toast-text {
+    font-size: 13.5px;
+    line-height: 1.62;
+    color: #3d4a5c;
+    font-weight: 700;
+    white-space: pre-line;
+    word-break: break-word;
+    padding-top: 2px;
+}
+
+/* ------------------------------------------------------------ 动画开关 */
+.vdlg-root.is-static .vdlg-mask,
+.vdlg-root.is-static .vdlg-card,
+.vdlg-root.is-static .vdlg-icon,
+.vdlg-toast.is-static {
+    transition: none !important;
+    animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vdlg-mask, .vdlg-card, .vdlg-icon, .vdlg-toast {
+        transition-duration: 0.01ms !important;
+        animation: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------- 响应式 */
+@media (max-width: 640px) {
+    .vdlg-root { padding: 16px; align-items: flex-end; }
+    .vdlg-card {
+        width: 100%;
+        border-radius: 20px;
+        padding: 24px 20px 16px;
+    }
+    .vdlg-card::before { height: 72px; }
+    .vdlg-icon { width: 52px; height: 52px; border-radius: 17px; font-size: 21px; margin-bottom: 14px; }
+    .vdlg-title { font-size: 16px; }
+    .vdlg-message { font-size: 13px; line-height: 1.75; }
+    .vdlg-actions { margin-top: 20px; }
+    .vdlg-btn { height: 46px; }
+
+    .vdlg-toasts {
+        right: 12px;
+        left: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        align-items: stretch;
+        max-width: none;
+    }
+    .vdlg-toast { max-width: none; width: 100%; }
+}

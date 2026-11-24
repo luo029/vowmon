@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 管理者后台</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/dialog.css">
     <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -455,18 +459,6 @@
         </div>
     </div>
 
-    <!-- 删除确认弹窗 -->
-    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
-        <div class="delete-modal" @click.stop>
-            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3>确认删除</h3>
-            <p>您确定要永久删除精灵 <strong>{{ deleteTargetName }}</strong> 吗？此操作不可撤销。</p>
-            <div class="delete-actions">
-                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
-                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="js/type-config.js"></script>
@@ -474,6 +466,7 @@
 <script src="js/github-api.js"></script>
 <script src="js/image-utils.js"></script>
 <script src="js/common-ui.js"></script>
+<script src="js/dialog.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

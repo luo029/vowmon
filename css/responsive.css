@@ -242,6 +242,7 @@ a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-ca
     .img-toolbar { flex-direction: column; align-items: stretch; }
     .toolbar-left, .toolbar-right { width: 100%; }
     .toolbar-left .input-with-btn { width: 100% !important; }
+    .toolbar-left .search-field { width: 100% !important; }
     .filter-select { flex: 1; min-width: 0; }
     .img-grid, .pet-img-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .img-thumb { height: 120px; }
