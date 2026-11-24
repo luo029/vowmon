@@ -31,7 +31,7 @@
             + (s.spAtk || 0) + (s.spDef || 0) + (s.spd || 0);
     }
 
-    window.PetUtils = {
+    window.VowmonUtils = {
         normalize: normalize,
         normalizeAll: normalizeAll,
         total: total

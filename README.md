@@ -265,7 +265,7 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 - **同一台电脑**：后台保存 → 写镜像 → `storage` 事件 → 前台标签页**不用刷新**就更新（实测有效）；跨标签页、跨页面（列表 / 图鉴 / 技能 / 物品）都跟着变。
 - **换设备 / 访客**：没有本机镜像，走云端；`/data/*` 代理缓存 60 秒，所以后台同步后最多 1 分钟生效。
 - 「未同步修改」标记：`vowmon_dirty_keys`。点「一键同步」成功后自动清掉；点「从仓库拉取」也会用远端覆盖本机并清掉。
-- 想让页面在数据变化时自己更新，用 `VowmonData.onChange('pets', (data) => { ... })`；`js/pet-utils.js` 提供 `PetUtils.normalizeAll()`，补齐缺字段的精灵，避免一条脏数据把整页渲染搞崩。
+- 想让页面在数据变化时自己更新，用 `VowmonData.onChange('pets', (data) => { ... })`；`js/vowmon-utils.js` 提供 `VowmonUtils.normalizeAll()`，补齐缺字段的精灵，避免一条脏数据把整页渲染搞崩。
 
 **后台怎么读写**：
 
