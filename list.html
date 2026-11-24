@@ -149,8 +149,8 @@
         }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261124">
-    <script src="js/navbar.js?v=20261124" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124">
+    <script src="js/navbar.js?v=20261124f" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
 </head>
 <body>
 
@@ -377,9 +377,16 @@ VowmonData.ready(['pets']).then(function () {
             };
             const toggleAnim = () => {
                 isAnimOn.value = !isAnimOn.value;
-                localStorage.setItem('vowmon_anim_on', isAnimOn.value);
+                localStorage.setItem('vowmon_anim_on', isAnimOn.value ? 'true' : 'false');
                 updateBodyClass();
+                // 通知导航栏按钮文字跟着更新（navbar.js 监听此事件）
+                document.dispatchEvent(new CustomEvent('vowmon:anim-changed', { detail: { on: isAnimOn.value } }));
             };
+            // 导航栏开关 / 其他标签页改动时，同步本页状态
+            document.addEventListener('vowmon:anim-changed', (e) => {
+                const on = e && e.detail ? !!e.detail.on : (localStorage.getItem('vowmon_anim_on') !== 'false');
+                if (isAnimOn.value !== on) { isAnimOn.value = on; updateBodyClass(); }
+            });
 
             onMounted(() => {
                 updateBodyClass();

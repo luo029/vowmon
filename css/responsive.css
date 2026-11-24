@@ -293,3 +293,9 @@ a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-ca
     transition: none !important;
     animation: none !important;
 }
+/* body 自身也可能挂过渡 / 动画，一并关掉 */
+.no-anim {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+}

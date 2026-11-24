@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124b">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124b">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124b">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124b">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124g">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
 </head>
 <body>
 <div id="app" v-cloak>
@@ -99,10 +99,13 @@
                                 </div>
                             </td>
                             <td v-if="visibleCols.includes('learners')" class="col-learners">
-                                <span class="learner-count-pill" :style="(skill.learners || []).length ? {} : { background: '#edf2f7', color: '#a0aec0' }">
-                                    <i class="fa-solid fa-paw"></i> <span class="font-num">{{ (skill.learners || []).length }}</span> 只
+                                <span class="learner-count-pill" :style="((skill.learners || []).length + (skill.stoneLearners || []).length) ? {} : { background: '#edf2f7', color: '#a0aec0' }">
+                                    <i class="fa-solid fa-paw"></i> <span class="font-num">{{ (skill.learners || []).length + (skill.stoneLearners || []).length }}</span> 只
                                 </span>
-                                <span v-if="(skill.learners || []).length" class="learner-names" :title="(skill.learners || []).join('、')">{{ (skill.learners || []).slice(0, 3).join('、') }}<template v-if="(skill.learners || []).length > 3"> 等</template></span>
+                                <span v-if="(skill.stoneLearners || []).length" class="learner-stone-badge" title="其中通过技能石学习的数量">
+                                    <i class="fa-solid fa-gem"></i> <span class="font-num">{{ (skill.stoneLearners || []).length }}</span>
+                                </span>
+                                <span v-if="((skill.learners || []).length + (skill.stoneLearners || []).length)" class="learner-names" :title="(skill.learners || []).concat(skill.stoneLearners || []).join('、')">{{ (skill.learners || []).slice(0, 3).join('、') }}<template v-if="(skill.learners || []).length > 3"> 等</template></span>
                                 <span v-else style="color:#cbd5e0;">-</span>
                             </td>
                             <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ skill.effect }}</td>
@@ -189,7 +192,7 @@
                     <div class="form-group full" style="grid-column: span 2;"><label>技能效果</label><textarea v-model="form.effect" class="custom-textarea" rows="3"></textarea></div>
 
                     <div class="form-group full" style="grid-column: span 2;">
-                        <label>可学会精灵 <span class="opt">已选 <span class="font-num">{{ (form.learners || []).length }}</span> 只</span></label>
+                        <label>可学会精灵 <span class="opt">已选 <span class="font-num">{{ (form.learners || []).length + (form.stoneLearners || []).length }}</span> 只 · 勾选默认「自学」，点「石」标记为技能石学习（无法自我领悟）</span></label>
                         <div class="learner-picker">
                             <div class="learner-toolbar">
                                 <div class="learner-search">
@@ -215,9 +218,17 @@
                                 </span>
                             </div>
                             <div class="learner-grid">
-                                <label class="learner-check" v-for="p in filteredLearnerPets" :key="p.id">
+                                <label class="learner-check" :class="{ 'is-stone': learnMode(p.name) === 'stone' }" v-for="p in filteredLearnerPets" :key="p.id">
                                     <input type="checkbox" :checked="hasLearner(p.name)" @change="toggleLearner(p.name)">
                                     <span class="learner-name">{{ p.name }}</span>
+                                    <button type="button" class="learner-mode-btn"
+                                            v-if="hasLearner(p.name)"
+                                            :class="{ stone: learnMode(p.name) === 'stone' }"
+                                            :title="learnMode(p.name) === 'stone' ? '技能石学习（点击改回自学）' : '自学领悟（点击改为技能石学习）'"
+                                            @click.prevent.stop="toggleStoneLearner(p.name)">
+                                        <i :class="learnMode(p.name) === 'stone' ? 'fa-solid fa-gem' : 'fa-solid fa-wand-sparkles'"></i>
+                                        {{ learnMode(p.name) === 'stone' ? '石' : '自' }}
+                                    </button>
                                     <span class="learner-types">
                                         <i v-for="t in p.types" :key="t" :class="getTypeIcon(t)" :style="{ color: getTypeColor(t) }" :title="t"></i>
                                     </span>
@@ -244,8 +255,8 @@
 <script src="../js/tag-config.js?v=20261124b"></script>
 <script src="../js/data-loader.js?v=20261124b"></script>
 <script src="../js/github-api.js?v=20261124b"></script>
-<script src="../js/common-ui.js?v=20261124b"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124b"></script>
-<script src="../js/admin-skills.js?v=20261124b"></script>
+<script src="../js/admin-skills.js?v=20261124h"></script>
 </body>
 </html>

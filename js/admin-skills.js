@@ -55,7 +55,8 @@ createApp({
             cost: 0,
             power: 0,
             tags: [],
-            learners: [],   // 可学会该技能的精灵名列表
+            learners: [],        // 自学（自我觉醒领悟）的精灵名列表
+            stoneLearners: [],   // 技能石学习（无法自学）的精灵名列表
             effect: ''
         });
 
@@ -64,15 +65,15 @@ createApp({
         // 把一批技能规整：category 归一到三类、tags / learners 保证是合法字符串数组。
         // 注意：自定义标签不一定在内置 tagNames 里，这里不能再按 tagNames 过滤，
         // 否则用户新建的标签会在加载时被清掉。
+        const toNameList = (v) => Array.isArray(v)
+            ? v.map(t => String(t)).filter(t => t && t.trim())
+            : [];
         const normalizeSkills = (list) => (list || []).map(item => ({
             ...item,
             category: normalizeCategory(item.category),
-            tags: Array.isArray(item.tags)
-                ? item.tags.map(t => String(t)).filter(t => t && t.trim())
-                : [],
-            learners: Array.isArray(item.learners)
-                ? item.learners.map(t => String(t)).filter(t => t && t.trim())
-                : []
+            tags: toNameList(item.tags),
+            learners: toNameList(item.learners),
+            stoneLearners: toNameList(item.stoneLearners)
         }));
 
         /* ------------------------------------------------------------ 标签库 */
@@ -210,35 +211,65 @@ createApp({
             return list;
         });
 
-        const hasLearner = (name) => (form.value.learners || []).includes(name);
+        const hasLearner = (name) =>
+            (form.value.learners || []).includes(name) ||
+            (form.value.stoneLearners || []).includes(name);
 
+        // 学习方式：'self' = 自学领悟；'stone' = 技能石学习（无法自我领悟）
+        const learnMode = (name) =>
+            (form.value.stoneLearners || []).includes(name) ? 'stone' : 'self';
+
+        // 勾选/取消勾选：勾上默认归入「自学」；取消时两个列表都移除
         const toggleLearner = (name) => {
             if (!Array.isArray(form.value.learners)) form.value.learners = [];
-            const i = form.value.learners.indexOf(name);
-            if (i > -1) form.value.learners.splice(i, 1);
-            else form.value.learners.push(name);
+            if (!Array.isArray(form.value.stoneLearners)) form.value.stoneLearners = [];
+            const inSelf = form.value.learners.includes(name);
+            const inStone = form.value.stoneLearners.includes(name);
+            if (inSelf || inStone) {
+                form.value.learners = form.value.learners.filter(n => n !== name);
+                form.value.stoneLearners = form.value.stoneLearners.filter(n => n !== name);
+            } else {
+                form.value.learners.push(name);
+            }
         };
 
-        // 全选：把当前筛选出的精灵全部加入
+        // 自学 ↔ 技能石 互相切换
+        const toggleStoneLearner = (name) => {
+            if (!Array.isArray(form.value.learners)) form.value.learners = [];
+            if (!Array.isArray(form.value.stoneLearners)) form.value.stoneLearners = [];
+            if (form.value.stoneLearners.includes(name)) {
+                form.value.stoneLearners = form.value.stoneLearners.filter(n => n !== name);
+                if (!form.value.learners.includes(name)) form.value.learners.push(name);
+            } else {
+                form.value.learners = form.value.learners.filter(n => n !== name);
+                form.value.stoneLearners.push(name);
+            }
+        };
+
+        // 全选：把当前筛选出的精灵全部加入「自学」
         const selectAllLearners = () => {
             if (!Array.isArray(form.value.learners)) form.value.learners = [];
             filteredLearnerPets.value.forEach(p => {
-                if (!form.value.learners.includes(p.name)) form.value.learners.push(p.name);
+                if (!hasLearner(p.name)) form.value.learners.push(p.name);
             });
         };
 
-        // 取消全选：把当前筛选出的精灵全部移除（只影响可见范围，不动其它属性已勾的）
+        // 取消全选：把当前筛选出的精灵全部移除（两个列表都清，只影响可见范围）
         const clearLearners = () => {
-            if (!Array.isArray(form.value.learners)) return;
             const names = new Set(filteredLearnerPets.value.map(p => p.name));
-            form.value.learners = form.value.learners.filter(n => !names.has(n));
+            if (Array.isArray(form.value.learners)) {
+                form.value.learners = form.value.learners.filter(n => !names.has(n));
+            }
+            if (Array.isArray(form.value.stoneLearners)) {
+                form.value.stoneLearners = form.value.stoneLearners.filter(n => !names.has(n));
+            }
         };
 
         // 当前筛选范围内是否已全部勾选（控制全选/取消按钮提示）
         const allFilteredSelected = computed(() => {
             const list = filteredLearnerPets.value;
             if (!list.length) return false;
-            return list.every(p => (form.value.learners || []).includes(p.name));
+            return list.every(p => hasLearner(p.name));
         });
 
         /* ---------------------------------------------------------------- 编辑 */
@@ -248,6 +279,7 @@ createApp({
                 editIndex.value = index;
                 form.value = JSON.parse(JSON.stringify(skill));
                 if (!Array.isArray(form.value.learners)) form.value.learners = [];
+                if (!Array.isArray(form.value.stoneLearners)) form.value.stoneLearners = [];
             } else {
                 isEdit.value = false;
                 editIndex.value = -1;
@@ -271,12 +303,9 @@ createApp({
             item.cost = Number(item.cost) || 0;
             item.power = Number(item.power) || 0;
             item.category = normalizeCategory(item.category);
-            item.tags = Array.isArray(item.tags)
-                ? item.tags.map(t => String(t)).filter(t => t && t.trim())
-                : [];
-            item.learners = Array.isArray(item.learners)
-                ? item.learners.map(t => String(t)).filter(t => t && t.trim())
-                : [];
+            item.tags = toNameList(item.tags);
+            item.learners = toNameList(item.learners);
+            item.stoneLearners = toNameList(item.stoneLearners);
             if (!item.id) item.id = nextSkillId();
 
             if (isEdit.value && editIndex.value > -1) {
@@ -446,7 +475,8 @@ createApp({
             getCategoryIcon, getCategoryColor,
             getTagIcon, getTagColor,
             learnerFilter, learnerSearch, filteredLearnerPets,
-            hasLearner, toggleLearner, selectAllLearners, clearLearners, allFilteredSelected,
+            hasLearner, learnMode, toggleLearner, toggleStoneLearner,
+            selectAllLearners, clearLearners, allFilteredSelected,
             showColSettings, allColumns, visibleCols,
             config,
             skills,

@@ -1,4 +1,18 @@
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(26,32,44,0.5); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+/* 遮罩不用 backdrop-filter（毛玻璃）：列表滚动时每帧都要重算整屏模糊，是弹窗滚动卡顿的主因；
+   用加深一点点的半透明底色达到近似的视觉层次，渲染成本几乎为零 */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(26,32,44,0.55); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+
+/* 弹窗入场动效：只在「动效开」（body 没有 .no-anim）时启用。
+   只动 opacity / transform，走合成层，不触发重排重绘，低配机也不掉帧。 */
+@keyframes vmodal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vmodal-rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+body:not(.no-anim) .modal-overlay { animation: vmodal-fade .14s ease-out both; }
+body:not(.no-anim) .modal,
+body:not(.no-anim) .selection-modal,
+body:not(.no-anim) .delete-modal { animation: vmodal-rise .18s cubic-bezier(.16, 1, .3, 1) both; }
 .modal { background: #f7fafc; width: 900px; max-width: 100%; max-height: 90vh; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 25px 60px -12px rgba(26,32,44,0.35); overflow: hidden; }
 .modal-header { padding: 18px 24px; background: #fff; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
 .modal-header h3 { font-size: 18px; color: #2d3748; font-weight: 900; }
@@ -36,8 +50,8 @@
 .selection-search i { color: #a0aec0; }
 .selection-search input { flex: 1; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; }
 .selection-search input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
-.selection-list { flex: 1; overflow-y: auto; padding: 10px; min-height: 250px; }
-.selection-item { padding: 12px 15px; border-bottom: 1px solid #f7fafc; cursor: pointer; border-radius: 6px; margin-bottom: 4px; transition: background 0.2s; }
+.selection-list { flex: 1; overflow-y: auto; padding: 10px; min-height: 250px; overscroll-behavior: contain; will-change: scroll-position; }
+.selection-item { padding: 12px 15px; border-bottom: 1px solid #f7fafc; cursor: pointer; border-radius: 6px; margin-bottom: 4px; }
 .selection-item:hover { background: #ebf8ff; }
 .item-name { font-weight: 700; color: #2d3748; font-size: 14px; margin-bottom: 4px; }
 .item-desc { font-size: 12px; color: #a0aec0; }

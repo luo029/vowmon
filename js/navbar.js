@@ -153,6 +153,10 @@
     function toggleAnim() {
         localStorage.setItem('vowmon_anim_on', isAnimOn() ? 'false' : 'true');
         applyAnim();
+        // 通知页面内自己的动效状态（list / vowdex 的 isAnimOn ref）跟着同步
+        try {
+            document.dispatchEvent(new CustomEvent('vowmon:anim-changed', { detail: { on: isAnimOn() } }));
+        } catch (e) { /* 老浏览器不支持 CustomEvent 时忽略 */ }
     }
 
     function linkHtml(link, cls) {
@@ -344,6 +348,13 @@
     };
 
     applyAnim();
+
+    // 页面内开关（list / vowdex 页面自己的动效按钮）改动后，同步导航按钮文字
+    document.addEventListener('vowmon:anim-changed', function () { applyAnim(); });
+    // 其他标签页切换开关时，本页立刻跟上（body class + 按钮文字）
+    window.addEventListener('storage', function (e) {
+        if (!e.key || e.key === 'vowmon_anim_on') applyAnim();
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', render);

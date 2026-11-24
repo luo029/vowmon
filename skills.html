@@ -78,6 +78,9 @@
         tbody tr:hover { background: #f7fafc; }
 
         .skill-name { font-weight: 900; color: #2d3748; }
+        .skill-link { color: inherit; text-decoration: none; cursor: pointer; border-bottom: 1px dashed #cbd5e0; padding-bottom: 1px; transition: color .15s, border-color .15s; }
+        .skill-link:hover { color: #2b6cb0; border-color: #2b6cb0; }
+        .skill-link i { font-size: 10px; margin-left: 4px; color: #a0aec0; }
         .type-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: bold; }
         .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; }
         /* 分类与标签胶囊：图标 + 文字，配色取自 category-config.js / tag-config.js */
@@ -91,8 +94,8 @@
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261124">
-    <script src="js/navbar.js?v=20261124" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124">
+    <script src="js/navbar.js?v=20261124f" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
 </head>
 <body>
 
@@ -175,7 +178,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="skill in sortedSkills" :key="skill.id">
-                        <td class="skill-name">{{ skill.name }}</td>
+                        <td class="skill-name"><a class="skill-link" :href="'skill-detail.html?id=' + encodeURIComponent(skill.id || '')" :title="'查看「' + skill.name + '」的可学精灵'">{{ skill.name }}<i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
                         <td>
                             <span class="type-tag">
                                 <span class="type-icon" :style="{backgroundColor: getTypeColor(skill.type)}"><i :class="getTypeIcon(skill.type)"></i></span>

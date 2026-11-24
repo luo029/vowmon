@@ -394,7 +394,12 @@
         bases: bases,
         /** 数据到位后再执行；失败会显示可重试的错误页 */
         ready: function (keys, opts) {
-            showBoot();
+            // 本机所有请求的数据都有镜像且不强制回源 → 数据立刻就能到位，
+            // 不显示加载遮罩，避免页面每次打开都闪一下「正在加载数据…」
+            const fresh = !!(opts && opts.fresh);
+            const list = (keys && keys.length) ? keys : ['pets'];
+            const allLocal = !fresh && list.every(function (k) { return !!readMirror(k); });
+            if (!allLocal) showBoot();
             const p = load(keys, opts);
             p.then(function () {
                 // 挂载发生在同一轮微任务里，rAF 之后隐藏遮罩就不会闪到 {{ }}

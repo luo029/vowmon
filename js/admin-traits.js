@@ -8,9 +8,11 @@
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted, watch } = Vue;
-VowmonData.ready(['pets','traits'], { fresh: true }).then(function () {
+// 不再强制 fresh 回源：本机有镜像就先用镜像秒开（草稿优先），
+// data-loader 会在背后静默对账，最新数据要显式更新时点「从仓库拉取」。
+VowmonData.ready(['pets','traits']).then(function () {
 
-createApp({
+const app = createApp({
     setup() {
         const typeDataList = typeData;
 
@@ -38,8 +40,19 @@ createApp({
 
         /* ------------------------------------------------------------ 精灵选择 */
         const showPokemonSearchModal = ref(false);
+        // 输入框绑定 pokemonSearchInput，防抖 180ms 后才更新 pokemonSearchQuery，
+        // 避免每敲一个字就过滤一次全部精灵造成卡顿
+        const pokemonSearchInput = ref('');
         const pokemonSearchQuery = ref('');
         const pokemonPage = ref(1);
+        let searchTimer = null;
+        watch(pokemonSearchInput, (val) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                pokemonSearchQuery.value = val;
+                pokemonPage.value = 1;
+            }, 180);
+        });
 
         const defaultForm = () => ({
             id: '',
@@ -91,9 +104,22 @@ createApp({
         }, { deep: true });
 
         /* ---------------------------------------------------------------- 工具 */
-        // 属性图标 / 颜色，取自 type-config.js（全局唯一来源）
-        const getTypeIcon = (name) => (typeDataList.find(t => t.name === name)?.icon) || 'fa-solid fa-circle';
-        const getTypeColor = (name) => (typeDataList.find(t => t.name === name)?.color) || '#cbd5e0';
+        // 属性图标 / 颜色，取自 type-config.js（全局唯一来源）。
+        // 加一层缓存：表格几百个胶囊每次渲染都 find 一遍很浪费，同名只查一次。
+        const typeIconCache = {};
+        const typeColorCache = {};
+        const getTypeIcon = (name) => {
+            if (!(name in typeIconCache)) {
+                typeIconCache[name] = (typeDataList.find(t => t.name === name)?.icon) || 'fa-solid fa-circle';
+            }
+            return typeIconCache[name];
+        };
+        const getTypeColor = (name) => {
+            if (!(name in typeColorCache)) {
+                typeColorCache[name] = (typeDataList.find(t => t.name === name)?.color) || '#cbd5e0';
+            }
+            return typeColorCache[name];
+        };
 
         // 属性胶囊多选切换
         const toggleType = (name) => {
@@ -210,16 +236,24 @@ createApp({
 
         /* ------------------------------------------------------------ 选精灵（多选 + 普通/隐藏切换） */
         const openPokemonModal = () => {
+            pokemonSearchInput.value = '';
             pokemonSearchQuery.value = '';
             pokemonPage.value = 1;
             showPokemonSearchModal.value = true;
         };
 
+        // 已勾选集合（Set）：勾选状态判断 O(1)，比每次渲染都遍历两个数组快得多
+        const pickedNames = computed(() => {
+            const s = new Set();
+            form.value.pokemons.forEach(n => s.add(n));
+            form.value.hiddenPokemons.forEach(n => s.add(n));
+            return s;
+        });
+
         // 是否已勾选（常规或隐藏都算）
         const isPokemonPicked = (pet) => {
             const name = pet && pet.name;
-            if (!name) return false;
-            return form.value.pokemons.includes(name) || form.value.hiddenPokemons.includes(name);
+            return !!name && pickedNames.value.has(name);
         };
 
         // 点击候选：勾选 → 加入常规；再次点击 → 移除（常规/隐藏都移除）
@@ -412,7 +446,7 @@ createApp({
             pokemonsStr,
             deleteTargetName,
             showPokemonSearchModal,
-            pokemonSearchQuery,
+            pokemonSearchInput,
             pokemonPage,
             filteredPokemons,
             paginatedPokemons,
@@ -427,5 +461,61 @@ createApp({
             pullFromRepo
         };
     }
-}).mount('#app');
+});
+
+/* ------------------------------ 特性表格子组件 ------------------------------
+   整张表格抽成独立组件：父页面里打字 / 搜索 / 开弹窗等无关数据变化时，
+   传进来的 props 不变，子组件直接跳过重渲染，表格越大收益越明显。
+   （注意：不用 v-memo —— 它在 CDN 运行时编译 + HTML 内联模板下会崩，
+   报 "Cannot read properties of undefined (reading 'memo')"。） */
+app.component('trait-table', {
+    props: {
+        traits:      { type: Array, default: () => [] },
+        visibleCols: { type: Array, default: () => [] },
+        getColor:    { type: Function, required: true },
+        getIcon:     { type: Function, required: true },
+        openEdit:    { type: Function, required: true },
+        openDelete:  { type: Function, required: true }
+    },
+    template: `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th v-if="visibleCols.includes('name')">特性名称</th>
+                    <th v-if="visibleCols.includes('types')">属性</th>
+                    <th v-if="visibleCols.includes('pokemons')">拥有精灵</th>
+                    <th v-if="visibleCols.includes('effect')">效果</th>
+                    <th style="text-align: right;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(trait, index) in traits" :key="trait.id || index">
+                    <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ trait.name }}</td>
+                    <td v-if="visibleCols.includes('types')">
+                        <div class="type-pill-cell">
+                            <span class="type-pill" v-for="t in trait.types" :key="t" :style="{ backgroundColor: getColor(t) }">
+                                <i :class="getIcon(t)"></i> {{ t }}
+                            </span>
+                        </div>
+                    </td>
+                    <td v-if="visibleCols.includes('pokemons')">
+                        <span class="trait-owner-list">
+                            <span class="trait-owner-pill" v-for="n in (trait.pokemons || []).slice(0, 2)" :key="n">{{ n }}</span>
+                            <span class="trait-owner-pill hidden" v-for="n in (trait.hiddenPokemons || []).slice(0, 2)" :key="'h' + n">★{{ n }}</span>
+                            <span v-if="((trait.pokemons || []).length + (trait.hiddenPokemons || []).length) > 4" style="color:#a0aec0; font-size:12px;">等 {{ (trait.pokemons || []).length + (trait.hiddenPokemons || []).length }} 只</span>
+                            <span v-if="!((trait.pokemons || []).length + (trait.hiddenPokemons || []).length)" style="color:#cbd5e0; font-size:12px;">—</span>
+                        </span>
+                    </td>
+                    <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ trait.effect }}</td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="action-btn edit-btn" @click.stop="openEdit(trait, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                        <button class="action-btn delete-btn" @click.stop="openDelete(index, trait.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    `
+});
+
+app.mount('#app');
 });

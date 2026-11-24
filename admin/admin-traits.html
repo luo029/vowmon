@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
         <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124e">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124e">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124e">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124e">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124g">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
 </head>
 <body>
 <div id="app" v-cloak>
@@ -61,43 +61,16 @@
             </div>
             
             <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th v-if="visibleCols.includes('name')">特性名称</th>
-                            <th v-if="visibleCols.includes('types')">属性</th>
-                            <th v-if="visibleCols.includes('pokemons')">拥有精灵</th>
-                            <th v-if="visibleCols.includes('effect')">效果</th>
-                            <th style="text-align: right;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody data-bisect="removed-rows">
-                        <!--BISECT-START--><tr v-for="(trait, index) in traits" :key="index">
-                            <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ trait.name }}</td>
-                            <td v-if="visibleCols.includes('types')">
-                                <div class="type-pill-cell">
-                                    <span class="type-pill" v-for="t in trait.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }">
-                                        <i :class="getTypeIcon(t)"></i> {{ t }}
-                                    </span>
-                                </div>
-                            </td>
-                            <!-- 超过3个精灵则显示省略号 -->
-                            <td v-if="visibleCols.includes('pokemons')">
-                                <span class="trait-owner-list">
-                                    <span class="trait-owner-pill" v-for="n in (trait.pokemons || []).slice(0, 2)" :key="n">{{ n }}</span>
-                                    <span class="trait-owner-pill hidden" v-for="n in (trait.hiddenPokemons || []).slice(0, 2)" :key="'h' + n">★{{ n }}</span>
-                                    <span v-if="((trait.pokemons || []).length + (trait.hiddenPokemons || []).length) > 4" style="color:#a0aec0; font-size:12px;">等 {{ (trait.pokemons || []).length + (trait.hiddenPokemons || []).length }} 只</span>
-                                    <span v-if="!((trait.pokemons || []).length + (trait.hiddenPokemons || []).length)" style="color:#cbd5e0; font-size:12px;">—</span>
-                                </span>
-                            </td>
-                            <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ trait.effect }}</td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <button class="action-btn edit-btn" @click.stop="openEditor(trait, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
-                                <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(index, trait.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
-                            </td>
-                        </tr>
-                    <!--BISECT-END--></tbody><!-- rows removed -->
-                </table>
+                <!-- 表格抽成独立子组件（模板写在 admin-traits.js 里）：
+                     输入框打字 / 搜索等无关数据变化时，props 不变，子组件不会重渲染 -->
+                <trait-table
+                    :traits="traits"
+                    :visible-cols="visibleCols"
+                    :get-color="getTypeColor"
+                    :get-icon="getTypeIcon"
+                    :open-edit="openEditor"
+                    :open-delete="openDeleteConfirm"
+                ></trait-table>
             </div>
         </main>
     </div>
@@ -163,7 +136,7 @@
 
             <div class="selection-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input v-model="pokemonSearchQuery" placeholder="输入精灵名称 / 编号搜索..." @input="pokemonPage = 1">
+                <input v-model="pokemonSearchInput" placeholder="输入精灵名称 / 编号搜索...">
             </div>
 
             <div class="selection-list">
@@ -199,10 +172,10 @@
 
 <script src="../js/site-config.js?v=20261124e"></script>
 <script src="../js/type-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261124e"></script>
+<script src="../js/data-loader.js?v=20261124f"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
-<script src="../js/common-ui.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-traits.js?v=20261124e"></script>
+<script src="../js/admin-traits.js?v=20261124g"></script>
 </body>
 </html>

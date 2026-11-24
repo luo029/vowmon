@@ -31,6 +31,25 @@
     'use strict';
     if (window.VowmonModal) return;
 
+    /* ------------------------------------------------------ 全局动效开关
+       后台页不加载 navbar.js，所以在这里也同步一次「动效 开/关」：
+       localStorage['vowmon_anim_on'] === 'false' → body 加 .no-anim，
+       配合 css/responsive.css 的全局规则（transition/animation 全 none !important），
+       以及弹窗入场动效的 body:not(.no-anim) 前置条件，实现「关掉就绝对无动画」。 */
+    function applyAnimFlag() {
+        var on = true;
+        try { on = localStorage.getItem('vowmon_anim_on') !== 'false'; } catch (e) { on = true; }
+        if (document.body) document.body.classList.toggle('no-anim', !on);
+    }
+    applyAnimFlag();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyAnimFlag);
+    }
+    // 另一个标签页切换开关时，当前后台页立刻跟上
+    window.addEventListener('storage', function (e) {
+        if (!e.key || e.key === 'vowmon_anim_on' || e.key === null) applyAnimFlag();
+    });
+
     var OVERLAY = '.modal-overlay';
     var PANEL = '.modal, .delete-modal, .selection-modal';
     var EVENT = 'vowmon:modal-close';

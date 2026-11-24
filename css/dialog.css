@@ -31,11 +31,16 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(23, 29, 41, 0.46);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
-    backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(23, 29, 41, 0.52);
     opacity: 0;
     transition: opacity 0.22s ease;
+}
+
+/* 毛玻璃只在「动效开」时启用：低配设备上整屏 blur 很吃 GPU，
+   关掉动效（body.no-anim）时完全不模糊，保证绝对流畅 */
+body:not(.no-anim) .vdlg-mask {
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
 }
 
 .vdlg-card {
