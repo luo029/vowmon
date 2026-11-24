@@ -63,9 +63,9 @@ const RANK_SCOPE = {
 };
 /* 权 / 位 / 力 三律标记：权柄（阶元）、生态位（阶位）、战力（等级） */
 const RANK_FLAGS = [
-    { key: 'quan', label: '权', color: '#c2410c', bg: '#fdf1e7', tip: '权柄：掌辖某一层阶元的掌权者（族尊掌科、基座掌目、灵相掌纲…），掌权后同族借力，也背负整层的托举' },
-    { key: 'wei',  label: '位', color: '#7048e8', bg: '#f2eefd', tip: '生态位：精灵在生态界中占据的位置，对应八阶阶位' },
-    { key: 'li',   label: '力', color: '#1971c2', bg: '#e9f2fb', tip: '战力：自身的数值面板与技能，对应等级，修炼就能增长' }
+    { key: 'quan', label: '权', name: '权柄', color: '#c2410c', tip: '权柄：掌辖某一层阶元的掌权者（族尊掌科、基座掌目、灵相掌纲…），掌权后同族借力，也背负整层的托举' },
+    { key: 'wei',  label: '位', name: '生态位', color: '#7048e8', tip: '生态位：精灵在生态界中占据的位置，对应八阶阶位' },
+    { key: 'li',   label: '力', name: '战力', color: '#1971c2', tip: '战力：自身的数值面板与技能，对应等级，修炼就能增长' }
 ];
 const DEFAULT_FLAGS = { quan: true, wei: false, li: true };
 

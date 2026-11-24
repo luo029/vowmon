@@ -190,18 +190,20 @@
         .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
         .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
 
-        /* ============ 权 · 位 · 力（阶元 / 阶位 / 等级） ============ */
-        .rank-flags { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .rank-flag { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, box-shadow .15s, opacity .15s; opacity: .55; }
-        .rank-flag:hover { opacity: 1; border-color: var(--rf-c, #4299e1); }
-        .rank-flag.on { opacity: 1; background: var(--rf-bg, #f0f7ff); border-color: var(--rf-c, #4299e1); box-shadow: 0 0 0 3px rgba(66,153,225,.08); }
-        .rank-flag .rf-mark { flex: none; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #fff; background: #c3cfdb; transition: background .15s; }
-        .rank-flag.on .rf-mark { background: var(--rf-c, #4299e1); }
-        .rank-flag .rf-text { flex: 1; min-width: 0; font-size: 12px; font-weight: 700; color: #718096; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rank-flag.on .rf-text { color: #4a5568; }
-        .rank-flag .rf-text b { font-weight: 900; color: var(--rf-c, #2b6cb0); }
-        .rank-flag .rf-tick { flex: none; font-size: 11px; color: var(--rf-c, #4299e1); }
-        @media (max-width: 640px) { .rank-flags { grid-template-columns: 1fr; } }
+        /* ============ 三律标记：权 · 位 · 力（阶元 / 阶位 / 等级） ============ */
+        .rank-group { grid-column: 1 / -1; }
+        .rank-bar { display: flex; gap: 6px; padding: 6px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 13px; }
+        .rank-item { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-start; gap: 7px; padding: 7px 10px; border: 1px solid transparent; border-radius: 9px; background: transparent; cursor: pointer; font-family: inherit; text-align: left; transition: background .15s, border-color .15s, box-shadow .15s; }
+        .rank-item:hover { background: #fff; border-color: #dbe4ec; }
+        .rank-item.on { background: #fff; border-color: var(--rf-c); box-shadow: 0 1px 4px rgba(45,55,72,.07); }
+        .rank-item .ri-dot { flex: none; width: 22px; height: 22px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900; color: #fff; background: #c8d3de; transition: background .15s; }
+        .rank-item.on .ri-dot { background: var(--rf-c); }
+        .rank-item .ri-name { flex: none; font-size: 11px; font-weight: 800; color: #a0aec0; }
+        .rank-item.on .ri-name { color: var(--rf-c); opacity: .8; }
+        .rank-item .ri-val { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 900; color: #bcc8d4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-item.on .ri-val { color: #2d3748; }
+        .rank-item .ri-tick { flex: none; font-size: 10px; color: var(--rf-c); }
+        @media (max-width: 640px) { .rank-bar { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -367,21 +369,23 @@
                                     <button type="button" class="trait-add-mini" @click="addTrait()" title="添加"><i class="fa-solid fa-check"></i></button>
                                     <button type="button" class="trait-cancel" @click="cancelTraitInput" title="取消"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label>权 · 位 · 力 <span style="font-size:11px;font-weight:700;color:#a0aec0;">阶元 / 阶位 / 等级</span> <i class="tip" data-tip="三律标记，默认勾【权】【力】。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与面板。">?</i></label>
-                            <div class="rank-flags">
-                                <button type="button" class="rank-flag" v-for="f in RANK_FLAGS" :key="f.key"
+                        <div class="form-group rank-group">
+                            <label>三律标记 <i class="tip" data-tip="默认勾【权】【力】。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与数值面板。">?</i></label>
+                            <div class="rank-bar">
+                                <button type="button" class="rank-item" v-for="f in RANK_FLAGS" :key="f.key"
                                         :class="{ on: form.rankFlags[f.key] }"
-                                        :style="{ '--rf-c': f.color, '--rf-bg': f.bg }"
+                                        :style="{ '--rf-c': f.color }"
                                         :title="f.tip"
                                         @click="toggleFlag(f.key)">
-                                    <span class="rf-mark">{{ f.label }}</span>
-                                    <span class="rf-text" v-if="f.key === 'quan'"><b>{{ formScope.label }}</b> · {{ formScopeValue || '未填' }}</span>
-                                    <span class="rf-text" v-else-if="f.key === 'wei'"><b>阶位</b> · {{ stageName(form.level) }}</span>
-                                    <span class="rf-text" v-else><b>等级</b> · Lv.{{ form.level }}</span>
-                                    <i class="fa-solid fa-check rf-tick" v-if="form.rankFlags[f.key]"></i>
+                                    <span class="ri-dot">{{ f.label }}</span>
+                                    <span class="ri-name">{{ f.name }}</span>
+                                    <span class="ri-val" v-if="f.key === 'quan'">{{ formScope.label }} · {{ formScopeValue || '未填' }}</span>
+                                    <span class="ri-val" v-else-if="f.key === 'wei'">{{ stageName(form.level) }}</span>
+                                    <span class="ri-val" v-else>Lv.{{ form.level }}</span>
+                                    <i class="fa-solid fa-check ri-tick" v-if="form.rankFlags[f.key]"></i>
                                 </button>
                             </div>
                         </div>
@@ -532,6 +536,6 @@
 <script src="../js/vow-textarea.js?v=20261125c"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126d"></script>
+<script src="../js/admin-individuals.js?v=20261126e"></script>
 </body>
 </html>
