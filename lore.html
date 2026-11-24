@@ -297,10 +297,13 @@
     'use strict';
 
     /* ---------- 关键词胶囊：把正文里的【X】渲染成属性色 / 神秘色 pill ---------- */
+    // 注意：type-config.js 用 const 声明，不挂 window，必须用裸标识符 + typeof 探测
     var typeMap = {};
-    if (window.typeData && typeof window.typeData.forEach === 'function') {
-        window.typeData.forEach(function (t) { typeMap[t.name] = t; });
-    }
+    try {
+        if (typeof typeData !== 'undefined' && typeof typeData.forEach === 'function') {
+            typeData.forEach(function (t) { typeMap[t.name] = t; });
+        }
+    } catch (e) { typeMap = {}; }
     // 文中简称 → 属性配置
     var alias = { '岩': '岩石', '地': '地面' };
     // 不是属性的概念词（神明 / 三律 / 蛇族），用紫金「神秘」样式
