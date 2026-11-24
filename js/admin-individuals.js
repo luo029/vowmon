@@ -280,6 +280,21 @@ const app = createApp({
         const removeTrait = (name) => {
             form.value.traits = form.value.traits.filter(t => t !== name);
         };
+        /* 独立弹窗添加特性：列表只负责显示，不再是一条假输入框 */
+        const addTraitViaDialog = async () => {
+            const name = await VowmonDialog.prompt('输入特性名', {
+                title: '添加特性',
+                placeholder: '',
+                okText: '添加'
+            });
+            const v = String(name == null ? '' : name).trim();
+            if (!v) return;
+            if (form.value.traits.includes(v)) {
+                VowmonDialog.toast('这个特性已经添加过了', 'warning');
+                return;
+            }
+            form.value.traits.push(v);
+        };
         const traitFromBook = (name) => traitNames.includes(name);
 
         /* --------------------------------------------------- 技能与熟练度（默认展示为胶囊，点击才编辑） */
@@ -508,7 +523,7 @@ const app = createApp({
             stageName: stageNameOf, RANK_BANDS,
             GENDERS, BLOODLINES, SKILL_LEVELS,
             natureOptions, natureHintOf, ownerOptions,
-            showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, traitFromBook,
+            showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,
             activeSkillIndex, skillSuggestions, setSkillName,
             editingSkillIndex, skillTypeIcon, newSkill, editSkill, finishSkill, removeSkill,
             addMilestone,
