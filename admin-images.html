@@ -130,7 +130,7 @@
 
                     <!-- 图片网格 -->
                     <div class="img-grid" v-else>
-                        <div class="img-card" v-for="img in filteredRepoImages" :key="img.repo + '|' + img.path">
+                        <div class="img-card" v-for="img in paginatedRepoImages" :key="img.repo + '|' + img.path">
                             <div class="img-thumb">
                                 <img :src="img.url" :alt="img.name" loading="lazy" @error="onImgError">
                             </div>
@@ -151,6 +151,18 @@
                                     <button class="action-btn mini delete-btn" @click="openDelete(img)"><i class="fa-solid fa-trash"></i> 删除</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 分页（上千张图只渲染当前页，避免一次请求几百张缩略图） -->
+                    <div class="pagination" v-if="!isLoading && filteredRepoImages.length > PAGE_SIZE">
+                        <span>共 {{ filteredRepoImages.length }} 张，第 {{ repoPage }} / {{ repoTotalPages }} 页</span>
+                        <div class="page-controls">
+                            <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="repoPage <= 1" @click="repoPage = 1">首页</button>
+                            <button class="btn btn-outline" style="padding: 4px 10px; margin-left: 6px;" :disabled="repoPage <= 1" @click="repoPage--">上一页</button>
+                            <span style="font-weight: bold; margin: 0 12px;">{{ repoPage }} / {{ repoTotalPages }}</span>
+                            <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="repoPage >= repoTotalPages" @click="repoPage++">下一页</button>
+                            <button class="btn btn-outline" style="padding: 4px 10px; margin-left: 6px;" :disabled="repoPage >= repoTotalPages" @click="repoPage = repoTotalPages">末页</button>
                         </div>
                     </div>
                 </section>
@@ -181,7 +193,7 @@
                     <div class="state-box" v-else-if="filteredPetRows.length === 0"><i class="fa-solid fa-magnifying-glass"></i> 没有符合条件的精灵</div>
 
                     <div class="pet-img-grid" v-else>
-                        <div class="pet-img-card" v-for="row in filteredPetRows" :key="row.pet.id" :class="'st-' + row.status">
+                        <div class="pet-img-card" v-for="row in paginatedPetRows" :key="row.pet.id" :class="'st-' + row.status">
                             <div class="pet-img-thumb">
                                 <img v-if="row.url" :src="row.url" :alt="row.pet.name" loading="lazy" @error="onImgError">
                                 <i v-else class="fa-solid fa-image-portrait"></i>
@@ -199,6 +211,18 @@
                                     <a class="action-btn mini" :href="'admin.html'"><i class="fa-solid fa-pen"></i> 去编辑</a>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 分页（精灵图片） -->
+                    <div class="pagination" v-if="filteredPetRows.length > PAGE_SIZE">
+                        <span>共 {{ filteredPetRows.length }} 只，第 {{ petPage }} / {{ petTotalPages }} 页</span>
+                        <div class="page-controls">
+                            <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="petPage <= 1" @click="petPage = 1">首页</button>
+                            <button class="btn btn-outline" style="padding: 4px 10px; margin-left: 6px;" :disabled="petPage <= 1" @click="petPage--">上一页</button>
+                            <span style="font-weight: bold; margin: 0 12px;">{{ petPage }} / {{ petTotalPages }}</span>
+                            <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="petPage >= petTotalPages" @click="petPage++">下一页</button>
+                            <button class="btn btn-outline" style="padding: 4px 10px; margin-left: 6px;" :disabled="petPage >= petTotalPages" @click="petPage = petTotalPages">末页</button>
                         </div>
                     </div>
                 </section>

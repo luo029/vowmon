@@ -209,6 +209,8 @@ vowmon/
 - **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `items.html` 的 Tab 与筛选胶囊、后台 `admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。
+- **图片仓库列举**：任何「列出仓库里有哪些图」的地方都必须走 `GitHubSync.listDirectory()`，不要自己写 `fetch` 打 Contents API —— 它内部已经处理了 1000 条静默截断（超限自动切 Git Trees API，见 [§3.1](#31-图片仓库的-1000-条上限)）。
+- **后台图片列表分页**：`admin-images.html` 的两个网格必须渲染 `paginatedRepoImages` / `paginatedPetRows`，不能直接用 `filteredRepoImages` / `filteredPetRows` 全量铺（上千张图会同时请求上千个缩略图）。每页 `PAGE_SIZE = 60`。
 - **后台属性选择**：精灵 / 技能 / 特性三页统一用胶囊款式——表格内 `.type-pill`，表单内 `.type-pill-option`，胶囊内容为「属性图标 + 属性名称」，颜色取自 `type-config.js`。不要再退回纯文本或旧复选框网格。
 - **技能分类**：只有「物理 / 特殊 / 变化」三类，取值统一来自 `js/category-config.js` 的 `categoryNames`（前后台都引用，`admin-skills.js` 的 `SKILL_CATEGORIES` 即指向它）。旧值映射表 `CATEGORY_ALIAS` 不要删（用于兼容历史数据）。
 - **后台「显示列」状态**：三个管理页（精灵 / 技能 / 特性）的列显隐分别存在 `localStorage['vowmon_pets_visible_cols']` / `['vowmon_skills_visible_cols']` / `['vowmon_traits_visible_cols']`，值为列 key 的字符串数组。勾选即刻写盘、刷新保持；要恢复默认就清掉这个键（精灵默认显示头像/编号/名称/属性/属性图标/阶数/形态，技能与特性默认全显）。
@@ -224,3 +226,67 @@ vowmon/
 - **多仓支持**：后台配置支持逗号分隔多个数据仓库（如 `vowmon_data_1, vowmon_data_2`），同步时将自动逐个推送。
 - **一键同步**：在后台修改数据后，点击右上角“一键同步”即可将最新的 JS 数据文件推送到 GitHub 数据仓库根目录（文件名为 `vow-data.js` / `skills-data.js` / `traits-data.js` / `items-data.js`），前台刷新即可拉取。
 - **仓库内路径**：数据文件在站点里的位置是 `data/xxx-data.js`，推送到 GitHub 数据仓库时放在该仓库根目录，两者互不影响。
+---
+
+## 3. 规模上限与性能（千只精灵）
+
+站点按「一千只以上精灵」的规模做过压测和加固，以下是需要知道的几条硬约束。
+
+### 3.1 图片仓库的 1000 条上限
+
+GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出部分会被**静默截断**：不报错，只是后面的文件在列表里凭空消失。图片仓库很容易破千 —— 500 只精灵就是 500 张主图 + 500 张异色图 = 1000 张。
+
+`js/github-api.js` 的 `listDirectory()` 已经处理掉这件事：
+
+- 正常情况（< 1000 条）行为不变，仍然只发 1 个请求；
+- 一旦发现返回满 1000 条，自动改用 **Git Trees API**（`/git/trees/{默认分支}?recursive=1`）取全量，再按目录前缀过滤出「直接子文件」（不含子目录里的文件、不含目录项）；
+- 返回结构与 Contents API 完全一致（`{ name, path, sha, size, type }`），`sha` 就是同一个 blob sha，可以直接拿去 `DELETE /contents/...` 删文件；
+- Trees API 单次最多返回 10 万个条目，几千张图毫无压力。
+
+需要额外 2 个请求（取默认分支 + 取文件树），只在破千时发生。
+
+### 3.2 要不要开 imgs1 / imgs2 两个仓库？
+
+**不需要，也不建议用拆仓库来回避这个问题。**
+
+- 1000 条是**每个目录**的限制，不是每个仓库。拆成两个仓库确实能把上限抬到 2000 张，但总数再涨（比如 1500 只精灵 = 3000 张图）时每个仓库又会各破千，问题原样回来，只是变成「两个仓库各丢一半」，更难排查。
+- 现在的 Trees API 兜底本身**没有上限**，一个仓库放几千张图完全没问题。
+- 拆仓库的真实代价：图片要在两个仓库间手工分配、CDN 路径出现两套、备份和迁移都更麻烦。
+
+多仓支持（`imgRepos` 逗号分隔）保留着，正确用途是**按内容分类**（例如 `vowmon_imgs` 放精灵、`vowmon_items` 放物品），不是用来绕开数量上限。
+
+### 3.3 图片管理页分页
+
+`admin-images.html` 的两个网格都只渲染当前页（`PAGE_SIZE = 60`）：
+
+- 上千张图时不会一次生成上千个 `<img>` 去轰 CDN（那会卡死页面，还可能被 jsDelivr 限流）；
+- 搜索框或筛选条件一变就自动回到第 1 页；重新扫描后总页数变少时页码自动纠正，不会停在空页；
+- 底部有「首页 / 上一页 / 页码 / 下一页 / 末页」，只有超过一页时才出现。
+
+### 3.4 图片与精灵的匹配索引（O(n²) → O(1)）
+
+后台要判断「每张图被哪些精灵使用」。原来的写法是 `精灵数 × 图片数` 的双重遍历 —— 1000 只精灵（含异色约 2000 张图）要跑几百万次字符串比较，主线程会卡好几秒。
+
+现在 `admin-images.js` 用 computed 预建两张 Map（按完整路径 `byPath`、按文件名 `byName`），单次查找 O(1)；`getPetUrl()` 也改成直接查索引，不再去 `petRows` 里线性 `find`（那是模板里每行调多次的 O(n²)）。
+
+### 3.5 实测数据（1000 条精灵 / 693KB 数据文件）
+
+| 项目 | 耗时 |
+|---|---|
+| 搜索过滤一次（全表 1000 条） | 0.04 ms |
+| 搜索 + 系别 + 阶数组合筛选 | 0.07 ms |
+| 全表排序 | 0.04 ms |
+| 图鉴渲染 30 张卡片（每页） | 3.7 ms |
+| 精灵列表渲染 10 行（每页） | 1.4 ms |
+| 渲染 100 张卡片 | 12.1 ms |
+| 渲染 1000 张卡片（不分页的极端情况） | 66 ms |
+| 后台保存：序列化 1000 条（677KB） | 3.86 ms |
+| 后台读取：反序列化 | 2.75 ms |
+
+结论：**数据层和渲染层都不是瓶颈**，现有分页（图鉴 30 / 列表 10 / 后台 15）足够撑到几千只。真正的成本只有数据文件体积 —— 1000 条 693KB，gzip 后约 100–150KB，4G 下一两秒。
+
+### 3.6 数据量再往上走时先看这里
+
+- **图片**：单页 30 张卡片，每张最多 2 个 `<img>`（主图 + 异色），都带 `loading="lazy"`。若以后单页图片明显变多，先考虑降 `pageSize` 而不是加虚拟滚动。
+- **后台保存**：每次改动都会 `JSON.stringify` 全量写入 `localStorage`（1000 条约 3.9ms）。`localStorage` 单域上限约 5MB，按当前单条 ~677 字节算，可存约 7000 条；接近上限时应改为分片存储或直接把数据文件作为唯一数据源。
+- **一键同步**：推送的是 `data/*.js` 文本（1000 条约 677KB），GitHub Contents API 单文件上限远高于此，暂时无需改用 Git Data API。

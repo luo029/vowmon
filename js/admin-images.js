@@ -8,7 +8,7 @@
      4. 支持上传图片到指定仓库、删除图片、把图片绑定到精灵。
    依赖：Vue3 / type-config.js / vow-data.js / github-api.js / common-ui.js
    ========================================================================== */
-const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
 
 createApp({
     setup() {
@@ -114,60 +114,99 @@ createApp({
 
             const seen = new Set();
             const collected = [];
-            const statuses = [];
 
-            for (const repo of imgRepos.value) {
-                let repoCount = 0;
-                let repoErr = '';
-                for (const dir of SCAN_DIRS) {
-                    try {
-                        const files = await GitHubSync.listDirectory(
-                            config.value.token, config.value.owner, repo, dir
-                        );
-                        files.forEach(f => {
-                            if (f.type !== 'file' || !IMAGE_EXT.test(f.name)) return;
-                            const key = repo + '|' + f.path;
-                            if (seen.has(key)) return;
-                            seen.add(key);
-                            collected.push({
-                                repo: repo,
-                                path: f.path,
-                                name: f.name,
-                                sha: f.sha,
-                                size: f.size,
-                                url: fileUrl(repo, f.path),
-                                usedBy: []
-                            });
-                            repoCount++;
-                        });
-                    } catch (e) {
-                        repoErr = e.message || '读取失败';
-                    }
+            // 多仓库 × 多目录并行读取（原来是一个个 await，仓库多时会明显慢）
+            const tasks = [];
+            imgRepos.value.forEach(repo => {
+                SCAN_DIRS.forEach(dir => {
+                    tasks.push(
+                        GitHubSync.listDirectory(config.value.token, config.value.owner, repo, dir)
+                            .then(files => ({ repo, files, error: '' }))
+                            .catch(e => ({ repo, files: [], error: (e && e.message) || '读取失败' }))
+                    );
+                });
+            });
+            const results = await Promise.all(tasks);
+
+            const statusMap = new Map();
+            imgRepos.value.forEach(repo => statusMap.set(repo, { repo, ok: true, count: 0, error: '' }));
+
+            results.forEach(r => {
+                const st = statusMap.get(r.repo);
+                if (!st) return;
+                if (r.error) {
+                    st.ok = false;
+                    st.error = r.error;
+                    return;
                 }
-                statuses.push({ repo, ok: !repoErr, count: repoCount, error: repoErr });
-            }
+                r.files.forEach(f => {
+                    if (f.type !== 'file' || !IMAGE_EXT.test(f.name)) return;
+                    const key = r.repo + '|' + f.path;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    collected.push({
+                        repo: r.repo,
+                        path: f.path,
+                        name: f.name,
+                        sha: f.sha,
+                        size: f.size,
+                        url: fileUrl(r.repo, f.path),
+                        usedBy: []
+                    });
+                    st.count++;
+                });
+            });
 
-            repoStatus.value = statuses;
+            repoStatus.value = imgRepos.value.map(repo => statusMap.get(repo));
             allImages.value = collected;
 
             // 建立图片 -> 精灵 的关联
             buildUsage();
 
             isLoading.value = false;
-            const failed = statuses.filter(s => !s.ok);
+            const failed = repoStatus.value.filter(s => !s.ok);
             if (failed.length) {
                 loadError.value = `${failed.length} 个仓库读取失败：${failed.map(s => s.repo).join('、')}。请检查 Token 权限与仓库名。`;
             }
         };
 
-        // 匹配规则：路径完全一致，或以同样的文件名结尾（兼容外链 / 不同 CDN 前缀）
-        const pathMatches = (petImage, img) => {
-            if (!petImage) return false;
+        // 索引：把「拿精灵图去图片堆里找」从 O(图片数) 降到 O(1)
+        // 1000 只精灵（含异色约 2000 张图）用原来的双重遍历要跑几百万次字符串比较，
+        // 主线程会卡好几秒，所以这里预建 path / 文件名两张表。只读 allImages，随它一起重算。
+        const imageIndex = computed(() => {
+            const byPath = new Map();
+            const byName = new Map();
+            allImages.value.forEach(img => {
+                byPath.set(img.path, img);
+                if (!byName.has(img.name)) byName.set(img.name, []);
+                byName.get(img.name).push(img);
+            });
+            return { byPath, byName };
+        });
+
+        // 匹配规则：路径完全一致优先，否则按文件名命中（兼容外链 / 不同 CDN 前缀）
+        const findImage = (petImage) => {
+            if (!petImage) return null;
             const a = String(petImage).replace(/\\/g, '');
-            const b = img.path;
-            if (a === b) return true;
+            const exact = imageIndex.value.byPath.get(a);
+            if (exact) return exact;
             const aName = a.split('/').pop().split('?')[0];
-            return !!aName && aName === img.name;
+            const list = aName ? imageIndex.value.byName.get(aName) : null;
+            return list && list.length ? list[0] : null;
+        };
+
+        // 全部命中（路径命中 + 同名命中，去重），用于统计「哪张图被谁用了」
+        const matchImages = (petImage) => {
+            if (!petImage) return [];
+            const a = String(petImage).replace(/\\/g, '');
+            const aName = a.split('/').pop().split('?')[0];
+            const out = [];
+            const seen = new Set();
+            const exact = imageIndex.value.byPath.get(a);
+            if (exact) { out.push(exact); seen.add(exact); }
+            const list = aName ? (imageIndex.value.byName.get(aName) || []) : [];
+            list.forEach(img => { if (!seen.has(img)) { out.push(img); seen.add(img); } });
+            return out;
         };
 
         const buildUsage = () => {
@@ -176,16 +215,10 @@ createApp({
                 const label = p.name || p.id;
                 const mark = (img, who) => { if (!img.usedBy.includes(who)) img.usedBy.push(who); };
                 // 主图
-                if (p.image) {
-                    allImages.value.forEach(img => {
-                        if (pathMatches(p.image, img)) mark(img, label);
-                    });
-                }
+                matchImages(p.image).forEach(img => mark(img, label));
                 // 异色图（shiny 数组，可多张）——也要算"被使用"，否则会被误判成未使用图片
                 (Array.isArray(p.shiny) ? p.shiny : []).forEach(sp => {
-                    allImages.value.forEach(img => {
-                        if (pathMatches(sp, img)) mark(img, label + '（异色）');
-                    });
+                    matchImages(sp).forEach(img => mark(img, label + '（异色）'));
                 });
             });
         };
@@ -210,7 +243,7 @@ createApp({
             const image = p.image || '';
             if (!image) return { pet: p, status: 'empty', url: '', repo: '' };
             if (/^https?:\/\//i.test(image)) return { pet: p, status: 'external', url: image, repo: '' };
-            const matched = allImages.value.find(img => pathMatches(image, img));
+            const matched = findImage(image);
             if (matched) return { pet: p, status: 'ok', url: matched.url, repo: matched.repo };
             return { pet: p, status: 'missing', url: fileUrl(imgRepos.value[0] || '', image), repo: '' };
         }));
@@ -230,13 +263,44 @@ createApp({
             });
         });
 
-        const statusText = (s) => ({ ok: '正常', missing: '缺失', empty: '未填写', external: '外链' }[s] || s);
-        // 异色图片张数（shiny 数组，可为空）
+        /* ------------------------------ 分页 ------------------------------ */
+        // 图片仓库可能上千张图，全部铺出来会同时生成上千个 <img> 并向 CDN 发请求，
+        // 页面直接卡住甚至被 jsDelivr 限流，所以两个网格都按页渲染（每页 60）。
+        const PAGE_SIZE = 60;
+        const repoPage = ref(1);
+        const petPage = ref(1);
+
+        const repoTotalPages = computed(() => Math.ceil(filteredRepoImages.value.length / PAGE_SIZE) || 1);
+        const petTotalPages = computed(() => Math.ceil(filteredPetRows.value.length / PAGE_SIZE) || 1);
+
+        const paginatedRepoImages = computed(() => {
+            const page = Math.min(Math.max(repoPage.value, 1), repoTotalPages.value);
+            const start = (page - 1) * PAGE_SIZE;
+            return filteredRepoImages.value.slice(start, start + PAGE_SIZE);
+        });
+        const paginatedPetRows = computed(() => {
+            const page = Math.min(Math.max(petPage.value, 1), petTotalPages.value);
+            const start = (page - 1) * PAGE_SIZE;
+            return filteredPetRows.value.slice(start, start + PAGE_SIZE);
+        });
+
+        // 搜索结果或筛选条件一变就回到第 1 页，否则可能停在一个空页上
+        watch([repoSearch, repoFilter, usageFilter], () => { repoPage.value = 1; });
+        watch([petSearch, petStatusFilter], () => { petPage.value = 1; });
+        // 重新扫描后总页数可能变少，越界就纠正回来
+        watch(repoTotalPages, (n) => { if (repoPage.value > n) repoPage.value = n; });
+        watch(petTotalPages, (n) => { if (petPage.value > n) petPage.value = n; });
+
+        const statusText = (s) => ({ ok: '正常', missing: '缺失', empty: '未填写', external: '外链' }[s] || s);        // 异色图片张数（shiny 数组，可为空）
         const shinyCount = (p) => (p && Array.isArray(p.shiny) ? p.shiny.length : 0);
         const shortRepo = (r) => r.length > 16 ? r.slice(0, 14) + '…' : r;
+        // 直接算，不再去 petRows 里线性查找（模板里每行会调多次，千条时是 O(n²)）
         const getPetUrl = (p) => {
-            const row = petRows.value.find(r => r.pet === p);
-            return row ? row.url : '';
+            const image = (p && p.image) || '';
+            if (!image) return '';
+            if (/^https?:\/\//i.test(image)) return image;
+            const matched = findImage(image);
+            return matched ? matched.url : fileUrl(imgRepos.value[0] || '', image);
         };
 
         const onImgError = (e) => {
@@ -394,6 +458,8 @@ createApp({
             isLoading, loadError, repoStatus, allImages, loadAll,
             repoSearch, repoFilter, usageFilter, filteredRepoImages,
             petSearch, petStatusFilter, filteredPetRows, linkedCount, missingPets,
+            repoPage, petPage, repoTotalPages, petTotalPages,
+            paginatedRepoImages, paginatedPetRows, PAGE_SIZE,
             showUploadModal, uploadPet, uploadRepo, uploadPath, uploadPreview,
             uploadFileInput, isUploading, openUpload, handleUpload,
             deleteTarget, isDeleting, openDelete, confirmDelete,
