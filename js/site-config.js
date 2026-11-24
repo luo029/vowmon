@@ -17,7 +17,7 @@
 window.VOWMON_SITE_CONFIG = {
     // 图片走本站 /img/* 反向代理（Cloudflare Pages Functions），CF 边缘缓存回源 GitHub。
     // 想换回 jsDelivr 直连就填：https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main
-    imgCdnBase: 'https://vowmon.pages.dev/img',
+    imgCdnBase: 'https://vowmon.keeptrue.ren/img',
     // 数据走本站 /data/* 反向代理，源站是 vowmon_data 仓库
-    dataCdnBase: 'https://vowmon.pages.dev/data'
+    dataCdnBase: 'https://vowmon.keeptrue.ren/data'
 };

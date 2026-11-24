@@ -337,10 +337,13 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 | 平台 | 地址 | 发布方式 |
 |---|---|---|
-| GitHub Pages | https://luo029.github.io/vowmon/ | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
-| Cloudflare Pages | https://vowmon.pages.dev/ | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy` |
+| Cloudflare Pages（**主站**） | https://vowmon.keeptrue.ren/ | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy`；`vowmon.keeptrue.ren` 是新网 DNS 上的 CNAME → `vowmon.pages.dev` |
+| Cloudflare Pages（裸地址） | https://vowmon.pages.dev/ | 同上，和上面是同一个项目 |
+| GitHub Pages | https://keeptrue.ren/vowmon/（裸地址 `luo029.github.io/vowmon/` 会 301 过来） | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
 
-两个地址内容一致，只有图片加速走的是 Cloudflare（见 4.3）。
+前两个是同一个 Pages 项目、同一份构建产物，只是域名不同。`js/site-config.js` 里的 `imgCdnBase` / `dataCdnBase` 都指向 `vowmon.keeptrue.ren`：这样即使某天 `*.pages.dev` 在境内被污染，自己域名下的数据与图片仍然可用（GitHub Pages 那份也会跨域来取，代理函数带 `Access-Control-Allow-Origin: *`）。
+
+> **绑定自定义域名必须做的一步**：在新网加完 CNAME 还不够，还要在 Cloudflare Pages 项目里把这个域名登记为 Custom domain（面板 Domains → Add，或 `POST /accounts/{id}/pages/projects/vowmon/domains` 带 `{"name":"vowmon.keeptrue.ren"}`）。只加 CNAME 不登记，访问会报 **Error 1001 / DNS resolution error（Please enable cookies）**——因为 CF 边缘没有这个主机名的配置，也没有对应证书，TLS 直接握手失败。登记后状态会走 `initializing → pending → active`，约 2 分钟签好 Google 证书即自动生效。
 
 ### 4.2 GitHub Pages
 
@@ -402,3 +405,4 @@ npx wrangler pages deploy . --project-name=vowmon --branch=main
 - **图不更新**：CF 缓存 1 小时，加 `?v=2` 破缓存，或等一小时。
 - **Cloudflare 部署失败**：看 Actions 日志；最常见是 Secret 过期/被删（`CLOUDFLARE_API_TOKEN`），去 Cloudflare「我的个人资料 → API 令牌」重新建一个并更新 Secret。
 - **GitHub Pages 404**：确认 Settings → Pages 里的分支还是 `main` / `(root)`，以及 `index.html` 在仓库根目录。
+- **自建域名报 Error 1001（Please enable cookies）**：DNS 通了但 CF 不认这个主机名。查 `GET /accounts/{id}/pages/projects/vowmon/domains`，没有这条就补登记；有但 `status` 不是 `active` 就再等一两分钟。用 `curl -sS -o /dev/null https://<域名>/` 若报 `SEC_E_ILLEGAL_MESSAGE`/handshake failed，也是同一个原因（没有证书）。
