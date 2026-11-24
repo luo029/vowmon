@@ -61,11 +61,11 @@ const RANK_SCOPE = {
     '元灵': { key: 'kingdom', label: '界' },
     '元':   { key: 'domain',  label: '域' }
 };
-/* 权 / 位 / 力 三标记：对应阶元、阶位、等级 */
+/* 权 / 位 / 力 三律标记：权柄（阶元）、生态位（阶位）、战力（等级） */
 const RANK_FLAGS = [
-    { key: 'quan', label: '权', color: '#c2410c', bg: '#fdf1e7', tip: '掌权者：统治当前阶位对应的阶元（族尊掌科、基座掌目、灵相掌纲…）' },
-    { key: 'wei',  label: '位', color: '#7048e8', bg: '#f2eefd', tip: '有正式阶位：在八阶体系里占了一个名分' },
-    { key: 'li',   label: '力', color: '#1971c2', bg: '#e9f2fb', tip: '以实力立身：等级即战力凭据' }
+    { key: 'quan', label: '权', color: '#c2410c', bg: '#fdf1e7', tip: '权柄：掌辖某一层阶元的掌权者（族尊掌科、基座掌目、灵相掌纲…），掌权后同族借力，也背负整层的托举' },
+    { key: 'wei',  label: '位', color: '#7048e8', bg: '#f2eefd', tip: '生态位：精灵在生态界中占据的位置，对应八阶阶位' },
+    { key: 'li',   label: '力', color: '#1971c2', bg: '#e9f2fb', tip: '战力：自身的数值面板与技能，对应等级，修炼就能增长' }
 ];
 const DEFAULT_FLAGS = { quan: true, wei: false, li: true };
 

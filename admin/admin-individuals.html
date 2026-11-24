@@ -370,7 +370,7 @@
                             </div>
                         </div>
                         <div class="form-group" style="grid-column: 1 / -1;">
-                            <label>阶元 · 阶位 · 等级 <i class="tip" data-tip="默认勾选【权】【力】。【权】＝当前阶位的掌权者，统治对应阶元（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】＝在八阶体系里有正式阶位；【力】＝以等级战力立身。">?</i></label>
+                            <label>权 · 位 · 力 <span style="font-size:11px;font-weight:700;color:#a0aec0;">阶元 / 阶位 / 等级</span> <i class="tip" data-tip="三律标记，默认勾【权】【力】。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与面板。">?</i></label>
                             <div class="rank-flags">
                                 <button type="button" class="rank-flag" v-for="f in RANK_FLAGS" :key="f.key"
                                         :class="{ on: form.rankFlags[f.key] }"
@@ -532,6 +532,6 @@
 <script src="../js/vow-textarea.js?v=20261125c"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126c"></script>
+<script src="../js/admin-individuals.js?v=20261126d"></script>
 </body>
 </html>
