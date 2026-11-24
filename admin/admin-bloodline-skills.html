@@ -76,7 +76,7 @@
             <div class="fam-card">
                 <div class="fam-head">
                     <div class="fam-cell"><label>选择 / 新建科 <i class="tip" data-tip="点击下拉选已有科；直接输入新名字即新建科">?</i></label><vow-select creatable :model-value="activeFamily" :options="familyOptions" @update:model-value="loadFamily" placeholder="选择或输入科名"></vow-select></div>
-                    <div class="fam-cell"><label>族尊 <i class="tip" data-tip="从御兽精灵档案里选，也可直接输入名字">?</i></label><vow-select creatable v-model="familyForm.zun" :options="zunOptions" placeholder="选择或输入族尊"></vow-select></div>
+                    <div class="fam-cell"><label>族尊 <i class="tip" data-tip="优先列出御兽精灵里勾了【权】的掌权者，也可直接输入名字">?</i></label><vow-select creatable v-model="familyForm.zun" :options="zunOptions" placeholder="选择或输入族尊"></vow-select></div>
                     <div class="fam-cell"><label>&nbsp;</label><button class="btn btn-primary btn-sm" @click="saveFamily"><i class="fa-solid fa-check"></i> 保存该科技能包</button></div>
                     <div class="fam-cell" v-if="activeFamily"><label>&nbsp;</label><button class="btn btn-outline btn-sm" @click="deleteFamily">删除该科</button></div>
                 </div>
@@ -98,8 +98,8 @@
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/vow-tip.js?v=20261125b"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/vow-select.js?v=20261126"></script>
+<script src="../js/vow-select.js?v=20261126d"></script>
 <script src="../js/vow-textarea.js?v=20261125c"></script>
-<script src="../js/admin-bloodline-skills.js?v=20261126f"></script>
+<script src="../js/admin-bloodline-skills.js?v=20261126g"></script>
 </body>
 </html>

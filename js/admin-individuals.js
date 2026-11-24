@@ -49,6 +49,25 @@ const TAX_FIELDS = [
     { key: 'order', label: '目' }, { key: 'family', label: '科' },
     { key: 'genus', label: '属' }, { key: 'species', label: '种' }
 ];
+/* 阶位 → 可掌的阶元：初灵掌种、升灵掌属、族尊掌科、基座掌目、
+   灵相掌纲、律冠掌门、元灵掌界、元掌域（八阶对八级阶元） */
+const RANK_SCOPE = {
+    '初灵': { key: 'species', label: '种' },
+    '升灵': { key: 'genus',   label: '属' },
+    '族尊': { key: 'family',  label: '科' },
+    '基座': { key: 'order',   label: '目' },
+    '灵相': { key: 'class',   label: '纲' },
+    '律冠': { key: 'phylum',  label: '门' },
+    '元灵': { key: 'kingdom', label: '界' },
+    '元':   { key: 'domain',  label: '域' }
+};
+/* 权 / 位 / 力 三标记：对应阶元、阶位、等级 */
+const RANK_FLAGS = [
+    { key: 'quan', label: '权', color: '#c2410c', bg: '#fdf1e7', tip: '掌权者：统治当前阶位对应的阶元（族尊掌科、基座掌目、灵相掌纲…）' },
+    { key: 'wei',  label: '位', color: '#7048e8', bg: '#f2eefd', tip: '有正式阶位：在八阶体系里占了一个名分' },
+    { key: 'li',   label: '力', color: '#1971c2', bg: '#e9f2fb', tip: '以实力立身：等级即战力凭据' }
+];
+const DEFAULT_FLAGS = { quan: true, wei: false, li: true };
 
 function stageNameOf(level) {
     const lv = Number(level) || 0;
@@ -76,6 +95,12 @@ function normalizeIndividual(v) {
     p.bloodlineSkill = String(p.bloodlineSkill == null ? '' : p.bloodlineSkill);
     p.bloodlineAttr = String(p.bloodlineAttr == null ? '' : p.bloodlineAttr);
     p.level = Number(p.level) || 0;
+    const rf = (p.rankFlags && typeof p.rankFlags === 'object') ? p.rankFlags : {};
+    p.rankFlags = {
+        quan: rf.quan === undefined ? DEFAULT_FLAGS.quan : !!rf.quan,
+        wei:  rf.wei  === undefined ? DEFAULT_FLAGS.wei  : !!rf.wei,
+        li:   rf.li   === undefined ? DEFAULT_FLAGS.li   : !!rf.li
+    };
     const TAX_KEYS = ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'];
     const tax = (p.taxonomy && typeof p.taxonomy === 'object') ? p.taxonomy : {};
     p.taxonomy = {};
@@ -125,6 +150,7 @@ const app = createApp({
             nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
             level: 1, ownerId: '', items: [],
+            rankFlags: { quan: true, wei: false, li: true },
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
             contractDate: '', contractChapter: '', milestones: [],
             experience: '', notes: ''
@@ -496,6 +522,28 @@ const app = createApp({
         const formSpeciesImage = computed(() => speciesImageOf(form.value));
         const formStageColor = computed(() => stageColorOfName(stageNameOf(form.value.level)));
 
+        /* ------------------------------------------------ 权 · 位 · 力（阶元 / 阶位 / 等级） */
+        const speciesTaxOf = (key) => {
+            const s = speciesOf(form.value.speciesId);
+            return String((s && s.taxonomy && s.taxonomy[key]) || '');
+        };
+        /* 当前等级对应的阶位能掌哪一层阶元（族尊→科、基座→目…） */
+        const formScope = computed(() => RANK_SCOPE[stageNameOf(form.value.level)] || RANK_SCOPE['元']);
+        /* 该层阶元的具体名字：先看个体自己的分类学，再继承种族图鉴 */
+        const formScopeValue = computed(() => {
+            const t = form.value.taxonomy || {};
+            return String(t[formScope.value.key] || '') || speciesTaxOf(formScope.value.key);
+        });
+        const scopeOfItem = (item) => RANK_SCOPE[stageNameOf(item && item.level)] || RANK_SCOPE['元'];
+        const scopeTextOf = (item) => {
+            const sc = scopeOfItem(item);
+            const t = (item && item.taxonomy) || {};
+            const s = speciesOf(item && item.speciesId);
+            const v = String(t[sc.key] || '') || String((s && s.taxonomy && s.taxonomy[sc.key]) || '');
+            return '掌' + sc.label + (v ? '·' + v : '');
+        };
+        const toggleFlag = (key) => { form.value.rankFlags[key] = !form.value.rankFlags[key]; };
+
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
             if (target === 'species') showSpeciesModal.value = false;
@@ -606,6 +654,7 @@ const app = createApp({
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,
             openSpeciesModal, formSpeciesLabel, formSpeciesImage, formStageColor,
+            RANK_FLAGS, RANK_SCOPE, formScope, formScopeValue, scopeTextOf, scopeOfItem, toggleFlag,
             syncToGitHub, pullFromRepo
         };
     }

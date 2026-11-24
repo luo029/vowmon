@@ -67,10 +67,21 @@ const app = createApp({
 
         const typeOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData))
             ? typeData.map(t => t.name) : [];
-        /* 族尊从御兽精灵档案里选（也可直接输入新名字） */
-        const zunOptions = computed(() => (individuals.value || [])
-            .map(p => String((p.nickname && String(p.nickname).trim()) || (p.speciesId ? '#' + p.speciesId : '')).trim())
-            .filter(Boolean));
+        /* 族尊从御兽精灵档案里选：优先【权】勾选（掌权者）的个体，其余作补充 */
+        const quanIndividuals = computed(() => (individuals.value || []).filter(p => p && !(p.rankFlags && p.rankFlags.quan === false)));
+        const zunOptions = computed(() => {
+            const pool = quanIndividuals.value.length ? quanIndividuals.value : (individuals.value || []);
+            const seen = {};
+            const out = [];
+            pool.forEach(p => {
+                const name = String((p.nickname && String(p.nickname).trim()) || (p.speciesId ? '#' + p.speciesId : '')).trim();
+                if (!name || seen[name]) return;
+                seen[name] = true;
+                const fam = String((p.taxonomy && p.taxonomy.family) || '');
+                out.push({ value: name, label: name, hint: fam ? '掌' + fam : '掌权者' });
+            });
+            return out;
+        });
         const typeIcon = (name) => {
             const t = (typeof typeData !== 'undefined' && Array.isArray(typeData) ? typeData : []).find(x => x.name === name);
             return (t && t.icon) || 'fa-solid fa-circle';
@@ -184,7 +195,10 @@ const app = createApp({
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('bloodlineSkills') : null;
                 const bag = mirror || (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || { skills: [] };
                 skills.value = (bag.skills || []).map(normalizeSkill);
-                individuals.value = (typeof allIndividualsData !== 'undefined' && Array.isArray(allIndividualsData)) ? allIndividualsData : [];
+                const indMirror = window.VowmonStore ? VowmonStore.getMirror('individuals') : null;
+                individuals.value = (indMirror && Array.isArray(indMirror.individuals))
+                    ? indMirror.individuals
+                    : ((typeof allIndividualsData !== 'undefined' && Array.isArray(allIndividualsData)) ? allIndividualsData : []);
                 families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
                 loadFamily(Object.keys(families.value)[0] || '');
             } catch (e) { console.error('血脉技能初始化失败', e); }

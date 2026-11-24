@@ -189,6 +189,19 @@
         .level-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
         .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
+
+        /* ============ 权 · 位 · 力（阶元 / 阶位 / 等级） ============ */
+        .rank-flags { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .rank-flag { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, box-shadow .15s, opacity .15s; opacity: .55; }
+        .rank-flag:hover { opacity: 1; border-color: var(--rf-c, #4299e1); }
+        .rank-flag.on { opacity: 1; background: var(--rf-bg, #f0f7ff); border-color: var(--rf-c, #4299e1); box-shadow: 0 0 0 3px rgba(66,153,225,.08); }
+        .rank-flag .rf-mark { flex: none; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #fff; background: #c3cfdb; transition: background .15s; }
+        .rank-flag.on .rf-mark { background: var(--rf-c, #4299e1); }
+        .rank-flag .rf-text { flex: 1; min-width: 0; font-size: 12px; font-weight: 700; color: #718096; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-flag.on .rf-text { color: #4a5568; }
+        .rank-flag .rf-text b { font-weight: 900; color: var(--rf-c, #2b6cb0); }
+        .rank-flag .rf-tick { flex: none; font-size: 11px; color: var(--rf-c, #4299e1); }
+        @media (max-width: 640px) { .rank-flags { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -266,6 +279,8 @@
                         <div class="name">{{ displayName(item) }}<span class="gender" v-if="item.gender">{{ item.gender }}</span></div>
                         <div class="species">{{ speciesLabel(item.speciesId) }}</div>
                         <div class="chips">
+                            <span class="mini-chip" v-if="item.rankFlags && item.rankFlags.quan" style="background: #c2410c;"><i class="fa-solid fa-sitemap"></i>{{ scopeTextOf(item) }}</span>
+                            <span class="mini-chip" v-if="item.rankFlags && item.rankFlags.wei" style="background: #7048e8;"><i class="fa-solid fa-layer-group"></i>{{ stageName(item.level) }}</span>
                             <span class="mini-chip" v-if="item.bloodline && item.bloodline !== '无'" :style="{ background: bloodColorOf(item.bloodline) }"><i class="fa-solid fa-dna"></i>{{ item.bloodline }}血脉</span>
                             <span class="mini-chip" v-for="t in (item.traits || []).slice(0, 2)" :key="t" style="background: #2b6cb0;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
                             <span class="mini-chip plain" v-if="(item.skills || []).length"><i class="fa-solid fa-bolt"></i>{{ (item.skills || []).length }} 技能</span>
@@ -352,6 +367,22 @@
                                     <button type="button" class="trait-add-mini" @click="addTrait()" title="添加"><i class="fa-solid fa-check"></i></button>
                                     <button type="button" class="trait-cancel" @click="cancelTraitInput" title="取消"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>阶元 · 阶位 · 等级 <i class="tip" data-tip="默认勾选【权】【力】。【权】＝当前阶位的掌权者，统治对应阶元（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】＝在八阶体系里有正式阶位；【力】＝以等级战力立身。">?</i></label>
+                            <div class="rank-flags">
+                                <button type="button" class="rank-flag" v-for="f in RANK_FLAGS" :key="f.key"
+                                        :class="{ on: form.rankFlags[f.key] }"
+                                        :style="{ '--rf-c': f.color, '--rf-bg': f.bg }"
+                                        :title="f.tip"
+                                        @click="toggleFlag(f.key)">
+                                    <span class="rf-mark">{{ f.label }}</span>
+                                    <span class="rf-text" v-if="f.key === 'quan'"><b>{{ formScope.label }}</b> · {{ formScopeValue || '未填' }}</span>
+                                    <span class="rf-text" v-else-if="f.key === 'wei'"><b>阶位</b> · {{ stageName(form.level) }}</span>
+                                    <span class="rf-text" v-else><b>等级</b> · Lv.{{ form.level }}</span>
+                                    <i class="fa-solid fa-check rf-tick" v-if="form.rankFlags[f.key]"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -500,7 +531,7 @@
 <script src="../js/vow-tip.js?v=20261125b"></script>
 <script src="../js/vow-textarea.js?v=20261125c"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/vow-select.js?v=20261125"></script>
-<script src="../js/admin-individuals.js?v=20261125k"></script>
+<script src="../js/vow-select.js?v=20261126d"></script>
+<script src="../js/admin-individuals.js?v=20261126c"></script>
 </body>
 </html>

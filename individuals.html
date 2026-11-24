@@ -55,6 +55,10 @@
         .pet-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 13px; padding: 5px 12px; border-radius: 10px; }
         .pet-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; }
         .pet-name-bar .gender-tag { font-size: 12px; font-weight: 800; color: #d4537e; background: #fbeaf0; border-radius: 999px; padding: 4px 12px; }
+        .rank-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 900; padding: 4px 13px; border-radius: 999px; white-space: nowrap; }
+        .rank-pill i { font-size: 11px; }
+        .rank-pill.quan { color: #c2410c; background: #fdf1e7; border: 1px solid #f2d3b8; }
+        .rank-pill.wei { color: #7048e8; background: #f2eefd; border: 1px solid #d9cdfa; }
         .pet-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
         .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
         .type-pill i { font-size: 10px; }
@@ -175,6 +179,8 @@
                     <span class="id-badge font-num">{{ indName(ind) }}</span>
                     <h1>{{ indName(ind) }}</h1>
                     <span class="gender-tag" v-if="ind.gender">{{ ind.gender }}</span>
+                    <span class="rank-pill quan" v-if="flagOn(ind, 'quan')" title="当前阶位的掌权者"><i class="fa-solid fa-sitemap"></i>{{ scopeText(ind) }}</span>
+                    <span class="rank-pill wei" v-if="flagOn(ind, 'wei')" title="八阶体系中占有正式阶位"><i class="fa-solid fa-layer-group"></i>{{ stageName(ind) }}</span>
                     <div class="type-icons">
                         <span class="type-pill" v-for="t in speciesTypes" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
                     </div>
@@ -352,6 +358,7 @@
                         <div class="ic-species">{{ speciesNameOf(p) || '未关联种族' }}</div>
                         <div class="ic-owner" v-if="ownerNameOf(p)"><i class="fa-solid fa-user-shield"></i> {{ ownerNameOf(p) }}</div>
                         <div class="ic-foot">
+                            <span class="mini-chip" v-if="flagOn(p, 'quan')" style="background:#c2410c;"><i class="fa-solid fa-sitemap"></i>{{ scopeText(p) }}</span>
                             <span class="mini-chip" v-if="p.bloodline && p.bloodline !== '无'" :style="{ background: bloodColor(p.bloodline) }"><i class="fa-solid fa-dna"></i>{{ p.bloodline }}</span>
                             <span class="mini-chip" v-for="t in (p.traits || []).slice(0, 1)" :key="t" style="background:#185FA5;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
                             <span class="mini-chip" v-for="s in (p.skills || []).slice(0, 2)" :key="'sk' + s.name" :style="{ background: lvColor(s.level) }"><i class="fa-solid fa-bolt"></i>{{ s.name }}</span>
@@ -428,6 +435,8 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 p.skills = Array.isArray(p.skills) ? p.skills : [];
                 p.items = Array.isArray(p.items) ? p.items : [];
                 p.bloodline = p.bloodline || '无';
+                const rf = (p.rankFlags && typeof p.rankFlags === 'object') ? p.rankFlags : {};
+                p.rankFlags = { quan: rf.quan !== false, wei: !!rf.wei, li: rf.li !== false };
                 return p;
             };
             individuals.value = (allIndividualsData || []).map(normalize);
@@ -483,6 +492,21 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 return band ? band.name : '未记录';
             };
             const stageColor = (p) => STAGE_COLORS[stageName(p)] || '#718096';
+            /* 阶位 → 可掌阶元（初灵掌种…元掌域）；权/位/力 三标记 */
+            const RANK_SCOPE = {
+                '初灵': { key: 'species', label: '种' }, '升灵': { key: 'genus', label: '属' },
+                '族尊': { key: 'family', label: '科' }, '基座': { key: 'order', label: '目' },
+                '灵相': { key: 'class', label: '纲' }, '律冠': { key: 'phylum', label: '门' },
+                '元灵': { key: 'kingdom', label: '界' }, '元': { key: 'domain', label: '域' }
+            };
+            const flagOn = (p, k) => !!(p && p.rankFlags && p.rankFlags[k]);
+            const scopeText = (p) => {
+                const sc = RANK_SCOPE[stageName(p)] || RANK_SCOPE['元'];
+                const t = (p && p.taxonomy) || {};
+                const s = speciesOf(p);
+                const v = String(t[sc.key] || '') || String((s && s.taxonomy && s.taxonomy[sc.key]) || '');
+                return '掌' + sc.label + (v ? '·' + v : '');
+            };
             const levelPercent = (p) => Math.min(100, Math.max(0, Number(p.level) || 0));
             const segWidth = (b) => (b.max === 9999 ? 1 : b.max - b.min + 1);
             const segStart = (b) => b.min;
@@ -554,7 +578,8 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 stageName, stageColor, cardColor, showcaseStyle,
                 levelPercent, segWidth, segStart,
                 owner, ownerNameOf, gotoCharacter, gotoIndividual,
-                lvColor, lvDesc, bloodColor, indName, natureHint
+                lvColor, lvDesc, bloodColor, indName, natureHint,
+                RANK_SCOPE, flagOn, scopeText
             };
         }
     }).mount('#app');

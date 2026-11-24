@@ -50,6 +50,11 @@
                 if (!q) return this.list;
                 return this.list.filter(function (o) { return o.label.toLowerCase().includes(q); }).slice(0, 8);
             },
+            /* 自填模式下没匹配到：把已有选项也列出来，避免用户以为「下拉坏了」 */
+            fallbackList: function () {
+                if (!this.creatable || this.menuList.length) return [];
+                return this.list.slice(0, 6);
+            },
             current: function () {
                 var v = this.modelValue;
                 return this.list.find(function (o) { return o.value === v; }) || null;
@@ -86,7 +91,14 @@
             '        <span class="vsel-opt-label">{{ o.label }}<small class="vsel-hint" v-if="o.hint">{{ o.hint }}</small></span>' +
             '        <i class="fa-solid fa-check vsel-opt-check" v-if="o.value === modelValue"></i>' +
             '      </div>' +
-            '      <div class="vsel-empty" v-if="!list.length">暂无可选项</div>' +
+            '      <div class="vsel-empty" v-if="!menuList.length">' +
+            '        <template v-if="list.length">{{ creatable ? \'无匹配，直接使用「\' + modelValue + \'」\' : \'没有匹配项\' }}</template>' +
+            '        <template v-else>{{ creatable ? \'还没有可选项，直接输入即新建\' : \'暂无可选项\' }}</template>' +
+            '      </div>' +
+            '      <div class="vsel-opt" v-for="o in fallbackList" :key="\'fb\' + o.value" @click.stop="pick(o)">' +
+            '        <span class="vsel-opt-label">{{ o.label }}<small class="vsel-hint" v-if="o.hint">{{ o.hint }}</small></span>' +
+            '        <i class="fa-solid fa-check vsel-opt-check" v-if="o.value === modelValue"></i>' +
+            '      </div>' +
             '    </div>' +
             '  </transition>' +
             '</div>'
