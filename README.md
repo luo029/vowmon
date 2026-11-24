@@ -341,7 +341,22 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 | Cloudflare Pages（裸地址） | https://vowmon.pages.dev/ | 同上，和上面是同一个项目 |
 | GitHub Pages | https://keeptrue.ren/vowmon/（裸地址 `luo029.github.io/vowmon/` 会 301 过来） | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
 
-前两个是同一个 Pages 项目、同一份构建产物，只是域名不同。`js/site-config.js` 里的 `imgCdnBase` / `dataCdnBase` 都指向 `vowmon.keeptrue.ren`：这样即使某天 `*.pages.dev` 在境内被污染，自己域名下的数据与图片仍然可用（GitHub Pages 那份也会跨域来取，代理函数带 `Access-Control-Allow-Origin: *`）。
+前两个是同一个 Pages 项目、同一份构建产物，只是域名不同。
+
+**资源基址不绑自定义域名**：`js/site-config.js` 里的 `imgCdnBase` / `dataCdnBase` 用的是 `https://vowmon.pages.dev/...` 这种固定裸域名。自定义域名只是一层访问入口——域名到期、换域名、临时解绑，都不会让全站数据和图片失效。想改基址有两个办法：
+
+1. 改仓库里的 `js/site-config.js`（对**所有访客**生效，需要提交 + 部署）；
+2. 后台「精灵管理 → 同步配置 → 数据仓库 / 图片仓库」里的 **数据公开地址 / 图片公开地址**（只对**你自己这台浏览器**生效，存在 `vowmon_sync_config`，留空即用默认值，输入框右边的 ↺ 就是一键恢复默认）。调试换源时用这个，不用改代码。
+
+可填的值举例：
+
+| 用途 | 地址 |
+|---|---|
+| 走本站 CF 代理（默认，推荐） | `https://vowmon.pages.dev/data`、`https://vowmon.pages.dev/img` |
+| jsDelivr 直连仓库 | `https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main` |
+| GitHub raw 直连仓库 | `https://raw.githubusercontent.com/luo029/vowmon_data/main` |
+
+> 数据加载器自带三级回退：默认基址 → jsDelivr → raw.githubusercontent，前一个失败自动换下一个，所以基址写错一般也不至于白屏（只是会慢一点）。
 
 > **绑定自定义域名必须做的一步**：在新网加完 CNAME 还不够，还要在 Cloudflare Pages 项目里把这个域名登记为 Custom domain（面板 Domains → Add，或 `POST /accounts/{id}/pages/projects/vowmon/domains` 带 `{"name":"vowmon.keeptrue.ren"}`）。只加 CNAME 不登记，访问会报 **Error 1001 / DNS resolution error（Please enable cookies）**——因为 CF 边缘没有这个主机名的配置，也没有对应证书，TLS 直接握手失败。登记后状态会走 `initializing → pending → active`，约 2 分钟签好 Google 证书即自动生效。
 

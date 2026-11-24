@@ -185,6 +185,16 @@
                                 <input type="text" v-model="config.dataRepos" placeholder="例如：vowmon_data_1, vowmon_data_2">
                                 <p class="field-hint">多个仓库用英文逗号分隔，空间不足时依次推送</p>
                             </div>
+                            <div class="form-group">
+                                <label>数据公开地址 <span class="opt">选填</span></label>
+                                <div class="input-with-btn">
+                                    <input type="text" v-model="config.dataCdnBase" placeholder="留空 = https://vowmon.pages.dev/data">
+                                    <button class="btn btn-outline btn-icon" @click.stop="resetDataBase" title="恢复默认">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                                <p class="field-hint">前台从这里取 JSON。可填：<code>https://vowmon.pages.dev/data</code>（本站代理，默认）／<code>https://cdn.jsdelivr.net/gh/用户名/仓库@main</code>／<code>https://raw.githubusercontent.com/用户名/仓库/main</code>。留空用默认，失败会自动回退 jsDelivr</p>
+                            </div>
                             <div class="repo-chips" v-if="config.dataRepos">
                                 <span class="repo-chip" v-for="r in config.dataRepos.split(',').map(s => s.trim()).filter(Boolean)" :key="r">
                                     <i class="fa-solid fa-box"></i> {{ r }}
@@ -206,9 +216,14 @@
                                 <p class="field-hint">多个仓库用英文逗号分隔</p>
                             </div>
                             <div class="form-group">
-                                <label>图片 CDN 基础路径 <span class="opt">选填</span></label>
-                                <input type="text" v-model="config.imgCdnBase" placeholder="https://cdn.jsdelivr.net/gh/用户名/仓库@main">
-                                <p class="field-hint">用于前台展示；支持 {repo} 占位符自动适配多仓库</p>
+                                <label>图片公开地址 <span class="opt">选填</span></label>
+                                <div class="input-with-btn">
+                                    <input type="text" v-model="config.imgCdnBase" placeholder="留空 = https://vowmon.pages.dev/img">
+                                    <button class="btn btn-outline btn-icon" @click.stop="resetImgBase" title="恢复默认">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                                <p class="field-hint">前台拼相对路径用的前缀。默认 <code>https://vowmon.pages.dev/img</code>（本站代理）；也可填 jsDelivr / raw.githubusercontent 直连。支持 <code>{repo}</code> 占位符（后台图片预览按仓库自动替换）</p>
                             </div>
                             <div class="form-group" style="grid-column: 1 / -1;">
                                 <label>上传压缩尺寸</label>
@@ -278,7 +293,7 @@
 
                             <div class="shiny-grid" v-if="form.shiny && form.shiny.length">
                                 <div class="shiny-item" v-for="(img, i) in form.shiny" :key="img + '-' + i">
-                                    <img :src="shinyPreview(img)" :alt="'异色 ' + (i + 1)" loading="lazy">
+                                    <img :src="shinyPreview(img)" :alt="'异色 ' + (i + 1)" decoding="async">
                                     <span class="shiny-seq">#{{ i + 1 }}</span>
                                     <button type="button" class="shiny-remove" title="移除这张异色图" @click="removeShiny(i)">
                                         <i class="fa-solid fa-xmark"></i>
@@ -462,6 +477,7 @@
 
 </div>
 
+<script src="js/site-config.js"></script>
 <script src="js/type-config.js"></script>
 <script src="js/data-loader.js"></script>
 <script src="js/github-api.js"></script>

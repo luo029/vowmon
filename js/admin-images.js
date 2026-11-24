@@ -87,7 +87,9 @@ createApp({
         //   - 若基础路径里出现了某个已配置仓库名，则把它替换成目标仓库（适配多仓库）；
         //   - 都没写则用 jsdelivr 默认规则。
         const buildCdnBase = (repo) => {
-            const raw = (config.value.imgCdnBase || '').trim().replace(/\/+$/, '');
+            let raw = (config.value.imgCdnBase || '').trim().replace(/\/+$/, '');
+            // 后台没填就看仓库里的默认值，别一上来就掉到 jsDelivr
+            if (!raw) raw = String((window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
             if (raw) {
                 if (raw.indexOf('{repo}') !== -1) return raw.replace(/\{repo\}/g, repo);
                 // 长的仓库名优先替换，避免 img1 先匹配到 img10 的前缀

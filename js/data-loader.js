@@ -56,7 +56,16 @@
 
     function bases() {
         const cfg = window.VOWMON_SITE_CONFIG || {};
-        const raw = [cfg.dataCdnBase].concat(FALLBACK_BASES);
+        // 后台「同步配置」里填的数据基址优先；读 localStorage 而不是读缓存的对象，
+        // 这样在后台改完地址、不刷新页面直接跳到前台也能立刻生效。
+        let localBase = '';
+        try {
+            const local = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {};
+            localBase = local.dataCdnBase || '';
+        } catch (e) {
+            localBase = '';
+        }
+        const raw = [localBase, cfg.dataCdnBase].concat(FALLBACK_BASES);
         const out = [];
         for (let i = 0; i < raw.length; i++) {
             const b = String(raw[i] || '').trim().replace(/\/+$/, '');

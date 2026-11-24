@@ -93,9 +93,13 @@ createApp({
             owner: '', 
             dataRepos: 'vowmon_data',  // 支持逗号分隔
             imgRepos: 'vowmon_imgs',   // 支持逗号分隔
-            imgCdnBase: '',
+            dataCdnBase: '',           // 数据公开地址，留空用 js/site-config.js 的默认值
+            imgCdnBase: '',            // 图片公开地址，留空同上
             imgSize: 512               // 上传时自动压缩的最长边（px）
         });
+
+        const resetDataBase = () => { config.value.dataCdnBase = ''; };
+        const resetImgBase = () => { config.value.imgCdnBase = ''; };
 
         // 图片压缩尺寸下拉项（统一由 js/image-utils.js 提供，避免两处写死）
         const imgSizeOptions = (window.ImageUtils && ImageUtils.SIZE_OPTIONS) || [256, 512, 768, 1024];
@@ -149,11 +153,44 @@ createApp({
         const getTypeColor = (name) => (adminTypeMap.get(name) || {}).color || '#ccc';
 
         // 生成缩略图路径
+        // 本次会话上传过的「仓库路径 → 压缩后的 base64」。
+        // 两个用途：① 预览优先用它，刚上传就能显示，不必等 CDN 就绪；② 改编号保存时按新编号重传，不用重新选图。
+        const uploadedImageCache = new Map();
+
+        // 图片仓库列表（同步配置支持逗号分隔多仓；上传只写第一个）
+        const imgRepos = computed(() => String(config.value.imgRepos || '').split(',').map(s => s.trim()).filter(Boolean));
+        const primaryImgRepo = () => imgRepos.value[0] || '';
+
+        // 生成图片仓库的公开前缀，优先级：
+        //   ① 后台同步配置里的「图片CDN基础路径」（支持 {repo} 占位符，也支持把已配置的仓库名替换成目标仓库）
+        //   ② 仓库里的 js/site-config.js 的 imgCdnBase
+        //   ③ 用 owner + 仓库名拼 jsDelivr 默认地址
+        const buildCdnBase = (repo) => {
+            const target = repo || primaryImgRepo();
+            let raw = String(config.value.imgCdnBase || '').trim().replace(/\/+$/, '');
+            if (!raw) raw = String((window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            if (raw) {
+                if (raw.indexOf('{repo}') !== -1) return raw.replace(/\{repo\}/g, target);
+                // 长的仓库名优先替换，避免 img1 先命中 img10 的前缀
+                const sorted = imgRepos.value.slice().sort((a, b) => b.length - a.length);
+                for (const r of sorted) {
+                    if (r && raw.indexOf(r) !== -1) return raw.split(r).join(target);
+                }
+                return raw;
+            }
+            if (config.value.owner && target) return `https://cdn.jsdelivr.net/gh/${config.value.owner}/${target}@main`;
+            return '';
+        };
+
         const getThumbUrl = (path) => {
             if (!path) return '';
-            if (path.startsWith('http')) return path;
-            if (config.value.imgCdnBase) return config.value.imgCdnBase.replace(/\/$/, '') + '/' + path;
-            return ''; 
+            const p = String(path);
+            if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+            const cached = uploadedImageCache.get(p);
+            if (cached) return `data:image/png;base64,${cached}`;
+            const base = buildCdnBase();
+            // 实在没有前缀就退回原路径（相对当前页面），至少不会拼出 `//` 这种死链
+            return base ? base + '/' + p.replace(/^\/+/, '') : p;
         };
 
         // 选择器逻辑
@@ -235,7 +272,7 @@ createApp({
 
         const configFilledCount = computed(() => {
             const c = config.value;
-            return [c.token, c.owner, c.dataRepos, c.imgRepos, c.imgCdnBase]
+            return [c.token, c.owner, c.dataRepos, c.imgRepos, c.dataCdnBase, c.imgCdnBase]
                 .filter(v => !!(v && String(v).trim())).length;
         });
 
@@ -292,9 +329,8 @@ createApp({
             return n === 1 ? `${base}_s.png` : `${base}_s${n}.png`;
         };
 
-        // 本次会话上传过的「仓库路径 → 压缩后的 base64」。
-        // 作用：改完编号点保存时，可以按新编号直接重传，不必让用户重新选图。
-        const uploadedImageCache = new Map();
+        // 本次会话上传过的「仓库路径 → 压缩后的 base64」——
+        // 声明在 getThumbUrl 之前，见上方 uploadedImageCache。
 
         const isRepoPath = (p) => !!p && !/^(https?:)?\/\//i.test(String(p)) && !String(p).startsWith('data:');
 
@@ -655,7 +691,7 @@ createApp({
         return {
             currentTab, switchTab, pets, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
             imgSizeOptions,
-            showToken, configFilledCount,
+            showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
             shinyFileInput, shinyInput, isShinyUploading, shinyProgress,
             shinyPreview, addShinyByInput, removeShiny, triggerShinyUpload, handleShinyUpload,

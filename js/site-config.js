@@ -11,13 +11,39 @@
  * dataCdnBase：数据 JSON 的访问前缀。默认走本站 /data 反向代理（CF 边缘缓存，60 秒）。
  *   加载器还会在失败时自动回退 jsDelivr -> raw.githubusercontent，见 js/data-loader.js。
  *
+ * 这里只放**不依赖域名有效期**的地址：用的是 Cloudflare Pages 的固定裸域名，
+ * 自定义域名（vowmon.keeptrue.ren）只当访问入口，不做资源基址——域名到期不会导致全站空图。
+ *
  * 优先级：浏览器 localStorage 里的 vowmon_sync_config（后台同步配置）
  *         > 本文件。也就是说访客看到的是这里的值，你自己本机可以用后台配置覆盖来调试。
+ *         后台：精灵管理 -> 同步配置 -> 数据仓库 / 图片仓库，两个「公开访问地址」都留空则用下面的默认值。
  */
-window.VOWMON_SITE_CONFIG = {
-    // 图片走本站 /img/* 反向代理（Cloudflare Pages Functions），CF 边缘缓存回源 GitHub。
-    // 想换回 jsDelivr 直连就填：https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main
-    imgCdnBase: 'https://vowmon.keeptrue.ren/img',
-    // 数据走本站 /data/* 反向代理，源站是 vowmon_data 仓库
-    dataCdnBase: 'https://vowmon.keeptrue.ren/data'
-};
+window.VOWMON_SITE_CONFIG = (function () {
+    var defaults = {
+        // 图片走本站 /img/* 反向代理（Cloudflare Pages Functions），CF 边缘缓存回源 GitHub。
+        // 也可直接填数据仓库的公开地址，例如：
+        //   https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main
+        //   https://raw.githubusercontent.com/luo029/vowmon_imgs/main
+        imgCdnBase: 'https://vowmon.pages.dev/img',
+        // 数据走本站 /data/* 反向代理，源站是 vowmon_data 仓库。
+        // 也可直接填数据仓库的公开地址，例如：
+        //   https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main
+        //   https://raw.githubusercontent.com/luo029/vowmon_data/main
+        dataCdnBase: 'https://vowmon.pages.dev/data'
+    };
+
+    var out = { imgCdnBase: defaults.imgCdnBase, dataCdnBase: defaults.dataCdnBase };
+    try {
+        var local = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {};
+        if (local.imgCdnBase && String(local.imgCdnBase).trim()) {
+            out.imgCdnBase = String(local.imgCdnBase).trim();
+        }
+        if (local.dataCdnBase && String(local.dataCdnBase).trim()) {
+            out.dataCdnBase = String(local.dataCdnBase).trim();
+        }
+    } catch (e) {
+        // localStorage 不可用（隐私模式等）：直接用默认值
+    }
+    out.defaults = defaults;
+    return out;
+})();
