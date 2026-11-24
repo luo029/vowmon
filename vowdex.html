@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 精灵图鉴</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+
+        /* 导航栏 */
+        .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 20px; position: relative; }
+        .logo { color: #2c3e50; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 10px; cursor: pointer; z-index: 2; }
+        .logo-svg { width: 38px; height: 38px; }
+        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; z-index: 1; }
+        .nav-item { position: relative; }
+        .nav-links a { display: block; color: #546e7a; text-decoration: none; font-size: 16px; font-weight: 600; padding: 10px 18px; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { color: #ff6b6b; background: #fff5f5; }
+        .dropdown-panel { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #ffffff; border-radius: 16px; padding: 25px; min-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f0f4f8; display: flex; gap: 30px; opacity: 0; visibility: hidden; }
+        .has-dropdown:hover .dropdown-panel { opacity: 1; visibility: visible; }
+        .dropdown-column { display: flex; flex-direction: column; min-width: 120px; }
+        .dropdown-column h4 { color: #90a4ae; font-size: 13px; margin-bottom: 15px; }
+        .dropdown-column a { padding: 8px 0; color: #455a64; font-size: 14px; }
+        .dropdown-column a:hover { color: #ff6b6b; background: none; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 15px; z-index: 2; }
+        .anim-toggle { font-size: 14px; font-weight: bold; color: #546e7a; text-decoration: none; padding: 6px 12px; border-radius: 20px; background: #f7fafc; border: 1px solid #e2e8f0; }
+        .anim-toggle:hover { color: #ff6b6b; border-color: #ff6b6b; }
+        .search-icon { cursor: pointer; display: flex; align-items: center; }
+
+        /* 主容器 */
+        .container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 2px solid #f0f4f8; padding-bottom: 15px; }
+        .header h2 { font-size: 24px; color: #2c3e50; font-weight: 900; }
+        .header .count { font-size: 14px; color: #a0aec0; margin-left: 10px; font-weight: normal; }
+        .view-toggle { display: flex; gap: 5px; background: #f7fafc; padding: 5px; border-radius: 20px; }
+        .view-toggle a { text-decoration: none; padding: 6px 20px; border-radius: 15px; font-size: 14px; font-weight: bold; color: #718096; }
+        .view-toggle a.active { background: #fff; color: #2c3e50; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* 筛选区 */
+        .filter-area { background: #fffdf8; border: 1px solid #fcecd7; border-radius: 16px; padding: 25px; margin-bottom: 25px; }
+        .filter-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #fcecd7; }
+        .filter-title { font-size: 18px; font-weight: 900; color: #2c3e50; }
+        .filter-tip { font-size: 13px; color: #a0aec0; margin-left: 15px; }
+        .clear-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: #dd6b20; font-size: 14px; cursor: pointer; font-weight: bold; padding: 6px 12px; border-radius: 8px; }
+        .clear-btn:hover { background: #fff5f5; color: #c53030; }
+        
+        .search-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search-box { flex: 1; position: relative; }
+        .search-box i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px; }
+        .search-box input { width: 100%; padding: 14px 20px 14px 45px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 15px; background: #fff; transition: border-color 0.2s; }
+        .search-box input:focus { border-color: #ff6b6b; }
+        
+        .filter-row { display: flex; align-items: flex-start; margin-bottom: 18px; }
+        .filter-label { font-size: 14px; font-weight: bold; color: #4a5568; min-width: 80px; padding-top: 8px; }
+        .filter-options { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+        
+        .filter-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; cursor: pointer; font-size: 14px; user-select: none; transition: all 0.2s; }
+        .filter-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .filter-btn.active { background: #ebf8ff; color: #2b6cb0; border-color: #90cdf4; font-weight: bold; }
+        .filter-btn .count-badge { background: #edf2f7; color: #718096; font-size: 12px; padding: 2px 8px; border-radius: 12px; font-weight: normal; }
+        .filter-btn.active .count-badge { background: #bee3f8; color: #2b6cb0; }
+
+        .type-btn-icon { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.2s; }
+        .type-btn-icon:hover { background: #f7fafc; }
+        .type-btn-icon.active { border-color: #ff6b6b; background: #fff5f5; color: #ff6b6b; }
+        .type-icon-svg { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; }
+        .type-btn-icon .count-badge { background: #edf2f7; color: #718096; font-size: 12px; padding: 2px 8px; border-radius: 12px; font-weight: normal; }
+        .type-btn-icon.active .count-badge { background: #fed7d7; color: #c53030; }
+
+        /* 图鉴卡片网格 */
+        .vowdex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .pet-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .pet-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #ff6b6b; z-index: 2; position: relative; }
+
+        .card-top { position: relative; display: flex; justify-content: center; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #f0f4f8; background: #fdfdfd; }
+        .card-top .id { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #a0aec0; }
+        .card-top .name { font-size: 15px; font-weight: 900; color: #2c3e50; text-align: center; }
+
+        .card-img { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background: #fafbfc; min-height: 130px; }
+        .card-img img { width: 100%; max-height: 110px; object-fit: contain; transition: transform 0.2s, opacity 0.25s; }
+        .pet-card:hover .card-img img { transform: scale(1.1); }
+
+        /* 异色：有异色图的卡片，悬停不再放大，而是淡出普通图、淡入异色图 */
+        .card-img .shiny {
+            position: absolute; top: 10px; right: 10px; bottom: 10px; left: 10px;
+            width: auto; height: auto; max-height: none; display: block;
+            object-fit: contain; opacity: 0; z-index: 1;
+        }
+        .pet-card.has-shiny:hover .card-img img { transform: none; }
+        /* 普通图淡出，避免异色图（可能是透明底）下面还透着原图 */
+        .pet-card.has-shiny:hover .card-img .base { opacity: 0; }
+        .pet-card.has-shiny:hover .card-img .shiny { opacity: 1; }
+
+        .card-bottom { padding: 10px; display: flex; justify-content: center; gap: 6px; border-top: 1px dashed #f0f4f8; }
+        .card-bottom .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 12px; }
+
+        .empty-state { text-align: center; color: #90a4ae; margin-top: 50px; font-size: 18px; font-weight: bold; }
+
+        /* 分页 */
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 10px; }
+        .page-info { color: #718096; font-size: 14px; }
+        .page-buttons { display: flex; gap: 6px; }
+        .page-btn { padding: 8px 14px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; color: #4a5568; font-size: 14px; font-weight: 500; font-family: inherit; transition: background 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f7fafc; border-color: #cbd5e0; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #ff6b6b; color: #fff; border-color: #ff6b6b; }
+
+        /* 动画全局开关类 */
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+        .no-anim .pet-card:hover { transform: none; box-shadow: none; border-color: #e2e8f0; }
+        .no-anim .pet-card:hover .card-img img { transform: none; }
+
+        @media (max-width: 900px) {
+            .nav-links { position: static; transform: none; margin: 0 10px; }
+            .dropdown-panel { display: none; }
+            .container { padding: 15px; margin: 10px; border-radius: 16px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .filter-row { flex-direction: column; }
+            .filter-label { margin-bottom: 10px; }
+            .vowdex-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css">
+    <script src="js/navbar.js" defer></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>精灵图鉴 <span class="count font-num">{{ filteredPets.length }} 种形态</span></h2>
+            </div>
+            <div class="view-toggle">
+                <a href="#" class="active">图鉴</a>
+                <a href="list.html">列表</a>
+            </div>
+        </div>
+
+        <!-- 高级筛选区 -->
+        <div class="filter-area">
+            <div class="filter-top">
+                <div>
+                    <span class="filter-title">筛选精灵</span>
+                    <span class="filter-tip">同组可多选，不同组同时满足</span>
+                </div>
+                <button class="clear-btn" @click="clearFilters">
+                    <i class="fa-solid fa-rotate-left"></i> 清空筛选
+                </button>
+            </div>
+
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" v-model="searchName" placeholder="搜索名称、编号...">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">精灵阶数</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: filters.stage.includes('一阶')}" @click="toggleFilter('stage', '一阶')">
+                        一阶 <span class="count-badge font-num">{{ stageCounts['一阶'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.stage.includes('二阶')}" @click="toggleFilter('stage', '二阶')">
+                        二阶 <span class="count-badge font-num">{{ stageCounts['二阶'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.stage.includes('三阶')}" @click="toggleFilter('stage', '三阶')">
+                        三阶 <span class="count-badge font-num">{{ stageCounts['三阶'] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">精灵形态</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: filters.form.includes('主形态')}" @click="toggleFilter('form', '主形态')">
+                        主形态 <span class="count-badge font-num">{{ formCounts['主形态'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.form.includes('地区形态')}" @click="toggleFilter('form', '地区形态')">
+                        地区形态 <span class="count-badge font-num">{{ formCounts['地区形态'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.form.includes('首领形态')}" @click="toggleFilter('form', '首领形态')">
+                        首领形态 <span class="count-badge font-num">{{ formCounts['首领形态'] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">精灵系别</div>
+                <div class="filter-options">
+                    <div 
+                        v-for="t in typeData" 
+                        :key="t.name" 
+                        class="type-btn-icon" 
+                        :class="{active: selectedTypes.includes(t.name)}" 
+                        @click="toggleType(t.name)"
+                    >
+                        <div class="type-icon-svg" :style="{ backgroundColor: t.color }"><i :class="t.icon"></i></div>
+                        {{ t.name }}
+                        <span class="count-badge font-num">{{ typeCounts[t.name] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片网格 -->
+        <div class="vowdex-grid" v-if="paginatedPets.length > 0">
+            <div class="pet-card" :class="{ 'has-shiny': hasShiny(pet) }" v-for="pet in paginatedPets" :key="pet.id"
+                 @mouseenter="startShiny(pet)" @mouseleave="stopShiny(pet)">
+                <div class="card-top">
+                    <span class="id font-num">{{ pet.id }}</span>
+                    <span class="name">{{ pet.name }}</span>
+                </div>
+                <div class="card-img">
+                    <img class="base" :src="getImgUrl(pet.image)" :alt="pet.name" loading="lazy">
+                    <img v-if="hasShiny(pet)" class="shiny" :src="shinySrc(pet)" :alt="pet.name + '（异色）'" loading="lazy">
+                </div>
+                <div class="card-bottom">
+                    <span class="type-icon" v-for="t in pet.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
+                        <i :class="getTypeIcon(t)"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div v-if="filteredPets.length === 0" class="empty-state">没有找到符合条件的精灵哦...</div>
+
+        <!-- 分页 -->
+        <div class="pagination" v-if="filteredPets.length > 0">
+            <div class="page-info">显示 <span class="font-num">{{ startIndex + 1 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredPets.length }}</span> 条</div>
+            <div class="page-buttons">
+                <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+                <button class="page-btn font-num" v-for="p in totalPages" :key="p" :class="{active: currentPage === p}" @click="currentPage = p">{{ p }}</button>
+                <button class="page-btn" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage++">下一页</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="data/vow-data.js"></script>
+<script>
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const pets = ref(allPetsData);
+            const searchName = ref('');
+            const filters = ref({ stage: [], form: [] });
+
+            // 动画状态
+            const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
+            const updateBodyClass = () => {
+                if (isAnimOn.value) document.body.classList.remove('no-anim');
+                else document.body.classList.add('no-anim');
+            };
+            const toggleAnim = () => {
+                isAnimOn.value = !isAnimOn.value;
+                localStorage.setItem('vowmon_anim_on', isAnimOn.value);
+                updateBodyClass();
+            };
+
+            onMounted(() => {
+                updateBodyClass();
+                if (typeof allPetsData !== 'undefined') pets.value = allPetsData;
+            });
+
+            // 配置获取
+            let siteConfig = {};
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}'); } catch(e){}
+            const IMG_BASE = siteConfig.imgCdnBase ? siteConfig.imgCdnBase.replace(/\/$/, '') + '/' : '';
+
+            const getImgUrl = (path) => {
+                if (!path) return 'https://via.placeholder.com/150?text=No+Image';
+                if (path.startsWith('http')) return path;
+                return IMG_BASE + path;
+            };
+            const getTypeColor = (type) => typeData.find(t => t.name === type)?.color || '#ccc';
+            const getTypeIcon = (type) => typeData.find(t => t.name === type)?.icon || '';
+
+            /* ---------------------------------------------------------- 异色 */
+            // 异色是精灵自己的一个图片数组（shiny），不占编号、不单独成卡片。
+            // 悬停时：没有异色 → 保持原来的放大动效；有异色 → 淡入异色图。
+            // 多张异色时，一直悬停会按顺序轮播。
+            // 说明：这里故意不给异色图挂 @error——轮播会切换 src，切图瞬间浏览器可能
+            // 抛出一次 abort 型 error，一旦据此判定"图坏了"就会把整只精灵的异色永久关掉。
+            const hasShiny = (pet) => Array.isArray(pet && pet.shiny) && pet.shiny.length > 0;
+
+            const shinyPetId = ref('');   // 当前悬停中的精灵 id
+            const shinyIdx = ref(0);      // 当前显示第几张异色
+            let shinyTimer = null;
+            let shinyTimerPetId = '';
+
+            const shinySrc = (pet) => {
+                if (!hasShiny(pet)) return '';
+                const list = pet.shiny;
+                const i = shinyPetId.value === pet.id ? (shinyIdx.value % list.length) : 0;
+                return getImgUrl(list[i]);
+            };
+
+            // 传 pet 进来是为了区分「离开旧卡片」和「移到新卡片」：
+            // 如果定时器已经被新卡片接管，就不要再被旧的 mouseleave 清掉。
+            const stopShiny = (pet) => {
+                if (pet && shinyTimerPetId && shinyTimerPetId !== pet.id) return;
+                if (shinyTimer) { clearInterval(shinyTimer); shinyTimer = null; }
+                shinyTimerPetId = '';
+                shinyPetId.value = '';
+                shinyIdx.value = 0;
+            };
+
+            const startShiny = (pet) => {
+                stopShiny();
+                if (!hasShiny(pet)) return;
+                shinyPetId.value = pet.id;
+                shinyIdx.value = 0;
+                // 关闭动画时不轮播，只固定显示第一张异色图
+                if (pet.shiny.length > 1 && isAnimOn.value) {
+                    shinyTimerPetId = pet.id;
+                    shinyTimer = setInterval(() => {
+                        shinyIdx.value = (shinyIdx.value + 1) % pet.shiny.length;
+                    }, 1100);
+                }
+            };
+
+
+            // 计数逻辑
+            const stageCounts = computed(() => {
+                const counts = { '一阶': 0, '二阶': 0, '三阶': 0 };
+                pets.value.forEach(p => { if(counts[p.stage] !== undefined) counts[p.stage]++; });
+                return counts;
+            });
+
+            const formCounts = computed(() => {
+                const counts = { '主形态': 0, '地区形态': 0, '首领形态': 0 };
+                pets.value.forEach(p => { if(counts[p.form] !== undefined) counts[p.form]++; });
+                return counts;
+            });
+
+            const typeCounts = computed(() => {
+                const counts = {};
+                typeData.forEach(t => counts[t.name] = 0);
+                pets.value.forEach(p => {
+                    p.types.forEach(t => { if(counts[t] !== undefined) counts[t]++; });
+                });
+                return counts;
+            });
+
+            // 筛选状态操作
+            const selectedTypes = ref([]);
+            const toggleType = (name) => {
+                const index = selectedTypes.value.indexOf(name);
+                index > -1 ? selectedTypes.value.splice(index, 1) : selectedTypes.value.push(name);
+            };
+
+            const toggleFilter = (key, value) => {
+                const index = filters.value[key].indexOf(value);
+                index > -1 ? filters.value[key].splice(index, 1) : filters.value[key].push(value);
+            };
+
+            const clearFilters = () => {
+                searchName.value = '';
+                filters.value = { stage: [], form: [] };
+                selectedTypes.value = [];
+            };
+
+            // 核心过滤逻辑
+            const filteredPets = computed(() => {
+                return pets.value.filter(pet => {
+                    const matchName = pet.name.includes(searchName.value) || pet.id.includes(searchName.value);
+                    const matchStage = filters.value.stage.length === 0 || filters.value.stage.includes(pet.stage);
+                    const matchForm = filters.value.form.length === 0 || filters.value.form.includes(pet.form);
+                    
+                    let matchType = true;
+                    if (selectedTypes.value.length > 0) {
+                        matchType = selectedTypes.value.some(t => pet.types.includes(t));
+                    }
+                    return matchName && matchStage && matchForm && matchType;
+                });
+            });
+
+            // 分页逻辑
+            const currentPage = ref(1);
+            const pageSize = 30; 
+
+            watch([searchName, filters, selectedTypes], () => { currentPage.value = 1; }, { deep: true });
+
+            const totalPages = computed(() => Math.ceil(filteredPets.value.length / pageSize) || 1);
+            const startIndex = computed(() => (currentPage.value - 1) * pageSize);
+            const endIndex = computed(() => Math.min(startIndex.value + pageSize, filteredPets.value.length));
+            const paginatedPets = computed(() => filteredPets.value.slice(startIndex.value, endIndex.value));
+
+            return {
+                isAnimOn, toggleAnim,
+                searchName, filters, selectedTypes, typeData,
+                filteredPets, paginatedPets, currentPage, totalPages, startIndex, endIndex,
+                stageCounts, formCounts, typeCounts,
+                toggleType, toggleFilter, clearFilters,
+                getImgUrl, getTypeColor, getTypeIcon,
+                hasShiny, shinySrc, startShiny, stopShiny
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

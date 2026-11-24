@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 图片管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <header class="topbar">
+        <h1><i class="fa-solid fa-images"></i> 图片管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='admin.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-primary" @click="loadAll" :disabled="isLoading">
+                <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isLoading }"></i> {{ isLoading ? '加载中...' : '刷新仓库' }}
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html" class="active"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="alert-box">
+                <i class="fa-solid fa-circle-info"></i>
+                自动扫描「同步配置」中填写的<strong>所有图片仓库</strong>（支持多个仓库 1、2、3……）。图片缩略图按各仓库的 CDN 地址生成；仓库为空或不存在时会自动跳过。
+                <a href="admin.html?tab=settings" style="margin-left:auto;white-space:nowrap;font-weight:800;">前往配置 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stat-cards" v-if="hasConfig">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#ebf8ff;color:#3182ce;"><i class="fa-solid fa-database"></i></div>
+                    <div><div class="stat-num">{{ imgRepos.length }}</div><div class="stat-label">图片仓库</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#faf5ff;color:#805ad5;"><i class="fa-solid fa-image"></i></div>
+                    <div><div class="stat-num">{{ allImages.length }}</div><div class="stat-label">仓库图片</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f0fff4;color:#38a169;"><i class="fa-solid fa-paw"></i></div>
+                    <div><div class="stat-num">{{ pets.length }}</div><div class="stat-label">精灵总数</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fffaf0;color:#dd6b20;"><i class="fa-solid fa-link"></i></div>
+                    <div><div class="stat-num">{{ linkedCount }}</div><div class="stat-label">已关联图片</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fff5f5;color:#e53e3e;"><i class="fa-solid fa-image-portrait"></i></div>
+                    <div><div class="stat-num">{{ missingPets.length }}</div><div class="stat-label">图片缺失精灵</div></div>
+                </div>
+            </div>
+
+            <!-- 未配置提示 -->
+            <div class="setup-hint" v-if="!hasConfig">
+                <div class="setup-hint-icon"><i class="fa-solid fa-sliders"></i></div>
+                <h2>尚未填写 GitHub 配置</h2>
+                <p>图片管理需要读取图片仓库，请先在「同步配置」中填写 Token、用户名与图片仓库名。</p>
+                <a class="btn btn-primary" href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 前往同步配置</a>
+            </div>
+
+            <template v-if="hasConfig">
+                <!-- 标签切换 -->
+                <div class="img-tabs">
+                    <button class="img-tab" :class="{ active: currentTab === 'repo' }" @click="currentTab = 'repo'">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> 仓库图片 <span class="tab-count">{{ allImages.length }}</span>
+                    </button>
+                    <button class="img-tab" :class="{ active: currentTab === 'pets' }" @click="currentTab = 'pets'">
+                        <i class="fa-solid fa-paw"></i> 精灵图片 <span class="tab-count">{{ pets.length }}</span>
+                    </button>
+                </div>
+
+                <!-- ============ 仓库图片 ============ -->
+                <section v-if="currentTab === 'repo'">
+                    <!-- 仓库状态条 -->
+                    <div class="repo-status-bar" v-if="repoStatus.length">
+                        <div class="repo-status-item" v-for="s in repoStatus" :key="s.repo" :class="s.ok ? 'ok' : 'err'">
+                            <i class="fa-solid" :class="s.ok ? 'fa-circle-check' : 'fa-circle-xmark'"></i>
+                            <span class="repo-name">{{ s.repo }}</span>
+                            <span class="repo-count">{{ s.ok ? s.count + ' 张' : '读取失败' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 工具栏 -->
+                    <div class="img-toolbar">
+                        <div class="toolbar-left">
+                            <div class="input-with-btn" style="width:260px;">
+                                <input v-model="repoSearch" placeholder="搜索文件名 / 路径 / 精灵名">
+                                <button class="btn btn-outline btn-icon" @click="repoSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <select v-model="repoFilter" class="filter-select">
+                                <option value="all">全部仓库</option>
+                                <option v-for="r in imgRepos" :key="r" :value="r">{{ r }}</option>
+                            </select>
+                            <select v-model="usageFilter" class="filter-select">
+                                <option value="all">全部状态</option>
+                                <option value="used">已被精灵使用</option>
+                                <option value="unused">未被使用</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" @click="openUpload()"><i class="fa-solid fa-cloud-arrow-up"></i> 上传图片</button>
+                        </div>
+                    </div>
+
+                    <!-- 加载 / 错误 / 空 -->
+                    <div class="state-box" v-if="isLoading"><i class="fa-solid fa-spinner fa-spin"></i> 正在扫描 {{ imgRepos.length }} 个图片仓库…</div>
+                    <div class="state-box error" v-else-if="loadError"><i class="fa-solid fa-triangle-exclamation"></i> {{ loadError }}</div>
+                    <div class="state-box" v-else-if="filteredRepoImages.length === 0"><i class="fa-solid fa-folder-open"></i> 没有找到图片（可尝试上传，或检查仓库名与目录路径是否正确）</div>
+
+                    <!-- 图片网格 -->
+                    <div class="img-grid" v-else>
+                        <div class="img-card" v-for="img in filteredRepoImages" :key="img.repo + '|' + img.path">
+                            <div class="img-thumb">
+                                <img :src="img.url" :alt="img.name" loading="lazy" @error="onImgError">
+                            </div>
+                            <div class="img-card-body">
+                                <div class="img-name" :title="img.name">{{ img.name }}</div>
+                                <div class="img-path" :title="img.path">{{ img.path }}</div>
+                                <div class="img-badges">
+                                    <span class="badge badge-repo" :title="img.repo"><i class="fa-solid fa-database"></i> {{ shortRepo(img.repo) }}</span>
+                                    <span class="badge" :class="img.usedBy.length ? 'badge-used' : 'badge-unused'">
+                                        <i class="fa-solid" :class="img.usedBy.length ? 'fa-link' : 'fa-unlink'"></i>
+                                        {{ img.usedBy.length ? '已用 · ' + img.usedBy.length : '未使用' }}
+                                    </span>
+                                </div>
+                                <div class="img-used-names" v-if="img.usedBy.length">{{ img.usedBy.join('、') }}</div>
+                                <div class="img-actions">
+                                    <button class="action-btn mini" @click="copyPath(img.path)"><i class="fa-regular fa-copy"></i> 复制路径</button>
+                                    <button class="action-btn mini" @click="replacePetWith(img)"><i class="fa-solid fa-paw"></i> 设为精灵图</button>
+                                    <button class="action-btn mini delete-btn" @click="openDelete(img)"><i class="fa-solid fa-trash"></i> 删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============ 精灵图片 ============ -->
+                <section v-if="currentTab === 'pets'">
+                    <div class="img-toolbar">
+                        <div class="toolbar-left">
+                            <div class="input-with-btn" style="width:260px;">
+                                <input v-model="petSearch" placeholder="搜索编号 / 名称">
+                                <button class="btn btn-outline btn-icon" @click="petSearch = ''" title="清空"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <select v-model="petStatusFilter" class="filter-select">
+                                <option value="all">全部状态</option>
+                                <option value="ok">图片正常</option>
+                                <option value="missing">图片缺失</option>
+                                <option value="empty">未填写路径</option>
+                                <option value="external">外链图片</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-right">
+                            <span class="toolbar-tip"><i class="fa-solid fa-circle-info"></i> 替换后记得回到精灵管理「一键同步数据」</span>
+                        </div>
+                    </div>
+
+                    <div class="state-box" v-if="isLoading"><i class="fa-solid fa-spinner fa-spin"></i> 正在核对精灵图片…</div>
+                    <div class="state-box" v-else-if="filteredPetRows.length === 0"><i class="fa-solid fa-magnifying-glass"></i> 没有符合条件的精灵</div>
+
+                    <div class="pet-img-grid" v-else>
+                        <div class="pet-img-card" v-for="row in filteredPetRows" :key="row.pet.id" :class="'st-' + row.status">
+                            <div class="pet-img-thumb">
+                                <img v-if="row.url" :src="row.url" :alt="row.pet.name" loading="lazy" @error="onImgError">
+                                <i v-else class="fa-solid fa-image-portrait"></i>
+                                <span class="status-flag" :class="'flag-' + row.status">{{ statusText(row.status) }}</span>
+                            </div>
+                            <div class="pet-img-info">
+                                <div class="pet-img-title">
+                                    <span class="pet-id">#{{ row.pet.id }}</span> {{ row.pet.name }}
+                                    <span class="shiny-chip" v-if="shinyCount(row.pet)">异色 ×{{ shinyCount(row.pet) }}</span>
+                                </div>
+                                <div class="pet-img-path" :title="row.pet.image || '未填写'">{{ row.pet.image || '未填写图片路径' }}</div>
+                                <div class="pet-img-repo" v-if="row.repo"><i class="fa-solid fa-database"></i> {{ row.repo }}</div>
+                                <div class="img-actions">
+                                    <button class="action-btn mini" @click="openUpload(row.pet)"><i class="fa-solid fa-cloud-arrow-up"></i> {{ row.status === 'ok' ? '替换图片' : '上传图片' }}</button>
+                                    <a class="action-btn mini" :href="'admin.html'"><i class="fa-solid fa-pen"></i> 去编辑</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </template>
+        </main>
+    </div>
+
+    <!-- 上传弹窗 -->
+    <div class="modal-overlay" v-if="showUploadModal" @vowmon:modal-close="showUploadModal = false">
+        <div class="modal upload-modal" @click.stop>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-cloud-arrow-up"></i> {{ uploadPet ? '替换精灵图片' : '上传到图片仓库' }}</h3>
+                <button class="btn-close" @click="showUploadModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box" v-if="uploadPet">
+                    <i class="fa-solid fa-circle-info"></i>
+                    正在为 <strong>{{ uploadPet.name }}（#{{ uploadPet.id }}）</strong> 上传图片。上传成功后会把路径自动写入该精灵，替换原有图片。
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>目标图片仓库</label>
+                        <select v-model="uploadRepo" class="filter-select" style="width:100%;">
+                            <option v-for="r in imgRepos" :key="r" :value="r">{{ r }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>仓库内路径（建议 sprites/编号.png）</label>
+                        <input v-model="uploadPath" placeholder="例如：sprites/004.png">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>选择本地图片</label>
+                    <input type="file" ref="uploadFileInput" accept="image/*" @change="handleUpload">
+                    <p class="hint">上传前会自动压缩并等比缩放为 PNG（最长边不超过 {{ config.imgSize || 512 }}px），文件名会统一改成 <b>.png</b>。</p>
+                    <p class="hint" v-if="isUploading"><i class="fa-solid fa-spinner fa-spin"></i> 正在上传，请稍候…</p>
+                </div>
+                <div class="upload-preview" v-if="uploadPreview">
+                    <img :src="uploadPreview" alt="预览">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showUploadModal = false">取消</button>
+                <span class="footer-hint">选择文件后自动上传</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="showDeleteModal = false">
+        <div class="delete-modal" @click.stop>
+            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>确认删除图片</h3>
+            <p>您确定要从仓库 <strong>{{ deleteTarget ? deleteTarget.repo : '' }}</strong> 永久删除图片 <strong>{{ deleteTarget ? deleteTarget.name : '' }}</strong> 吗？<br>此操作不可撤销。</p>
+            <p v-if="deleteTarget && deleteTarget.usedBy.length" style="color:#e53e3e;">
+                <i class="fa-solid fa-circle-exclamation"></i> 该图片正被精灵「{{ deleteTarget.usedBy.join('、') }}」使用，删除后这些精灵的图片将失效。
+            </p>
+            <div class="delete-actions">
+                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
+                <button class="btn btn-danger" @click="confirmDelete" :disabled="isDeleting">{{ isDeleting ? '删除中...' : '确认删除' }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设为精灵图片弹窗 -->
+    <div class="modal-overlay" v-if="showBindModal" @vowmon:modal-close="showBindModal = false">
+        <div class="modal" style="max-width:480px;" @click.stop>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-link"></i> 设为精灵图片</h3>
+                <button class="btn-close" @click="showBindModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box"><i class="fa-solid fa-circle-info"></i> 将把路径 <strong>{{ bindImage ? bindImage.path : '' }}</strong> 写入所选精灵，替换其原图片。</div>
+                <div class="form-group">
+                    <label>搜索并选择精灵</label>
+                    <div class="input-with-btn">
+                        <input v-model="bindSearch" placeholder="输入编号或名称搜索">
+                        <button class="btn btn-outline btn-icon" @click="bindSearch = ''"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="bind-list">
+                    <div class="bind-item" v-for="p in filteredBindPets" :key="p.id" @click="confirmBind(p)">
+                        <img v-if="getPetUrl(p)" :src="getPetUrl(p)" @error="onImgError" alt="">
+                        <i v-else class="fa-solid fa-image-portrait"></i>
+                        <span class="bind-name">#{{ p.id }} {{ p.name }}</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                    <div class="state-box" v-if="!filteredBindPets.length"><i class="fa-solid fa-magnifying-glass"></i> 没有匹配的精灵</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showBindModal = false">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 轻提示 -->
+    <div class="toast" v-if="toastMsg" :class="toastType"><i class="fa-solid" :class="toastType === 'ok' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i> {{ toastMsg }}</div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="data/vow-data.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/image-utils.js"></script>
+<script src="js/common-ui.js"></script>
+<script src="js/admin-images.js"></script>
+</body>
+</html>

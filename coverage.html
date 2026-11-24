@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 技能打击面计算器</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: '微软雅黑', -apple-system, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; height: 70px; display: flex; align-items: center; justify-content: center; }
+        .nav-container { max-width: 1200px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; }
+        .logo { color: #2c3e50; font-size: 22px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        
+        .container { max-width: 1100px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header h2 { font-size: 24px; color: #2c3e50; font-weight: 900; }
+        .reset-btn { padding: 8px 20px; border-radius: 20px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; font-weight: bold; }
+        
+        .select-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .select-header { display: flex; align-items: center; margin-bottom: 15px; gap: 15px; }
+        .select-box h3 { font-size: 16px; color: #4a5568; }
+        .select-badge { background: #fff5f5; color: #ff6b6b; padding: 2px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; }
+        
+        .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+        .type-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 5px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; background: #f8fafc; }
+        .type-btn.active { border-color: #ff6b6b; background: #fff5f5; }
+        .type-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+        .type-name { font-size: 13px; font-weight: bold; color: #4a5568; }
+        
+        .summary-card { background: #fff; border-radius: 16px; padding: 20px 25px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .summary-icons { display: flex; gap: 10px; }
+        .type-icon-large { width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 24px; }
+        .summary-text h3 { font-size: 20px; color: #2c3e50; margin-bottom: 5px; }
+        .summary-text p { font-size: 14px; color: #718096; }
+        .highlight-green { color: #38a169; font-weight: bold; }
+        .highlight-red { color: #e53e3e; font-weight: bold; }
+        
+        .panel { background: #fff; border-radius: 16px; padding: 25px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .panel-header { margin-bottom: 20px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 15px; }
+        .panel-header h2 { font-size: 20px; color: #2c3e50; }
+        .panel-hint { display: inline-block; margin-top: 6px; font-size: 12px; color: #a0aec0; }
+        
+        .coverage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .coverage-box { border-radius: 12px; padding: 20px; border: 1px solid transparent; }
+        .box-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .box-title { font-size: 15px; font-weight: bold; }
+        .box-mult { font-size: 18px; font-weight: 900; }
+        .box-desc { font-size: 13px; margin-bottom: 15px; display: block; color: #718096; }
+        .box-content { display: flex; flex-wrap: wrap; gap: 8px; }
+        .mini-type { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; color: #fff; font-size: 13px; font-weight: bold; }
+        
+        .bg-green-deep { background: #e6fffa; border-color: #b2f5ea; } .bg-green-deep .box-title, .bg-green-deep .box-mult { color: #319795; }
+        .bg-green-light { background: #f0fff4; border-color: #c6f6d5; } .bg-green-light .box-title, .bg-green-light .box-mult { color: #38a169; }
+        .bg-red-deep { background: #fff5f5; border-color: #fed7d7; } .bg-red-deep .box-title, .bg-red-deep .box-mult { color: #c53030; }
+        .bg-red-light { background: #fffaf0; border-color: #feebc8; } .bg-red-light .box-title, .bg-red-light .box-mult { color: #dd6b20; }
+        .bg-gray-light { background: #f7fafc; border-color: #edf2f7; } .bg-gray-light .box-title, .bg-gray-light .box-mult { color: #4a5568; }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css">
+    <script src="js/navbar.js" defer></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <div class="header">
+            <h2>技能打击面计算器</h2>
+            <button class="reset-btn" @click="reset">重置</button>
+        </div>
+
+        <div class="select-box">
+            <div class="select-header">
+                <h3>技能系别 (最多 5 个)</h3>
+                <span class="select-badge">{{ selectedTypes.length }} / 5</span>
+            </div>
+            <div class="type-grid">
+                <div v-for="t in allTypes" :key="t.name" class="type-btn" :class="{ active: selectedTypes.includes(t.name) }" @click="toggleType(t.name)">
+                    <div class="type-icon" :style="{ backgroundColor: t.color }"><i :class="t.icon"></i></div>
+                    <div class="type-name">{{ t.name }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card" v-if="selectedTypes.length > 0">
+            <div class="summary-left">
+                <div class="summary-icons">
+                    <div class="type-icon-large" v-for="t in selectedTypes" :key="'sum-'+t" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i></div>
+                </div>
+            </div>
+            <div class="summary-text" style="text-align: right;">
+                <h3>有效打击 <span class="highlight-green">{{ coverageStats.hitCount }}</span> 种组合</h3>
+                <p>无法突破 <span class="highlight-red">{{ coverageStats.resistCount }}</span> 种组合</p>
+            </div>
+        </div>
+
+        <div class="panel" v-if="selectedTypes.length > 0">
+            <div class="panel-header"><h2>打击面详细报告</h2><span class="panel-hint">统计范围：{{ coverageStats.totalCount }} 种属性组合（18 单系 + 153 双系）</span></div>
+            <div class="coverage-grid">
+                <div class="coverage-box bg-green-deep" v-if="coverageData.hit4.length > 0">
+                    <div class="box-header"><span class="box-title">强力克制面</span><span class="box-mult">×4 倍</span></div>
+                    <span class="box-desc">至少有一种已选技能能打出 4 倍伤害。</span>
+                    <div class="box-content">
+                        <span v-for="t in coverageData.hit4" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                    </div>
+                </div>
+                <div class="coverage-box bg-green-light" v-if="coverageData.hit2.length > 0">
+                    <div class="box-header"><span class="box-title">普通克制面</span><span class="box-mult">×2 倍</span></div>
+                    <span class="box-desc">有技能能造成2倍伤害。</span>
+                    <div class="box-content">
+                        <span v-for="t in coverageData.hit2" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                    </div>
+                </div>
+                <div class="coverage-box bg-gray-light" v-if="coverageData.resist0.length > 0">
+                    <div class="box-header"><span class="box-title">完全盲点 (免疫)</span><span class="box-mult">×0 倍</span></div>
+                    <span class="box-desc">所有已选技能都被该组合免疫。</span>
+                    <div class="box-content">
+                        <span v-for="t in coverageData.resist0" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                    </div>
+                </div>
+                <div class="coverage-box bg-red-deep" v-if="coverageData.resist025.length > 0">
+                    <div class="box-header"><span class="box-title">严重盲点</span><span class="box-mult">×0.25 倍</span></div>
+                    <span class="box-desc">所有已选技能都被该组合双重抵抗。</span>
+                    <div class="box-content">
+                        <span v-for="t in coverageData.resist025" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                    </div>
+                </div>
+                <div class="coverage-box bg-red-light" v-if="coverageData.resist05.length > 0">
+                    <div class="box-header"><span class="box-title">普通盲点</span><span class="box-mult">×0.5 倍</span></div>
+                    <span class="box-desc">所有已选技能都被该组合抵抗。</span>
+                    <div class="box-content">
+                        <span v-for="t in coverageData.resist05" :key="t" class="mini-type" :style="{ backgroundColor: getColor(t) }"><i :class="getIcon(t)"></i> {{ t }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="empty-state" v-else style="text-align: center; color: #a0aec0; margin-top: 50px;">请在上方选择技能属性以计算打击面。</div>
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="js/type-chart.js"></script>
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            const allTypes = typeData;
+            const selectedTypes = ref(['火']);
+
+            // 18 个单系 + 153 个双系 = 171 种防守端组合
+            const defenderCombos = buildDefenderCombos(allTypes.map(item => item.name));
+
+            const getColor = (name) => allTypes.find(item => item.name === name)?.color || '#ccc';
+            const getIcon = (name) => allTypes.find(item => item.name === name)?.icon || '';
+
+            const toggleType = (name) => {
+                const index = selectedTypes.value.indexOf(name);
+                if (index > -1) selectedTypes.value.splice(index, 1);
+                else {
+                    if (selectedTypes.value.length < 5) selectedTypes.value.push(name);
+                    else { selectedTypes.value.shift(); selectedTypes.value.push(name); }
+                }
+            };
+
+            const reset = () => { selectedTypes.value = []; };
+
+            const coverageData = computed(() => {
+                const buckets = { hit4: [], hit2: [], resist0: [], resist025: [], resist05: [] };
+                if (selectedTypes.value.length === 0) return buckets;
+
+                defenderCombos.forEach(combo => {
+                    // 该守方组合能承受的最大伤害倍率（取所选技能里最好的那个）
+                    let best = 0;
+                    selectedTypes.value.forEach(attacker => {
+                        const mult = getComboMultiplier(attacker, combo);
+                        if (mult > best) best = mult;
+                    });
+
+                    const label = combo.join(' / ');
+                    if (best === 4) buckets.hit4.push(label);
+                    else if (best === 2) buckets.hit2.push(label);
+                    else if (best === 0) buckets.resist0.push(label);
+                    else if (best === 0.25) buckets.resist025.push(label);
+                    else if (best === 0.5) buckets.resist05.push(label);
+                });
+
+                return buckets;
+            });
+
+            const coverageStats = computed(() => {
+                return {
+                    hitCount: coverageData.value.hit4.length + coverageData.value.hit2.length,
+                    resistCount: coverageData.value.resist0.length + coverageData.value.resist025.length + coverageData.value.resist05.length,
+                    totalCount: defenderCombos.length
+                };
+            });
+
+            return { allTypes, selectedTypes, getColor, getIcon, toggleType, reset, coverageData, coverageStats };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

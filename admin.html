@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 管理者后台</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <header class="topbar">
+        <h1><i class="fa-solid fa-screwdriver-wrench"></i> Vowmon 后台管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" @click="window.location.href='index.html'"><i class="fa-solid fa-house"></i> 返回首页</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步数据到 GitHub' }}
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a :class="{active: currentTab === 'sprites'}" @click.stop="switchTab('sprites')"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a :class="{active: currentTab === 'settings'}" @click.stop="switchTab('settings')"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div v-if="currentTab === 'sprites'">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 20px;">精灵数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ pets.length }} 只</span></h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="col-settings-wrap">
+                            <button class="btn btn-outline" :class="{ active: showColSettings }" @click.stop="showColSettings = !showColSettings">
+                                <i class="fa-solid fa-table-columns"></i> 显示列
+                                <i class="fa-solid fa-chevron-down" style="font-size: 11px; margin-left: 2px;"></i>
+                            </button>
+                            <div class="col-settings-dropdown" v-show="showColSettings" @click.stop>
+                                <label class="checkbox-item" v-for="(label, key) in allColumns" :key="key">
+                                    <input type="checkbox" v-model="visibleCols" :value="key"> {{ label }}
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加新精灵</button>
+                    </div>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th v-if="visibleCols.includes('image')">头像</th>
+                                <th v-if="visibleCols.includes('id')">编号</th>
+                                <th v-if="visibleCols.includes('name')">名称</th>
+                                <th v-if="visibleCols.includes('types')">属性</th>
+                                <th v-if="visibleCols.includes('stage')">阶数</th>
+                                <th v-if="visibleCols.includes('form')">形态</th>
+                                <th v-if="visibleCols.includes('ability')">特性</th>
+                                <th v-if="visibleCols.includes('hp')">HP</th>
+                                <th v-if="visibleCols.includes('atk')">攻击</th>
+                                <th v-if="visibleCols.includes('def')">防御</th>
+                                <th v-if="visibleCols.includes('spAtk')">特攻</th>
+                                <th v-if="visibleCols.includes('spDef')">特防</th>
+                                <th v-if="visibleCols.includes('spd')">速度</th>
+                                <th style="text-align: right; padding-right: 20px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(pet, index) in paginatedPets" :key="index">
+                                <td v-if="visibleCols.includes('image')" class="img-cell">
+                                    <img v-if="getThumbUrl(pet.image)" :src="getThumbUrl(pet.image)" alt="头像">
+                                    <span v-else class="img-placeholder">无</span>
+                                </td>
+                                <td v-if="visibleCols.includes('id')">{{ pet.id }}</td>
+                                <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ pet.name }}</td>
+                                <td v-if="visibleCols.includes('types')">
+                                    <div class="type-pill-cell">
+                                        <span class="type-pill" v-for="t in pet.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }">
+                                            <i v-if="visibleCols.includes('typeIcon')" :class="getTypeIcon(t)"></i>
+                                            {{ t }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td v-if="visibleCols.includes('stage')">{{ pet.stage }}</td>
+                                <td v-if="visibleCols.includes('form')">{{ pet.form }}</td>
+                                <td v-if="visibleCols.includes('ability')">{{ pet.ability }}</td>
+                                <td v-if="visibleCols.includes('hp')">{{ pet.stats?.hp || 0 }}</td>
+                                <td v-if="visibleCols.includes('atk')">{{ pet.stats?.atk || 0 }}</td>
+                                <td v-if="visibleCols.includes('def')">{{ pet.stats?.def || 0 }}</td>
+                                <td v-if="visibleCols.includes('spAtk')">{{ pet.stats?.spAtk || 0 }}</td>
+                                <td v-if="visibleCols.includes('spDef')">{{ pet.stats?.spDef || 0 }}</td>
+                                <td v-if="visibleCols.includes('spd')">{{ pet.stats?.spd || 0 }}</td>
+                                <td style="text-align: right; padding-right: 20px; white-space: nowrap;">
+                                    <button class="action-btn edit-btn" @click.stop="openEditor(pet, (listPage - 1) * listPageSize + index)">
+                                        <i class="fa-solid fa-pen"></i> 编辑
+                                    </button>
+                                    <button class="action-btn delete-btn" @click.stop="openDeleteConfirm((listPage - 1) * listPageSize + index, pet.name)">
+                                        <i class="fa-solid fa-trash-can"></i> 删除
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span>共 {{ pets.length }} 条数据</span>
+                    <div class="page-controls">
+                        <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="listPage === 1" @click="listPage--">上一页</button>
+                        <span style="font-weight: bold; margin: 0 10px;">{{ listPage }} / {{ Math.ceil(pets.length / listPageSize) || 1 }}</span>
+                        <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="listPage >= Math.ceil(pets.length / listPageSize)" @click="listPage++">下一页</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设置 Tab -->
+            <div v-if="currentTab === 'settings'" class="settings-layout">
+                <!-- 概览 -->
+                <div class="settings-hero">
+                    <div class="settings-hero-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div class="settings-hero-text">
+                        <h2>GitHub 同步配置</h2>
+                        <p>配置仅保存在本机浏览器，不会上传。填好后即可一键同步数据、管理图片仓库。</p>
+                    </div>
+                    <div class="settings-hero-progress">
+                        <div class="ring" :style="{ '--p': (configFilledCount / 5 * 100) + '%' }">
+                            <span>{{ configFilledCount }}/5</span>
+                        </div>
+                        <small>已完成</small>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- 认证 -->
+                    <section class="settings-panel">
+                        <div class="panel-head">
+                            <span class="panel-icon blue"><i class="fa-solid fa-key"></i></span>
+                            <div><h3>身份认证</h3><p>用于访问你的 GitHub 仓库</p></div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>Access Token <span class="req">必填</span></label>
+                                <div class="input-with-btn">
+                                    <input :type="showToken ? 'text' : 'password'" v-model="config.token" placeholder="github_pat_xxxxxxxxxxxx">
+                                    <button class="btn btn-outline btn-icon" @click.stop="showToken = !showToken" :title="showToken ? '隐藏' : '显示'">
+                                        <i class="fa-solid" :class="showToken ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                <p class="field-hint">Fine-grained Token，需勾选 Contents 读写权限</p>
+                            </div>
+                            <div class="form-group">
+                                <label>用户名 Owner <span class="req">必填</span></label>
+                                <input type="text" v-model="config.owner" placeholder="你的 GitHub 用户名">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 数据仓库 -->
+                    <section class="settings-panel">
+                        <div class="panel-head">
+                            <span class="panel-icon purple"><i class="fa-solid fa-database"></i></span>
+                            <div><h3>数据仓库</h3><p>存放精灵 / 技能 / 特性数据文件</p></div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>仓库名 <span class="req">必填</span></label>
+                                <input type="text" v-model="config.dataRepos" placeholder="例如：vowmon_data_1, vowmon_data_2">
+                                <p class="field-hint">多个仓库用英文逗号分隔，空间不足时依次推送</p>
+                            </div>
+                            <div class="repo-chips" v-if="config.dataRepos">
+                                <span class="repo-chip" v-for="r in config.dataRepos.split(',').map(s => s.trim()).filter(Boolean)" :key="r">
+                                    <i class="fa-solid fa-box"></i> {{ r }}
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 图片仓库 -->
+                    <section class="settings-panel wide">
+                        <div class="panel-head">
+                            <span class="panel-icon orange"><i class="fa-solid fa-images"></i></span>
+                            <div><h3>图片仓库</h3><p>存放上传的精灵图片，支持多个仓库分散存储</p></div>
+                        </div>
+                        <div class="panel-body two-col">
+                            <div class="form-group">
+                                <label>仓库名 <span class="opt">选填</span></label>
+                                <input type="text" v-model="config.imgRepos" placeholder="例如：vowmon_imgs_1, vowmon_imgs_2">
+                                <p class="field-hint">多个仓库用英文逗号分隔</p>
+                            </div>
+                            <div class="form-group">
+                                <label>图片 CDN 基础路径 <span class="opt">选填</span></label>
+                                <input type="text" v-model="config.imgCdnBase" placeholder="https://cdn.jsdelivr.net/gh/用户名/仓库@main">
+                                <p class="field-hint">用于前台展示；支持 {repo} 占位符自动适配多仓库</p>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>上传压缩尺寸</label>
+                                <select v-model.number="config.imgSize" class="filter-select" style="width:100%; max-width:260px;">
+                                    <option v-for="s in imgSizeOptions" :key="s" :value="s">{{ s }} × {{ s }}</option>
+                                </select>
+                                <p class="field-hint">上传时自动等比缩放为 PNG，最长边不超过该值（小图不放大）</p>
+                            </div>
+                        </div>
+                        <div class="repo-chips" v-if="config.imgRepos">
+                            <span class="repo-chip img" v-for="r in config.imgRepos.split(',').map(s => s.trim()).filter(Boolean)" :key="r">
+                                <i class="fa-regular fa-image"></i> {{ r }}
+                            </span>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 操作栏 -->
+                <div class="settings-actions">
+                    <span class="settings-actions-tip"><i class="fa-solid fa-shield-halved"></i> Token 仅存本机，不会上传</span>
+                    <button class="btn btn-primary btn-lg" @click.stop="saveConfig"><i class="fa-solid fa-floppy-disk"></i> 保存配置</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑精灵弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑精灵' : '添加新精灵' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-circle-info"></i> 基础信息</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>编号</label><input v-model="form.id" placeholder="如：001"></div>
+                        <div class="form-group"><label>名称</label><input v-model="form.name" placeholder="如：圆法师"></div>
+                        
+                        <div class="form-group full image-upload-group">
+                            <label>精灵图片</label>
+                            <div class="image-input-wrapper">
+                                <div class="image-preview-box">
+                                    <img v-if="previewImageUrl" :src="previewImageUrl" alt="预览">
+                                    <span v-else>暂无图片</span>
+                                </div>
+                                <div class="image-controls">
+                                    <div class="input-with-btn">
+                                        <input v-model="form.image" placeholder="输入外链或点击右侧上传" @input="updatePreview">
+                                        <button class="btn btn-outline" @click="triggerFileUpload" :disabled="isUploading">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> {{ isUploading ? '上传中...' : '本地选图' }}
+                                        </button>
+                                    </div>
+                                    <input type="file" ref="fileInput" accept="image/*" style="display: none;" @change="handleFileUpload">
+                                    <p class="hint">
+                                        本地选图会<b>自动压缩并等比缩放</b>成 PNG（默认最长边 {{ config.imgSize || 512 }}px），
+                                        并按编号自动命名为 <b>sprites/{{ form.id || '编号' }}.png</b>。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group full shiny-upload-group">
+                            <label>异色图片 <span class="opt">可多张 · 不占编号 · 图鉴悬停显示</span></label>
+
+                            <div class="shiny-grid" v-if="form.shiny && form.shiny.length">
+                                <div class="shiny-item" v-for="(img, i) in form.shiny" :key="img + '-' + i">
+                                    <img :src="shinyPreview(img)" :alt="'异色 ' + (i + 1)" loading="lazy">
+                                    <span class="shiny-seq">#{{ i + 1 }}</span>
+                                    <button type="button" class="shiny-remove" title="移除这张异色图" @click="removeShiny(i)">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="shiny-empty" v-else>
+                                <i class="fa-regular fa-images"></i> 还没添加异色图片。添加后，图鉴里这张卡片悬停时不再放大，而是切换成异色。
+                            </p>
+
+                            <div class="image-controls">
+                                <div class="input-with-btn">
+                                    <input v-model="shinyInput" placeholder="输入外链或路径，如 sprites/001_s.png"
+                                           @keydown.enter.prevent="addShinyByInput">
+                                    <button type="button" class="btn btn-outline" @click="addShinyByInput">
+                                        <i class="fa-solid fa-plus"></i> 添加
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-primary shiny-upload-btn" @click="triggerShinyUpload" :disabled="isShinyUploading">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    {{ isShinyUploading ? (shinyProgress || '上传中…') : '上传异色图片（可多选）' }}
+                                </button>
+                                <input type="file" ref="shinyFileInput" accept="image/*" multiple style="display: none;" @change="handleShinyUpload">
+                                <p class="hint">
+                                    按 #1、#2… 的顺序排列；有多张时，图鉴里鼠标悬停会依次轮播。
+                                    上传后自动压缩为 PNG，并按编号命名：第 1 张 <b>sprites/{{ form.id || '编号' }}_s.png</b>，
+                                    之后依次 <b>_s2</b>、<b>_s3</b>…；不占编号，也不单独出现在图鉴里。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-tags"></i> 分类与属性</div>
+                    <div class="form-group full" style="margin-bottom: 16px;">
+                        <label>属性 (点击多选)</label>
+                        <div class="type-pill-select">
+                            <span class="type-pill-option" v-for="t in typeData" :key="t.name"
+                                  :class="{ active: form.types.includes(t.name) }"
+                                  :style="form.types.includes(t.name) ? { backgroundColor: t.color, borderColor: t.color } : { color: t.color }"
+                                  @click="toggleType(t.name)">
+                                <i :class="t.icon"></i> {{ t.name }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>精灵阶数</label>
+                            <div class="custom-select" :class="{ 'is-open': activeDropdown === 'stage' }" @click.stop="toggleDropdown('stage')" @vowmon-dropdown-close="activeDropdown = ''">
+                                <div class="select-display">{{ form.stage }} <i class="fa-solid fa-chevron-down"></i></div>
+                                <div class="dropdown-options" v-show="activeDropdown === 'stage'">
+                                    <div class="dropdown-item" v-for="opt in ['一阶', '二阶', '三阶']" :key="opt" @click.stop="selectOption('stage', opt)">{{ opt }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>精灵形态</label>
+                            <div class="custom-select" :class="{ 'is-open': activeDropdown === 'form' }" @click.stop="toggleDropdown('form')" @vowmon-dropdown-close="activeDropdown = ''">
+                                <div class="select-display">{{ form.form }} <i class="fa-solid fa-chevron-down"></i></div>
+                                <div class="dropdown-options" v-show="activeDropdown === 'form'">
+                                    <div class="dropdown-item" v-for="opt in ['主形态', '地区形态', '首领形态']" :key="opt" @click.stop="selectOption('form', opt)">{{ opt }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>阶级 (Rank)</label>
+                            <input v-model="form.rank" placeholder="如：初灵">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-leaf"></i> 生态与特性</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>特性 (点击搜索或直接输入)</label>
+                            <div class="input-with-btn">
+                                <input v-model="form.ability" placeholder="搜索或新建特性名" @input="activeDropdown = ''">
+                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('ability')">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>特性效果说明</label>
+                            <input v-model="form.abilityEffect" placeholder="选择已有特性会自动填入">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>蛋组 (点击搜索或直接输入)</label>
+                            <div class="input-with-btn">
+                                <input v-model="form.eggGroup" placeholder="搜索或新建蛋组" @input="activeDropdown = ''">
+                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('eggGroup')">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>可骑乘</label>
+                            <div class="custom-select" :class="{ 'is-open': activeDropdown === 'rideable' }" @click.stop="toggleDropdown('rideable')" @vowmon-dropdown-close="activeDropdown = ''">
+                                <div class="select-display">{{ form.rideable || '无' }} <i class="fa-solid fa-chevron-down"></i></div>
+                                <div class="dropdown-options" v-show="activeDropdown === 'rideable'">
+                                    <div class="dropdown-item" v-for="opt in ['无', '是', '否']" :key="opt" @click.stop="selectOption('rideable', opt === '无' ? '' : opt)">{{ opt }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group"><label>身高 (m)</label><input type="number" step="0.1" v-model="form.height"></div>
+                        <div class="form-group"><label>体重 (kg)</label><input type="number" step="0.1" v-model="form.weight"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-chart-simple"></i> 六维属性</div>
+                    <div class="form-grid stats-grid">
+                        <div class="form-group"><label>生命 (HP)</label><input type="number" v-model.number="form.stats.hp"></div>
+                        <div class="form-group"><label>攻击 (ATK)</label><input type="number" v-model.number="form.stats.atk"></div>
+                        <div class="form-group"><label>防御 (DEF)</label><input type="number" v-model.number="form.stats.def"></div>
+                        <div class="form-group"><label>特攻 (SPA)</label><input type="number" v-model.number="form.stats.spAtk"></div>
+                        <div class="form-group"><label>特防 (SPD)</label><input type="number" v-model.number="form.stats.spDef"></div>
+                        <div class="form-group"><label>速度 (SPE)</label><input type="number" v-model.number="form.stats.spd"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-book-open"></i> 精灵介绍</div>
+                    <textarea v-model="form.description" class="custom-textarea" rows="3" placeholder="填写精灵的背景或介绍..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="savePet" :disabled="isSaving">
+                    <i class="fa-solid" :class="isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
+                    {{ isSaving ? '处理中…' : '保存到本地' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 独立选择器弹窗 -->
+    <div class="modal-overlay" v-if="showSelectionModal" @vowmon:modal-close="closeModal('selection')" style="z-index: 1100;">
+        <div class="selection-modal" @click.stop>
+            <div class="modal-header">
+                <h3>选择{{ selectionType === 'ability' ? '特性' : '蛋组' }}</h3>
+                <button class="btn-close" @click="showSelectionModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="selectionSearchQuery" placeholder="输入关键词搜索..." @input="selectionPage = 1">
+            </div>
+            
+            <div class="selection-list">
+                <div 
+                    class="selection-item" 
+                    v-for="item in paginatedSelectionList" 
+                    :key="item.key"
+                    @click="selectFromModal(item)"
+                >
+                    <div class="item-name">{{ item.key }}</div>
+                    <div class="item-desc" v-if="item.desc">{{ item.desc }}</div>
+                </div>
+                <div v-if="paginatedSelectionList.length === 0" class="empty-state">没有找到相关数据</div>
+            </div>
+            
+            <div class="selection-pagination">
+                <span>共 {{ filteredSelectionList.length }} 条</span>
+                <div class="page-controls">
+                    <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="selectionPage === 1" @click="selectionPage--">上一页</button>
+                    <span style="font-weight: bold; margin: 0 10px;">{{ selectionPage }} / {{ Math.ceil(filteredSelectionList.length / 10) || 1 }}</span>
+                    <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="selectionPage >= Math.ceil(filteredSelectionList.length / 10)" @click="selectionPage++">下一页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
+        <div class="delete-modal" @click.stop>
+            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>确认删除</h3>
+            <p>您确定要永久删除精灵 <strong>{{ deleteTargetName }}</strong> 吗？此操作不可撤销。</p>
+            <div class="delete-actions">
+                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
+                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="data/vow-data.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/image-utils.js"></script>
+<script src="js/common-ui.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

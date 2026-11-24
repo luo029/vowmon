@@ -1,0 +1,354 @@
+/* ==========================================================================
+   Vowmon Wiki 全站导航 —— 内容与交互唯一来源
+   --------------------------------------------------------------------------
+   改导航（增删菜单、改链接、改文字）只改这个文件 + navbar.css，
+   不需要再去每个 html 里改一遍。
+
+   使用方式：
+       <head> 里：
+           <link rel="stylesheet" href="navbar.css">
+           <script src="navbar.js" defer></script>
+       <body> 里：
+           <div id="site-navbar"></div>
+
+   navbar.js 会自动：
+     1. 渲染整条导航；
+     2. 根据当前文件名高亮对应菜单；
+     3. 绑定动效开关（localStorage: vowmon_anim_on）；
+     4. 绑定搜索框（回车跳到 list.html?q=关键字）；
+     5. 绑定移动端汉堡菜单与下拉展开。
+   ========================================================================== */
+(function () {
+    'use strict';
+
+    /* ---------------------------------------------------------------- 配置 */
+
+    var SITE_NAME = 'Vowmon Wiki';
+    var HOME = 'index.html';
+
+    // 导航结构：改这里就能改全站
+    var NAV = [
+        { key: 'home', label: '首页', href: HOME },
+        {
+            key: 'dex', label: '图鉴', href: 'vowdex.html',
+            columns: [
+                {
+                    title: '精灵资料',
+                    links: [
+                        { label: '精灵图鉴', href: 'vowdex.html' },
+                        { label: '精灵列表', href: 'list.html' },
+                        { label: '技能图鉴', href: 'skills.html' },
+                        { label: '特性大全', href: 'traits.html' },
+                        { label: '性格大全', href: 'natures.html' }
+                    ]
+                },
+                {
+                    title: '生态与物品',
+                    links: [
+                        { label: '物品图鉴', href: 'items.html' },
+                        { label: '精灵果实', soon: true }
+                    ]
+                },
+                {
+                    title: '世界观',
+                    links: [
+                        { label: '十八生态界', soon: true },
+                        { label: '元域演化史', soon: true }
+                    ]
+                }
+            ]
+        },
+        {
+            key: 'tools', label: '工具', href: 'calculator.html',
+            columns: [
+                {
+                    title: '查询与计算',
+                    links: [
+                        { label: '⚖️ 属性克制计算器', href: 'calculator.html' },
+                        { label: '🎯 技能打击面计算器', href: 'coverage.html' }
+                    ]
+                },
+                {
+                    title: '管理',
+                    links: [
+                        { label: '🛠️ 管理者后台', href: 'admin.html' },
+                        { label: '🖼️ 图片管理', href: 'admin-images.html' },
+                        { label: '📦 物品管理', href: 'admin-items.html' }
+                    ]
+                }
+            ]
+        },
+        { key: 'map', label: '地图', soon: true }
+    ];
+
+    // 文件名 -> 高亮哪个菜单
+    var ACTIVE_MAP = {
+        'index.html': 'home',
+        'vowdex.html': 'dex',
+        'list.html': 'dex',
+        'skills.html': 'dex',
+        'traits.html': 'dex',
+        'natures.html': 'dex',
+        'items.html': 'dex',
+        'calculator.html': 'tools',
+        'coverage.html': 'tools',
+        'admin.html': 'tools',
+        'admin-items.html': 'tools',
+        'admin-images.html': 'tools'
+    };
+
+    var LOGO_SVG =
+        '<svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">' +
+        '<stop offset="0%" stop-color="#ff9a9e" /><stop offset="100%" stop-color="#fecfef" /></linearGradient></defs>' +
+        '<path d="M50,5 L90,25 L90,75 L50,95 L10,75 L10,25 Z" fill="url(#logoGrad)" stroke="#fff" stroke-width="3"/>' +
+        '<circle cx="50" cy="50" r="20" fill="#fff" opacity="0.8"/>' +
+        '<path d="M40,55 Q50,65 60,55 M35,40 Q45,30 50,45 M55,45 Q65,30 65,40" stroke="#ff6b6b" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+        '</svg>';
+
+    var SEARCH_SVG =
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+
+    var MENU_SVG =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" aria-hidden="true">' +
+        '<line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line>' +
+        '<line x1="3" y1="18" x2="21" y2="18"></line></svg>';
+
+    /* ---------------------------------------------------------------- 工具 */
+
+    function esc(text) {
+        return String(text == null ? '' : text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function currentFile() {
+        var parts = window.location.pathname.split('/');
+        var file = parts[parts.length - 1];
+        return (file || 'index.html').toLowerCase();
+    }
+
+    function activeKey() {
+        return ACTIVE_MAP[currentFile()] || '';
+    }
+
+    function isAnimOn() {
+        return localStorage.getItem('vowmon_anim_on') !== 'false';
+    }
+
+    function applyAnim() {
+        var on = isAnimOn();
+        document.body.classList.toggle('no-anim', !on);
+        var btn = document.getElementById('siteAnimToggle');
+        if (btn) {
+            btn.textContent = on ? '✨ 动效：开' : '🚫 动效：关';
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+    }
+
+    function toggleAnim() {
+        localStorage.setItem('vowmon_anim_on', isAnimOn() ? 'false' : 'true');
+        applyAnim();
+    }
+
+    function linkHtml(link, cls) {
+        if (link.soon) {
+            return '<a href="javascript:void(0)" class="' + (cls || '') + ' soon" aria-disabled="true">' +
+                esc(link.label) + '<span class="soon-tag">敬请期待</span></a>';
+        }
+        return '<a href="' + esc(link.href) + '" class="' + (cls || '') + '">' + esc(link.label) + '</a>';
+    }
+
+    function itemHtml(item, active) {
+        var isActive = item.key === active;
+
+        if (!item.columns) {
+            if (item.soon) {
+                return '<a href="javascript:void(0)" class="soon" aria-disabled="true">' +
+                    esc(item.label) + '<span class="soon-tag">敬请期待</span></a>';
+            }
+            return '<a href="' + esc(item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
+                esc(item.label) + '</a>';
+        }
+
+        var cols = item.columns.map(function (col) {
+            var links = col.links.map(function (l) { return linkHtml(l, ''); }).join('');
+            return '<div class="dropdown-column"><h4>' + esc(col.title) + '</h4>' + links + '</div>';
+        }).join('');
+
+        return '<div class="nav-item has-dropdown">' +
+            '<a href="' + esc(item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
+            esc(item.label) + '<span class="chev">▾</span></a>' +
+            '<div class="dropdown-panel">' + cols + '</div>' +
+            '</div>';
+    }
+
+    /* ---------------------------------------------------------------- 渲染 */
+
+    function buildHtml(active) {
+        var items = NAV.map(function (item) { return itemHtml(item, active); }).join('');
+
+        return '' +
+            '<header class="navbar">' +
+            '<div class="nav-container">' +
+            '<a class="logo" href="' + HOME + '" aria-label="' + esc(SITE_NAME) + ' 首页">' +
+            LOGO_SVG + '<span>' + esc(SITE_NAME) + '</span></a>' +
+            '<nav class="nav-links" id="siteNavLinks" aria-label="主导航">' + items + '</nav>' +
+            '<div class="nav-actions">' +
+            '<a href="javascript:void(0)" class="anim-toggle" id="siteAnimToggle" role="button" tabindex="0">✨ 动效：开</a>' +
+            '<button type="button" class="search-icon" id="siteSearchBtn" aria-label="打开搜索">' + SEARCH_SVG + '</button>' +
+            '<button type="button" class="nav-toggle" id="siteNavToggle" aria-label="打开菜单" aria-expanded="false">' + MENU_SVG + '</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="nav-search" id="siteNavSearch">' +
+            '<div class="nav-search-inner">' +
+            '<input id="siteSearchInput" type="search" placeholder="搜索精灵名称或编号，回车直达精灵列表…" autocomplete="off">' +
+            '<button type="button" id="siteSearchGo">搜索</button>' +
+            '</div>' +
+            '</div>' +
+            '</header>';
+    }
+
+    function isMobile() {
+        return window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    function goSearch() {
+        var input = document.getElementById('siteSearchInput');
+        if (!input) return;
+        var keyword = input.value.trim();
+        if (!keyword) {
+            input.focus();
+            return;
+        }
+        window.location.href = 'list.html?q=' + encodeURIComponent(keyword);
+    }
+
+    function bind() {
+        var navLinks = document.getElementById('siteNavLinks');
+        var navToggle = document.getElementById('siteNavToggle');
+        var searchBtn = document.getElementById('siteSearchBtn');
+        var searchBox = document.getElementById('siteNavSearch');
+        var searchInput = document.getElementById('siteSearchInput');
+        var searchGo = document.getElementById('siteSearchGo');
+        var animBtn = document.getElementById('siteAnimToggle');
+
+        if (animBtn) {
+            animBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                toggleAnim();
+            });
+            animBtn.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleAnim();
+                }
+            });
+        }
+
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = navLinks.classList.toggle('open');
+                navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (searchBox) searchBox.classList.remove('open');
+            });
+        }
+
+        if (navLinks) {
+            navLinks.addEventListener('click', function (e) {
+                var link = e.target.closest ? e.target.closest('a') : null;
+                if (!link) return;
+                var item = link.parentElement;
+                // 只有「图鉴 / 工具」这一级的父链接负责开合面板，面板里的子链接正常跳转
+                var isParentLink = item && item.classList.contains('has-dropdown') &&
+                    item.firstElementChild === link;
+                if (!isParentLink) return;
+
+                e.preventDefault();
+                var willOpen = !item.classList.contains('open');
+                var opened = navLinks.querySelectorAll('.has-dropdown.open');
+                for (var i = 0; i < opened.length; i++) opened[i].classList.remove('open');
+                if (willOpen) item.classList.add('open');
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape' || !navLinks) return;
+            var opened = navLinks.querySelectorAll('.has-dropdown.open');
+            for (var i = 0; i < opened.length; i++) opened[i].classList.remove('open');
+            navLinks.classList.remove('open');
+            if (searchBox) searchBox.classList.remove('open');
+        });
+
+        if (searchBtn && searchBox) {
+            searchBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = searchBox.classList.toggle('open');
+                if (navLinks) navLinks.classList.remove('open');
+                if (open && searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    goSearch();
+                } else if (e.key === 'Escape') {
+                    if (searchBox) searchBox.classList.remove('open');
+                }
+            });
+        }
+
+        if (searchGo) {
+            searchGo.addEventListener('click', function (e) {
+                e.preventDefault();
+                goSearch();
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            var navbar = document.querySelector('.navbar');
+            if (!navbar) return;
+            if (navbar.contains(e.target)) return;
+            if (navLinks) {
+                navLinks.classList.remove('open');
+                var opened = navLinks.querySelectorAll('.has-dropdown.open');
+                for (var i = 0; i < opened.length; i++) opened[i].classList.remove('open');
+            }
+            if (searchBox) searchBox.classList.remove('open');
+        });
+    }
+
+    function render() {
+        var host = document.getElementById('site-navbar');
+        if (!host) return;
+        host.innerHTML = buildHtml(activeKey());
+        bind();
+        applyAnim();
+    }
+
+    window.VowmonNav = {
+        render: render,
+        applyAnim: applyAnim,
+        toggleAnim: toggleAnim,
+        config: NAV
+    };
+
+    applyAnim();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', render);
+    } else {
+        render();
+    }
+})();

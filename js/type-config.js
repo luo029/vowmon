@@ -1,0 +1,20 @@
+const typeData = [
+    { name: '一般', icon: 'fa-solid fa-star', color: '#A8A77A' },
+    { name: '格斗', icon: 'fa-solid fa-hand-fist', color: '#C22E28' },
+    { name: '飞行', icon: 'fa-solid fa-feather', color: '#A98FF3' },
+    { name: '毒', icon: 'fa-solid fa-skull-crossbones', color: '#A33EA1' },
+    { name: '地面', icon: 'fa-solid fa-mountain-sun', color: '#E2BF65' },
+    { name: '岩石', icon: 'fa-solid fa-cubes', color: '#B6A136' },
+    { name: '虫', icon: 'fa-solid fa-bug', color: '#A6B91A' },
+    { name: '幽灵', icon: 'fa-solid fa-ghost', color: '#735797' },
+    { name: '钢', icon: 'fa-solid fa-gear', color: '#B7B7CE' },
+    { name: '火', icon: 'fa-solid fa-fire', color: '#EE8130' },
+    { name: '水', icon: 'fa-solid fa-droplet', color: '#6390F0' },
+    { name: '草', icon: 'fa-solid fa-leaf', color: '#7AC74C' },
+    { name: '电', icon: 'fa-solid fa-bolt', color: '#F7D02C' },
+    { name: '超能力', icon: 'fa-solid fa-eye', color: '#F95587' },
+    { name: '冰', icon: 'fa-solid fa-snowflake', color: '#96D9D6' },
+    { name: '龙', icon: 'fa-solid fa-dragon', color: '#6F35FC' },
+    { name: '恶', icon: 'fa-solid fa-moon', color: '#705746' },
+    { name: '妖精', icon: 'fa-solid fa-heart', color: '#EE99AC' }
+];

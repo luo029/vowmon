@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 技能管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <header class="topbar">
+        <h1><i class="fa-solid fa-fire"></i> 技能管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='admin.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步技能数据' }}
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html" class="active"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">技能数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ skills.length }} 条</span></h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="col-settings-wrap">
+                        <button class="btn btn-outline" :class="{ active: showColSettings }" @click.stop="showColSettings = !showColSettings">
+                            <i class="fa-solid fa-table-columns"></i> 显示列
+                            <i class="fa-solid fa-chevron-down" style="font-size: 11px; margin-left: 2px;"></i>
+                        </button>
+                        <div class="col-settings-dropdown" v-show="showColSettings" @click.stop>
+                            <label class="checkbox-item" v-for="(label, key) in allColumns" :key="key">
+                                <input type="checkbox" v-model="visibleCols" :value="key"> {{ label }}
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加新技能</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th v-if="visibleCols.includes('name')">技能名称</th>
+                            <th v-if="visibleCols.includes('type')">属性</th>
+                            <th v-if="visibleCols.includes('category')">分类</th>
+                            <th v-if="visibleCols.includes('cost')">能耗</th>
+                            <th v-if="visibleCols.includes('power')">威力</th>
+                            <th v-if="visibleCols.includes('tags')">标签</th>
+                            <th v-if="visibleCols.includes('effect')">效果</th>
+                            <th style="text-align: right;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(skill, index) in skills" :key="index">
+                            <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ skill.name }}</td>
+                            <td v-if="visibleCols.includes('type')">
+                                <div class="type-pill-cell">
+                                    <span class="type-pill" :style="{ backgroundColor: getTypeColor(skill.type) }">
+                                        <i :class="getTypeIcon(skill.type)"></i> {{ skill.type }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td v-if="visibleCols.includes('category')">
+                                <span class="category-pill" :style="{ backgroundColor: getCategoryColor(skill.category) }">
+                                    <i :class="getCategoryIcon(skill.category)"></i> {{ skill.category }}
+                                </span>
+                            </td>
+                            <td v-if="visibleCols.includes('cost')">{{ skill.cost }}</td>
+                            <td v-if="visibleCols.includes('power')">{{ skill.power || '-' }}</td>
+                            <td v-if="visibleCols.includes('tags')">
+                                <div class="tag-pill-cell">
+                                    <span v-for="tag in (skill.tags || [])" :key="tag" class="tag-pill" :style="{ backgroundColor: getTagColor(tag) }"><i :class="getTagIcon(tag)"></i> {{ tag }}</span>
+                                    <span v-if="!(skill.tags || []).length" style="color:#cbd5e0;">-</span>
+                                </div>
+                            </td>
+                            <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ skill.effect }}</td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <button class="action-btn edit-btn" @click.stop="openEditor(skill, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                                <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(index, skill.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" style="width: 650px;" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑技能' : '添加技能' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group full" style="grid-column: span 2;"><label>技能名称</label><input v-model="form.name"></div>
+                    
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>技能属性 (单选)</label>
+                        <div class="type-pill-select">
+                            <span class="type-pill-option" v-for="t in typeData" :key="t.name"
+                                  :class="{ active: form.type === t.name }"
+                                  :style="form.type === t.name ? { backgroundColor: t.color, borderColor: t.color } : { color: t.color }"
+                                  @click="form.type = t.name">
+                                <i :class="t.icon"></i> {{ t.name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>技能分类</label>
+                        <div class="custom-select" :class="{ 'is-open': activeDropdown === 'category' }" @click.stop="activeDropdown = activeDropdown === 'category' ? '' : 'category'" @vowmon-dropdown-close="activeDropdown = ''">
+                            <div class="select-display"><span><span class="cat-icon" :style="{ backgroundColor: getCategoryColor(form.category) }"><i :class="getCategoryIcon(form.category)"></i></span>{{ form.category }}</span> <i class="fa-solid fa-chevron-down"></i></div>
+                            <div class="dropdown-options" v-show="activeDropdown === 'category'">
+                                <div class="dropdown-item" v-for="opt in skillCategories" :key="opt" @click.stop="form.category = opt; activeDropdown = ''"><span class="cat-icon" :style="{ backgroundColor: getCategoryColor(opt) }"><i :class="getCategoryIcon(opt)"></i></span>{{ opt }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>能耗</label><input type="number" v-model.number="form.cost"></div>
+                    <div class="form-group"><label>威力 (无则填0)</label><input type="number" v-model.number="form.power"></div>
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>技能标签 (可多选，支持搜索 / 新建 / 删除)</label>
+                        <div class="tag-selector">
+                            <!-- 已选标签：点 × 取消选择 -->
+                            <div class="tag-selected" v-if="form.tags && form.tags.length">
+                                <span class="tag-chip" v-for="name in form.tags" :key="name"
+                                      :style="{ backgroundColor: getTagColor(name) }">
+                                    <i :class="getTagIcon(name)"></i> {{ name }}
+                                    <i class="fa-solid fa-xmark tag-chip-remove" @click.stop="toggleTag(name)"></i>
+                                </span>
+                            </div>
+                            <!-- 搜索框 -->
+                            <div class="tag-search-wrap">
+                                <i class="fa-solid fa-magnifying-glass tag-search-ico"></i>
+                                <input type="text" v-model="tagQuery" class="tag-search-input"
+                                       placeholder="搜索标签，或输入新名称后回车创建…"
+                                       @focus="showTagDropdown = true"
+                                       @keydown.enter.prevent="canCreateTag ? createTag() : (filteredTagOptions.length && toggleTag(filteredTagOptions[0].name))">
+                            </div>
+                            <!-- 候选下拉：搜索匹配 + 新建 + 删除 -->
+                            <div class="tag-dropdown" v-show="showTagDropdown">
+                                <div class="tag-option" v-for="t in filteredTagOptions" :key="t.name">
+                                    <span class="tag-opt-main" @click.stop="toggleTag(t.name)">
+                                        <span class="tag-dot" :style="{ backgroundColor: t.color }"><i :class="t.icon"></i></span>
+                                        {{ t.name }}
+                                    </span>
+                                    <i class="fa-solid fa-trash-can tag-opt-del" :title="'删除标签 ' + t.name" @click.stop="deleteTag(t.name)"></i>
+                                </div>
+                                <div class="tag-option create" v-if="canCreateTag" @click.stop="createTag()">
+                                    <span class="tag-opt-main"><i class="fa-solid fa-plus"></i> 新建「{{ tagQuery.trim() }}」</span>
+                                </div>
+                                <div class="tag-empty" v-if="!filteredTagOptions.length && !canCreateTag">没有匹配的标签</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group full" style="grid-column: span 2;"><label>技能效果</label><textarea v-model="form.effect" class="custom-textarea" rows="3"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="saveSkill">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
+        <div class="delete-modal" @click.stop>
+            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>确认删除</h3>
+            <p>确定要删除技能 <strong>{{ deleteTargetName }}</strong> 吗？</p>
+            <div class="delete-actions">
+                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
+                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统一引入 assets 目录下的文件 -->
+<script src="js/type-config.js"></script>
+<script src="js/category-config.js"></script>
+<script src="js/tag-config.js"></script>
+<script src="data/skills-data.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/common-ui.js"></script>
+<script src="js/admin-skills.js"></script>
+</body>
+</html>

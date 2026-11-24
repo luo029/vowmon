@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 性格大全</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+
+        .container { max-width: 1200px; margin: 30px auto; background: #fffaf3; border-radius: 24px; padding: 30px; border: 1px solid #fde6c8; }
+
+        /* 面包屑 */
+        .breadcrumb { font-size: 13px; color: #b08d5a; font-weight: 700; margin-bottom: 14px; }
+        .breadcrumb a { color: #b08d5a; text-decoration: none; }
+        .breadcrumb a:hover { color: #dd6b20; }
+        .breadcrumb span { margin: 0 8px; color: #d9b98a; }
+
+        .page-title { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 900; color: #744210; margin-bottom: 14px; }
+        .page-title i { color: #dd6b20; }
+        .intro { font-size: 14px; line-height: 1.9; color: #8a6d47; font-weight: 700; margin-bottom: 16px; }
+        .intro b { color: #dd6b20; }
+
+
+        /* 区块卡片 */
+        .section { background: #fff; border: 1px solid #f6e3c8; border-radius: 18px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(221,107,32,.04); }
+        .section-title { font-size: 18px; font-weight: 900; color: #744210; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: #dd6b20; }
+        .section-sub { font-size: 12px; color: #b08d5a; font-weight: 700; margin-bottom: 18px; }
+
+        /* 性格速查矩阵 */
+        .matrix-wrap { overflow-x: auto; }
+        .matrix { border-collapse: separate; border-spacing: 4px; margin: 0 auto; min-width: 560px; }
+        .matrix th, .matrix td { min-width: 96px; height: 52px; text-align: center; font-size: 14px; font-weight: 800; border-radius: 9px; padding: 6px; }
+        .matrix thead th { color: #fff; border: none; }
+        .matrix tbody th { color: #fff; border: none; }
+        .matrix td.corner { background: transparent; }
+        .matrix td.empty { background: #faf5ee; color: #d9c7ae; }
+        .matrix td.cell { background: #fff; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+        .matrix td.cell:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+        .matrix td.cell.active { outline: 3px solid #dd6b20; }
+        .matrix-legend { text-align: center; font-size: 12px; color: #b08d5a; font-weight: 700; margin-top: 14px; }
+
+        .neutral-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+        .neutral-chip { background: #f7f0e6; border: 1px solid #ecd9bf; color: #8a6d47; font-size: 12px; font-weight: 800; padding: 5px 12px; border-radius: 999px; cursor: pointer; transition: background .12s; }
+        .neutral-chip:hover, .neutral-chip.active { background: #fbd9a8; color: #744210; }
+
+        /* 筛选区 */
+        .filter-row { display: flex; align-items: flex-start; margin-bottom: 14px; gap: 12px; }
+        .filter-label { font-size: 13px; font-weight: 800; color: #744210; min-width: 80px; padding-top: 7px; flex-shrink: 0; }
+        .filter-options { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+        .filter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; border: 1px solid #ecd9bf; background: #fff; color: #5a4a3a; cursor: pointer; font-size: 13px; font-weight: 800; user-select: none; transition: background .12s, box-shadow .12s; }
+        .filter-btn:hover { border-color: #f6ad55; }
+        .filter-btn.active { background: #dd6b20; color: #fff; border-color: #dd6b20; box-shadow: 0 3px 10px rgba(221,107,32,.28); }
+        .filter-btn .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .filter-btn.active .dot { box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+
+        .search-row { margin-bottom: 18px; }
+        .search-box { position: relative; max-width: 460px; }
+        .search-box .search-ico { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #dd6b20; font-size: 15px; pointer-events: none; }
+        .search-box input { width: 100%; padding: 11px 16px 11px 42px; border: 2px solid #f6e2c8; border-radius: 12px; outline: none; font-size: 14px; font-weight: 700; background: #fff; }
+        .search-box input:focus { border-color: #f6ad55; box-shadow: 0 0 0 4px rgba(246,173,85,.18); }
+
+        .result-count { font-size: 13px; color: #8a6d47; font-weight: 800; margin-bottom: 14px; }
+
+        /* 性格卡片网格 */
+        .nature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+        .nature-card { background: #fff; border: 1px solid #f0dcc0; border-radius: 14px; padding: 16px; transition: transform .15s, box-shadow .15s, border-color .15s; }
+        .nature-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(221,107,32,.12); }
+        .nature-card.highlight { border-color: #dd6b20; box-shadow: 0 0 0 3px rgba(221,107,32,.2); }
+        .card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+        .card-name { font-size: 18px; font-weight: 900; color: #744210; }
+        .card-en { font-size: 12px; color: #b08d5a; font-weight: 700; }
+        .card-ja { font-size: 11px; color: #c4a67c; font-weight: 700; margin-top: -8px; margin-bottom: 10px; }
+        .mod-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .mod { flex: 1; text-align: center; padding: 7px 4px; border-radius: 9px; font-size: 12px; font-weight: 800; color: #fff; }
+        .mod.up { background: #48bb78; }
+        .mod.down { background: #e53e3e; }
+        .mod.neutral { background: #cbd5e0; color: #718096; }
+
+        .empty-state { text-align: center; color: #b08d5a; padding: 50px 20px; font-weight: 700; }
+
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css">
+    <script src="js/navbar.js" defer></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <div class="breadcrumb"><a href="index.html">首页</a><span>/</span><a href="vowdex.html">图鉴</a><span>/</span>性格</div>
+
+        <div class="page-title"><i class="fa-solid fa-brain"></i> 性格</div>
+        <p class="intro">性格是精灵与生俱来的特质，<b>出生时随机确定，且无法通过升级改变</b>。不同性格会让精灵的能力值产生 <b>+10% / -10%</b> 的波动——提高一项能力的同时，往往会降低另一项。另外还有 5 种<b>中性性格</b>，不造成任何能力修正。</p>
+
+        <!-- 速查矩阵 -->
+        <div class="section">
+            <div class="section-title"><i class="fa-solid fa-table-cells"></i> 性格速查表</div>
+            <div class="section-sub">横轴为「降低的能力」，纵轴为「提高的能力」，交叉格即为对应性格（点击格子可定位到下方卡片）</div>
+            <div class="matrix-wrap">
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <td class="corner"></td>
+                            <th v-for="s in stats" :key="s.name" :style="{backgroundColor: s.color}">{{ s.name }}↓</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="row in stats" :key="row.name">
+                            <th :style="{backgroundColor: row.color}">{{ row.name }}↑</th>
+                            <td v-for="col in stats" :key="col.name"
+                                :class="cellClass(row.name, col.name)"
+                                :style="cellStyle(row.name, col.name)"
+                                @click="focusNature(row.name, col.name)">
+                                {{ cellText(row.name, col.name) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="matrix-legend">↑ 提高　↓ 降低　— 表示不存在该组合（同一能力不能既提高又降低）</div>
+            <div class="neutral-list">
+                <span class="neutral-chip" v-for="n in neutralNatures" :key="n.id"
+                      :class="{active: highlightId === n.id}" @click="focusNeutral(n.id)">{{ n.name }}</span>
+            </div>
+            <div class="matrix-legend">以上是 5 种无能力修正的中性性格（点击定位）</div>
+        </div>
+
+        <!-- 性格卡片 -->
+        <div class="section">
+            <div class="section-title"><i class="fa-solid fa-address-card"></i> 全部性格</div>
+            <div class="section-sub">共 {{ natures.length }} 种性格，可按能力倾向筛选</div>
+
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-ico"></i>
+                    <input type="text" v-model="keyword" placeholder="搜索性格名（中文 / 日文 / 英文）...">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">提高的能力</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: selectedUp.includes(s.name)}" v-for="s in stats" :key="s.name" @click="toggleUp(s.name)">
+                        <span class="dot" :style="{backgroundColor: s.color}"></span>{{ s.name }}
+                    </div>
+                    <div class="filter-btn" :class="{active: selectedUp.includes('无')}" @click="toggleUp('无')">无修正</div>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-label">降低的能力</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: selectedDown.includes(s.name)}" v-for="s in stats" :key="s.name" @click="toggleDown(s.name)">
+                        <span class="dot" :style="{backgroundColor: s.color}"></span>{{ s.name }}
+                    </div>
+                    <div class="filter-btn" :class="{active: selectedDown.includes('无')}" @click="toggleDown('无')">无修正</div>
+                </div>
+            </div>
+
+            <div class="result-count">共 {{ filteredNatures.length }} 种性格</div>
+
+            <div class="nature-grid">
+                <div class="nature-card" v-for="n in filteredNatures" :key="n.id" :class="{highlight: highlightId === n.id}">
+                    <div class="card-head">
+                        <span class="card-name">{{ n.name }}</span>
+                        <span class="card-en">{{ n.en }}</span>
+                    </div>
+                    <div class="card-ja">{{ n.ja }}</div>
+                    <div class="mod-row">
+                        <div class="mod" :class="n.up ? 'up' : 'neutral'">{{ n.up ? n.up + ' +10%' : '无加成' }}</div>
+                        <div class="mod" :class="n.down ? 'down' : 'neutral'">{{ n.down ? n.down + ' -10%' : '无减益' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div v-if="!filteredNatures.length" class="empty-state"><i class="fa-solid fa-filter" style="font-size:28px; display:block; margin-bottom:10px;"></i>没有符合条件的性格，试试调整筛选条件</div>
+        </div>
+    </div>
+</div>
+
+<script src="data/natures-data.js"></script>
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const natures = ref(allNaturesData || []);
+            const stats = natureStats;
+
+            const keyword = ref('');
+            const selectedUp = ref([]);
+            const selectedDown = ref([]);
+            const highlightId = ref(null);
+
+            // 中性性格（无能力修正）
+            const neutralNatures = computed(() => natures.value.filter(n => !n.up && !n.down));
+
+            // 矩阵：按「提高 / 降低」定位性格
+            const findNature = (up, down) => natures.value.find(n => n.up === up && n.down === down);
+            const cellText = (up, down) => {
+                if (up === down) return '—';
+                const n = findNature(up, down);
+                return n ? n.name : '—';
+            };
+            const cellClass = (up, down) => {
+                if (up === down) return 'empty';
+                const n = findNature(up, down);
+                return n ? 'cell' : 'empty';
+            };
+            const cellStyle = (up, down) => {
+                const n = findNature(up, down);
+                if (!n) return {};
+                return highlightId.value === n.id
+                    ? { backgroundColor: '#fbd9a8', color: '#744210' }
+                    : { backgroundColor: '#fffaf3', color: '#744210' };
+            };
+            const focusNature = (up, down) => {
+                const n = findNature(up, down);
+                if (!n) return;
+                highlightId.value = n.id;
+                scrollToCard(n.id);
+            };
+            const focusNeutral = (id) => { highlightId.value = id; scrollToCard(id); };
+            const scrollToCard = (id) => {
+                setTimeout(() => {
+                    const cards = document.querySelectorAll('.nature-card');
+                    const idx = natures.value.findIndex(n => n.id === id);
+                    if (cards[idx]) cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 30);
+            };
+
+            // 通用多选切换（ref 数组），模板里通过下面这些包装函数调用
+            const toggleIn = (arrRef, val) => {
+                const arr = arrRef.value;
+                const i = arr.indexOf(val);
+                i > -1 ? arr.splice(i, 1) : arr.push(val);
+            };
+            const toggleUp = (v) => toggleIn(selectedUp, v);
+            const toggleDown = (v) => toggleIn(selectedDown, v);
+
+            const matchGroup = (selected, value, neutralValue) => {
+                if (!selected.length) return true;
+                return selected.some(x => x === value || (x === '无' && neutralValue));
+            };
+            const filteredNatures = computed(() => {
+                const kw = keyword.value.trim().toLowerCase();
+                return natures.value.filter(n => {
+                    const matchKw = !kw || [n.name, n.ja, n.en].join(' ').toLowerCase().includes(kw);
+                    const matchUp = matchGroup(selectedUp.value, n.up, !n.up);
+                    const matchDown = matchGroup(selectedDown.value, n.down, !n.down);
+                    return matchKw && matchUp && matchDown;
+                });
+            });
+
+            onMounted(() => {
+                const isAnimOn = localStorage.getItem('vowmon_anim_on') !== 'false';
+                if (!isAnimOn) document.body.classList.add('no-anim');
+            });
+
+            return {
+                natures, stats, neutralNatures,
+                keyword, selectedUp, selectedDown, highlightId,
+                cellText, cellClass, cellStyle, focusNature, focusNeutral,
+                toggleUp, toggleDown, filteredNatures
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

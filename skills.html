@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 技能图鉴</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+
+        .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 20px; position: relative; }
+        .logo { color: #2c3e50; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo-svg { width: 38px; height: 38px; }
+        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; }
+        .nav-links a { display: block; color: #546e7a; text-decoration: none; font-size: 16px; font-weight: 600; padding: 10px 18px; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { color: #ff6b6b; background: #fff5f5; }
+
+        .container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        .header h2 { font-size: 24px; color: #2c3e50; font-weight: 900; display: flex; align-items: center; gap: 12px; }
+        .header h2 .result-count { font-size: 13px; font-weight: 800; color: #2b6cb0; background: #ebf8ff; border: 1px solid #bee3f8; padding: 3px 12px; border-radius: 999px; }
+
+        /* ---------------- 筛选面板 ---------------- */
+        .filter-area { background: linear-gradient(135deg, #fffdf8 0%, #fffaf2 100%); border: 1px solid #fde6c8; border-radius: 20px; padding: 24px 26px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(221,107,32,.04); }
+        .filter-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px dashed #f3d9b0; padding-bottom: 14px; }
+        .filter-title { font-size: 17px; font-weight: 900; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
+        .filter-title i { color: #dd6b20; }
+        .filter-hint { font-size: 12px; font-weight: 700; color: #c0a276; margin-left: 10px; }
+        .clear-btn { background: #fff; border: 1px solid #f6c99b; color: #dd6b20; font-size: 13px; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-weight: 800; transition: background .15s, box-shadow .15s; }
+        .clear-btn:hover { background: #fff5e6; box-shadow: 0 2px 8px rgba(221,107,32,.12); }
+        .clear-btn i { margin-right: 4px; }
+
+        /* 搜索框 */
+        .search-row { margin-bottom: 20px; }
+        .search-box { position: relative; max-width: 560px; }
+        .search-box .search-ico { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #dd6b20; font-size: 16px; pointer-events: none; }
+        .search-box input { width: 100%; padding: 14px 44px 14px 48px; border: 2px solid #f6e2c8; border-radius: 14px; outline: none; font-size: 15px; font-weight: 700; background: #fff; box-shadow: 0 2px 8px rgba(221,107,32,.05); transition: border-color .15s, box-shadow .15s; }
+        .search-box input::placeholder { color: #b9c2cc; font-weight: 600; }
+        .search-box input:focus { border-color: #f6ad55; box-shadow: 0 0 0 4px rgba(246,173,85,.22); }
+        .search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: #edf2f7; border: none; color: #718096; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+        .search-clear:hover { background: #e2e8f0; color: #2d3748; }
+
+        /* 筛选行 */
+        .filter-row { display: flex; align-items: flex-start; margin-bottom: 14px; gap: 12px; }
+        .filter-row:last-child { margin-bottom: 0; }
+        .filter-label { font-size: 13px; font-weight: 800; color: #744210; min-width: 72px; padding-top: 7px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .filter-label i { color: #dd6b20; font-size: 12px; }
+        .filter-options { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+
+        .filter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; border: 1px solid #ecd9bf; background: #fff; color: #5a4a3a; cursor: pointer; font-size: 13px; font-weight: 800; user-select: none; transition: transform .12s, box-shadow .12s, background .12s, color .12s, border-color .12s; }
+        .filter-btn:hover { transform: translateY(-1px); border-color: #f6ad55; box-shadow: 0 3px 8px rgba(221,107,32,.1); }
+        .filter-btn.active { background: #dd6b20; color: #fff; border-color: #dd6b20; box-shadow: 0 3px 10px rgba(221,107,32,.28); }
+        .filter-btn .count-badge { background: #f7f0e6; color: #a58a68; font-size: 11px; padding: 1px 7px; border-radius: 999px; font-weight: 800; min-width: 20px; text-align: center; }
+        .filter-btn.active .count-badge { background: rgba(255,255,255,.28); color: #fff; }
+
+        /* 筛选按钮里的属性 / 分类 / 标签 图标 */
+        .filter-icon { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 5px; color: #fff; font-size: 9px; flex-shrink: 0; }
+        .filter-btn.active .filter-icon { background: rgba(255,255,255,.9) !important; }
+
+        /* ---------------- 表格 ---------------- */
+        .table-wrapper { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #2d3748; color: #fff; }
+        th { padding: 16px 15px; text-align: left; font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        /* 可排序表头：点击按「大小」排列，箭头指示当前方向 */
+        th.sortable { cursor: pointer; user-select: none; white-space: nowrap; transition: background .15s; }
+        th.sortable:hover { background: #3d4859; }
+        th.sortable .sort-indicator { display: inline-flex; flex-direction: column; margin-left: 5px; vertical-align: middle; line-height: 9px; font-size: 10px; color: #718096; }
+        th.sortable .sort-indicator .on { color: #f6ad55; }
+        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; vertical-align: middle; }
+        tbody tr:hover { background: #f7fafc; }
+
+        .skill-name { font-weight: 900; color: #2d3748; }
+        .type-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: bold; }
+        .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; }
+        /* 分类与标签胶囊：图标 + 文字，配色取自 category-config.js / tag-config.js */
+        .cat-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: #2d3748; }
+        .cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; color: #fff; font-size: 11px; flex-shrink: 0; }
+        .tag-cell { display: flex; flex-wrap: wrap; gap: 5px; }
+        .tag-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; }
+        .tag-pill i { font-size: 10px; }
+        .empty-state { text-align: center; color: #a0aec0; padding: 50px 20px; font-weight: 700; }
+
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css">
+    <script src="js/navbar.js" defer></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <div class="header">
+            <h2>技能列表 <span class="result-count font-num">共 {{ filteredSkills.length }} 条</span></h2>
+        </div>
+
+        <div class="filter-area">
+            <div class="filter-top">
+                <div>
+                    <span class="filter-title"><i class="fa-solid fa-sliders"></i> 筛选技能</span>
+                    <span class="filter-hint">同组可多选，不同组同时满足</span>
+                </div>
+                <button class="clear-btn" @click="clearFilters"><i class="fa-solid fa-rotate-left"></i> 清空筛选</button>
+            </div>
+
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-ico"></i>
+                    <input type="text" v-model="searchName" placeholder="输入技能名称、效果或标签...">
+                    <button v-if="searchName" class="search-clear" @click="searchName = ''" title="清空搜索"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label"><i class="fa-solid fa-shapes"></i>技能类型</div>
+                <div class="filter-options">
+                    <div class="filter-btn" v-for="cat in categories" :key="cat" :class="{active: selectedCategories.includes(cat)}" @click="toggleCategory(cat)">
+                        <span class="filter-icon" :style="{backgroundColor: getCategoryColor(cat)}"><i :class="getCategoryIcon(cat)"></i></span>
+                        {{ cat }} <span class="count-badge font-num">{{ getCategoryCount(cat) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label"><i class="fa-solid fa-bolt"></i>能耗</div>
+                <div class="filter-options">
+                    <div class="filter-btn" v-for="c in costOptions" :key="c" :class="{active: selectedCosts.includes(c)}" @click="toggleCost(c)">
+                        {{ c }} <span class="count-badge font-num">{{ getCostCount(c) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label"><i class="fa-solid fa-tags"></i>技能标签</div>
+                <div class="filter-options">
+                    <div class="filter-btn" v-for="t in usedTagNames" :key="t" :class="{active: selectedTags.includes(t)}" @click="toggleTag(t)">
+                        <span class="filter-icon" :style="{backgroundColor: getTagColor(t)}"><i :class="getTagIcon(t)"></i></span>
+                        {{ t }} <span class="count-badge font-num">{{ getTagCount(t) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label"><i class="fa-solid fa-water"></i>技能系别</div>
+                <div class="filter-options">
+                    <div class="filter-btn" v-for="t in typeOptions" :key="t" :class="{active: selectedTypes.includes(t)}" @click="toggleType(t)">
+                        <span class="filter-icon" :style="{backgroundColor: getTypeColor(t)}"><i :class="getTypeIcon(t)"></i></span>
+                        {{ t }} <span class="count-badge font-num">{{ getTypeCount(t) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sortable" @click="sortBy('name')">技能名称<span class="sort-indicator" v-html="sortArrow('name')"></span></th>
+                        <th class="sortable" @click="sortBy('type')">技能属性<span class="sort-indicator" v-html="sortArrow('type')"></span></th>
+                        <th class="sortable" @click="sortBy('category')">技能类型<span class="sort-indicator" v-html="sortArrow('category')"></span></th>
+                        <th class="sortable" @click="sortBy('cost')">能耗<span class="sort-indicator" v-html="sortArrow('cost')"></span></th>
+                        <th class="sortable" @click="sortBy('power')">威力<span class="sort-indicator" v-html="sortArrow('power')"></span></th>
+                        <th style="width: 32%;">技能效果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="skill in sortedSkills" :key="skill.id">
+                        <td class="skill-name">{{ skill.name }}</td>
+                        <td>
+                            <span class="type-tag">
+                                <span class="type-icon" :style="{backgroundColor: getTypeColor(skill.type)}"><i :class="getTypeIcon(skill.type)"></i></span>
+                                {{ skill.type }}系
+                            </span>
+                        </td>
+                        <td>
+                            <span class="cat-tag">
+                                <span class="cat-icon" :style="{backgroundColor: getCategoryColor(skill.category)}"><i :class="getCategoryIcon(skill.category)"></i></span>
+                                {{ skill.category }}
+                            </span>
+                        </td>
+                        <td class="font-num">{{ skill.cost }}</td>
+                        <td class="font-num">{{ skill.power || '-' }}</td>
+                        <td style="color: #718096;">{{ skill.effect }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-if="!filteredSkills.length" class="empty-state"><i class="fa-solid fa-filter" style="font-size:28px; display:block; margin-bottom:10px;"></i>没有符合条件的技能，试试调整筛选条件</div>
+        </div>
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="js/category-config.js"></script>
+<script src="js/tag-config.js"></script>
+<script src="data/skills-data.js"></script>
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            // 技能分类只保留三类：物理 / 特殊 / 变化；分类名与图标/配色均取自 category-config.js（唯一来源）
+            const categories = categoryNames;
+            const CATEGORY_ALIAS = {
+                '物攻': '物理', '物理': '物理',
+                '魔攻': '特殊', '特殊': '特殊',
+                '防御': '变化', '状态': '变化', '变化': '变化'
+            };
+            const normalizeCategory = (c) => CATEGORY_ALIAS[c] || categories[0];
+            // 数据规整：category 归一到三类；tags 保证是数组且都在 tag-config.js 里登记过
+            const skills = ref((allSkillsData || []).map(s => ({
+                ...s,
+                category: normalizeCategory(s.category),
+                // 保留所有字符串标签（含后台新建的自定义标签），不能按内置 tagNames 过滤
+                tags: Array.isArray(s.tags) ? s.tags.map(t => String(t)).filter(t => t && t.trim()) : []
+            })));
+
+            const searchName = ref('');
+            const selectedCategories = ref([]);
+            const selectedCosts = ref([]);
+            const selectedTags = ref([]);
+            const selectedTypes = ref([]);
+
+            // 表头排序：sortKey 为列名，sortOrder 为 asc / desc / ''（原序）
+            const sortKey = ref('');
+            const sortOrder = ref('');
+            const sortBy = (key) => {
+                if (sortKey.value !== key) { sortKey.value = key; sortOrder.value = 'asc'; }
+                else if (sortOrder.value === 'asc') sortOrder.value = 'desc';
+                else if (sortOrder.value === 'desc') { sortKey.value = ''; sortOrder.value = ''; }
+                else sortOrder.value = 'asc';
+            };
+            // 返回上下箭头 HTML：当前列高亮当前方向
+            const sortArrow = (key) => {
+                const on = sortKey.value === key ? sortOrder.value : '';
+                return '<i class="fa-solid fa-caret-up' + (on === 'asc' ? ' on' : '') + '"></i>'
+                     + '<i class="fa-solid fa-caret-down' + (on === 'desc' ? ' on' : '') + '"></i>';
+            };
+
+            onMounted(() => {
+                const isAnimOn = localStorage.getItem('vowmon_anim_on') !== 'false';
+                if (!isAnimOn) document.body.classList.add('no-anim');
+            });
+
+            const getTypeColor = (type) => typeData.find(t => t.name === type)?.color || '#ccc';
+            const getTypeIcon = (type) => typeData.find(t => t.name === type)?.icon || '';
+
+            // 能耗 / 系别 的可选项直接从现有数据派生，新增技能后自动出现，无需改代码
+            const costOptions = computed(() => [...new Set(skills.value.map(s => Number(s.cost) || 0))].sort((a, b) => a - b));
+            const typeOptions = computed(() => {
+                const used = new Set(skills.value.map(s => s.type));
+                return typeData.filter(t => used.has(t.name)).map(t => t.name);
+            });
+            // 技能标签只显示数据中实际用到的（数量 > 0），按使用数量降序；
+            // 这样后台设置了几个就显示几个，不再列出 tag-config.js 里全部预定义标签。
+            const usedTagNames = computed(() => {
+                const count = new Map();
+                skills.value.forEach(s => (s.tags || []).forEach(t => count.set(t, (count.get(t) || 0) + 1)));
+                return tagNames.filter(t => count.get(t) > 0).sort((a, b) => count.get(b) - count.get(a));
+            });
+
+            // 通用：在 ref 数组里切换某个值（组多选）。
+            // 注意：模板里访问 ref 会自动解包成数组，所以模板不直接调用本函数，
+            // 而是调用下面这些「在 JS 内部持有 ref」的包装函数，避免 arr.value 为 undefined 报错。
+            const toggleIn = (arrRef, val) => {
+                const arr = arrRef.value;
+                const i = arr.indexOf(val);
+                i > -1 ? arr.splice(i, 1) : arr.push(val);
+            };
+            const toggleCategory = (c) => toggleIn(selectedCategories, c);
+            const toggleCost = (c) => toggleIn(selectedCosts, c);
+            const toggleTag = (t) => toggleIn(selectedTags, t);
+            const toggleType = (t) => toggleIn(selectedTypes, t);
+
+            const clearFilters = () => {
+                searchName.value = '';
+                selectedCategories.value = [];
+                selectedCosts.value = [];
+                selectedTags.value = [];
+                selectedTypes.value = [];
+            };
+
+            // 各筛选项的数量角标（基于全量数据，不随其它筛选变化）
+            const getCategoryCount = (cat) => skills.value.filter(s => s.category === cat).length;
+            const getCostCount = (c) => skills.value.filter(s => (Number(s.cost) || 0) === c).length;
+            const getTagCount = (t) => skills.value.filter(s => (s.tags || []).includes(t)).length;
+            const getTypeCount = (t) => skills.value.filter(s => s.type === t).length;
+
+            const filteredSkills = computed(() => {
+                const kw = searchName.value.trim().toLowerCase();
+                return skills.value.filter(s => {
+                    // 搜索：名称 / 效果 / 标签名
+                    const hay = [s.name, s.effect, ...(s.tags || [])].join(' ').toLowerCase();
+                    const matchName = !kw || hay.includes(kw);
+                    // 组内 OR、组间 AND
+                    const matchCat = !selectedCategories.value.length || selectedCategories.value.includes(s.category);
+                    const matchCost = !selectedCosts.value.length || selectedCosts.value.includes(Number(s.cost) || 0);
+                    const matchTag = !selectedTags.value.length || (s.tags || []).some(t => selectedTags.value.includes(t));
+                    const matchType = !selectedTypes.value.length || selectedTypes.value.includes(s.type);
+                    return matchName && matchCat && matchCost && matchTag && matchType;
+                });
+            });
+
+            // 在筛选结果基础上应用表头排序。数值列按数值大小，其余按配置顺序或名称。
+            const sortedSkills = computed(() => {
+                const list = filteredSkills.value.slice();
+                const key = sortKey.value;
+                const order = sortOrder.value;
+                if (!key || !order) return list;
+                const dir = order === 'asc' ? 1 : -1;
+                const numeric = key === 'cost' || key === 'power';
+                const seq = key === 'type' ? typeData.map(t => t.name)
+                          : key === 'category' ? categoryNames : null;
+                return list.sort((a, b) => {
+                    let cmp;
+                    if (numeric) {
+                        cmp = (Number(a[key]) || 0) - (Number(b[key]) || 0);
+                    } else if (seq) {
+                        cmp = seq.indexOf(a[key]) - seq.indexOf(b[key]);
+                    } else {
+                        cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'zh-CN');
+                    }
+                    // 稳定排序：值相等时按名称兜底，避免顺序跳动
+                    if (cmp === 0 && key !== 'name') cmp = String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
+                    return cmp * dir;
+                });
+            });
+
+            return {
+                searchName, categories, usedTagNames, selectedCategories, selectedCosts, selectedTags, selectedTypes,
+                costOptions, typeOptions, filteredSkills, sortedSkills, sortKey, sortOrder, sortBy, sortArrow,
+                toggleCategory, toggleCost, toggleTag, toggleType, clearFilters,
+                getCategoryCount, getCostCount, getTagCount, getTypeCount,
+                getTypeColor, getTypeIcon, getCategoryIcon, getCategoryColor, getTagIcon, getTagColor
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

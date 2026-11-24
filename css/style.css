@@ -1,0 +1,75 @@
+/* 基础与字体 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+.font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+
+/* 导航栏 */
+.navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
+.nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 20px; position: relative; }
+.logo { color: #2c3e50; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 10px; cursor: pointer; z-index: 2; }
+.logo-svg { width: 38px; height: 38px; }
+.nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; z-index: 1; }
+.nav-item { position: relative; }
+.nav-links a { display: block; color: #546e7a; text-decoration: none; font-size: 16px; font-weight: 600; padding: 10px 18px; border-radius: 8px; }
+.nav-links a:hover, .nav-links a.active { color: #ff6b6b; background: #fff5f5; }
+.dropdown-panel { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #ffffff; border-radius: 16px; padding: 25px; min-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f0f4f8; display: flex; gap: 30px; opacity: 0; visibility: hidden; transition: all 0.2s; z-index: 100; }
+.has-dropdown:hover .dropdown-panel { opacity: 1; visibility: visible; }
+.dropdown-column { display: flex; flex-direction: column; min-width: 120px; }
+.dropdown-column h4 { color: #90a4ae; font-size: 13px; margin-bottom: 15px; letter-spacing: 1px; }
+.dropdown-column a { padding: 8px 0; color: #455a64; font-size: 14px; border-radius: 0; background: none !important; }
+.dropdown-column a:hover { color: #ff6b6b; }
+.nav-actions { display: flex; align-items: center; gap: 15px; z-index: 2; }
+.search-icon { cursor: pointer; display: flex; align-items: center; }
+
+/* 主容器 */
+.main-container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; min-height: 800px; }
+.section-title { text-align: center; font-size: 24px; font-weight: 900; color: #2c3e50; margin: 40px 0 25px 0; position: relative; }
+.section-title span { position: relative; z-index: 1; padding: 0 20px; background: #fdfdfd; }
+.section-title::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); z-index: 0; }
+
+/* Banner */
+.hero-banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 24px; padding: 50px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+.banner-content { flex: 1; z-index: 2; }
+.tag { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.hero-banner h1 { margin: 15px 0 10px 0; font-size: 42px; font-weight: 900; line-height: 1.2; }
+.hero-banner p { color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 30px; }
+.banner-btn { background: #fff; color: #764ba2; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.banner-image-area { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+.magic-pokeball { width: 170px; height: 170px; border-radius: 50%; position: relative; overflow: hidden; border: 8px solid #fff; }
+.pb-top { position: absolute; top: 0; width: 100%; height: 50%; background: #ff6b6b; }
+.pb-bottom { position: absolute; bottom: 0; width: 100%; height: 50%; background: #f8f9fa; }
+.pb-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; background: #fff; border-radius: 50%; border: 8px solid #333; }
+.pb-center::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: #fff; border-radius: 50%; border: 4px solid #333; }
+
+/* 首页菜单网格 */
+.menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.menu-card { padding: 30px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; background: #fff; border: 1px solid #f0f4f8; transition: all 0.2s; }
+.menu-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.menu-icon-wrap { width: 64px; height: 64px; border-radius: 18px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+.card-blue .menu-icon-wrap { background: #ebf8ff; }
+.card-yellow .menu-icon-wrap { background: #fffff0; }
+.card-green .menu-icon-wrap { background: #f0fff4; }
+.card-pink .menu-icon-wrap { background: #fff5f7; }
+.menu-text h3 { font-size: 18px; margin-bottom: 8px; color: #2c3e50; font-weight: 900; }
+.menu-text p { font-size: 13px; color: #718096; }
+
+/* 研究工具网格 */
+.tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }
+.tool-card { background: #fff; padding: 20px 30px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #f0f4f8; cursor: pointer; transition: all 0.2s; }
+.tool-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.tool-icon-wrap { width: 56px; height: 56px; border-radius: 16px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+.bg-cyan { background: #e0f7fa; }
+.bg-purple { background: #faf5ff; }
+.bg-orange { background: #fffaf0; }
+.tool-desc h4 { font-size: 16px; color: #2c3e50; margin-bottom: 6px; font-weight: bold; }
+.tool-desc p { font-size: 13px; color: #a0aec0; }
+
+/* 全局动画开关 */
+.no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+
+@media (max-width: 900px) {
+    .menu-grid { grid-template-columns: repeat(2, 1fr); }
+    .tool-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hero-banner { flex-direction: column; text-align: center; padding: 30px; }
+}

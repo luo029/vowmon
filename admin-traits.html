@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 特性管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <header class="topbar">
+        <h1><i class="fa-solid fa-leaf"></i> 特性管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='admin.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步特性数据' }}
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html" class="active"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">特性数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ traits.length }} 条</span></h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="col-settings-wrap">
+                        <button class="btn btn-outline" :class="{ active: showColSettings }" @click.stop="showColSettings = !showColSettings">
+                            <i class="fa-solid fa-table-columns"></i> 显示列
+                            <i class="fa-solid fa-chevron-down" style="font-size: 11px; margin-left: 2px;"></i>
+                        </button>
+                        <div class="col-settings-dropdown" v-show="showColSettings" @click.stop>
+                            <label class="checkbox-item" v-for="(label, key) in allColumns" :key="key">
+                                <input type="checkbox" v-model="visibleCols" :value="key"> {{ label }}
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加新特性</button>
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th v-if="visibleCols.includes('name')">特性名称</th>
+                            <th v-if="visibleCols.includes('types')">属性</th>
+                            <th v-if="visibleCols.includes('pokemons')">拥有精灵</th>
+                            <th v-if="visibleCols.includes('effect')">效果</th>
+                            <th style="text-align: right;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(trait, index) in traits" :key="index">
+                            <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ trait.name }}</td>
+                            <td v-if="visibleCols.includes('types')">
+                                <div class="type-pill-cell">
+                                    <span class="type-pill" v-for="t in trait.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }">
+                                        <i :class="getTypeIcon(t)"></i> {{ t }}
+                                    </span>
+                                </div>
+                            </td>
+                            <!-- 超过3个精灵则显示省略号 -->
+                            <td v-if="visibleCols.includes('pokemons')">
+                                {{ trait.pokemons.slice(0, 3).join(', ') }}
+                                <span v-if="trait.pokemons.length > 3" style="color:#a0aec0;">...</span>
+                            </td>
+                            <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ trait.effect }}</td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <button class="action-btn edit-btn" @click.stop="openEditor(trait, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                                <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(index, trait.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" style="width: 650px;" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑特性' : '添加特性' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group full" style="grid-column: span 2;"><label>特性名称</label><input v-model="form.name"></div>
+                    
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>关联属性 (多选)</label>
+                        <div class="type-pill-select">
+                            <span class="type-pill-option" v-for="t in typeData" :key="t.name"
+                                  :class="{ active: form.types.includes(t.name) }"
+                                  :style="form.types.includes(t.name) ? { backgroundColor: t.color, borderColor: t.color } : { color: t.color }"
+                                  @click="toggleType(t.name)">
+                                <i :class="t.icon"></i> {{ t.name }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>拥有该特性的精灵</label>
+                        <div class="input-with-btn">
+                            <input v-model="pokemonsStr" placeholder="逗号分隔，或点击右侧搜索">
+                            <button class="btn btn-outline btn-icon" @click.stop="openPokemonModal">
+                                <i class="fa-solid fa-magnifying-glass"></i> 搜索精灵
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full" style="grid-column: span 2;"><label>特性效果</label><textarea v-model="form.effect" class="custom-textarea" rows="3"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="saveTrait">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 精灵搜索弹窗 -->
+    <div class="modal-overlay" v-if="showPokemonSearchModal" @vowmon:modal-close="closeModal('pokemon')" style="z-index: 1100;">
+        <div class="selection-modal" @click.stop>
+            <div class="modal-header">
+                <h3>选择拥有该特性的精灵</h3>
+                <button class="btn-close" @click="showPokemonSearchModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="pokemonSearchQuery" placeholder="输入精灵名称搜索..." @input="pokemonPage = 1">
+            </div>
+            
+            <div class="selection-list">
+                <div 
+                    class="selection-item" 
+                    v-for="pet in paginatedPokemons" 
+                    :key="pet.id"
+                    @click="selectPokemon(pet)"
+                >
+                    <div class="item-name">{{ pet.name }}</div>
+                    <div class="item-desc">{{ pet.id }}</div>
+                </div>
+                <div v-if="paginatedPokemons.length === 0" class="empty-state">没有找到相关精灵</div>
+            </div>
+            
+            <div class="selection-pagination">
+                <span>共 {{ filteredPokemons.length }} 条</span>
+                <div class="page-controls">
+                    <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="pokemonPage === 1" @click="pokemonPage--">上一页</button>
+                    <span style="font-weight: bold; margin: 0 10px;">{{ pokemonPage }} / {{ Math.ceil(filteredPokemons.length / 10) || 1 }}</span>
+                    <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="pokemonPage >= Math.ceil(filteredPokemons.length / 10)" @click="pokemonPage++">下一页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
+        <div class="delete-modal" @click.stop>
+            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>确认删除</h3>
+            <p>确定要删除特性 <strong>{{ deleteTargetName }}</strong> 吗？</p>
+            <div class="delete-actions">
+                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
+                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="data/traits-data.js"></script>
+<script src="data/vow-data.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/common-ui.js"></script>
+<script src="js/admin-traits.js"></script>
+</body>
+</html>

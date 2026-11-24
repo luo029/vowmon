@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 精灵列表</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+
+        /* 导航栏 */
+        .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 20px; position: relative; }
+        .logo { color: #2c3e50; font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 10px; cursor: pointer; z-index: 2; }
+        .logo-svg { width: 38px; height: 38px; }
+        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; z-index: 1; }
+        .nav-item { position: relative; }
+        .nav-links a { display: block; color: #546e7a; text-decoration: none; font-size: 16px; font-weight: 600; padding: 10px 18px; border-radius: 8px; }
+        .nav-links a:hover, .nav-links a.active { color: #ff6b6b; background: #fff5f5; }
+        .dropdown-panel { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #ffffff; border-radius: 16px; padding: 25px; min-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f0f4f8; display: flex; gap: 30px; opacity: 0; visibility: hidden; }
+        .has-dropdown:hover .dropdown-panel { opacity: 1; visibility: visible; }
+        .dropdown-column { display: flex; flex-direction: column; min-width: 120px; }
+        .dropdown-column h4 { color: #90a4ae; font-size: 13px; margin-bottom: 15px; }
+        .dropdown-column a { padding: 8px 0; color: #455a64; font-size: 14px; }
+        .dropdown-column a:hover { color: #ff6b6b; background: none; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 15px; z-index: 2; }
+        .anim-toggle { font-size: 14px; font-weight: bold; color: #546e7a; text-decoration: none; padding: 6px 12px; border-radius: 20px; background: #f7fafc; border: 1px solid #e2e8f0; }
+        .anim-toggle:hover { color: #ff6b6b; border-color: #ff6b6b; }
+        .search-icon { cursor: pointer; display: flex; align-items: center; }
+
+        /* 主容器 */
+        .container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 2px solid #f0f4f8; padding-bottom: 15px; }
+        .header h2 { font-size: 24px; color: #2c3e50; font-weight: 900; }
+        .header .count { font-size: 14px; color: #a0aec0; margin-left: 10px; font-weight: normal; }
+        .view-toggle { display: flex; gap: 5px; background: #f7fafc; padding: 5px; border-radius: 20px; }
+        .view-toggle a { text-decoration: none; padding: 6px 20px; border-radius: 15px; font-size: 14px; font-weight: bold; color: #718096; }
+        .view-toggle a.active { background: #fff; color: #2c3e50; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* 筛选区 */
+        .filter-area { background: #fffdf8; border: 1px solid #fcecd7; border-radius: 16px; padding: 25px; margin-bottom: 25px; }
+        .filter-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #fcecd7; }
+        .filter-title { font-size: 18px; font-weight: 900; color: #2c3e50; }
+        .filter-tip { font-size: 13px; color: #a0aec0; margin-left: 15px; }
+        .clear-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: #dd6b20; font-size: 14px; cursor: pointer; font-weight: bold; padding: 6px 12px; border-radius: 8px; }
+        .clear-btn:hover { background: #fff5f5; color: #c53030; }
+        
+        .search-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search-box { flex: 1; position: relative; }
+        .search-box i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px; }
+        .search-box input { width: 100%; padding: 14px 20px 14px 45px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 15px; background: #fff; }
+        .search-box input:focus { border-color: #ff6b6b; }
+        
+        .filter-row { display: flex; align-items: flex-start; margin-bottom: 18px; }
+        .filter-label { font-size: 14px; font-weight: bold; color: #4a5568; min-width: 80px; padding-top: 8px; }
+        .filter-options { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+        
+        .filter-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; cursor: pointer; font-size: 14px; user-select: none; }
+        .filter-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .filter-btn.active { background: #ebf8ff; color: #2b6cb0; border-color: #90cdf4; font-weight: bold; }
+        .filter-btn .count-badge { background: #edf2f7; color: #718096; font-size: 12px; padding: 2px 8px; border-radius: 12px; font-weight: normal; }
+        .filter-btn.active .count-badge { background: #bee3f8; color: #2b6cb0; }
+
+        .type-btn-icon { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .type-btn-icon:hover { background: #f7fafc; }
+        .type-btn-icon.active { border-color: #ff6b6b; background: #fff5f5; color: #ff6b6b; }
+        .type-icon-svg { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; }
+        .type-btn-icon .count-badge { background: #edf2f7; color: #718096; font-size: 12px; padding: 2px 8px; border-radius: 12px; font-weight: normal; }
+        .type-btn-icon.active .count-badge { background: #fed7d7; color: #c53030; }
+
+        /* 列控制折叠 */
+        .column-control-wrap { margin-top: 25px; border-top: 1px dashed #fcecd7; padding-top: 15px; }
+        .column-header { display: flex; align-items: center; gap: 20px; }
+        .column-header .header-title { font-size: 14px; font-weight: bold; color: #4a5568; }
+        .col-toggle-header { display: flex; align-items: center; cursor: pointer; color: #dd6b20; font-size: 14px; font-weight: bold; user-select: none; }
+        .col-toggle-header i.fa-table-columns { margin-right: 6px; color: #dd6b20; }
+        .col-toggle-header .font-num { margin: 0 5px; color: #dd6b20; }
+        .col-toggle-header i.fa-chevron-down, .col-toggle-header i.fa-chevron-up { font-size: 12px; color: #dd6b20; margin-left: 4px; }
+        .col-actions { display: flex; gap: 15px; font-size: 13px; color: #718096; font-weight: bold; cursor: pointer; }
+        .col-actions span:hover { color: #dd6b20; text-decoration: underline; }
+        
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding: 15px; background: #fffaf0; border-radius: 12px; border: 1px solid #feebc8; }
+        .col-btn { display: flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 20px; border: 1px solid transparent; background: #fff; color: #718096; cursor: pointer; font-size: 13px; font-weight: bold; user-select: none; }
+        .col-btn:hover { background: #f7fafc; border-color: #e2e8f0; }
+        .col-btn i { font-size: 14px; color: #cbd5e0; }
+        .col-btn.active { background: #fefcbf; color: #b7791f; border-color: #f6e05e; }
+        .col-btn.active i { color: #d69e2e; }
+
+        /* 表格 */
+        .table-wrapper { overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th, td { padding: 14px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; font-size: 14px; white-space: nowrap; }
+        
+        thead { background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; }
+        th { font-weight: bold; cursor: pointer; user-select: none; }
+        th:hover { background: #edf2f7; color: #2b6cb0; }
+        th i { margin-left: 5px; font-size: 12px; color: #a0aec0; }
+
+        tbody tr:hover { background: #f7fafc; }
+        
+        .img-cell img { width: 48px; height: 48px; object-fit: contain; }
+        .name-cell { font-weight: bold; color: #2c3e50; cursor: pointer; text-align: center; }
+        .name-cell:hover { color: #ff6b6b; }
+        
+        .type-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px 4px 8px; border-radius: 999px;
+            color: #fff; font-size: 12px; font-weight: 700; line-height: 1;
+            margin: 2px 4px 2px 0; white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(45,55,72,.12);
+        }
+        .type-pill i { font-size: 11px; }
+        
+        .stat-val { color: #4a5568; font-weight: 600; }
+        .total-val { font-weight: 900; color: #dd6b20; background: #fffaf0; padding: 4px 10px; border-radius: 6px; border: 1px solid #feebc8; }
+        
+        .text-col { color: #718096; font-size: 13px; max-width: 200px; white-space: normal; text-align: left; }
+        .tag-col { background: #edf2f7; color: #4a5568; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+
+        /* 分页 */
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 10px; }
+        .page-info { color: #718096; font-size: 14px; }
+        .page-buttons { display: flex; gap: 6px; }
+        .page-btn { padding: 8px 14px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; color: #4a5568; font-size: 14px; font-weight: 500; font-family: inherit; }
+        .page-btn:hover:not(:disabled) { background: #f7fafc; border-color: #cbd5e0; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #ff6b6b; color: #fff; border-color: #ff6b6b; }
+
+        /* 动画全局开关类 */
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+
+        @media (max-width: 900px) {
+            .nav-links { position: static; transform: none; margin: 0 10px; }
+            .dropdown-panel { display: none; }
+            .container { padding: 15px; margin: 10px; border-radius: 16px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .filter-row { flex-direction: column; }
+            .filter-label { margin-bottom: 10px; }
+            .type-pill { padding: 3px 8px 3px 7px; font-size: 11px; gap: 4px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css">
+    <script src="js/navbar.js" defer></script>
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>精灵列表 <span class="count font-num">{{ filteredPets.length }} 种形态</span></h2>
+            </div>
+            <div class="view-toggle">
+                <a href="vowdex.html">图鉴</a>
+                <a href="#" class="active">列表</a>
+            </div>
+        </div>
+
+        <div class="filter-area">
+            <div class="filter-top">
+                <div>
+                    <span class="filter-title">筛选精灵</span>
+                    <span class="filter-tip">同组可多选，不同组同时满足</span>
+                </div>
+                <button class="clear-btn" @click="clearFilters">
+                    <i class="fa-solid fa-rotate-left"></i> 清空筛选
+                </button>
+            </div>
+
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" v-model="searchName" placeholder="搜索名称、编号...">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">精灵阶数</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: filters.stage.includes('一阶')}" @click="toggleFilter('stage', '一阶')">
+                        一阶 <span class="count-badge font-num">{{ stageCounts['一阶'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.stage.includes('二阶')}" @click="toggleFilter('stage', '二阶')">
+                        二阶 <span class="count-badge font-num">{{ stageCounts['二阶'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.stage.includes('三阶')}" @click="toggleFilter('stage', '三阶')">
+                        三阶 <span class="count-badge font-num">{{ stageCounts['三阶'] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">精灵形态</div>
+                <div class="filter-options">
+                    <div class="filter-btn" :class="{active: filters.form.includes('主形态')}" @click="toggleFilter('form', '主形态')">
+                        主形态 <span class="count-badge font-num">{{ formCounts['主形态'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.form.includes('地区形态')}" @click="toggleFilter('form', '地区形态')">
+                        地区形态 <span class="count-badge font-num">{{ formCounts['地区形态'] || 0 }}</span>
+                    </div>
+                    <div class="filter-btn" :class="{active: filters.form.includes('首领形态')}" @click="toggleFilter('form', '首领形态')">
+                        首领形态 <span class="count-badge font-num">{{ formCounts['首领形态'] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-label">精灵系别</div>
+                <div class="filter-options">
+                    <div 
+                        v-for="t in typeData" 
+                        :key="t.name" 
+                        class="type-btn-icon" 
+                        :class="{active: selectedTypes.includes(t.name)}" 
+                        @click="toggleType(t.name)"
+                    >
+                        <div class="type-icon-svg" :style="{ backgroundColor: t.color }"><i :class="t.icon"></i></div>
+                        {{ t.name }}
+                        <span class="count-badge font-num">{{ typeCounts[t.name] || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column-control-wrap">
+                <div class="column-header">
+                    <span class="header-title">显示哪些列</span>
+                    <div class="col-toggle-header" @click="showColumnControl = !showColumnControl">
+                        <i class="fa-solid fa-table-columns"></i> 选择显示列 
+                        <span class="font-num">{{ activeColCount }}/{{ Object.keys(cols).length }}</span>
+                        <i class="fa-solid" :class="showColumnControl ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="col-actions" v-if="showColumnControl">
+                        <span @click="resetColumns">恢复默认</span>
+                        <span @click="selectAllColumns">全部显示</span>
+                    </div>
+                </div>
+                
+                <div class="checkbox-group" v-show="showColumnControl">
+                    <div class="col-btn" :class="{active: cols.id}" @click="cols.id = !cols.id"><i class="fa-solid" :class="cols.id ? 'fa-check-circle' : 'fa-circle'"></i> 编号</div>
+                    <div class="col-btn" :class="{active: cols.image}" @click="cols.image = !cols.image"><i class="fa-solid" :class="cols.image ? 'fa-check-circle' : 'fa-circle'"></i> 头像</div>
+                    <div class="col-btn" :class="{active: cols.name}" @click="cols.name = !cols.name"><i class="fa-solid" :class="cols.name ? 'fa-check-circle' : 'fa-circle'"></i> 精灵名称</div>
+                    <div class="col-btn" :class="{active: cols.types}" @click="cols.types = !cols.types"><i class="fa-solid" :class="cols.types ? 'fa-check-circle' : 'fa-circle'"></i> 属性</div>
+                    <div class="col-btn" :class="{active: cols.ability}" @click="cols.ability = !cols.ability"><i class="fa-solid" :class="cols.ability ? 'fa-check-circle' : 'fa-circle'"></i> 特性</div>
+                    
+                    <div class="col-btn" :class="{active: cols.abilityEffect}" @click="cols.abilityEffect = !cols.abilityEffect"><i class="fa-solid" :class="cols.abilityEffect ? 'fa-check-circle' : 'fa-circle'"></i> 特性效果</div>
+                    <div class="col-btn" :class="{active: cols.form}" @click="cols.form = !cols.form"><i class="fa-solid" :class="cols.form ? 'fa-check-circle' : 'fa-circle'"></i> 形态</div>
+                    <div class="col-btn" :class="{active: cols.eggGroup}" @click="cols.eggGroup = !cols.eggGroup"><i class="fa-solid" :class="cols.eggGroup ? 'fa-check-circle' : 'fa-circle'"></i> 蛋组</div>
+                    <div class="col-btn" :class="{active: cols.height}" @click="cols.height = !cols.height"><i class="fa-solid" :class="cols.height ? 'fa-check-circle' : 'fa-circle'"></i> 身高</div>
+                    <div class="col-btn" :class="{active: cols.weight}" @click="cols.weight = !cols.weight"><i class="fa-solid" :class="cols.weight ? 'fa-check-circle' : 'fa-circle'"></i> 体重</div>
+                    <div class="col-btn" :class="{active: cols.rideable}" @click="cols.rideable = !cols.rideable"><i class="fa-solid" :class="cols.rideable ? 'fa-check-circle' : 'fa-circle'"></i> 可骑乘</div>
+                    
+                    <div class="col-btn" :class="{active: cols.hp}" @click="cols.hp = !cols.hp"><i class="fa-solid" :class="cols.hp ? 'fa-check-circle' : 'fa-circle'"></i> 生命</div>
+                    <div class="col-btn" :class="{active: cols.atk}" @click="cols.atk = !cols.atk"><i class="fa-solid" :class="cols.atk ? 'fa-check-circle' : 'fa-circle'"></i> 攻击</div>
+                    <div class="col-btn" :class="{active: cols.def}" @click="cols.def = !cols.def"><i class="fa-solid" :class="cols.def ? 'fa-check-circle' : 'fa-circle'"></i> 防御</div>
+                    <div class="col-btn" :class="{active: cols.spAtk}" @click="cols.spAtk = !cols.spAtk"><i class="fa-solid" :class="cols.spAtk ? 'fa-check-circle' : 'fa-circle'"></i> 特攻</div>
+                    <div class="col-btn" :class="{active: cols.spDef}" @click="cols.spDef = !cols.spDef"><i class="fa-solid" :class="cols.spDef ? 'fa-check-circle' : 'fa-circle'"></i> 特防</div>
+                    <div class="col-btn" :class="{active: cols.spd}" @click="cols.spd = !cols.spd"><i class="fa-solid" :class="cols.spd ? 'fa-check-circle' : 'fa-circle'"></i> 速度</div>
+                    <div class="col-btn" :class="{active: cols.total}" @click="cols.total = !cols.total"><i class="fa-solid" :class="cols.total ? 'fa-check-circle' : 'fa-circle'"></i> 总和</div>
+                    
+                    <div class="col-btn" :class="{active: cols.description}" @click="cols.description = !cols.description"><i class="fa-solid" :class="cols.description ? 'fa-check-circle' : 'fa-circle'"></i> 精灵介绍</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th v-if="cols.id" @click="sortBy('id')">编号 <i class="fa-solid" :class="getSortIcon('id')"></i></th>
+                        <th v-if="cols.image">头像</th>
+                        <th v-if="cols.name" @click="sortBy('name')">精灵名称 <i class="fa-solid" :class="getSortIcon('name')"></i></th>
+                        <th v-if="cols.types">属性</th>
+                        <th v-if="cols.ability">特性</th>
+                        <th v-if="cols.abilityEffect">特性效果</th>
+                        <th v-if="cols.form">形态</th>
+                        <th v-if="cols.eggGroup">蛋组</th>
+                        <th v-if="cols.height">身高</th>
+                        <th v-if="cols.weight">体重</th>
+                        <th v-if="cols.rideable">可骑乘</th>
+                        
+                        <th v-if="cols.hp" @click="sortBy('stats.hp')">生命 <i class="fa-solid" :class="getSortIcon('stats.hp')"></i></th>
+                        <th v-if="cols.atk" @click="sortBy('stats.atk')">攻击 <i class="fa-solid" :class="getSortIcon('stats.atk')"></i></th>
+                        <th v-if="cols.def" @click="sortBy('stats.def')">防御 <i class="fa-solid" :class="getSortIcon('stats.def')"></i></th>
+                        <th v-if="cols.spAtk" @click="sortBy('stats.spAtk')">特攻 <i class="fa-solid" :class="getSortIcon('stats.spAtk')"></i></th>
+                        <th v-if="cols.spDef" @click="sortBy('stats.spDef')">特防 <i class="fa-solid" :class="getSortIcon('stats.spDef')"></i></th>
+                        <th v-if="cols.spd" @click="sortBy('stats.spd')">速度 <i class="fa-solid" :class="getSortIcon('stats.spd')"></i></th>
+                        <th v-if="cols.total" @click="sortBy('total')">总和 <i class="fa-solid" :class="getSortIcon('total')"></i></th>
+                        
+                        <th v-if="cols.description">精灵介绍</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="pet in paginatedPets" :key="pet.id">
+                        <td v-if="cols.id" class="font-num">{{ pet.id }}</td>
+                        <td v-if="cols.image" class="img-cell"><img :src="getImgUrl(pet.image)" :alt="pet.name"></td>
+                        <td v-if="cols.name" class="name-cell" @click="window.location.href='vowdex.html'">{{ pet.name }}</td>
+                        <td v-if="cols.types">
+                            <span class="type-pill" v-for="t in pet.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
+                                <i :class="getTypeIcon(t)"></i><span>{{ t }}</span>
+                            </span>
+                        </td>
+                        <td v-if="cols.ability">{{ pet.ability }}</td>
+                        
+                        <td v-if="cols.abilityEffect" class="text-col">{{ pet.abilityEffect || '-' }}</td>
+                        <td v-if="cols.form" class="text-col"><span class="tag-col">{{ pet.form || '-' }}</span></td>
+                        <td v-if="cols.eggGroup" class="text-col">{{ pet.eggGroup || '-' }}</td>
+                        <td v-if="cols.height" class="font-num">{{ pet.height || '-' }}</td>
+                        <td v-if="cols.weight" class="font-num">{{ pet.weight || '-' }}</td>
+                        <td v-if="cols.rideable" class="text-col">{{ pet.rideable || '-' }}</td>
+
+                        <td v-if="cols.hp" class="stat-val font-num">{{ pet.stats.hp }}</td>
+                        <td v-if="cols.atk" class="stat-val font-num">{{ pet.stats.atk }}</td>
+                        <td v-if="cols.def" class="stat-val font-num">{{ pet.stats.def }}</td>
+                        <td v-if="cols.spAtk" class="stat-val font-num">{{ pet.stats.spAtk }}</td>
+                        <td v-if="cols.spDef" class="stat-val font-num">{{ pet.stats.spDef }}</td>
+                        <td v-if="cols.spd" class="stat-val font-num">{{ pet.stats.spd }}</td>
+                        <td v-if="cols.total" class="total-val font-num">{{ getTotal(pet.stats) }}</td>
+                        
+                        <td v-if="cols.description" class="text-col">{{ pet.description || '-' }}</td>
+                    </tr>
+                    <tr v-if="paginatedPets.length === 0">
+                        <td colspan="20" style="text-align: center; color: #a0aec0; padding: 30px;">没有找到符合条件的精灵。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <div class="page-info">显示 <span class="font-num">{{ startIndex + 1 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredPets.length }}</span> 条</div>
+            <div class="page-buttons">
+                <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+                <button class="page-btn font-num" v-for="p in totalPages" :key="p" :class="{active: currentPage === p}" @click="currentPage = p">{{ p }}</button>
+                <button class="page-btn" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage++">下一页</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/type-config.js"></script>
+<script src="data/vow-data.js"></script>
+<script>
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const pets = ref(allPetsData);
+            // 支持从导航搜索框带过来的 ?q= 关键词
+            const searchName = ref(new URLSearchParams(window.location.search).get('q') || '');
+            const filters = ref({ stage: [], form: [] });
+
+            // 动画状态
+            const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
+            const updateBodyClass = () => {
+                if (isAnimOn.value) document.body.classList.remove('no-anim');
+                else document.body.classList.add('no-anim');
+            };
+            const toggleAnim = () => {
+                isAnimOn.value = !isAnimOn.value;
+                localStorage.setItem('vowmon_anim_on', isAnimOn.value);
+                updateBodyClass();
+            };
+
+            onMounted(() => {
+                updateBodyClass();
+                if (typeof allPetsData !== 'undefined') pets.value = allPetsData;
+            });
+
+            let siteConfig = {};
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}'); } catch(e){}
+            const IMG_BASE = siteConfig.imgCdnBase ? siteConfig.imgCdnBase.replace(/\/$/, '') + '/' : '';
+
+            const getImgUrl = (path) => {
+                if (!path) return '';
+                if (path.startsWith('http')) return path;
+                return IMG_BASE + path;
+            };
+
+            const stageCounts = computed(() => {
+                const counts = { '一阶': 0, '二阶': 0, '三阶': 0 };
+                pets.value.forEach(p => { if(counts[p.stage] !== undefined) counts[p.stage]++; });
+                return counts;
+            });
+
+            const formCounts = computed(() => {
+                const counts = { '主形态': 0, '地区形态': 0, '首领形态': 0 };
+                pets.value.forEach(p => { if(counts[p.form] !== undefined) counts[p.form]++; });
+                return counts;
+            });
+
+            const typeCounts = computed(() => {
+                const counts = {};
+                typeData.forEach(t => counts[t.name] = 0);
+                pets.value.forEach(p => {
+                    p.types.forEach(t => { if(counts[t] !== undefined) counts[t]++; });
+                });
+                return counts;
+            });
+
+            const selectedTypes = ref([]);
+            const toggleType = (name) => {
+                const index = selectedTypes.value.indexOf(name);
+                index > -1 ? selectedTypes.value.splice(index, 1) : selectedTypes.value.push(name);
+            };
+
+            const toggleFilter = (key, value) => {
+                const index = filters.value[key].indexOf(value);
+                index > -1 ? filters.value[key].splice(index, 1) : filters.value[key].push(value);
+            };
+
+            const clearFilters = () => {
+                searchName.value = '';
+                filters.value = { stage: [], form: [] };
+                selectedTypes.value = [];
+            };
+
+            const showColumnControl = ref(false);
+            const defaultCols = {
+                id: true, image: true, name: true, types: true, ability: true,
+                abilityEffect: false, form: false, eggGroup: false, height: false, weight: false, rideable: false,
+                hp: true, atk: true, def: true, spAtk: true, spDef: true, spd: true, total: true,
+                description: false
+            };
+            const cols = ref({ ...defaultCols });
+
+            const activeColCount = computed(() => Object.values(cols.value).filter(Boolean).length);
+            const resetColumns = () => { cols.value = { ...defaultCols }; };
+            const selectAllColumns = () => { Object.keys(cols.value).forEach(k => cols.value[k] = true); };
+
+            const sortKey = ref('');
+            const sortAsc = ref(true);
+
+            const sortBy = (key) => {
+                if (sortKey.value === key) {
+                    sortAsc.value = !sortAsc.value;
+                } else {
+                    sortKey.value = key;
+                    sortAsc.value = true;
+                }
+            };
+
+            const getSortIcon = (key) => {
+                if (sortKey.value !== key) return 'fa-sort text-gray-300';
+                return sortAsc.value ? 'fa-sort-up' : 'fa-sort-down';
+            };
+
+            const getTotal = (stats) => stats.hp + stats.atk + stats.def + stats.spAtk + stats.spDef + stats.spd;
+            const getTypeColor = (type) => typeData.find(t => t.name === type)?.color || '#ccc';
+            const getTypeIcon = (type) => typeData.find(t => t.name === type)?.icon || '';
+
+            const filteredPets = computed(() => {
+                let result = pets.value.filter(pet => {
+                    const matchName = pet.name.includes(searchName.value) || pet.id.includes(searchName.value);
+                    const matchStage = filters.value.stage.length === 0 || filters.value.stage.includes(pet.stage);
+                    const matchForm = filters.value.form.length === 0 || filters.value.form.includes(pet.form);
+                    
+                    let matchType = true;
+                    if (selectedTypes.value.length > 0) {
+                        matchType = selectedTypes.value.some(t => pet.types.includes(t));
+                    }
+                    return matchName && matchStage && matchForm && matchType;
+                });
+
+                if (sortKey.value) {
+                    result.sort((a, b) => {
+                        let valA, valB;
+                        if (sortKey.value === 'total') {
+                            valA = getTotal(a.stats); valB = getTotal(b.stats);
+                        } else if (sortKey.value.startsWith('stats.')) {
+                            const statKey = sortKey.value.split('.')[1];
+                            valA = a.stats[statKey]; valB = b.stats[statKey];
+                        } else {
+                            valA = a[sortKey.value]; valB = b[sortKey.value];
+                        }
+                        if (valA < valB) return sortAsc.value ? -1 : 1;
+                        if (valA > valB) return sortAsc.value ? 1 : -1;
+                        return 0;
+                    });
+                }
+                return result;
+            });
+
+            const currentPage = ref(1);
+            const pageSize = 10;
+
+            watch([searchName, filters, selectedTypes], () => { currentPage.value = 1; }, { deep: true });
+
+            const totalPages = computed(() => Math.ceil(filteredPets.value.length / pageSize) || 1);
+            const startIndex = computed(() => (currentPage.value - 1) * pageSize);
+            const endIndex = computed(() => Math.min(startIndex.value + pageSize, filteredPets.value.length));
+            const paginatedPets = computed(() => filteredPets.value.slice(startIndex.value, endIndex.value));
+
+            return {
+                isAnimOn, toggleAnim,
+                searchName, filters, selectedTypes, typeData, showColumnControl,
+                cols, sortBy, getSortIcon, getTotal, getTypeColor, getTypeIcon, getImgUrl,
+                filteredPets, currentPage, totalPages, startIndex, endIndex, paginatedPets,
+                toggleType, toggleFilter, clearFilters, activeColCount, resetColumns, selectAllColumns,
+                stageCounts, formCounts, typeCounts,
+                window
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

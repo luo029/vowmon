@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vowmon Wiki - 物品管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/common-ui.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div id="app">
+    <header class="topbar">
+        <h1><i class="fa-solid fa-box-open"></i> 物品管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='items.html'" title="前台物品图鉴">
+                <i class="fa-solid fa-up-right-from-square"></i> 查看物品图鉴
+            </button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步物品数据' }}
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="admin.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html" class="active"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+                <h2 style="font-size: 20px;">物品数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ items.length }} 件</span></h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="col-settings-wrap">
+                        <button class="btn btn-outline" :class="{ active: showColSettings }" @click.stop="showColSettings = !showColSettings">
+                            <i class="fa-solid fa-table-columns"></i> 显示列
+                            <i class="fa-solid fa-chevron-down" style="font-size: 11px; margin-left: 2px;"></i>
+                        </button>
+                        <div class="col-settings-dropdown" v-show="showColSettings" @click.stop>
+                            <label class="checkbox-item" v-for="(label, key) in allColumns" :key="key">
+                                <input type="checkbox" v-model="visibleCols" :value="key"> {{ label }}
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加新物品</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table items-table">
+                    <thead>
+                        <tr>
+                            <th v-if="visibleCols.includes('icon')" style="width: 64px;">图标</th>
+                            <th v-if="visibleCols.includes('name')" style="width: 150px;">物品名称</th>
+                            <th v-if="visibleCols.includes('kind')" style="width: 88px;">类型</th>
+                            <th v-if="visibleCols.includes('group')" style="width: 120px;">分组</th>
+                            <th v-if="visibleCols.includes('obtain')" style="width: 190px;">获取方式</th>
+                            <th v-if="visibleCols.includes('desc')">描述</th>
+                            <th style="text-align: right; width: 150px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in items" :key="item.id || index">
+                            <td v-if="visibleCols.includes('icon')">
+                                <span class="item-icon-cell">
+                                    <img v-if="item.icon" :src="item.icon" :alt="item.name">
+                                    <i v-else :class="item.iconClass" :style="{ color: item.color }"></i>
+                                </span>
+                            </td>
+                            <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ item.name }}</td>
+                            <td v-if="visibleCols.includes('kind')">
+                                <span class="kind-pill">{{ item.kind }}</span>
+                            </td>
+                            <td v-if="visibleCols.includes('group')">
+                                <span class="group-pill" :style="{ color: getItemGroupColor(item.group), borderColor: getItemGroupColor(item.group) + '55' }">
+                                    <i :class="getItemGroupIcon(item.group)"></i> {{ item.group }}
+                                </span>
+                            </td>
+                            <td v-if="visibleCols.includes('obtain')" style="max-width: 220px; color: #718096;">
+                                <span v-if="(item.obtain || []).length">{{ (item.obtain || []).join('、') }}</span>
+                                <span v-else style="color:#cbd5e0;">-</span>
+                            </td>
+                            <td v-if="visibleCols.includes('desc')" style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.desc }}</td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <button class="action-btn edit-btn" @click.stop="openEditor(item, index)"><i class="fa-solid fa-pen"></i> 编辑</button>
+                                <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(index, item.name)"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div v-if="!items.length" style="text-align:center; padding: 40px; color:#a0aec0;">还没有物品，点右上角「添加新物品」开始。</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" style="width: 680px;" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑物品' : '添加物品' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>物品名称</label>
+                        <input v-model="form.name" placeholder="如：传说印记">
+                    </div>
+
+                    <div class="form-group">
+                        <label>类型（图鉴顶部 Tab）</label>
+                        <div class="custom-select" :class="{ 'is-open': activeDropdown === 'kind' }" @click.stop="activeDropdown = activeDropdown === 'kind' ? '' : 'kind'" @vowmon-dropdown-close="activeDropdown = ''">
+                            <div class="select-display">{{ form.kind }} <i class="fa-solid fa-chevron-down"></i></div>
+                            <div class="dropdown-options" v-show="activeDropdown === 'kind'">
+                                <div class="dropdown-item" v-for="k in itemKinds" :key="k" @click.stop="form.kind = k; activeDropdown = ''">{{ k }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>分组（筛选胶囊）</label>
+                        <div class="custom-select" :class="{ 'is-open': activeDropdown === 'group' }" @click.stop="activeDropdown = activeDropdown === 'group' ? '' : 'group'" @vowmon-dropdown-close="activeDropdown = ''">
+                            <div class="select-display">
+                                <span><span class="group-dot" :style="{ backgroundColor: getItemGroupColor(form.group) }"><i :class="getItemGroupIcon(form.group)"></i></span>{{ form.group }}</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div class="dropdown-options" v-show="activeDropdown === 'group'">
+                                <div class="dropdown-item" v-for="g in itemGroups" :key="g.name" @click.stop="form.group = g.name; activeDropdown = ''">
+                                    <span class="group-dot" :style="{ backgroundColor: g.color }"><i :class="g.icon"></i></span>{{ g.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>细分类 <span class="opt">选填，显示在详情页描述上方</span></label>
+                        <input v-model="form.category" placeholder="如：传说精灵挑战道具">
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>图标</label>
+                        <div class="item-icon-editor">
+                            <div class="item-icon-preview">
+                                <img v-if="form.icon" :src="displayIcon" alt="预览">
+                                <i v-else :class="form.iconClass" :style="{ color: form.color }"></i>
+                            </div>
+                            <div class="item-icon-fields">
+                                <div class="input-with-btn">
+                                    <input v-model="form.icon" placeholder="图片外链或仓库路径，留空则用图标字体" @input="previewIcon = form.icon">
+                                    <button type="button" class="btn btn-outline" @click="triggerIconUpload" :disabled="isUploading">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> {{ isUploading ? '上传中…' : '上传图片' }}
+                                    </button>
+                                </div>
+                                <input type="file" ref="iconFileInput" accept="image/*" style="display: none;" @change="handleIconUpload">
+                                <div class="icon-inline-row">
+                                    <div class="inline-field">
+                                        <span class="inline-label">图标字体</span>
+                                        <input v-model="form.iconClass" placeholder="fa-solid fa-star">
+                                    </div>
+                                    <div class="inline-field color-field">
+                                        <span class="inline-label">主题色</span>
+                                        <input type="color" v-model="form.color">
+                                    </div>
+                                    <button type="button" class="btn btn-outline btn-sm" @click="resetIconFont">
+                                        <i class="fa-solid fa-rotate-left"></i> 用分组默认图标
+                                    </button>
+                                </div>
+                                <p class="hint">
+                                    有图片时优先显示图片；没有图片则显示图标字体 + 主题色。
+                                    上传的图片会压缩为 PNG，并存到 <b>items/{{ form.id || '编号' }}.png</b>。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>物品描述</label>
+                        <textarea v-model="form.desc" class="custom-textarea" rows="3" placeholder="一句话说明这个物品的用途"></textarea>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>获取方式 <span class="opt">一行一条</span></label>
+                        <textarea v-model="obtainText" class="custom-textarea" rows="3" placeholder="商店购买&#10;任务奖励"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="saveItem">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="modal-overlay" v-if="showDeleteModal" @vowmon:modal-close="closeModal('delete')">
+        <div class="delete-modal" @click.stop>
+            <div class="delete-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>确认删除</h3>
+            <p>确定要删除物品 <strong>{{ deleteTargetName }}</strong> 吗？</p>
+            <div class="delete-actions">
+                <button class="btn btn-outline" @click="showDeleteModal = false">取消</button>
+                <button class="btn btn-danger" @click="confirmDelete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/item-config.js"></script>
+<script src="data/items-data.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/image-utils.js"></script>
+<script src="js/common-ui.js"></script>
+<script src="js/admin-items.js"></script>
+</body>
+</html>

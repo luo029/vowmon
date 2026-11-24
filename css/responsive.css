@@ -1,0 +1,294 @@
+/* ==========================================================================
+   Vowmon Wiki —— 全站移动端适配（Android / iOS）
+   --------------------------------------------------------------------------
+   本文件必须放在所有样式之后引入，用于覆盖各页内联样式与公共样式。
+   适配断点：
+     <= 900px  平板 / 大屏手机横屏
+     <= 640px  普通手机
+     <= 380px  小屏手机
+   说明：
+     - 输入框统一 16px，避免 iOS Safari 聚焦时自动放大页面；
+     - 使用 safe-area-inset 适配 iPhone 刘海 / 底部 Home 条；
+     - 横向滚动容器加 -webkit-overflow-scrolling，滚动更顺滑；
+     - 不引入任何新动画，遵循 vowmon_anim_on 全局动画开关。
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- 基础 */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { max-width: 100%; }
+/* 用 clip 而非 hidden，避免生成新的滚动容器而破坏 position:sticky 导航栏 */
+body { overflow-x: clip; }
+img { max-width: 100%; }
+
+/* iOS 聚焦不缩放（所有可输入控件字号 >= 16px） */
+input, textarea, select, .select-display { font-size: 16px !important; }
+/* 文本类输入去掉 iOS 内阴影圆角，复选框/单选/文件/下拉保留原生外观 */
+input[type="text"], input[type="password"], input[type="number"], input[type="search"], input[type="email"] {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-border-radius: 0;
+}
+
+/* 可横向滚动的区域顺滑滚动 */
+.table-wrapper, .table-container, .side-nav, .dropdown-options, .bind-list, .selection-list {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 点击高亮透明（避免移动端蓝色方块） */
+a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-card {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ================================================================ 公共导航栏 */
+@media (max-width: 900px) {
+    .nav-container { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+    .logo { font-size: 18px; gap: 8px; }
+    .logo-svg { width: 32px; height: 32px; }
+    .nav-links > a, .nav-item > a { padding: 13px 12px; font-size: 16px; }
+    .nav-actions { gap: 10px; }
+}
+
+@media (max-width: 640px) {
+    .nav-container { height: 60px; }
+    .nav-links { top: 60px; max-height: calc(100dvh - 60px); padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+    .nav-search { top: 60px; }
+    .logo span { font-size: 16px; }
+}
+
+/* ================================================================ 前台通用 */
+@media (max-width: 900px) {
+    .container, .main-container {
+        margin: 12px auto;
+        padding: 16px;
+        border-radius: 16px;
+        width: calc(100% - 24px);
+    }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header h2 { font-size: 20px; }
+    .pagination { flex-direction: column; gap: 12px; text-align: center; }
+    .page-controls { justify-content: center; flex-wrap: wrap; }
+}
+
+/* ================================================================ 首页 index */
+@media (max-width: 900px) {
+    .hero-banner { padding: 24px; border-radius: 18px; }
+    .hero-banner h1 { font-size: 30px; }
+    .hero-banner p { font-size: 14px; }
+    .magic-pokeball { width: 120px; height: 120px; }
+    .menu-grid { gap: 12px; }
+    .menu-card { padding: 20px 12px; }
+    .menu-icon-wrap { width: 52px; height: 52px; margin-bottom: 12px; }
+    .menu-text h3 { font-size: 16px; }
+    .tool-grid { gap: 12px; }
+    .section-title { font-size: 20px; margin: 28px 0 18px; }
+}
+
+@media (max-width: 640px) {
+    .hero-banner { padding: 20px; text-align: center; }
+    .hero-banner h1 { font-size: 26px; }
+    .banner-image-area { display: none; }
+    .menu-grid { grid-template-columns: repeat(2, 1fr); }
+    .menu-card { padding: 16px 8px; }
+    .card-top .name { font-size: 13px; }
+}
+
+@media (max-width: 380px) {
+    .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .menu-text h3 { font-size: 14px; }
+    .menu-text p { font-size: 11px; }
+}
+
+/* ================================================================ 图鉴 vowdex */
+@media (max-width: 900px) {
+    .filter-area { padding: 16px; }
+    .filter-top { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .filter-tip { margin-left: 0; }
+    .search-row { flex-direction: column; gap: 10px; }
+    .filter-row { flex-direction: column; gap: 8px; }
+    .filter-label { min-width: 0; padding-top: 0; }
+    .vowdex-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .view-toggle { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+    .vowdex-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .card-img { min-height: 100px; padding: 8px; }
+    .card-img img { max-height: 88px; }
+    .card-top .name { font-size: 13px; }
+    .filter-btn, .type-btn-icon { padding: 7px 12px; font-size: 13px; }
+}
+
+/* ================================================================ 列表 list */
+@media (max-width: 900px) {
+    .col-toggle-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .col-actions { flex-wrap: wrap; gap: 12px; }
+    .checkbox-group { padding: 12px; gap: 8px; }
+    .col-btn { padding: 6px 12px; font-size: 12px; }
+    .table-wrapper { max-width: 100%; }
+    /* 表格保持 min-width，由容器横向滚动，避免列被压扁 */
+    .table-wrapper table { min-width: 900px; }
+    th, td { padding: 11px 10px !important; font-size: 13px !important; }
+}
+
+@media (max-width: 640px) {
+    .table-wrapper { border-radius: 12px; margin: 0 -4px; }
+    .checkbox-group { max-height: 220px; overflow-y: auto; }
+}
+
+/* ================================================================ 技能 / 特性前台 */
+@media (max-width: 900px) {
+    .filter-bar, .toolbar, .search-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+    .data-table, table.data-table { min-width: 620px; }
+}
+
+@media (max-width: 640px) {
+    .skill-grid, .trait-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* ================================================================ 计算器 / 打击面 */
+@media (max-width: 900px) {
+    .select-section { flex-direction: column; gap: 14px; }
+    .select-box { padding: 16px; }
+    .defense-grid, .attack-grid, .coverage-grid { grid-template-columns: 1fr; gap: 12px; }
+    .summary-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .panel { padding: 16px; }
+    .type-grid { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 8px; }
+    .type-btn { padding: 8px 3px; }
+    .table-container { max-width: 100%; }
+    .attack-tabs { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+    .container { padding: 14px; }
+    .type-grid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; }
+    .type-name { font-size: 11px; }
+    .type-icon, .type-icon-large { width: 24px; height: 24px; font-size: 12px; }
+    .type-icon-large { width: 40px; height: 40px; font-size: 20px; }
+    .summary-text h3 { font-size: 17px; }
+    .summary-text p { font-size: 12px; }
+    .mini-type { padding: 5px 10px; font-size: 12px; }
+    .header h2 { font-size: 20px; }
+}
+
+/* ================================================================ 后台通用 */
+@media (max-width: 900px) {
+    .topbar {
+        height: auto;
+        min-height: 64px;
+        padding: 12px 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .topbar h1 { font-size: 17px; }
+    .topbar-actions { flex-wrap: wrap; gap: 8px; }
+
+    .layout { flex-direction: column; height: auto; overflow: visible; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; }
+    /* 侧栏变横向可滚动标签条 */
+    .side-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px 12px;
+        gap: 6px;
+        scrollbar-width: none;
+    }
+    .side-nav::-webkit-scrollbar { display: none; }
+    .side-nav a { white-space: nowrap; flex: 0 0 auto; padding: 9px 13px; font-size: 13px; }
+    .side-nav a.active { box-shadow: inset 0 -3px 0 #4299e1; }
+
+    .main-content { padding: 16px; overflow: visible; }
+
+    /* 表格横向滚动 */
+    .table-wrapper { max-width: 100%; }
+    .data-table { min-width: 760px; }
+    .data-table th, .data-table td { padding: 11px 12px !important; font-size: 13px !important; }
+
+    /* 表单单列 */
+    .form-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+    .form-section { padding: 16px; }
+    .image-input-wrapper { flex-direction: column; }
+    .image-preview-box { width: 88px; height: 88px; }
+
+    /* 弹窗 */
+    .modal-overlay { padding: 10px; align-items: center; }
+    .modal, .selection-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 92dvh;
+        border-radius: 14px;
+    }
+    .modal-header { padding: 14px 16px; }
+    .modal-header h3 { font-size: 16px; }
+    .modal-body { padding: 16px; gap: 14px; max-height: 68dvh; }
+    .modal-footer { padding: 12px 16px; }
+    .delete-modal { padding: 24px 20px; }
+    .selection-list { min-height: 160px; }
+    .selection-search, .selection-pagination { padding: 12px 14px; }
+
+    /* 分页 */
+    .pagination { flex-direction: column; gap: 10px; text-align: center; }
+
+    /* 统计 / 设置 */
+    .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .settings-hero { padding: 20px; }
+    .settings-hero-text h2 { font-size: 19px; }
+    .settings-actions { flex-direction: column; align-items: stretch; }
+    .settings-actions .btn { width: 100%; }
+    .settings-actions-tip { text-align: center; }
+
+    /* 图片管理 */
+    .img-toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-left, .toolbar-right { width: 100%; }
+    .toolbar-left .input-with-btn { width: 100% !important; }
+    .filter-select { flex: 1; min-width: 0; }
+    .img-grid, .pet-img-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .img-thumb { height: 120px; }
+    .pet-img-thumb { height: 120px; }
+    .img-tab { flex: 1; justify-content: center; padding: 10px 8px; font-size: 13px; }
+    .toast { width: calc(100% - 32px); justify-content: center; bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 640px) {
+    .main-content { padding: 12px; }
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .stat-card { padding: 12px; gap: 10px; }
+    .stat-icon { width: 38px; height: 38px; font-size: 16px; }
+    .stat-num { font-size: 19px; }
+    .stat-label { font-size: 11px; }
+    .img-grid, .pet-img-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .img-card-body, .pet-img-info { padding: 10px; }
+    .img-name, .pet-img-title { font-size: 12px; }
+    .action-btn.mini { padding: 5px 7px; font-size: 10px; }
+    .settings-hero { gap: 12px; padding: 16px; }
+    .settings-hero-icon { width: 46px; height: 46px; font-size: 20px; }
+    .ring { width: 54px; height: 54px; }
+    .ring span { width: 44px; height: 44px; font-size: 13px; }
+    .panel-head { padding: 14px 16px; }
+    .panel-body { padding: 16px; }
+    .repo-chip { font-size: 11px; padding: 4px 8px; }
+    .alert-box { flex-wrap: wrap; font-size: 12px; }
+    .alert-box a { margin-left: 0 !important; }
+}
+
+@media (max-width: 380px) {
+    .topbar h1 { font-size: 15px; }
+    .btn { padding: 8px 12px; font-size: 12px; }
+    .img-grid, .pet-img-grid { grid-template-columns: 1fr; }
+    .stat-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .type-pill-option { padding: 6px 10px; font-size: 12px; }
+}
+
+/* 横屏矮屏：弹窗与侧栏压缩 */
+@media (max-height: 480px) and (orientation: landscape) {
+    .modal, .selection-modal { max-height: 94dvh; }
+    .modal-body { max-height: 60dvh; }
+    .side-nav { padding-top: 6px; padding-bottom: 6px; }
+}
+
+/* 尊重全局动画开关（与 style.css / 各页内联规则一致） */
+.no-anim *, .no-anim *::before, .no-anim *::after {
+    transition: none !important;
+    animation: none !important;
+}
