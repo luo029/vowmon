@@ -27,13 +27,19 @@
         .bs-note { color: #a0aec0; font-size: 12.5px; }
         .bs-tip { margin: 10px auto 16px; max-width: 1000px; padding: 12px 16px; border: 1px solid #bee3f8; background: #ebf8ff; color: #2b6cb0; border-radius: 12px; font-size: 14px; font-weight: 700; line-height: 1.8; }
         .fam-card { background: #fff; border: 1px solid #e5ecf3; border-radius: 14px; padding: 16px 18px; margin: 0 auto 16px; max-width: 1000px; }
-        .fam-head { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .fam-head > div { width: 220px; }
+        .fam-head { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: end; gap: 10px; margin-bottom: 14px; }
+        .fam-head .fam-cell { min-width: 0; }
         .fam-head input { width: 100%; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 14px; outline: none; font-family: inherit; }
         .fam-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
         .fam-cell label { display: block; font-size: 12.5px; font-weight: 900; color: #4a5568; margin-bottom: 5px; text-align: center; }
         .fam-cell input { width: 100%; padding: 9px 8px; border: 1px solid #dbe4ec; border-radius: 8px; font-size: 13.5px; outline: none; font-family: inherit; text-align: center; background: #fbfdff; }
         .fam-actions { font-size: 13px; margin-top: 12px; display: flex; justify-content: center; }
+        .pet-pick-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 46vh; overflow-y: auto; }
+        .pet-pick { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; cursor: pointer; font-family: inherit; }
+        .pet-pick b { font-size: 13.5px; color: #2d3748; }
+        .pet-pick small { font-size: 11px; color: #a0aec0; }
+        .pet-pick.on { border-color: #4299e1; background: #ebf8ff; }
+        .pet-pick i { position: absolute; top: 9px; right: 10px; color: #4299e1; }
     </style>
 </head>
 <body>
@@ -67,11 +73,12 @@
             <div class="bs-tip"><i class="fa-solid fa-circle-info"></i> 每个属性各有一个血脉技能，由族群「族尊」授予。这里维护可选清单，录入御兽精灵时先选血脉属性、再选对应技能；精灵图鉴会按种族属性展示可用血脉技能。</div>
             <div class="fam-card">
                 <div class="fam-head">
-                    <div><vow-select :model-value="activeFamily" :options="familyOptions" @update:model-value="loadFamily" placeholder="选择科 / 新建科"></vow-select></div>
-                    <div><input v-model="familyForm.name" placeholder=""></div>
-                    <div><input v-model="familyForm.zun" placeholder=""></div>
-                    <button class="btn btn-primary btn-sm" @click="saveFamily"><i class="fa-solid fa-check"></i> 保存该科技能包</button>
-                    <button class="btn btn-outline btn-sm" @click="deleteFamily" v-if="activeFamily">删除该科</button>
+                    <div class="fam-cell"><label>选择科 <i class="tip" data-tip="选中已有科即可编辑其族尊与十八系技能；新建科请先填科名">?</i></label><vow-select :model-value="activeFamily" :options="familyOptions" @update:model-value="loadFamily" placeholder="选择科"></vow-select></div>
+                    <div class="fam-cell"><label>科名 <i class="tip" data-tip="新建科时填写，如：水獭科">?</i></label><input v-model="familyForm.name" placeholder=""></div>
+                    <div class="fam-cell"><label>族尊 <i class="tip" data-tip="该科精灵的族尊名，如：沧澜族尊">?</i></label><input v-model="familyForm.zun" placeholder=""></div>
+                    <div class="fam-cell" style="min-width:150px;"><label>关联精灵</label><button type="button" class="btn btn-outline btn-sm" @click="showPetModal = true"><i class="fa-solid fa-paw"></i> {{ (familyForm.speciesIds || []).length }} 只 · 选择</button></div>
+                    <div class="fam-cell" style="min-width:170px;"><label>&nbsp;</label><button class="btn btn-primary btn-sm" @click="saveFamily"><i class="fa-solid fa-check"></i> 保存该科技能包</button></div>
+                    <div class="fam-cell" v-if="activeFamily" style="min-width:110px;"><label>&nbsp;</label><button class="btn btn-outline btn-sm" @click="deleteFamily">删除该科</button></div>
                 </div>
                 <div class="fam-grid">
                     <div class="fam-cell" v-for="t in typeOptions" :key="t"><label :style="{ color: typeColor(t) }">{{ t }}</label><input v-model="familyForm.skills[t]" placeholder=""></div>
@@ -79,10 +86,10 @@
                 <div class="fam-actions"><span style="font-size:12px; color:#a0aec0; font-weight:700;">同一科共用同一位族尊下发的十八系血脉技能；属该科的精灵批量适用。</span></div>
             </div>
 
-            <div class="toolbar">
-                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input v-model="search" placeholder=""></div>
+            <div class="toolbar" style="max-width: 1100px; margin: 0 auto 16px; justify-content: center; gap: 14px;">
+                <div class="search-box" style="flex: 0 0 280px;"><i class="fa-solid fa-magnifying-glass"></i><input v-model="search" placeholder=""></div>
                 <span class="count-pill">共 <b class="font-num">{{ filtered.length }}</b> 个血脉技能</span>
-                <div style="margin-left: auto;"><button class="btn btn-primary" @click="openAdd"><i class="fa-solid fa-plus"></i> 添加血脉技能</button></div>
+                <button class="btn btn-primary" @click="openAdd"><i class="fa-solid fa-plus"></i> 添加血脉技能</button>
             </div>
 
             <div class="bs-grid">
@@ -103,11 +110,28 @@
         <div class="modal" style="width: 520px;" @click.stop>
             <div class="modal-header"><h3>{{ isEdit ? '编辑血脉技能' : '添加血脉技能' }}</h3><button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="modal-body">
-                <div class="form-group" style="margin-bottom:14px;"><label>技能名</label><input v-model="form.name" placeholder=""></div>
-                <div class="form-group" style="margin-bottom:14px;"><label>所属属性</label><vow-select v-model="form.type" :options="typeOptions" placeholder="选择属性"></vow-select></div>
-                <div class="form-group"><label>备注</label><vow-textarea v-model="form.note" :rows="2"></vow-textarea></div>
+                <div class="form-group" style="margin-bottom:14px;"><label>技能名 <i class="tip" data-tip="填写该属性血脉技能的名称，如：本心一击">?</i></label><input v-model="form.name" placeholder=""></div>
+                <div class="form-group" style="margin-bottom:14px;"><label>所属属性 <i class="tip" data-tip="十八属性各有一技；科属技能包按属性取用">?</i></label><vow-select v-model="form.type" :options="typeOptions" placeholder="选择属性"></vow-select></div>
+                <div class="form-group"><label>备注 <i class="tip" data-tip="可写技能效果或来源，留空即可">?</i></label><vow-textarea v-model="form.note" :rows="2"></vow-textarea></div>
             </div>
             <div class="modal-footer"><button class="btn btn-outline" @click="showModal = false">取消</button><button class="btn btn-primary" @click="save"><i class="fa-solid fa-check"></i> 保存</button></div>
+        </div>
+    </div>
+
+    <!-- 关联精灵（多选） -->
+    <div class="modal-overlay" v-if="showPetModal" @vowmon:modal-close="showPetModal = false" style="z-index:1100;">
+        <div class="modal" style="width:560px;" @click.stop>
+            <div class="modal-header"><h3>关联精灵 · 归入「{{ familyForm.name || activeFamily || '新科' }}」</h3><button class="btn-close" @click="showPetModal = false"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-body">
+                <div class="toolbar"><div class="search-box" style="flex:1;"><i class="fa-solid fa-magnifying-glass"></i><input v-model="petSearch" placeholder=""></div></div>
+                <div class="pet-pick-list">
+                    <button type="button" class="pet-pick" v-for="p in filteredPets" :key="p.id" :class="{ on: isPetPicked(p) }" @click="togglePet(p)">
+                        <b>{{ p.name }}</b><small>#{{ p.id }}</small><i class="fa-solid fa-check" v-if="isPetPicked(p)"></i>
+                    </button>
+                    <div class="empty-state" v-if="!filteredPets.length">没有匹配的精灵</div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" @click="showPetModal = false"><i class="fa-solid fa-check"></i> 完成（{{ (familyForm.speciesIds || []).length }} 只）</button></div>
         </div>
     </div>
 </div>
@@ -117,9 +141,10 @@
 <script src="../js/data-loader.js?v=20261126b"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/vow-tip.js?v=20261125b"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261125"></script>
 <script src="../js/vow-textarea.js?v=20261125c"></script>
-<script src="../js/admin-bloodline-skills.js?v=20261126c"></script>
+<script src="../js/admin-bloodline-skills.js?v=20261126d"></script>
 </body>
 </html>

@@ -14,29 +14,43 @@ function normalizeSkill(s) {
     return o;
 }
 
-VowmonData.ready(['bloodlineSkills']).then(function () {
+VowmonData.ready(['bloodlineSkills', 'pets']).then(function () {
 
 const app = createApp({
     setup() {
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data' });
         const skills = ref([]);
+        const pets = ref([]);
         const families = ref({});
         const familyOptions = computed(() => Object.keys(families.value));
         const activeFamily = ref('');
-        const familyForm = ref({ name: '', zun: '', skills: {} });
+        const familyForm = ref({ name: '', zun: '', skills: {}, speciesIds: [] });
         const loadFamily = (name) => {
             activeFamily.value = name;
-            const f = families.value[name] || { zun: '', skills: {} };
+            const f = families.value[name] || { zun: '', skills: {}, speciesIds: [] };
             const picks = {};
             typeOptions.forEach(t => { picks[t] = (f.skills || {})[t] || ''; });
-            familyForm.value = { name: name || '', zun: f.zun || '', skills: picks };
+            familyForm.value = { name: name || '', zun: f.zun || '', skills: picks, speciesIds: Array.isArray(f.speciesIds) ? f.speciesIds.slice() : [] };
         };
         const saveFamily = () => {
             const name = String(familyForm.value.name || '').trim();
             if (!name) { VowmonDialog.toast('请填写科名', 'warning'); return; }
             const picks = {};
             typeOptions.forEach(t => { picks[t] = String((familyForm.value.skills || {})[t] || '').trim(); });
-            families.value = Object.assign({}, families.value, { [name]: { zun: String(familyForm.value.zun || '').trim(), skills: picks } });
+            families.value = Object.assign({}, families.value, { [name]: {
+                zun: String(familyForm.value.zun || '').trim(),
+                skills: picks,
+                speciesIds: (familyForm.value.speciesIds || []).slice()
+            } });
+            /* 批量把选中的精灵归到该科：写回图鉴数据本机镜像 */
+            const ids = (familyForm.value.speciesIds || []).map(String);
+            let changed = false;
+            pets.value.forEach(p => {
+                if (!ids.includes(String(p.id))) return;
+                if (!p.taxonomy || typeof p.taxonomy !== 'object') p.taxonomy = {};
+                if (p.taxonomy.family !== name) { p.taxonomy.family = name; changed = true; }
+            });
+            if (changed && window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
             activeFamily.value = name;
             saveLocal();
             VowmonDialog.toast('已保存「' + name + '」的族尊技能包；记得一键同步', 'success');
@@ -54,6 +68,22 @@ const app = createApp({
                 VowmonDialog.toast('已删除', 'success');
             });
         };
+        /* 关联精灵：选中的精灵自动归入该科 */
+        const showPetModal = ref(false);
+        const petSearch = ref('');
+        const filteredPets = computed(() => {
+            const kw = petSearch.value.trim().toLowerCase();
+            if (!kw) return pets.value;
+            return pets.value.filter(p => [p.name, p.id].join(' ').toLowerCase().includes(kw));
+        });
+        const togglePet = (p) => {
+            const id = String(p.id);
+            const arr = familyForm.value.speciesIds || (familyForm.value.speciesIds = []);
+            const i = arr.indexOf(id);
+            if (i > -1) arr.splice(i, 1); else arr.push(id);
+        };
+        const isPetPicked = (p) => (familyForm.value.speciesIds || []).includes(String(p.id));
+
         const search = ref('');
         const isSyncing = ref(false);
         const showModal = ref(false);
@@ -172,6 +202,7 @@ const app = createApp({
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('bloodlineSkills') : null;
                 const bag = mirror || (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || { skills: [] };
                 skills.value = (bag.skills || []).map(normalizeSkill);
+                pets.value = (typeof allPetsData !== 'undefined' && Array.isArray(allPetsData)) ? allPetsData : [];
                 families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
                 loadFamily(Object.keys(families.value)[0] || '');
             } catch (e) { console.error('血脉技能初始化失败', e); }
@@ -180,6 +211,7 @@ const app = createApp({
         return {
             config, skills, families, familyOptions, activeFamily, familyForm,
             loadFamily, saveFamily, deleteFamily,
+            pets, showPetModal, petSearch, filteredPets, togglePet, isPetPicked,
             search, filtered, isSyncing,
             showModal, isEdit, form, typeOptions, typeColor,
             openAdd, openEdit, save, askDelete, closeModal,

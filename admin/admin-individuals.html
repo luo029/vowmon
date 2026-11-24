@@ -103,13 +103,15 @@
         .trait-list { min-height: 44px; max-height: 92px; overflow-y: auto; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; }
         .trait-empty { font-size: 12.5px; color: #cbd5e0; font-weight: 700; }
         .trait-line { display: flex; align-items: stretch; gap: 8px; }
+        .trait-line .trait-list { flex: 1; min-width: 0; }
+        .trait-edit-inline { display: flex; align-items: center; gap: 6px; flex: 1.6; min-width: 0; }
         .trait-add-btn { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed #4299e1; background: #f0f7ff; color: #2b6cb0; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; }
         .trait-add-btn i { font-size: 15px; }
         .trait-add-btn:hover { background: #4299e1; color: #fff; border-style: solid; }
         .trait-add-mini { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px; background: #38a169; color: #fff; cursor: pointer; }
         .trait-cancel { width: 34px; height: 34px; padding: 0; flex: none; }
         .trait-add-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
-        .trait-search-wrap { position: relative; width: 260px; flex: none; }
+        .trait-search-wrap { position: relative; flex: 1; min-width: 0; }
         .trait-search-wrap input { width: 100%; padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; background: #fff; }
         .trait-search-wrap input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .trait-add, .trait-cancel { height: 34px; }
@@ -335,9 +337,8 @@
                                         <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
                                         <span class="trait-empty" v-if="!form.traits.length">暂未添加特性</span>
                                     </div>
-                                    <button type="button" class="trait-add-btn" v-if="!traitAdding" @click="openTraitInput"><i class="fa-solid fa-plus"></i><span>添加</span></button>
-                                </div>
-                                <div class="trait-add-row" v-if="traitAdding">
+                                <div v-if="!traitAdding && !form.traits.length" class="trait-add-btn" @click="openTraitInput"><i class="fa-solid fa-plus"></i><span>添加</span></div>
+                                <div class="trait-edit-inline" v-else-if="traitAdding">
                                     <div class="trait-search-wrap">
                                         <input ref="traitInputEl" v-model="traitInput" placeholder="" @input="onTraitInput" @keydown.enter="addTrait($event)">
                                         <div class="trait-drop" v-if="showTraitMenu && traitSuggestions.length">

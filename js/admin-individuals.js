@@ -65,7 +65,7 @@ function normalizeIndividual(v) {
     p.gender = GENDERS.includes(p.gender) ? p.gender : '';
     p.nature = String(p.nature == null ? '' : p.nature);
     p.personality = String(p.personality == null ? '' : p.personality);
-    p.traits = Array.isArray(p.traits) ? p.traits.map(t => String(t)).filter(t => t && t.trim()) : [];
+    p.traits = Array.isArray(p.traits) ? p.traits.map(t => String(t)).filter(t => t && t.trim()).slice(0, 1) : [];
     p.skills = Array.isArray(p.skills)
         ? p.skills.map(s => ({
             name: String((s && s.name) || '').trim(),
@@ -296,14 +296,17 @@ const app = createApp({
             if (e && (e.isComposing || e.keyCode === 229)) return;
             const name = traitInput.value.trim();
             if (!name) return;
-            if (!form.value.traits.includes(name)) form.value.traits.push(name);
+            /* 一只精灵只有一个特性：再次添加直接替换 */
+            form.value.traits = [name];
             traitInput.value = '';
             showTraitMenu.value = false;
+            traitAdding.value = false;
         };
         const pickTrait = (name) => {
-            if (!form.value.traits.includes(name)) form.value.traits.push(name);
+            form.value.traits = [name];
             traitInput.value = '';
             showTraitMenu.value = false;
+            traitAdding.value = false;
         };
         const removeTrait = (name) => {
             form.value.traits = form.value.traits.filter(t => t !== name);
