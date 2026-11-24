@@ -70,6 +70,7 @@
                             <th v-if="visibleCols.includes('cost')">能耗</th>
                             <th v-if="visibleCols.includes('power')">威力</th>
                             <th v-if="visibleCols.includes('tags')">标签</th>
+                            <th v-if="visibleCols.includes('learners')">可学精灵</th>
                             <th v-if="visibleCols.includes('effect')">效果</th>
                             <th style="text-align: right;">操作</th>
                         </tr>
@@ -96,6 +97,13 @@
                                     <span v-for="tag in (skill.tags || [])" :key="tag" class="tag-pill" :style="{ backgroundColor: getTagColor(tag) }"><i :class="getTagIcon(tag)"></i> {{ tag }}</span>
                                     <span v-if="!(skill.tags || []).length" style="color:#cbd5e0;">-</span>
                                 </div>
+                            </td>
+                            <td v-if="visibleCols.includes('learners')" class="col-learners">
+                                <span class="learner-count-pill" :style="(skill.learners || []).length ? {} : { background: '#edf2f7', color: '#a0aec0' }">
+                                    <i class="fa-solid fa-paw"></i> <span class="font-num">{{ (skill.learners || []).length }}</span> 只
+                                </span>
+                                <span v-if="(skill.learners || []).length" class="learner-names" :title="(skill.learners || []).join('、')">{{ (skill.learners || []).slice(0, 3).join('、') }}<template v-if="(skill.learners || []).length > 3"> 等</template></span>
+                                <span v-else style="color:#cbd5e0;">-</span>
                             </td>
                             <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ skill.effect }}</td>
                             <td style="text-align: right; white-space: nowrap;">
@@ -179,6 +187,41 @@
                         </div>
                     </div>
                     <div class="form-group full" style="grid-column: span 2;"><label>技能效果</label><textarea v-model="form.effect" class="custom-textarea" rows="3"></textarea></div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>可学会精灵 <span class="opt">已选 <span class="font-num">{{ (form.learners || []).length }}</span> 只 · 点属性胶囊筛选</span></label>
+                        <div class="learner-picker">
+                            <div class="learner-filter-row">
+                                <div class="learner-type-pills">
+                                    <span class="type-pill-option learner-pill-all" :class="{ active: learnerFilter === '' }" @click="learnerFilter = ''">全部</span>
+                                    <span class="type-pill-option" v-for="t in typeData" :key="t.name"
+                                          :class="{ active: learnerFilter === t.name }"
+                                          :style="learnerFilter === t.name ? { backgroundColor: t.color, borderColor: t.color } : { color: t.color }"
+                                          @click="learnerFilter = learnerFilter === t.name ? '' : t.name">
+                                        <i :class="t.icon"></i> {{ t.name }}
+                                    </span>
+                                </div>
+                                <div class="learner-actions">
+                                    <button type="button" class="btn btn-outline btn-sm" @click="selectAllLearners">
+                                        <i class="fa-solid fa-check-double"></i> 全选
+                                    </button>
+                                    <button type="button" class="btn btn-outline btn-sm" @click="clearLearners">
+                                        <i class="fa-solid fa-eraser"></i> 取消全选
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="learner-grid">
+                                <label class="learner-check" v-for="p in filteredLearnerPets" :key="p.id">
+                                    <input type="checkbox" :checked="hasLearner(p.name)" @change="toggleLearner(p.name)">
+                                    <span class="learner-name">{{ p.name }}</span>
+                                    <span class="learner-types">
+                                        <i v-for="t in p.types" :key="t" :class="getTypeIcon(t)" :style="{ color: getTypeColor(t) }" :title="t"></i>
+                                    </span>
+                                </label>
+                                <div class="learner-empty" v-if="!filteredLearnerPets.length">没有该属性的精灵</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

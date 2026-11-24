@@ -19,7 +19,7 @@ const CATEGORY_ALIAS = {
     '防御': '变化', '状态': '变化', '变化': '变化'
 };
 const normalizeCategory = (c) => CATEGORY_ALIAS[c] || SKILL_CATEGORIES[0];
-VowmonData.ready(['skills'], { fresh: true }).then(function () {
+VowmonData.ready(['skills','pets'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -55,12 +55,13 @@ createApp({
             cost: 0,
             power: 0,
             tags: [],
+            learners: [],   // 可学会该技能的精灵名列表
             effect: ''
         });
 
         const form = ref(defaultForm());
 
-        // 把一批技能规整：category 归一到三类、tags 保证是合法字符串数组。
+        // 把一批技能规整：category 归一到三类、tags / learners 保证是合法字符串数组。
         // 注意：自定义标签不一定在内置 tagNames 里，这里不能再按 tagNames 过滤，
         // 否则用户新建的标签会在加载时被清掉。
         const normalizeSkills = (list) => (list || []).map(item => ({
@@ -68,6 +69,9 @@ createApp({
             category: normalizeCategory(item.category),
             tags: Array.isArray(item.tags)
                 ? item.tags.map(t => String(t)).filter(t => t && t.trim())
+                : [],
+            learners: Array.isArray(item.learners)
+                ? item.learners.map(t => String(t)).filter(t => t && t.trim())
                 : []
         }));
 
@@ -139,7 +143,7 @@ createApp({
         const showColSettings = ref(false);
         const allColumns = {
             name: '技能名称', type: '属性', category: '分类',
-            cost: '能耗', power: '威力', tags: '标签', effect: '效果'
+            cost: '能耗', power: '威力', tags: '标签', learners: '可学精灵', effect: '效果'
         };
         // 显示列状态持久化：localStorage['vowmon_skills_visible_cols']
         // 未存过 -> 返回 null（用默认全选）；存过 -> 返回数组（可能是空数组，代表用户全取消）
@@ -186,18 +190,67 @@ createApp({
             if (window.VowmonStore) VowmonStore.save('skills', { skills: skills.value });
         };
 
+        /* ---------------------------------------------------- 可学会精灵选择 */
+        // 精灵池（来自 vow-data.json），支持按属性筛选 + 勾选 + 全选/取消全选
+        const pets = ref([]);
+        const learnerFilter = ref('');   // '' = 全部属性；否则为属性名
+
+        const learnerPool = computed(() => (pets.value || []).map(p => ({
+            id: p.id,
+            name: String(p.name || ''),
+            types: Array.isArray(p.types) ? p.types : []
+        })).filter(p => p.name));
+
+        const filteredLearnerPets = computed(() => {
+            if (!learnerFilter.value) return learnerPool.value;
+            return learnerPool.value.filter(p => p.types.includes(learnerFilter.value));
+        });
+
+        const hasLearner = (name) => (form.value.learners || []).includes(name);
+
+        const toggleLearner = (name) => {
+            if (!Array.isArray(form.value.learners)) form.value.learners = [];
+            const i = form.value.learners.indexOf(name);
+            if (i > -1) form.value.learners.splice(i, 1);
+            else form.value.learners.push(name);
+        };
+
+        // 全选：把当前筛选出的精灵全部加入
+        const selectAllLearners = () => {
+            if (!Array.isArray(form.value.learners)) form.value.learners = [];
+            filteredLearnerPets.value.forEach(p => {
+                if (!form.value.learners.includes(p.name)) form.value.learners.push(p.name);
+            });
+        };
+
+        // 取消全选：把当前筛选出的精灵全部移除（只影响可见范围，不动其它属性已勾的）
+        const clearLearners = () => {
+            if (!Array.isArray(form.value.learners)) return;
+            const names = new Set(filteredLearnerPets.value.map(p => p.name));
+            form.value.learners = form.value.learners.filter(n => !names.has(n));
+        };
+
+        // 当前筛选范围内是否已全部勾选（控制全选/取消按钮提示）
+        const allFilteredSelected = computed(() => {
+            const list = filteredLearnerPets.value;
+            if (!list.length) return false;
+            return list.every(p => (form.value.learners || []).includes(p.name));
+        });
+
         /* ---------------------------------------------------------------- 编辑 */
         const openEditor = (skill, index) => {
             if (skill && typeof index === 'number') {
                 isEdit.value = true;
                 editIndex.value = index;
                 form.value = JSON.parse(JSON.stringify(skill));
+                if (!Array.isArray(form.value.learners)) form.value.learners = [];
             } else {
                 isEdit.value = false;
                 editIndex.value = -1;
                 form.value = defaultForm();
                 form.value.id = nextSkillId();
             }
+            learnerFilter.value = '';
             activeDropdown.value = '';
             tagQuery.value = '';
             showTagDropdown.value = false;
@@ -216,6 +269,9 @@ createApp({
             item.category = normalizeCategory(item.category);
             item.tags = Array.isArray(item.tags)
                 ? item.tags.map(t => String(t)).filter(t => t && t.trim())
+                : [];
+            item.learners = Array.isArray(item.learners)
+                ? item.learners.map(t => String(t)).filter(t => t && t.trim())
                 : [];
             if (!item.id) item.id = nextSkillId();
 
@@ -322,6 +378,14 @@ createApp({
                 skills.value = normalizeSkills(allSkillsData);
             }
 
+            // 精灵池：给「可学会精灵」选择器用（ready(['skills','pets']) 已保证 allPetsData 就绪）
+            try {
+                pets.value = JSON.parse(localStorage.getItem('vowmon_pets_data') || 'null')
+                    || JSON.parse(JSON.stringify(allPetsData));
+            } catch (err) {
+                pets.value = JSON.parse(JSON.stringify(allPetsData));
+            }
+
             // 点击「显示列」浮层/标签选择器以外的地方时收起对应面板。
             // 注意：这里用捕获阶段（true），是先于目标元素上的 @click.stop 执行的，
             // 所以必须自己判断点击是否落在面板内部——之前无条件 showColSettings=false，
@@ -377,6 +441,8 @@ createApp({
             getTypeIcon, getTypeColor,
             getCategoryIcon, getCategoryColor,
             getTagIcon, getTagColor,
+            learnerFilter, filteredLearnerPets,
+            hasLearner, toggleLearner, selectAllLearners, clearLearners, allFilteredSelected,
             showColSettings, allColumns, visibleCols,
             config,
             skills,
