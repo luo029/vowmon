@@ -39,9 +39,28 @@
         .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
         .type-pill i { font-size: 10px; }
 
-        /* 展示台：属性色渐变底 + 两层缓慢流动的纹样背景 + 精灵上下浮动 */
-        .showcase { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.6); box-shadow: 0 12px 32px rgba(45,55,72,.14); background: linear-gradient(160deg, var(--sc-c1, #bee3f8) 0%, var(--sc-c2, #e8f4fd) 58%, #f7fbfe 100%); }
-        .showcase .stage { position: relative; height: 340px; display: flex; align-items: center; justify-content: center; }
+        /* 展示台：属性色渐变底 + 左上光泽 + 流动纹样 + 上升气泡 + 精灵上下浮动 */
+        .showcase { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.6); box-shadow: 0 12px 32px rgba(45,55,72,.14);
+            background:
+                radial-gradient(95% 75% at 80% 8%, rgba(255,255,255,.5), transparent 58%),
+                linear-gradient(160deg, var(--sc-c1, #bee3f8) 0%, var(--sc-c2, #e8f4fd) 55%, #f9fbfe 100%); }
+        .showcase .stage { position: relative; height: 400px; display: flex; align-items: center; justify-content: center; }
+
+        /* 左上高光 + 底部柔和阴影，让台面更有层次 */
+        .showcase .shine { position: absolute; inset: 0; pointer-events: none;
+            background:
+                radial-gradient(70% 55% at 22% 12%, rgba(255,255,255,.42), transparent 62%),
+                linear-gradient(0deg, rgba(45,55,72,.08) 0%, transparent 22%); }
+
+        /* 上升气泡：小光点从底部缓缓飘起（只动 transform/opacity） */
+        .showcase .bubble { position: absolute; bottom: -34px; border-radius: 50%; pointer-events: none; z-index: 1;
+            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.85), rgba(255,255,255,.2) 58%, transparent 72%);
+            animation: bubbleUp linear infinite; will-change: transform, opacity; }
+        @keyframes bubbleUp {
+            0% { transform: translate3d(0, 0, 0); opacity: 0; }
+            14% { opacity: .85; }
+            82% { opacity: .45; }
+            100% { transform: translate3d(28px, -480px, 0); opacity: 0; } }
 
         /* 流动背景：两层大尺寸纹样分别向两个方向缓慢平移（只动 transform，GPU 合成，流畅） */
         .showcase .drift { position: absolute; inset: -60%; pointer-events: none; will-change: transform; }
@@ -51,7 +70,7 @@
         @keyframes driftB { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(76px, -38px, 0); } }
 
         .pet-figure { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-        .pet-figure img { width: 250px; max-width: 70vw; height: 250px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.22)); animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
+        .pet-figure img { width: 310px; max-width: 76vw; height: 310px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.22)); animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
         @keyframes petFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
         /* 地面影子随浮动同步缩放，更像真的悬浮 */
         .pet-shadow { width: 130px; height: 16px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.26) 0%, transparent 68%); animation: shadowPulse 3.2s ease-in-out infinite; }
@@ -128,14 +147,38 @@
 
         /* 动画开关：关 = 全站无动画（浮动 / 流动背景 / 过渡全部停掉，背景保留为静态） */
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+        .no-anim .bubble { display: none; }
+
+        /* ---------------- 整页背景：柔和渐变 + 三团缓漂的彩色光斑 ---------------- */
+        body { background: linear-gradient(180deg, #f7fafd 0%, #eef4fa 100%); }
+        .page-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+        .page-bg .blob { position: absolute; border-radius: 50%; will-change: transform; }
+        .page-bg .blob.b1 { width: 560px; height: 560px; left: -160px; top: -180px;
+            background: radial-gradient(circle, rgba(147,197,253,.34) 0%, rgba(147,197,253,0) 68%);
+            animation: blobA 52s ease-in-out infinite alternate; }
+        .page-bg .blob.b2 { width: 640px; height: 640px; right: -220px; top: 24%;
+            background: radial-gradient(circle, rgba(253,186,200,.26) 0%, rgba(253,186,200,0) 68%);
+            animation: blobB 64s ease-in-out infinite alternate; }
+        .page-bg .blob.b3 { width: 520px; height: 520px; left: 26%; bottom: -220px;
+            background: radial-gradient(circle, rgba(134,239,172,.24) 0%, rgba(134,239,172,0) 68%);
+            animation: blobC 58s ease-in-out infinite alternate; }
+        .page-bg .dots { position: absolute; inset: 0;
+            background-image: radial-gradient(circle, rgba(148,163,184,.14) 0 2px, transparent 2.6px);
+            background-size: 44px 44px; }
+        @keyframes blobA { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(130px, 90px, 0); } }
+        @keyframes blobB { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-150px, -110px, 0); } }
+        @keyframes blobC { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(110px, -80px, 0); } }
 
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; gap: 14px; padding: 0 12px; }
             .crumb-bar { flex-wrap: wrap; padding: 0 12px; }
             .neighbor-chip { max-width: 140px; }
-            .showcase .stage { height: 280px; }
-            .pet-figure img { width: 200px; height: 200px; }
+            .showcase .stage { height: 330px; }
+            .pet-figure img { width: 255px; height: 255px; }
             .pet-name-bar h1 { font-size: 21px; }
+            .page-bg .blob.b1 { width: 380px; height: 380px; }
+            .page-bg .blob.b2 { width: 420px; height: 420px; }
+            .page-bg .blob.b3 { width: 360px; height: 360px; }
         }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261125a">
@@ -146,6 +189,14 @@
 
 <div id="app">
     <div id="site-navbar"></div>
+
+    <!-- 整页装饰背景：三团缓漂光斑 + 细点阵 -->
+    <div class="page-bg">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+        <div class="dots"></div>
+    </div>
 
     <template v-if="pet">
         <!-- 顶部：返回 + 上/下一只 -->
@@ -182,6 +233,8 @@
                 <div class="showcase" :style="showcaseStyle">
                     <div class="drift a"></div>
                     <div class="drift b"></div>
+                    <div class="shine"></div>
+                    <span class="bubble" v-for="n in 7" :key="n" :style="bubbleStyle(n)"></span>
                     <div class="stage">
                         <div class="pet-figure">
                             <img :src="displayImg" :alt="pet.name" decoding="async">
@@ -351,6 +404,15 @@ VowmonData.ready(['pets']).then(function () {
                 return { '--sc-c1': c + 'cc', '--sc-c2': c + '33' };
             });
 
+            // 展示台上升气泡：按序号散布位置 / 大小 / 速度（伪随机但每次渲染一致）
+            const bubbleStyle = (n) => ({
+                left: ((n * 137) % 92) + 3 + '%',
+                width: (10 + (n * 53) % 24) + 'px',
+                height: (10 + (n * 53) % 24) + 'px',
+                animationDuration: (9 + (n * 29) % 8) + 's',
+                animationDelay: -((n * 47) % 12) + 's'
+            });
+
             /* ---------------- 动画开关（关 = 浮动/流动背景全停，异色不轮播） ---------------- */
             const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
             const updateBodyClass = () => {
@@ -415,12 +477,37 @@ VowmonData.ready(['pets']).then(function () {
             const evoNodes = computed(() => {
                 if (!pet.value) return [];
                 const p = pet.value;
-                const fromIds = Array.isArray(p.evoFrom) ? p.evoFrom : [];
-                const toIds = Array.isArray(p.evoTo) ? p.evoTo : [];
+                const seen = new Set();
                 const nodes = [];
-                fromIds.forEach(id => { const q = petById.value.get(String(id)); if (q) nodes.push({ id: q.id, name: q.name, image: q.image }); });
-                nodes.push({ id: p.id, name: p.name, image: p.image });
-                toIds.forEach(id => { const q = petById.value.get(String(id)); if (q) nodes.push({ id: q.id, name: q.name, image: q.image }); });
+                const pushUnique = (q) => {
+                    if (!q || seen.has(q.id)) return;
+                    seen.add(q.id);
+                    nodes.push({ id: q.id, name: q.name, image: q.image });
+                };
+                // 向上递归收集祖先：evoFrom 只有直接上一阶，
+                // 祖先自己可能还有 evoFrom（009→008→007 这种三阶链）
+                const collectUp = (node) => {
+                    const fromIds = Array.isArray(node.evoFrom) ? node.evoFrom : [];
+                    fromIds.forEach(id => {
+                        const q = petById.value.get(String(id));
+                        if (!q) return;
+                        collectUp(q);
+                        pushUnique(q);
+                    });
+                };
+                collectUp(p);
+                pushUnique(p);
+                // 向下递归收集后代（同理 evoTo 链可能超过一层）
+                const collectDown = (node) => {
+                    const toIds = Array.isArray(node.evoTo) ? node.evoTo : [];
+                    toIds.forEach(id => {
+                        const q = petById.value.get(String(id));
+                        if (!q) return;
+                        pushUnique(q);
+                        collectDown(q);
+                    });
+                };
+                collectDown(p);
                 return nodes;
             });
 
@@ -472,7 +559,7 @@ VowmonData.ready(['pets']).then(function () {
             return {
                 pet, notFound, prevPet, nextPet, gotoId,
                 getImgUrl, getTypeColor, getTypeIcon,
-                isShiny, displayImg, showcaseStyle,
+                isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
                 heightText, weightText,
                 abilityRows, evoNodes,
