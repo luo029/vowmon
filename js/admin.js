@@ -845,7 +845,11 @@ createApp({
                 try {
                     const tbag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'traits-data.json');
                     if (tbag && Array.isArray(tbag.traits)) {
-                        traits.value = JSON.parse(JSON.stringify(tbag.traits));
+                        traits.value = tbag.traits.map(t => ({
+                            ...t,
+                            pokemons: Array.isArray(t.pokemons) ? t.pokemons : [],
+                            hiddenPokemons: Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : []
+                        }));
                         localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
                         if (window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
                     }

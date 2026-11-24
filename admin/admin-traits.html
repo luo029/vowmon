@@ -84,10 +84,10 @@
                             <!-- 超过3个精灵则显示省略号 -->
                             <td v-if="visibleCols.includes('pokemons')">
                                 <span class="trait-owner-list">
-                                    <span class="trait-owner-pill" v-for="n in trait.pokemons.slice(0, 2)" :key="n">{{ n }}</span>
-                                    <span class="trait-owner-pill hidden" v-for="n in trait.hiddenPokemons.slice(0, 2)" :key="'h' + n">★{{ n }}</span>
-                                    <span v-if="(trait.pokemons.length + trait.hiddenPokemons.length) > 4" style="color:#a0aec0; font-size:12px;">等 {{ trait.pokemons.length + trait.hiddenPokemons.length }} 只</span>
-                                    <span v-if="!(trait.pokemons.length + trait.hiddenPokemons.length)" style="color:#cbd5e0; font-size:12px;">—</span>
+                                    <span class="trait-owner-pill" v-for="n in (trait.pokemons || []).slice(0, 2)" :key="n">{{ n }}</span>
+                                    <span class="trait-owner-pill hidden" v-for="n in (trait.hiddenPokemons || []).slice(0, 2)" :key="'h' + n">★{{ n }}</span>
+                                    <span v-if="((trait.pokemons || []).length + (trait.hiddenPokemons || []).length) > 4" style="color:#a0aec0; font-size:12px;">等 {{ (trait.pokemons || []).length + (trait.hiddenPokemons || []).length }} 只</span>
+                                    <span v-if="!((trait.pokemons || []).length + (trait.hiddenPokemons || []).length)" style="color:#cbd5e0; font-size:12px;">—</span>
                                 </span>
                             </td>
                             <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ trait.effect }}</td>

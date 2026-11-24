@@ -50,6 +50,14 @@ createApp({
             effect: ''
         });
 
+        // 规整一批特性数据：老数据可能缺 pokemons / hiddenPokemons 字段，统一补齐，
+        // 否则表格渲染 .slice 会抛错导致整页白屏
+        const normalizeTraitList = (list) => (Array.isArray(list) ? list : []).map(t => ({
+            ...t,
+            types: Array.isArray(t.types) ? t.types : [],
+            pokemons: Array.isArray(t.pokemons) ? t.pokemons : [],
+            hiddenPokemons: Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : []
+        }));
         const form = ref(defaultForm());
 
         /* ------------------------------------------------------------ 显示列 */
@@ -325,13 +333,13 @@ createApp({
             const savedTraits = localStorage.getItem('vowmon_traits_data');
             if (savedTraits) {
                 try {
-                    traits.value = JSON.parse(savedTraits);
+                    traits.value = normalizeTraitList(JSON.parse(savedTraits));
                 } catch (err) {
                     console.warn('本地特性数据解析失败，改用默认数据', err);
-                    traits.value = JSON.parse(JSON.stringify(allTraitsData));
+                    traits.value = normalizeTraitList(JSON.parse(JSON.stringify(allTraitsData)));
                 }
             } else {
-                traits.value = JSON.parse(JSON.stringify(allTraitsData));
+                traits.value = normalizeTraitList(JSON.parse(JSON.stringify(allTraitsData)));
             }
 
             const savedPets = localStorage.getItem('vowmon_pets_data');
@@ -379,7 +387,7 @@ createApp({
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'traits-data.json');
                 if (!bag || !Array.isArray(bag.traits)) throw new Error('仓库里没有 traits-data.json，或字段不是 traits 数组');
 
-                traits.value = JSON.parse(JSON.stringify(bag.traits));
+                traits.value = normalizeTraitList(JSON.parse(JSON.stringify(bag.traits)));
                 localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
                 if (window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + traits.value.length + ' 条特性', 'success', { duration: 3200 });
