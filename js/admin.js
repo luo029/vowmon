@@ -122,6 +122,26 @@ createApp({
 
         const form = reactive(defaultForm());
 
+        /* 分类学联动：科 / 属 / 种只要有一个已录入过，就自动补全前面的域界门纲目。
+           只填空字段，不覆盖用户已写内容；匹配优先级：种 → 属 → 科。 */
+        watch(() => [form.taxonomy.family, form.taxonomy.genus, form.taxonomy.species], () => {
+            const t = form.taxonomy;
+            const rules = [
+                ['species', ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']],
+                ['genus', ['domain', 'kingdom', 'phylum', 'class', 'order', 'family']],
+                ['family', ['domain', 'kingdom', 'phylum', 'class', 'order']]
+            ];
+            rules.forEach(([key, targets]) => {
+                const val = String(t[key] || '').trim();
+                if (!val) return;
+                const hit = pets.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
+                if (!hit) return;
+                targets.forEach(k => {
+                    if (!String(t[k] || '').trim() && hit.taxonomy[k]) t[k] = hit.taxonomy[k];
+                });
+            });
+        });
+
         onMounted(() => {
             const storedData = localStorage.getItem('vowmon_pets_data');
             if (storedData) {

@@ -14,9 +14,9 @@
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
-        .tax-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 16px; }
-        .tax-cell label { display: block; font-size: 11px; font-weight: 900; color: #718096; margin-bottom: 4px; }
-        .tax-cell input { width: 100%; padding: 7px 8px; border: 1px solid #dbe4ec; border-radius: 8px; font-size: 12.5px; outline: none; font-family: inherit; }
+        .tax-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; max-width: 900px; margin: 0 auto 14px; }
+        .tax-cell label { display: block; font-size: 12px; font-weight: 900; color: #4a5568; margin-bottom: 5px; text-align: center; }
+        .tax-cell input { width: 100%; padding: 8px 6px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; text-align: center; background: #fbfdff; }
         .tax-cell input:focus { border-color: #4299e1; box-shadow: 0 0 0 2px rgba(66,153,225,.12); }
     </style>
 </head>
@@ -346,7 +346,7 @@
                         <div class="tax-cell"><label>属</label><input v-model="form.taxonomy.genus" placeholder=""></div>
                         <div class="tax-cell"><label>种</label><input v-model="form.taxonomy.species" placeholder=""></div>
                     </div>
-                    <p class="hint" style="margin:-8px 0 14px;">科决定该精灵所属族尊下发的十八系血脉技能；在「血脉技能」页按科批量设置。</p>
+                    <p class="hint" style="margin:-2px 0 16px; text-align:center;">科决定该精灵所属族尊下发的十八系血脉技能；在「血脉技能」页按科批量设置。</p>
                     <div class="form-group full" style="margin-bottom: 16px;">
                         <label>属性 (点击多选)</label>
                         <div class="type-pill-select">
@@ -605,6 +605,6 @@
 <script src="../js/image-utils.js?v=20261124d"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124d"></script>
-<script src="../js/admin.js?v=20261124k"></script>
+<script src="../js/admin.js?v=20261124m"></script>
 </body>
 </html>

@@ -17,7 +17,7 @@
          （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
 
-const { createApp, ref, computed, onMounted, nextTick } = Vue;
+const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
 const RANK_BANDS = [
     { name: '初灵', min: 1,   max: 15 },
@@ -148,6 +148,23 @@ const app = createApp({
         const typeMap = (typeof typeData !== 'undefined' && Array.isArray(typeData))
             ? new Map(typeData.map(t => [t.name, t])) : new Map();
         const typeColor = (t) => (typeMap.get(t) || {}).color || '#cbd5e0';
+
+        /* 分类学联动：科/属/种已存在时自动补全域界门纲目（只填空，不覆盖） */
+        watch(() => [form.value.taxonomy.family, form.value.taxonomy.genus, form.value.taxonomy.species], () => {
+            const t = form.value.taxonomy;
+            const rules = [
+                ['species', ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus']],
+                ['genus', ['domain', 'kingdom', 'phylum', 'class', 'order', 'family']],
+                ['family', ['domain', 'kingdom', 'phylum', 'class', 'order']]
+            ];
+            rules.forEach(([key, targets]) => {
+                const val = String(t[key] || '').trim();
+                if (!val) return;
+                const hit = pets.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
+                if (!hit) return;
+                targets.forEach(k => { if (!String(t[k] || '').trim() && hit.taxonomy[k]) t[k] = hit.taxonomy[k]; });
+            });
+        });
 
         /* ------------------------------------------------------------- 工具 */
         const petById = computed(() => {
