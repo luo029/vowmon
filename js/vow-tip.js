@@ -24,8 +24,8 @@
         var w = box.offsetWidth;
         var h = box.offsetHeight;
         var x = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
-        var y = r.bottom + 8;
-        if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 8);
+        var y = r.top - h - 8;
+        if (y < 8) y = Math.min(window.innerHeight - h - 8, r.bottom + 8);
         box.style.left = x + 'px';
         box.style.top = y + 'px';
     }

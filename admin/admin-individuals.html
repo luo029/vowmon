@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125b">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125c">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
@@ -100,6 +100,8 @@
         .trait-input-box input { flex: 1 1 140px; min-width: 100px; padding: 4px 0; border: 0 !important; box-shadow: none !important; background: transparent !important; }
         .trait-input-box input::placeholder { color: #cbd5e0; }
         .trait-search-icon { color: #718096; font-size: 13px; }
+        .trait-add { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #bee3f8; border-radius: 9px; background: #ebf8ff; color: #2b6cb0; font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .trait-add:hover { background: #bee3f8; }
         .td-head { font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .06em; padding: 6px 11px 4px; }
         .td-none { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #a0aec0; }
 
@@ -153,8 +155,17 @@
         .sp-cell .sp-i { font-size: 10.5px; color: #a0aec0; font-weight: 700; }
 
         .lv-tag { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12px; font-weight: 900; letter-spacing: .05em; padding: 7px 18px; border-radius: 999px; color: #fff; flex-shrink: 0; }
-        .level-row { display: flex; align-items: center; gap: 12px; grid-column: span 2; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 14px; }
-        .level-row input { flex: none; width: 180px; }
+        /* 基本信息三列紧凑排版 */
+        .basic-grid { grid-template-columns: 1fr 1fr 1.25fr; }
+        .basic-grid .seg-opt { padding: 8px 11px; }
+        .basic-grid .species-pick { gap: 7px; }
+        .basic-grid .sp-view { flex: 1; min-width: 0; min-height: 46px; padding: 5px 8px; gap: 7px; }
+        .basic-grid .sp-view img { width: 34px; height: 34px; }
+        .basic-grid .sp-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .basic-grid .sp-btn { padding: 8px 11px; }
+        .level-row { display: flex; align-items: center; gap: 12px; grid-column: 1 / -1; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 14px; }
+        .level-row input { flex: none; width: 80px; padding: 8px 10px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; color: #2d3748; font-size: 14px; font-weight: 800; text-align: center; outline: none; font-family: inherit; }
+        .level-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
         .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
     </style>
@@ -265,7 +276,7 @@
                 <!-- 基本信息 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-circle-info"></i> 基本信息</div>
-                    <div class="form-grid">
+                    <div class="form-grid basic-grid">
                         <div class="form-group"><label>昵称 <i class="tip" data-tip="可以不填；留空则直接用种族名当称呼">?</i></label><input v-model="form.nickname" placeholder=""></div>
                         <div class="form-group"><label>性别</label>
                             <div class="seg-group">
@@ -274,22 +285,22 @@
                                         @click="form.gender = (form.gender === g ? '' : g)">{{ g }}</button>
                             </div>
                         </div>
-                        <div class="form-group" style="grid-column: span 2;"><label>种族 <i class="tip" data-tip="从精灵图鉴选择；若该种族只有一个特性会自动填入">?</i></label>
+                        <div class="form-group"><label>种族 <i class="tip" data-tip="从精灵图鉴选择；若该种族只有一个特性会自动填入">?</i></label>
                             <div class="species-pick">
                                 <div class="sp-view">
                                     <img v-if="formSpeciesImage" :src="formSpeciesImage" alt="">
-                                    <i v-else class="fa-solid fa-paw" style="font-size: 26px; color: #cbd5e0;"></i>
+                                    <i v-else class="fa-solid fa-paw" style="font-size: 20px; color: #cbd5e0;"></i>
                                     <div>
                                         <div class="sp-name">{{ formSpeciesLabel.name || '未关联种族' }}</div>
                                         <div class="sp-id" v-if="formSpeciesLabel.id">{{ formSpeciesLabel.id }}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="sp-btn" @click.stop="openSpeciesModal"><i class="fa-solid fa-paw"></i> 选择种族</button>
+                                <button type="button" class="sp-btn" @click.stop="openSpeciesModal" title="选择种族"><i class="fa-solid fa-paw"></i></button>
                             </div>
                         </div>
                         <div class="level-row">
                             <span class="lv-label" style="min-width: 66px; font-weight: 900; color: #4a5568;">等级 <i class="tip" data-tip="填 1-100 即可；阶段由等级自动推导（初灵→升灵→族尊→基座→灵相→律冠→元灵→元）">?</i></span>
-                            <input type="number" min="1" max="100" v-model.number="form.level">
+                            <input type="text" inputmode="numeric" v-model.number="form.level">
                             <i class="fa-solid fa-arrow-right lv-arrow"></i>
                             <span class="lv-label">当前阶段</span>
                             <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
@@ -305,21 +316,13 @@
                         <div class="nature-hint" v-if="form.nature && natureHintOf(form.nature)">{{ form.nature }}：{{ natureHintOf(form.nature) }}</div>
                     </div>
                     <div class="form-group" style="margin-bottom: 14px;"><label>习性 <i class="tip" data-tip="这只精灵的脾气秉性，自由描述">?</i></label><vow-textarea v-model="form.personality" :rows="2"></vow-textarea></div>
-                    <div class="form-group"><label>特性 <i class="tip" data-tip="输入关键词搜索图鉴特性；回车可自由添加图鉴里没有的">?</i></label>
+                    <div class="form-group"><label>特性 <i class="tip" data-tip="输入特性名后点「添加特性」；已添加的可点 × 移除。选择种族时若只有一个特性会自动填入">?</i></label>
                         <div class="trait-wrap">
                             <div class="trait-chips trait-input-box">
-                                <i class="fa-solid fa-magnifying-glass trait-search-icon"></i>
                                 <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
-                                <input v-model="traitInput" placeholder="" @input="onTraitInput" @keydown.enter="addTrait($event)">
+                                <input v-model="traitInput" placeholder="" @keydown.enter="addTrait($event)">
                             </div>
-                            <div class="trait-drop" v-if="showTraitMenu && traitInput.trim()">
-                                <div class="td-head">图鉴特性搜索结果</div>
-                                <div class="td-item" v-for="n in traitSuggestions" :key="n" @click.stop="pickTrait(n)">
-                                    <i class="fa-solid fa-crown"></i>{{ n }}
-                                    <span class="td-tag">图鉴特性</span>
-                                </div>
-                                <div class="td-none" v-if="!traitSuggestions.length">没有匹配项 · 按回车可自由添加「{{ traitInput.trim() }}」</div>
-                            </div>
+                            <button type="button" class="trait-add" @click="addTrait()"><i class="fa-solid fa-plus"></i> 添加特性</button>
                         </div>
                     </div>
                 </div>
@@ -450,10 +453,10 @@
 <script src="../js/data-loader.js?v=20261125b"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/vow-tip.js?v=20261125"></script>
-<script src="../js/vow-textarea.js?v=20261125"></script>
+<script src="../js/vow-tip.js?v=20261125b"></script>
+<script src="../js/vow-textarea.js?v=20261125b"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261125"></script>
-<script src="../js/admin-individuals.js?v=20261125f"></script>
+<script src="../js/admin-individuals.js?v=20261125g"></script>
 </body>
 </html>

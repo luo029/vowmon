@@ -23,12 +23,14 @@
                 var t = e && e.target;
                 if (!t) return;
                 t.style.height = 'auto';
-                t.style.height = Math.max(t.scrollHeight, 56) + 'px';
+                var h = Math.max(t.scrollHeight, 56) + 'px';
+                requestAnimationFrame(function () { t.style.height = h; });
             },
             onInput: function (e) {
                 this.$emit('update:modelValue', e.target.value);
                 this.grow(e);
             },
+            onBigInput: function (e) { this.$emit('update:modelValue', e.target.value); },
             toggle: function () {
                 this.expanded = !this.expanded;
                 if (this.expanded) {
@@ -55,13 +57,15 @@
             '    <textarea ref="small" class="vta-small" :rows="rows" :value="modelValue" @input="onInput"></textarea>' +
             '    <button type="button" class="vta-expand" @click="toggle" title="放大编辑"><i class="fa-solid fa-expand"></i></button>' +
             '  </div>' +
-            '  <div class="vta-overlay" v-if="expanded" @click.self="done">' +
-            '    <div class="vta-modal">' +
-            '      <div class="vta-head"><b>放大编辑</b><button type="button" class="btn-close" @click="done"><i class="fa-solid fa-xmark"></i></button></div>' +
-            '      <textarea ref="big" class="vta-big" :value="modelValue" @input="onInput"></textarea>' +
-            '      <div class="vta-foot"><button type="button" class="btn btn-primary btn-sm" @click="done"><i class="fa-solid fa-check"></i> 完成</button></div>' +
+            '  <teleport to="body">' +
+            '    <div class="vta-overlay" v-if="expanded" @click.self="done">' +
+            '      <div class="vta-modal">' +
+            '        <div class="vta-head"><b>放大编辑</b><button type="button" class="btn-close" @click="done"><i class="fa-solid fa-xmark"></i></button></div>' +
+            '        <textarea ref="big" class="vta-big" :value="modelValue" @input="onBigInput"></textarea>' +
+            '        <div class="vta-foot"><button type="button" class="btn btn-primary btn-sm" @click="done"><i class="fa-solid fa-check"></i> 完成</button></div>' +
+            '      </div>' +
             '    </div>' +
-            '  </div>' +
+            '  </teleport>' +
             '</div>'
     };
 })();

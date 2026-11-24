@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125b">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125c">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
@@ -67,6 +67,7 @@
         .sect-title i { font-size: 12px; }
         .sect-title::after { content: none; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+        .basic-grid { grid-template-columns: repeat(3, 1fr); }
         .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; display: block; }
         .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fbfdff; transition: border-color .15s, box-shadow .15s; }
@@ -209,7 +210,7 @@
                 <!-- 基本信息 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
-                    <div class="form-grid">
+                    <div class="form-grid basic-grid">
                         <div class="form-group"><label>姓名 <i class="tip" data-tip="必填">?</i></label><input v-model="form.name" placeholder=""></div>
                         <div class="form-group"><label>头衔 / 称号 <i class="tip" data-tip="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder=""></div>
                         <div class="form-group"><label>所属势力 <i class="tip" data-tip="如：九牧联盟 / 荒野">?</i></label>
@@ -217,7 +218,7 @@
                         </div>
                         <div class="form-group"><label>出生地区 <i class="tip" data-tip="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder=""></div>
                         <div class="form-group"><label>联盟职位 <i class="tip" data-tip="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder=""></div>
-                        <div class="form-group"><label>存款 <i class="tip" data-tip="联盟币">?</i></label><input type="number" min="0" v-model.number="form.money"></div>
+                        <div class="form-group"><label>存款 <i class="tip" data-tip="联盟币">?</i></label><input type="text" inputmode="numeric" v-model.number="form.money"></div>
                     </div>
                 </div>
 
@@ -324,9 +325,9 @@
 <script src="../js/data-loader.js?v=20261125b"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/vow-tip.js?v=20261125"></script>
-<script src="../js/vow-textarea.js?v=20261125"></script>
+<script src="../js/vow-tip.js?v=20261125b"></script>
+<script src="../js/vow-textarea.js?v=20261125b"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125g"></script>
+<script src="../js/admin-characters.js?v=20261125h"></script>
 </body>
 </html>
