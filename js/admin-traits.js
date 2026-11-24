@@ -132,6 +132,8 @@ createApp({
 
         const saveLocal = () => {
             localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
+            // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
+            if (window.VowmonStore) VowmonStore.save('traits', { traits: traits.value });
         };
 
         /* ---------------------------------------------------------------- 编辑 */
@@ -319,6 +321,7 @@ createApp({
 
                 traits.value = JSON.parse(JSON.stringify(bag.traits));
                 localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
+                if (window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + traits.value.length + ' 条特性', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {

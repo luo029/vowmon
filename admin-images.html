@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 图片管理</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/common-ui.css">
     <link rel="stylesheet" href="css/dialog.css">
@@ -143,8 +141,11 @@
                                         <i class="fa-solid" :class="img.usedBy.length ? 'fa-link' : 'fa-unlink'"></i>
                                         {{ img.usedBy.length ? '已用 · ' + img.usedBy.length : '未使用' }}
                                     </span>
+                                    <span class="badge badge-shiny" v-if="looksShiny(img.path)" title="文件名是异色图格式（_s / _s2）"><i class="fa-solid fa-star"></i> 异色</span>
                                 </div>
-                                <div class="img-used-names" v-if="img.usedBy.length">{{ img.usedBy.join('、') }}</div>
+                                <div class="img-used-names" v-if="img.usedBy.length">
+                                    <span class="used-chip" v-for="(n, ni) in img.usedBy" :key="ni"><i class="fa-solid fa-paw"></i>{{ n }}</span>
+                                </div>
                                 <div class="img-actions">
                                     <button class="action-btn mini" @click="copyPath(img.path)"><i class="fa-regular fa-copy"></i> 复制路径</button>
                                     <button class="action-btn mini" @click="replacePetWith(img)"><i class="fa-solid fa-paw"></i> 设为精灵图</button>
@@ -239,8 +240,21 @@
             </div>
             <div class="modal-body">
                 <div class="alert-box" v-if="uploadPet">
-                    <i class="fa-solid fa-circle-info"></i>
-                    正在为 <strong>{{ uploadPet.name }}（#{{ uploadPet.id }}）</strong> 上传图片。上传成功后会把路径自动写入该精灵，替换原有图片。
+                    <i class="fa-solid" :class="uploadMode === 'shiny' ? 'fa-star' : 'fa-circle-info'"></i>
+                    <span v-if="uploadMode === 'shiny'">正在为 <strong>{{ uploadPet.name }}（#{{ uploadPet.id }}）</strong> 上传<strong>异色图</strong>。上传成功后路径会追加到该精灵的异色列表，<strong>主图保持不变</strong>。</span>
+                    <span v-else>正在为 <strong>{{ uploadPet.name }}（#{{ uploadPet.id }}）</strong> 上传图片。上传成功后会把路径自动写入该精灵，替换原有图片。</span>
+                </div>
+                <div class="form-group" v-if="uploadPet">
+                    <label>存到哪个位置</label>
+                    <div class="mode-switch">
+                        <button type="button" class="mode-opt" :class="{ active: uploadMode === 'image' }" @click="setUploadMode('image')">
+                            <i class="fa-solid fa-image"></i> 主图（替换原图）
+                        </button>
+                        <button type="button" class="mode-opt" :class="{ active: uploadMode === 'shiny' }" @click="setUploadMode('shiny')">
+                            <i class="fa-solid fa-star"></i> 异色图（追加）
+                        </button>
+                    </div>
+                    <p class="field-hint">切到异色图时，路径会自动从 <code>sprites/{{ uploadPet.id }}.png</code> 变成 <code>sprites/{{ uploadPet.id }}_s.png</code>。</p>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -280,7 +294,23 @@
                 <button class="btn-close" @click="showBindModal = false"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="alert-box"><i class="fa-solid fa-circle-info"></i> 将把路径 <strong>{{ bindImage ? bindImage.path : '' }}</strong> 写入所选精灵，替换其原图片。</div>
+                <div class="alert-box" :class="bindMode === 'shiny' ? 'alert-info' : 'alert-warn'">
+                    <i class="fa-solid" :class="bindMode === 'shiny' ? 'fa-star' : 'fa-circle-info'"></i>
+                    <span v-if="bindMode === 'shiny'">将把路径 <strong>{{ bindImage ? bindImage.path : '' }}</strong> 作为<strong>异色图</strong>追加到所选精灵，<strong>不会动它的主图</strong>。</span>
+                    <span v-else>将把路径 <strong>{{ bindImage ? bindImage.path : '' }}</strong> 写入所选精灵，<strong>替换其原图片</strong>。</span>
+                </div>
+                <div class="form-group">
+                    <label>存到哪个位置</label>
+                    <div class="mode-switch">
+                        <button type="button" class="mode-opt" :class="{ active: bindMode === 'image' }" @click="bindMode = 'image'">
+                            <i class="fa-solid fa-image"></i> 主图（替换原图）
+                        </button>
+                        <button type="button" class="mode-opt" :class="{ active: bindMode === 'shiny' }" @click="bindMode = 'shiny'">
+                            <i class="fa-solid fa-star"></i> 异色图（追加）
+                        </button>
+                    </div>
+                    <p class="field-hint">文件名带 <code>_s</code> / <code>_s2</code> 的图片会自动选「异色图」。</p>
+                </div>
                 <div class="form-group">
                     <label>搜索并选择精灵</label>
                     <div class="input-with-btn">
@@ -292,7 +322,7 @@
                     <div class="bind-item" v-for="p in filteredBindPets" :key="p.id" @click="confirmBind(p)">
                         <img v-if="getPetUrl(p)" :src="getPetUrl(p)" @error="onImgError" alt="">
                         <i v-else class="fa-solid fa-image-portrait"></i>
-                        <span class="bind-name">#{{ p.id }} {{ p.name }}</span>
+                        <span class="bind-name">#{{ p.id }}&nbsp;&nbsp;{{ p.name }}</span>
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
                     <div class="state-box" v-if="!filteredBindPets.length"><i class="fa-solid fa-magnifying-glass"></i> 没有匹配的精灵</div>

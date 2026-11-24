@@ -65,6 +65,16 @@ createApp({
         const kinds = ref([]);
         const groups = ref([]);
         const categories = ref([]);
+        // 物品数据 + 自定义类型/分组/细分类 一起写进本机镜像，前台立刻可见
+        const saveMirror = () => {
+            if (!window.VowmonStore) return;
+            VowmonStore.save('items', {
+                kinds: kinds.value,
+                groups: groups.value,
+                categories: categories.value,
+                items: items.value
+            });
+        };
         const pickQuery = ref({ kind: '', group: '', category: '' });
         // 分组图标：选中的图标（新建分组时用它，已有分组时点一下直接改）
         const iconDraft = ref(ITEM_DEFAULT_GROUP_ICON);
@@ -90,6 +100,7 @@ createApp({
             setItemKinds(kinds.value);
             setItemGroups(groups.value);
             setItemCategories(categories.value);
+            saveMirror();
         };
 
         const initPickers = () => {
@@ -358,7 +369,9 @@ createApp({
 
         const saveLocal = () => {
             localStorage.setItem('vowmon_items_data', JSON.stringify(items.value));
+            saveMirror();
         };
+
 
         /* ---------------------------------------------------------------- 编辑 */
         const openEditor = (item, index) => {

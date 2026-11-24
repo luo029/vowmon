@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 精灵图鉴</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
-        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
 
         /* 导航栏 */
         .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
@@ -252,6 +250,7 @@
 
 <script src="js/site-config.js"></script>
 <script src="js/type-config.js"></script>
+<script src="js/pet-utils.js"></script>
 <script src="js/data-loader.js"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
@@ -259,7 +258,12 @@ VowmonData.ready(['pets']).then(function () {
 
     createApp({
         setup() {
-            const pets = ref(allPetsData);
+            // 统一规整（补齐缺失字段），后台草稿里的半成品精灵也不会让整页崩掉
+            const pets = ref(PetUtils.normalizeAll(allPetsData));
+            // 后台改了精灵数据 → 这里立刻刷新，不用刷新页面
+            VowmonData.onChange('pets', (data) => {
+                pets.value = PetUtils.normalizeAll((data && data.pets) || allPetsData);
+            });
             const searchName = ref('');
             const filters = ref({ stage: [], form: [] });
 
@@ -277,7 +281,7 @@ VowmonData.ready(['pets']).then(function () {
 
             onMounted(() => {
                 updateBodyClass();
-                if (typeof allPetsData !== 'undefined') pets.value = allPetsData;
+                if (typeof allPetsData !== 'undefined') pets.value = PetUtils.normalizeAll(allPetsData);
             });
 
             // 配置获取

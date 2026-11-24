@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 物品图鉴</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
-        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
         a { color: inherit; text-decoration: none; }
 
         .container { max-width: 1180px; margin: 26px auto 40px; background: #fdfdfd; border-radius: 24px; padding: 28px 30px 34px; box-shadow: 0 1px 3px rgba(45,55,72,.04); }
@@ -264,7 +262,7 @@ VowmonData.ready(['items']).then(function () {
             };
 
             // 数据规整：补默认值，保证 icon/obtain 等字段一定存在
-            const items = ref((allItemsData || []).map(raw => {
+            const toItem = (raw) => {
                 const item = Object.assign({}, raw);
                 item.id = String(item.id || '');
                 item.name = String(item.name || '未命名物品').trim();
@@ -279,7 +277,12 @@ VowmonData.ready(['items']).then(function () {
                     ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                     : (item.obtain ? [String(item.obtain)] : []);
                 return item;
-            }));
+            };
+            const items = ref((allItemsData || []).map(toItem));
+            // 后台改了物品数据 → 这里立刻刷新，不用刷新页面
+            VowmonData.onChange('items', (data) => {
+                items.value = ((data && data.items) || allItemsData || []).map(toItem);
+            });
 
             /* -------------------------------------------------------- 视图切换 */
             const currentId = ref('');

@@ -48,6 +48,15 @@ createApp({
         const showBindModal = ref(false);
         const bindImage = ref(null);
         const bindSearch = ref('');
+        // 绑到哪个位置：image = 主图（替换原图），shiny = 异色图（追加，不动主图）
+        const bindMode = ref('image');
+
+        // 上传时同样要选位置，避免把异色图当成主图覆盖掉
+        const uploadMode = ref('image');
+
+        // 文件名像异色的：001_s.png / 001_s2.png / 001_shiny.png（与后台命名规则一致）
+        const looksShiny = (path) => /_s\d*\.(png|jpe?g|webp)$/i.test(String(path || '')) ||
+            /_shiny\d*\./i.test(String(path || ''));
 
         // 提示：统一走 VowmonDialog 的轻提示（js/dialog.js），不再自己维护一份 toast
         const showToast = (msg, type = 'ok') => {
@@ -80,6 +89,16 @@ createApp({
 
         const savePets = () => {
             localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+            // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
+            if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
+        };
+
+        // 往精灵的异色列表里追加一张（去重），不动主图
+        const addShinyToPet = (pet, path) => {
+            if (!Array.isArray(pet.shiny)) pet.shiny = [];
+            if (pet.shiny.indexOf(path) !== -1) return false;
+            pet.shiny.push(path);
+            return true;
         };
 
         // 按仓库生成 CDN 基础路径：
@@ -312,6 +331,20 @@ createApp({
         };
 
         /* ------------------------------ 上传 ------------------------------ */
+        // 切换位置时顺手把建议路径换掉（主图 ↔ 异色图），省得用户自己改文件名
+        const setUploadMode = (mode) => {
+            uploadMode.value = mode;
+            const pet = uploadPet.value;
+            if (!pet) return;
+            const id = pet.id;
+            const p = String(uploadPath.value || '');
+            if (mode === 'shiny' && new RegExp('sprites/' + id + '\\.png$').test(p)) {
+                uploadPath.value = `sprites/${id}_s.png`;
+            } else if (mode === 'image' && looksShiny(p)) {
+                uploadPath.value = `sprites/${id}.png`;
+            }
+        };
+
         const openUpload = (pet) => {
             if (!hasConfig.value) {
                 showToast('请先在「同步配置」中填写仓库信息', 'err');
@@ -319,6 +352,7 @@ createApp({
             }
             uploadPet.value = pet || null;
             uploadRepo.value = imgRepos.value[0] || '';
+            uploadMode.value = 'image';
             if (pet && pet.image && !/^https?:\/\//i.test(pet.image)) {
                 uploadPath.value = pet.image;
             } else if (pet) {
@@ -358,12 +392,19 @@ createApp({
                     path, img.base64, `Upload image: ${path}`, true
                 );
                 if (uploadPet.value) {
-                    uploadPet.value.image = path;
+                    if (uploadMode.value === 'shiny') {
+                        const added = addShinyToPet(uploadPet.value, path);
+                        if (!added) showToast('这张图已经在该精灵的异色列表里了', 'err');
+                    } else {
+                        uploadPet.value.image = path;
+                    }
                     savePets();
                 }
                 uploadPreview.value = `data:image/png;base64,${img.base64}`;
-                showToast((uploadPet.value ? '图片已上传并绑定到精灵' : '图片上传成功')
-                    + `（${img.canvasSize}×${img.canvasSize}，${ImageUtils.formatBytes(img.bytes)}）`);
+                const target = uploadPet.value
+                    ? (uploadMode.value === 'shiny' ? '已作为异色图追加到精灵' : '已上传并替换精灵主图')
+                    : '图片上传成功';
+                showToast(target + `（${img.canvasSize}×${img.canvasSize}，${ImageUtils.formatBytes(img.bytes)}）`);
                 showUploadModal.value = false;
                 await loadAll();
             } catch (err) {
@@ -414,6 +455,8 @@ createApp({
         const replacePetWith = (img) => {
             bindImage.value = img;
             bindSearch.value = '';
+            // 文件名像异色图就默认选「异色」，避免一按就把主图覆盖掉
+            bindMode.value = looksShiny(img && img.path) ? 'shiny' : 'image';
             showBindModal.value = true;
         };
 
@@ -427,9 +470,19 @@ createApp({
 
         const confirmBind = (pet) => {
             if (!bindImage.value) return;
-            pet.image = bindImage.value.path;
-            savePets();
-            showToast(`已将图片绑定到「${pet.name || pet.id}」`);
+            const path = bindImage.value.path;
+            if (bindMode.value === 'shiny') {
+                const added = addShinyToPet(pet, path);
+                savePets();
+                showToast(added
+                    ? `已把这张图作为异色图加到「${pet.name || pet.id}」（主图不变）`
+                    : `「${pet.name || pet.id}」的异色列表里已经有这张图了`);
+                if (!added) return;
+            } else {
+                pet.image = path;
+                savePets();
+                showToast(`已将图片绑定到「${pet.name || pet.id}」的主图`);
+            }
             showBindModal.value = false;
             bindImage.value = null;
             buildUsage();
@@ -464,9 +517,10 @@ createApp({
             repoPage, petPage, repoTotalPages, petTotalPages,
             paginatedRepoImages, paginatedPetRows, PAGE_SIZE,
             showUploadModal, uploadPet, uploadRepo, uploadPath, uploadPreview,
-            uploadFileInput, isUploading, openUpload, handleUpload,
+            uploadFileInput, isUploading, openUpload, handleUpload, uploadMode, setUploadMode,
             deleteTarget, isDeleting, openDelete, confirmDelete,
             showBindModal, bindImage, bindSearch, filteredBindPets, replacePetWith, confirmBind,
+            bindMode, looksShiny,
             getPetUrl, statusText, shortRepo, onImgError, copyPath, shinyCount,
             window
         };

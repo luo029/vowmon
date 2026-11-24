@@ -214,6 +214,7 @@ vowmon/
 - **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `items.html` 的 Tab 与筛选胶囊、后台 `admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。
+- **主图 / 异色图要分清**：图片管理页的「设为精灵图」和「上传图片」弹窗里都有「存到哪个位置」开关——`主图（替换原图）` 写 `pet.image`，`异色图（追加）` 写 `pet.shiny[]`（数组，不占编号）。文件名带 `_s` / `_s2` 的图会**自动预选「异色图」**，避免一按就把主图覆盖掉。判断函数是 `js/admin-images.js` 的 `looksShiny(path)`。
 - **图片仓库列举**：任何「列出仓库里有哪些图」的地方都必须走 `GitHubSync.listDirectory()`，不要自己写 `fetch` 打 Contents API —— 它内部已经处理了 1000 条静默截断（超限自动切 Git Trees API，见 [§3.1](#31-图片仓库的-1000-条上限)）。
 - **后台图片列表分页**：`admin-images.html` 的两个网格必须渲染 `paginatedRepoImages` / `paginatedPetRows`，不能直接用 `filteredRepoImages` / `filteredPetRows` 全量铺（上千张图会同时请求上千个缩略图）。每页 `PAGE_SIZE = 60`。
 - **后台属性选择**：精灵 / 技能 / 特性三页统一用胶囊款式——表格内 `.type-pill`，表单内 `.type-pill-option`，胶囊内容为「属性图标 + 属性名称」，颜色取自 `type-config.js`。不要再退回纯文本或旧复选框网格。
@@ -221,7 +222,11 @@ vowmon/
 - **后台「显示列」状态**：三个管理页（精灵 / 技能 / 特性）的列显隐分别存在 `localStorage['vowmon_pets_visible_cols']` / `['vowmon_skills_visible_cols']` / `['vowmon_traits_visible_cols']`，值为列 key 的字符串数组。勾选即刻写盘、刷新保持；要恢复默认就清掉这个键（精灵默认显示头像/编号/名称/属性/属性图标/阶数/形态，技能与特性默认全显）。
 - **显示列面板的收起判断**：document 上的点击监听必须用 `e.target.closest('.col-settings-wrap')` 判断「点在面板内还是外」，不能无条件 `showColSettings = false`。后者会把面板里勾选复选框的点击也当成外部点击，面板瞬间收起，复选框的默认切换被打断，表现为「要点好几次才生效」。技能页的监听是捕获阶段（为了穿透弹窗的 `@click.stop`），更要自己判断，因为捕获阶段先于目标元素的 `@click.stop` 执行。
 - **移动端适配**：所有页面都必须最后引入 `css/responsive.css`（放 `</head>` 前），且 viewport 带 `viewport-fit=cover`。适配断点 900 / 640 / 380px，不要在各页内联样式里另写移动端规则。
-- **图标/字体**：Font Awesome 6.4 与 Google Fonts Nunito 走 CDN，各页 `<head>` 自行引入。
+- **图标/字体**：Font Awesome 6.4 与 Inter 变量字体走 jsDelivr CDN，各页 `<head>` 自行引入。
+  - **字体栈**：`'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif`，写在 `css/style.css` / `css/admin.css` / `css/navbar.css` 的 `body` 里（部分页面另有内联 `body` 规则，改字体时三处都要同步）。
+  - **数字**用 `.font-num`（`font-variant-numeric: tabular-nums`），表格里的能力值、编号因此能对齐成一列。
+  - **不要**再引入 Google Fonts 的 Nunito：国内经常被墙，而且字形偏圆，和现在的风格不搭。
+  - 中文**不要**用 Noto Sans SC 网页字体：fontsource 的中文子集每个约 1MB，一页文字要拉好几个，太重；中文交给系统字体（HarmonyOS / MiSans / 思源黑体 / 苹方 / 微软雅黑）。
 
 ---
 
@@ -242,6 +247,25 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 ```
 
 加载器依次尝试 `dataCdnBase`（默认本站 `/data/*` 反代）→ jsDelivr → raw.githubusercontent，任何一个成功就把 JSON 里的字段赋给对应全局变量，然后才挂载 Vue；全都失败会显示带「重新加载」按钮的错误页，不会白屏。
+
+### 2.1 本地优先 + 云端对账（后台改完，前台立刻变）
+
+取数不是「只读云端」，而是**先信本地，再和云端比**：
+
+```text
+① 本机镜像 localStorage: vowmon_mirror_<key>
+   ← 后台每次保存都会写这里（精灵/技能/特性/物品）
+② 云端数据仓库（三个源依次兜底）
+③ 两边比对：
+   - 一样 → 什么都不做
+   - 不一样 + 本地没有未同步修改 → 用云端覆盖，页面自动刷新
+   - 不一样 + 本地有未同步修改 → 保留本地，等你点「一键同步」
+```
+
+- **同一台电脑**：后台保存 → 写镜像 → `storage` 事件 → 前台标签页**不用刷新**就更新（实测有效）；跨标签页、跨页面（列表 / 图鉴 / 技能 / 物品）都跟着变。
+- **换设备 / 访客**：没有本机镜像，走云端；`/data/*` 代理缓存 60 秒，所以后台同步后最多 1 分钟生效。
+- 「未同步修改」标记：`vowmon_dirty_keys`。点「一键同步」成功后自动清掉；点「从仓库拉取」也会用远端覆盖本机并清掉。
+- 想让页面在数据变化时自己更新，用 `VowmonData.onChange('pets', (data) => { ... })`；`js/pet-utils.js` 提供 `PetUtils.normalizeAll()`，补齐缺字段的精灵，避免一条脏数据把整页渲染搞崩。
 
 **后台怎么读写**：
 

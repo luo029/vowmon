@@ -591,6 +591,8 @@ createApp({
             else pets.value.unshift(petData);
             
             saveToLocal();
+            // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
+            if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
             showModal.value = false;
         };
 
@@ -613,6 +615,7 @@ createApp({
                     listPage.value--;
                 }
                 saveToLocal();
+                if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
                 VowmonDialog.toast('已删除', 'success');
             }
             deleteTargetIndex.value = -1;
@@ -641,6 +644,8 @@ createApp({
                     );
                 }
                 
+                // 同步成功：本机镜像与云端一致，清掉「未同步」标记
+                if (window.VowmonStore) VowmonStore.markSynced('pets');
                 VowmonDialog.toast('数据已成功同步到所有配置的仓库', 'success', { duration: 3200 });
             } catch (error) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
@@ -675,6 +680,7 @@ createApp({
 
                 pets.value = JSON.parse(JSON.stringify(bag.pets));
                 localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+                if (window.VowmonStore) VowmonStore.replace('pets', { pets: pets.value });
                 listPage.value = 1;
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + pets.value.length + ' 条精灵数据', 'success', { duration: 3200 });
             } catch (error) {

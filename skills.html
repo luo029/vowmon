@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Vowmon Wiki - 技能图鉴</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
-        .font-num { font-family: 'Nunito', sans-serif; font-weight: 800; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
 
         .navbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
         .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; padding: 0 20px; position: relative; }
@@ -219,12 +217,17 @@ VowmonData.ready(['skills']).then(function () {
             };
             const normalizeCategory = (c) => CATEGORY_ALIAS[c] || categories[0];
             // 数据规整：category 归一到三类；tags 保证是数组且都在 tag-config.js 里登记过
-            const skills = ref((allSkillsData || []).map(s => ({
+            const toSkill = (s) => ({
                 ...s,
                 category: normalizeCategory(s.category),
                 // 保留所有字符串标签（含后台新建的自定义标签），不能按内置 tagNames 过滤
                 tags: Array.isArray(s.tags) ? s.tags.map(t => String(t)).filter(t => t && t.trim()) : []
-            })));
+            });
+            const skills = ref((allSkillsData || []).map(toSkill));
+            // 后台改了技能数据 → 这里立刻刷新，不用刷新页面
+            VowmonData.onChange('skills', (data) => {
+                skills.value = ((data && data.skills) || allSkillsData || []).map(toSkill);
+            });
 
             const searchName = ref('');
             const selectedCategories = ref([]);
