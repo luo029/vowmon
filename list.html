@@ -311,7 +311,7 @@
                                 <i :class="getTypeIcon(t)"></i><span>{{ t }}</span>
                             </span>
                         </td>
-                        <td v-if="cols.ability">{{ pet.ability }}</td>
+                        <td v-if="cols.ability">{{ [pet.ability, pet.ability2].filter(Boolean).join(' / ') }}<span v-if="pet.hiddenAbility" style="color:#805ad5;"> ★{{ pet.hiddenAbility }}</span></td>
                         
                         <td v-if="cols.abilityEffect" class="text-col">{{ pet.abilityEffect || '-' }}</td>
                         <td v-if="cols.form" class="text-col"><span class="tag-col">{{ pet.form || '-' }}</span></td>

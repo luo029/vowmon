@@ -113,8 +113,16 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
     background: #f7fafc; font-size: 12px; font-weight: 700; color: #a0aec0; line-height: 1.5;
 }
 .shiny-empty i { font-size: 14px; color: #cbd5e0; }
+/* 外链输入 + 添加 + 上传 合并为一行，紧凑不占宽 */
+.shiny-add-row { display: flex; gap: 8px; align-items: stretch; }
+.shiny-add-row input { flex: 1; min-width: 0; }
+.shiny-add-row .btn { flex: 0 0 auto; white-space: nowrap; }
 .shiny-upload-btn { justify-content: center; }
 .shiny-upload-btn:disabled { opacity: .6; cursor: not-allowed; }
+@media (max-width: 640px) {
+    .shiny-add-row { flex-wrap: wrap; }
+    .shiny-add-row input { flex: 1 1 100%; }
+}
 /* 触屏设备没有 hover，删除按钮常显 */
 @media (hover: none) {
     .shiny-remove { display: flex; }

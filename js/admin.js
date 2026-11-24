@@ -106,7 +106,10 @@ createApp({
 
         const defaultForm = () => ({
             id: '', name: '', types: [], stage: '一阶', evoPos: '初始', form: '主形态', rank: '',
-            ability: '', abilityEffect: '', eggGroup: '', rideable: '', height: '', weight: '',
+            ability: '', abilityEffect: '',
+            ability2: '', ability2Effect: '',           // 第二特性（多特性随机触发其一）
+            hiddenAbility: '', hiddenAbilityEffect: '', // 隐藏特性（不填默认为空）
+            eggGroup: '', rideable: '', height: '', weight: '',
             image: '', shiny: [], description: '',
             stats: { hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 0 }
         });
@@ -194,8 +197,10 @@ createApp({
         };
 
         // 选择器逻辑
-        const openSelectionModal = (type) => {
+        const selectionTarget = ref('ability'); // 当前选择器写给哪个字段：ability / ability2 / hiddenAbility
+        const openSelectionModal = (type, target) => {
             selectionType.value = type;
+            selectionTarget.value = target || type;
             selectionSearchQuery.value = '';
             selectionPage.value = 1;
             showSelectionModal.value = true;
@@ -204,9 +209,12 @@ createApp({
 
         const rawSelectionList = computed(() => {
             if (selectionType.value === 'ability') {
+                // 汇总已有特性候选：特性 1 / 特性 2 / 隐藏特性 都计入
                 const map = new Map();
                 pets.value.forEach(p => {
                     if (p.ability && !map.has(p.ability)) map.set(p.ability, p.abilityEffect || '无说明');
+                    if (p.ability2 && !map.has(p.ability2)) map.set(p.ability2, p.ability2Effect || '无说明');
+                    if (p.hiddenAbility && !map.has(p.hiddenAbility)) map.set(p.hiddenAbility, p.hiddenAbilityEffect || '无说明');
                 });
                 return Array.from(map.entries()).map(([key, desc]) => ({ key, desc }));
             } else {
@@ -228,8 +236,17 @@ createApp({
 
         const selectFromModal = (item) => {
             if (selectionType.value === 'ability') {
-                form.ability = item.key;
-                form.abilityEffect = item.desc === '无说明' ? '' : item.desc;
+                const desc = item.desc === '无说明' ? '' : item.desc;
+                if (selectionTarget.value === 'ability2') {
+                    form.ability2 = item.key;
+                    form.ability2Effect = desc;
+                } else if (selectionTarget.value === 'hiddenAbility') {
+                    form.hiddenAbility = item.key;
+                    form.hiddenAbilityEffect = desc;
+                } else {
+                    form.ability = item.key;
+                    form.abilityEffect = desc;
+                }
             } else {
                 form.eggGroup = item.key;
             }

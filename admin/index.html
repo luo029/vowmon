@@ -99,7 +99,7 @@
                                 </td>
                                 <td v-if="visibleCols.includes('stage')">{{ pet.stage }}</td>
                                 <td v-if="visibleCols.includes('form')">{{ pet.form }}</td>
-                                <td v-if="visibleCols.includes('ability')">{{ pet.ability }}</td>
+                                <td v-if="visibleCols.includes('ability')">{{ [pet.ability, pet.ability2].filter(Boolean).join(' / ') }}<span v-if="pet.hiddenAbility" style="color:#805ad5;"> ★{{ pet.hiddenAbility }}</span></td>
                                 <td v-if="visibleCols.includes('hp')">{{ pet.stats?.hp || 0 }}</td>
                                 <td v-if="visibleCols.includes('atk')">{{ pet.stats?.atk || 0 }}</td>
                                 <td v-if="visibleCols.includes('def')">{{ pet.stats?.def || 0 }}</td>
@@ -304,22 +304,20 @@
                             </p>
 
                             <div class="image-controls">
-                                <div class="input-with-btn">
+                                <div class="shiny-add-row">
                                     <input v-model="shinyInput" placeholder="输入外链或路径，如 sprites/001_s.png"
                                            @keydown.enter.prevent="addShinyByInput">
                                     <button type="button" class="btn btn-outline" @click="addShinyByInput">
                                         <i class="fa-solid fa-plus"></i> 添加
                                     </button>
+                                    <button type="button" class="btn btn-primary shiny-upload-btn" @click="triggerShinyUpload" :disabled="isShinyUploading">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        {{ isShinyUploading ? (shinyProgress || '上传中…') : '上传图片' }}
+                                    </button>
+                                    <input type="file" ref="shinyFileInput" accept="image/*" multiple style="display: none;" @change="handleShinyUpload">
                                 </div>
-                                <button type="button" class="btn btn-primary shiny-upload-btn" @click="triggerShinyUpload" :disabled="isShinyUploading">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    {{ isShinyUploading ? (shinyProgress || '上传中…') : '上传异色图片（可多选）' }}
-                                </button>
-                                <input type="file" ref="shinyFileInput" accept="image/*" multiple style="display: none;" @change="handleShinyUpload">
                                 <p class="hint">
-                                    按 #1、#2… 的顺序排列；有多张时，图鉴里鼠标悬停会依次轮播。
-                                    上传后自动压缩为 PNG，并按编号命名：第 1 张 <b>sprites/{{ form.id || '编号' }}_s.png</b>，
-                                    之后依次 <b>_s2</b>、<b>_s3</b>…；不占编号，也不单独出现在图鉴里。
+                                    上传自动压缩为 PNG，按编号命名：第 1 张 <b>sprites/{{ form.id || '编号' }}_s.png</b>，之后 <b>_s2</b>、<b>_s3</b>…；多张时图鉴悬停依次轮播，不占编号。
                                 </p>
                             </div>
                         </div>
@@ -373,7 +371,7 @@
                             <label>特性 (点击搜索或直接输入)</label>
                             <div class="input-with-btn">
                                 <input v-model="form.ability" placeholder="搜索或新建特性名" @input="activeDropdown = ''">
-                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('ability')">
+                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('ability', 'ability')">
                                     <i class="fa-solid fa-magnifying-glass"></i>
                                 </button>
                             </div>
@@ -382,6 +380,36 @@
                         <div class="form-group">
                             <label>特性效果说明</label>
                             <input v-model="form.abilityEffect" placeholder="选择已有特性会自动填入">
+                        </div>
+
+                        <div class="form-group">
+                            <label>特性 2 <span class="opt">可选 · 多特性随机触发其一</span></label>
+                            <div class="input-with-btn">
+                                <input v-model="form.ability2" placeholder="第二特性名，留空则只有特性 1">
+                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('ability', 'ability2')">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>特性 2 效果说明</label>
+                            <input v-model="form.ability2Effect" placeholder="不填写则默认为空">
+                        </div>
+
+                        <div class="form-group">
+                            <label>隐藏特性 <span class="opt">可选</span></label>
+                            <div class="input-with-btn">
+                                <input v-model="form.hiddenAbility" placeholder="隐藏特性名，留空默认为空">
+                                <button class="btn btn-outline btn-icon" @click.stop="openSelectionModal('ability', 'hiddenAbility')">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>隐藏特性说明</label>
+                            <input v-model="form.hiddenAbilityEffect" placeholder="不填写则默认为空">
                         </div>
                         
                         <div class="form-group">

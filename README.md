@@ -1,6 +1,6 @@
 # Vowmon Wiki
 
-Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
+Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。  
 纯静态站点，Vue 3 CDN 版驱动，GitHub Pages / Cloudflare Pages 托管。
 
 ---
@@ -10,7 +10,6 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allPetsData`）。禁止使用 Pokedex / Pokemon / pets 作为对外名称。
 2. **代码输出格式**：所有生成的代码必须使用 ` ```text ` 代码块，**禁止使用高亮**。代码文件名写在代码块上方。严禁使用省略号。
 3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`；前台 `.html` 页面留在根目录，**后台页面统一放 `admin/` 子目录**；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
-
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
 5. **属性统一**：所有属性的图标和颜色存放在 `js/type-config.js`，全局引用。
 6. **禁止系统弹窗**：任何 `alert()` / `confirm()` / `prompt()` 都不允许出现，统一换成自定义弹窗 `VowmonDialog`（`js/dialog.js` + `css/dialog.css`，用法见 1.2）。
@@ -79,7 +78,7 @@ vowmon/
 **引用路径举例**（前台页面在根目录，带文件夹前缀；后台页面在 `admin/` 里，本地资源带 `../` 前缀）：
 
 ```text
-<!-- 前台页面 -->
+
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/navbar.css">
 <script src="js/navbar.js" defer></script>
@@ -88,13 +87,17 @@ vowmon/
 <script src="js/tag-config.js"></script>
 <script src="js/data-loader.js"></script>
 
-<!-- 后台页面（admin/ 子目录内） -->
+
 <link rel="stylesheet" href="../css/admin.css">
 <script src="../js/data-loader.js"></script>
-<!-- 数据不用再写 script 标签，页面里用 VowmonData.ready([...]) 拉取 -->
+
 ```
 
+
+
 > 新增前台页面放根目录，新增后台页面放 `admin/`；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
+
+
 
 ---
 
@@ -202,6 +205,8 @@ vowmon/
 - **当前页高亮**：`js/navbar.js` 的 `ACTIVE_MAP` 按文件名自动判断，新增页面时补一行映射即可。
 - 注意：`navbar.js` 用 `defer` 注入，晚于各页 Vue 的 `mount('#app')`，所以不会被 Vue 覆盖；不要去掉 `defer`。
 
+
+
 ---
 
 ## 1.2 公共依赖约定
@@ -212,7 +217,11 @@ vowmon/
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
 - **弹窗组件**：后台五个页面（`admin/index.html`、`admin-skills.html`、`admin-traits.html`、`admin-items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
 - **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。
+|  |  |
+| --- | --- |
   - `VowmonDialog.confirm(消息, 选项)` → `Promise<boolean>`，`VowmonDialog.alert(消息, 选项)` → `Promise`，`VowmonDialog.prompt(消息, 选项)` → `Promise<string|null>`。
+|  |  |  |
+| --- | --- | --- |
   - `VowmonDialog.toast(消息, 'success' | 'warning' | 'danger')` 是右下角轻提示，用于「已保存 / 已删除 / 已同步」这类不需要用户确认的结果。
   - 选项：`type`（`info` / `success` / `warning` / `danger`）、`title`、`okText`、`cancelText`、`detail`（长错误信息，等宽小字块）、`html`（消息里要用 `<strong>` 时必须开，变量用 `VowmonDialog.esc()` 转义）、`duration`（仅 toast）。
   - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
@@ -379,6 +388,7 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 1. 改仓库里的 `js/site-config.js`（对**所有访客**生效，需要提交 + 部署）；
 2. 后台「精灵管理 → 同步配置 → 数据仓库 / 图片仓库」里的 **数据公开地址 / 图片公开地址**（只对**你自己这台浏览器**生效，存在 `vowmon_sync_config`，留空即用默认值，输入框右边的 ↺ 就是一键恢复默认）。调试换源时用这个，不用改代码。
+
 
 可填的值举例：
 
