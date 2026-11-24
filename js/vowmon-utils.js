@@ -20,8 +20,17 @@
         return pet;
     }
 
+    // 编号数字（取编号开头的数字；无数字的排最后）
+    function idNum(pet) {
+        const m = String(pet.id || '').trim().match(/^\d+/);
+        return m ? parseInt(m[0], 10) : Infinity;
+    }
+
     function normalizeAll(list) {
-        return (Array.isArray(list) ? list : []).map(normalize);
+        // 前台统一按编号从小到大排序（图鉴 / 列表共用此入口），不动数据存储顺序
+        return (Array.isArray(list) ? list : [])
+            .map(normalize)
+            .sort((a, b) => idNum(a) - idNum(b));
     }
 
     /** 能力值合计（缺项按 0 算，不会出现 NaN） */
