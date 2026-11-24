@@ -154,10 +154,17 @@ createApp({
             });
         });
 
-        // 分页数据
+        // 编号数字（取编号开头的数字，无数字的排最后）
+        const petIdNum = (p) => {
+            const m = String((p && p.id) || '').trim().match(/^\d+/);
+            return m ? parseInt(m[0], 10) : -1;
+        };
+
+        // 分页数据：按编号从大到小排序后再切页（不改动 pets.value 本身的存储顺序）
         const paginatedPets = computed(() => {
+            const sorted = pets.value.slice().sort((a, b) => petIdNum(b) - petIdNum(a));
             const start = (listPage.value - 1) * listPageSize;
-            return pets.value.slice(start, start + listPageSize);
+            return sorted.slice(start, start + listPageSize);
         });
 
         // 辅助获取图标和颜色（Map 缓存，避免每行都扫一遍 typeData）
@@ -372,7 +379,9 @@ createApp({
             VowmonDialog.toast('同步配置已保存', 'success');
         };
 
-        const openEditor = (pet = null, index = -1) => {
+        const openEditor = (pet = null) => {
+            // 列表是按编号排序展示的，索引一律按对象引用反查，避免换算错位
+            const index = pet ? pets.value.indexOf(pet) : -1;
             isEdit.value = !!pet;
             editIndex.value = index;
             activeDropdown.value = '';
@@ -759,9 +768,11 @@ createApp({
         };
 
         // 删除逻辑：确认弹窗走统一的 VowmonDialog（js/dialog.js + css/dialog.css）
-        const openDeleteConfirm = (index, name) => {
+        const openDeleteConfirm = (pet) => {
+            // 列表按编号排序展示，删除索引按对象引用反查
+            const index = pets.value.indexOf(pet);
             deleteTargetIndex.value = index;
-            deleteTargetName.value = name;
+            deleteTargetName.value = pet ? pet.name : '';
             VowmonDialog.confirm(
                 `您确定要永久删除精灵 <strong>${VowmonDialog.esc(name)}</strong> 吗？此操作不可撤销。`,
                 { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
