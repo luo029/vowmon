@@ -149,10 +149,14 @@
                             <span class="lbl">存款 · SAVINGS</span>
                             <span class="val font-num"><i class="fa-solid fa-coins"></i>{{ fmtMoney(cha.money) }}<span class="unit">联盟币</span></span>
                         </div>
-                        <div class="pf-faction" v-if="cha.faction">
-                            <i class="fa-solid fa-flag"></i> {{ cha.faction }}
-                            <small>所属势力</small>
-                        </div>
+                <div class="pf-faction" v-if="cha.faction">
+                    <i class="fa-solid fa-flag"></i> {{ cha.faction }}
+                    <small>所属势力</small>
+                </div>
+                <div class="pf-faction" v-if="cha.birthplace">
+                    <i class="fa-solid fa-location-dot"></i> {{ cha.birthplace }}
+                    <small>出生地区</small>
+                </div>
                     </div>
                 </div>
             </div>
@@ -314,6 +318,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     : [];
                 p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String) : [];
                 p.position = String(p.position == null ? '' : p.position);
+                p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
                 ['background', 'personality', 'relations', 'appearance', 'strength'].forEach(k => { p[k] = String(p[k] == null ? '' : p[k]); });
                 p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 return p;

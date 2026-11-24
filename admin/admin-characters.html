@@ -82,6 +82,21 @@
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
         /* ============ 成就经历卡片 ============ */
+        /* ============ 成就经历卡片 ============ */
+        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+        .ms-head-row { display: grid; grid-template-columns: 28px minmax(100px, .8fr) minmax(150px, 1.6fr) minmax(110px, .9fr) 32px; gap: 8px; align-items: center; }
+        .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .ms-item input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .ms-item input:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .ms-note { width: 100%; margin-top: 8px; }
+        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 32px; width: 32px; }
+        .ms-del:hover { background: #fee; }
+        .ms-add { margin-top: 2px; }
+
+        /* 字段提示：默认不占位置，悬浮显示说明 */
+        .tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-left: 5px; border-radius: 50%; background: #edf2f7; color: #718096; font-size: 10px; font-style: normal; font-weight: 900; cursor: help; vertical-align: middle; }
+        .tip:hover { background: #d69e2e; color: #fff; }
+
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
     </style>
 </head>
@@ -134,7 +149,7 @@
             <div class="toolbar">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input v-model="searchName" placeholder="搜索姓名 / 势力 / 头衔 / 简介关键词...">
+                    <input v-model="searchName" placeholder="">
                 </div>
                 <span class="count-pill">共 <b class="font-num">{{ filteredList.length }}</b> 位人物</span>
                 <div style="margin-left: auto;">
@@ -197,28 +212,29 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
                     <div class="form-grid">
-                        <div class="form-group"><label>姓名 <span class="opt">必填</span></label><input v-model="form.name" placeholder="如：林殊"></div>
-                        <div class="form-group"><label>头衔 / 称号</label><input v-model="form.title" placeholder="如：职业（称号）/ 首座 / 大冠"></div>
-                        <div class="form-group"><label>所属势力</label>
-                            <input v-model="form.faction" placeholder="如：九牧联盟">
+                        <div class="form-group"><label>姓名 <i class="tip" title="必填">?</i></label><input v-model="form.name" placeholder=""></div>
+                        <div class="form-group"><label>头衔 / 称号 <i class="tip" title="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder=""></div>
+                        <div class="form-group"><label>所属势力 <i class="tip" title="如：九牧联盟 / 荒野">?</i></label>
+                            <input v-model="form.faction" placeholder="">
                         </div>
-                        <div class="form-group"><label>联盟职位 <span class="opt">没有可留空</span></label><input v-model="form.position" placeholder="如：盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君"></div>
-                        <div class="form-group"><label>存款 <span class="opt">联盟币</span></label><input type="number" min="0" v-model.number="form.money"></div>
+                        <div class="form-group"><label>出生地区 <i class="tip" title="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder=""></div>
+                        <div class="form-group"><label>联盟职位 <i class="tip" title="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder=""></div>
+                        <div class="form-group"><label>存款 <i class="tip" title="联盟币">?</i></label><input type="number" min="0" v-model.number="form.money"></div>
                     </div>
                 </div>
 
                 <!-- 御兽师个人成就 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-medal"></i> 御兽师个人成就 <span class="opt" style="font-weight:700; color:#a0aec0;">契约相关经历请写在精灵档案里</span></div>
+                    <div class="sect-title"><i class="fa-solid fa-medal"></i> 御兽师个人成就 <i class="tip" title="契约与突破经历请写在精灵档案里">?</i> </div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
-                            <input v-model="m.chapter" placeholder="章节，如：第 38 章">
-                            <input v-model="m.title" placeholder="事件，如：晋升戎枢 / 夺得大冠">
-                            <input v-model="m.date" placeholder="日期（选填）">
+                            <input v-model="m.chapter" placeholder="">
+                            <input v-model="m.title" placeholder="">
+                            <input v-model="m.date" placeholder="">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        <input class="ms-note" v-model="m.note" placeholder="补充说明（选填），如：因护城战功获破格提拔">
+                        <input class="ms-note" v-model="m.note" placeholder="">
                     </div>
                     <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
                 </div>
@@ -227,21 +243,21 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-address-book"></i> 人物档案详情</div>
                     <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <span class="opt">出身、来历、成长环境</span></label><textarea v-model="form.background" rows="3" placeholder="如：生于九牧北境的猎户之家，少年时救过一只异变精灵…"></textarea></div>
-                        <div class="form-group"><label>性格 <span class="opt">脾气秉性</span></label><textarea v-model="form.personality" rows="2" placeholder="如：外表冷淡，对熟人极其护短"></textarea></div>
-                        <div class="form-group"><label>外貌 <span class="opt">外形特征</span></label><textarea v-model="form.appearance" rows="2" placeholder="如：灰发绿瞳，常年披一件旧斗篷"></textarea></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <span class="opt">师徒、亲友、宿敌等，可用「 · 」分隔</span></label><textarea v-model="form.relations" rows="2" placeholder="如：师父 · 林殊　|　宿敌 · 赤霄　|　搭档 · 沐沐"></textarea></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <span class="opt">能力、战绩、短板</span></label><textarea v-model="form.strength" rows="3" placeholder="如：擅长控场与高速突袭；弱点是持久战与精神抗性…"></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <i class="tip" title="出身、来历、成长环境">?</i></label><textarea v-model="form.background" rows="3" placeholder=""></textarea></div>
+                        <div class="form-group"><label>性格 <i class="tip" title="脾气秉性">?</i></label><textarea v-model="form.personality" rows="2" placeholder=""></textarea></div>
+                        <div class="form-group"><label>外貌 <i class="tip" title="外形特征">?</i></label><textarea v-model="form.appearance" rows="2" placeholder=""></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <i class="tip" title="师徒、亲友、宿敌等">?</i></label><textarea v-model="form.relations" rows="2" placeholder=""></textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <i class="tip" title="能力、战绩、短板">?</i></label><textarea v-model="form.strength" rows="3" placeholder=""></textarea></div>
                     </div>
                 </div>
 
                 <!-- 物品栏 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-suitcase"></i> 物品栏 <span class="opt" style="font-weight:700; color:#a0aec0;">道具名可引用物品图鉴里的名称</span></div>
+                    <div class="sect-title"><i class="fa-solid fa-suitcase"></i> 物品栏 <i class="tip" title="道具名可引用物品图鉴里的名称">?</i> </div>
                     <div class="inv-head" v-if="form.inventory.length"><span>道具名</span><span>备注</span><span></span></div>
                     <div class="inv-row" v-for="(it, i) in form.inventory" :key="i">
-                        <input v-model="it.name" placeholder="道具名">
-                        <input v-model="it.note" placeholder="备注，如 ×2">
+                        <input v-model="it.name" placeholder="">
+                        <input v-model="it.note" placeholder="">
                         <button type="button" class="row-x" @click="form.inventory.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     <button type="button" class="btn btn-outline btn-sm" @click="addInventory"><i class="fa-solid fa-plus"></i> 添加物品</button>
@@ -249,7 +265,7 @@
 
                 <!-- 持有精灵 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-paw"></i> 持有的御兽精灵 <span class="opt" style="font-weight:700; color:#a0aec0;">先在「御兽精灵」页录入个体，再来关联</span></div>
+                    <div class="sect-title"><i class="fa-solid fa-paw"></i> 持有的御兽精灵 <i class="tip" title="先在御兽精灵页录入个体，再来关联">?</i> </div>
                     <div class="trait-chips">
                         <span class="trait-chip" v-for="p in pickedPets" :key="p.id">
                             <i class="fa-solid fa-paw" style="color: #38a169;"></i>{{ indLabel(p) }}
@@ -263,7 +279,7 @@
                 <!-- 简介 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介</div>
-                    <div class="form-group" style="margin-bottom: 12px;"><textarea v-model="form.bio" rows="3" placeholder="这个人物的出身、经历、性格…"></textarea></div>
+                    <div class="form-group" style="margin-bottom: 12px;"><textarea v-model="form.bio" rows="3" placeholder=""></textarea></div>
                     <div class="form-group"><label>备注</label><input v-model="form.notes"></div>
                 </div>
             </div>
@@ -283,7 +299,7 @@
             </div>
             <div class="selection-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input v-model="petSearchInput" placeholder="输入昵称 / 种族 / 编号搜索...">
+                <input v-model="petSearchInput" placeholder="">
             </div>
             <div class="selection-list">
                 <div class="selection-item" v-for="p in filteredPets" :key="p.id"
@@ -311,6 +327,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125e"></script>
+<script src="../js/admin-characters.js?v=20261125f"></script>
 </body>
 </html>

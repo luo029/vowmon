@@ -24,6 +24,7 @@ function normalizeCharacter(c) {
     p.name = String(p.name == null ? '' : p.name);
     p.title = String(p.title == null ? '' : p.title);
     p.faction = String(p.faction == null ? '' : p.faction);
+    p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
     p.position = String(p.position == null ? '' : p.position);
     p.money = Number(p.money) || 0;
     p.inventory = Array.isArray(p.inventory)
@@ -67,7 +68,7 @@ createApp({
         const petSearchInput = ref('');
 
         const defaultForm = () => ({
-            id: '', name: '', title: '', faction: '', position: '', money: 0,
+            id: '', name: '', title: '', faction: '', birthplace: '', position: '', money: 0,
             inventory: [], petIds: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
             notes: '', milestones: []

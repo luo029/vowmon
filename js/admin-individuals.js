@@ -242,6 +242,7 @@ const app = createApp({
             showSpeciesModal.value = false;
             showTraitMenu.value = false;
             activeSkillIndex.value = -1;
+            editingSkillIndex.value = -1;
             showModal.value = true;
         };
         /* 模板里的「选择种族」按钮（必须是已定义的方法，见文件头注释） */
@@ -281,10 +282,29 @@ const app = createApp({
         };
         const traitFromBook = (name) => traitNames.includes(name);
 
-        /* --------------------------------------------------- 技能与熟练度（输入关键词搜技能表） */
-        const addSkill = () => {
-            activeSkillIndex.value = -1;
+        /* --------------------------------------------------- 技能与熟练度（默认展示为胶囊，点击才编辑） */
+        const editingSkillIndex = ref(-1);
+        const newSkill = () => {
             form.value.skills.push({ name: '', level: '入门' });
+            editingSkillIndex.value = form.value.skills.length - 1;
+        };
+        const editSkill = (i) => { editingSkillIndex.value = i; };
+        const finishSkill = (i) => {
+            const s = form.value.skills[i];
+            if (s && !String(s.name || '').trim()) form.value.skills.splice(i, 1);
+            editingSkillIndex.value = -1;
+        };
+        const removeSkill = (i) => {
+            form.value.skills.splice(i, 1);
+            editingSkillIndex.value = -1;
+        };
+        /* 技能属性图标：来自技能表 type → type-config.js 的图标 */
+        const skillTypeIcon = (name) => {
+            const s = (typeof allSkillsData !== 'undefined' && Array.isArray(allSkillsData) ? allSkillsData : [])
+                .find(x => x.name === name);
+            const t = (typeof typeData !== 'undefined' && Array.isArray(typeData) ? typeData : [])
+                .find(x => x.name === (s && s.type));
+            return (t && t.icon) || 'fa-solid fa-bolt';
         };
         const skillNames = (typeof allSkillsData !== 'undefined' && Array.isArray(allSkillsData))
             ? allSkillsData.map(s => String(s.name || '')).filter(Boolean) : [];
@@ -490,8 +510,9 @@ const app = createApp({
             natureOptions, natureHintOf, ownerOptions,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, traitFromBook,
             activeSkillIndex, skillSuggestions, setSkillName,
+            editingSkillIndex, skillTypeIcon, newSkill, editSkill, finishSkill, removeSkill,
             addMilestone,
-            openEditor, addSkill, saveItem,
+            openEditor, saveItem,
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,
             openSpeciesModal, formSpeciesLabel, formSpeciesImage, formStageColor,
