@@ -188,9 +188,10 @@
     </div>
 </div>
 
-<script src="data/natures-data.js"></script>
+<script src="js/data-loader.js"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
+VowmonData.ready(['natures']).then(function () {
 
     createApp({
         setup() {
@@ -275,6 +276,7 @@
             };
         }
     }).mount('#app');
+});
 </script>
 </body>
 </html>

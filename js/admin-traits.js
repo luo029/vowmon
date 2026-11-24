@@ -8,6 +8,7 @@
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted, watch } = Vue;
+VowmonData.ready(['pets','traits'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -226,13 +227,12 @@ createApp({
             }
 
             isSyncing.value = true;
-            const content = '// traits-data.js\n' +
-                'const allTraitsData = ' + JSON.stringify(traits.value, null, 4) + ';\n';
+            const content = JSON.stringify({ traits: traits.value }, null, 4) + '\n';
 
             try {
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(
-                        cfg.token, cfg.owner, repo, 'traits-data.js',
+                        cfg.token, cfg.owner, repo, 'traits-data.json',
                         content, 'update traits data'
                     );
                 }
@@ -298,6 +298,37 @@ createApp({
             else if (target === 'pokemon') showPokemonSearchModal.value = false;
         };
 
+        // 从数据仓库拉取最新数据（数据仓库是唯一数据源，会覆盖本机草稿）
+        const pullFromRepo = async () => {
+            const cfg = config.value;
+            const repo = String(cfg.dataRepos || '').split(/[\s,，]+/).map(s => s.trim()).filter(Boolean)[0];
+            if (!cfg.token || !cfg.owner || !repo) {
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
+                return;
+            }
+            const ok = await VowmonDialog.confirm(
+                '将从「' + repo + '」读取 traits-data.json，并覆盖本机未同步的改动。继续？',
+                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
+            );
+            if (!ok) return;
+
+            isSyncing.value = true;
+            try {
+                const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'traits-data.json');
+                if (!bag || !Array.isArray(bag.traits)) throw new Error('仓库里没有 traits-data.json，或字段不是 traits 数组');
+
+                traits.value = JSON.parse(JSON.stringify(bag.traits));
+                localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
+                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + traits.value.length + ' 条特性', 'success', { duration: 3200 });
+            } catch (err) {
+                VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err)
+                });
+            } finally {
+                isSyncing.value = false;
+            }
+        };
+
         return {
             typeData: typeDataList,
             getTypeIcon, getTypeColor, toggleType,
@@ -321,7 +352,9 @@ createApp({
             confirmDelete,
             openPokemonModal,
             selectPokemon,
-            syncToGitHub
+            syncToGitHub,
+            pullFromRepo
         };
     }
 }).mount('#app');
+});

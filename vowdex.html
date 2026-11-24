@@ -252,9 +252,10 @@
 
 <script src="js/site-config.js"></script>
 <script src="js/type-config.js"></script>
-<script src="data/vow-data.js"></script>
+<script src="js/data-loader.js"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
+VowmonData.ready(['pets']).then(function () {
 
     createApp({
         setup() {
@@ -419,6 +420,7 @@
             };
         }
     }).mount('#app');
+});
 </script>
 </body>
 </html>

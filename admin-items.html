@@ -28,6 +28,7 @@
                 <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
                 {{ isSyncing ? '正在同步...' : '一键同步物品数据' }}
             </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
         </div>
     </header>
 
@@ -284,8 +285,8 @@
 
 <script src="js/site-config.js"></script>
 <!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
-<script src="data/items-data.js"></script>
 <script src="js/item-config.js"></script>
+<script src="js/data-loader.js"></script>
 <script src="js/github-api.js"></script>
 <script src="js/image-utils.js"></script>
 <script src="js/common-ui.js"></script>

@@ -19,6 +19,7 @@ const CATEGORY_ALIAS = {
     '防御': '变化', '状态': '变化', '变化': '变化'
 };
 const normalizeCategory = (c) => CATEGORY_ALIAS[c] || SKILL_CATEGORIES[0];
+VowmonData.ready(['skills'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -263,8 +264,7 @@ createApp({
             }
 
             isSyncing.value = true;
-            const content = '// skills-data.js\n' +
-                'const allSkillsData = ' + JSON.stringify(skills.value, null, 4) + ';\n';
+            const content = JSON.stringify({ skills: skills.value }, null, 4) + '\n';
 
             const repos = String(cfg.dataRepos || '')
                 .split(/[\s,，]+/)
@@ -280,7 +280,7 @@ createApp({
             try {
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(
-                        cfg.token, cfg.owner, repo, 'skills-data.js',
+                        cfg.token, cfg.owner, repo, 'skills-data.json',
                         content, 'update skills data'
                     );
                 }
@@ -335,6 +335,37 @@ createApp({
             // 其它自定义下拉的关闭统一由 js/common-ui.js 处理（VowmonDropdown）
         });
 
+        // 从数据仓库拉取最新数据（数据仓库是唯一数据源，会覆盖本机草稿）
+        const pullFromRepo = async () => {
+            const cfg = config.value;
+            const repo = String(cfg.dataRepos || '').split(/[\s,，]+/).map(s => s.trim()).filter(Boolean)[0];
+            if (!cfg.token || !cfg.owner || !repo) {
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
+                return;
+            }
+            const ok = await VowmonDialog.confirm(
+                '将从「' + repo + '」读取 skills-data.json，并覆盖本机未同步的改动。继续？',
+                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
+            );
+            if (!ok) return;
+
+            isSyncing.value = true;
+            try {
+                const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'skills-data.json');
+                if (!bag || !Array.isArray(bag.skills)) throw new Error('仓库里没有 skills-data.json，或字段不是 skills 数组');
+
+                skills.value = normalizeSkills(bag.skills);
+                localStorage.setItem('vowmon_skills_data', JSON.stringify(skills.value));
+                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + skills.value.length + ' 条技能', 'success', { duration: 3200 });
+            } catch (err) {
+                VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err)
+                });
+            } finally {
+                isSyncing.value = false;
+            }
+        };
+
         return {
             typeData: typeDataList,
             skillCategories: SKILL_CATEGORIES,
@@ -357,7 +388,9 @@ createApp({
             saveSkill,
             openDeleteConfirm,
             confirmDelete,
-            syncToGitHub
+            syncToGitHub,
+            pullFromRepo
         };
     }
 }).mount('#app');
+});

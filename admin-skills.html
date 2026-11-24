@@ -26,6 +26,7 @@
                 <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
                 {{ isSyncing ? '正在同步...' : '一键同步技能数据' }}
             </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
         </div>
     </header>
 
@@ -194,7 +195,7 @@
 <script src="js/type-config.js"></script>
 <script src="js/category-config.js"></script>
 <script src="js/tag-config.js"></script>
-<script src="data/skills-data.js"></script>
+<script src="js/data-loader.js"></script>
 <script src="js/github-api.js"></script>
 <script src="js/common-ui.js"></script>
 <script src="js/dialog.js"></script>

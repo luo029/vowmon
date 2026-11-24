@@ -203,9 +203,10 @@
 <script src="js/type-config.js"></script>
 <script src="js/category-config.js"></script>
 <script src="js/tag-config.js"></script>
-<script src="data/skills-data.js"></script>
+<script src="js/data-loader.js"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
+VowmonData.ready(['skills']).then(function () {
 
     createApp({
         setup() {
@@ -347,6 +348,7 @@
             };
         }
     }).mount('#app');
+});
 </script>
 </body>
 </html>

@@ -236,10 +236,11 @@
 
 <script src="js/site-config.js"></script>
 <!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
-<script src="data/items-data.js"></script>
+<script src="js/data-loader.js"></script>
 <script src="js/item-config.js"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
+VowmonData.ready(['items']).then(function () {
 
     createApp({
         setup() {
@@ -383,6 +384,7 @@
             };
         }
     }).mount('#app');
+});
 </script>
 </body>
 </html>

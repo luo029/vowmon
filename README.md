@@ -7,9 +7,9 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 
 ## ⚠️ 核心开发规范 (给 AI 的备忘录)
 
-1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即 `vow-data.js`，全局变量仍为 `allPetsData` 以兼容已保存数据）。禁止使用 Pokedex / Pokemon / pets 作为对外名称。
+1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allPetsData`）。禁止使用 Pokedex / Pokemon / pets 作为对外名称。
 2. **代码输出格式**：所有生成的代码必须使用 ` ```text ` 代码块，**禁止使用高亮**。代码文件名写在代码块上方。严禁使用省略号。
-3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`、`data/`，`.html` 页面留在根目录。禁止再新增 `assets/`、`pages/` 之类的分类层，禁止把文件直接丢回根目录。
+3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`，`.html` 页面留在根目录；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
 
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
 5. **属性统一**：所有属性的图标和颜色存放在 `js/type-config.js`，全局引用。
@@ -65,14 +65,12 @@ vowmon/
 │   ├── admin-skills.js     # 技能后台逻辑
 │   ├── admin-traits.js     # 特性后台逻辑
 │   ├── admin-items.js      # 物品后台逻辑
-│   └── admin-images.js     # 图片管理逻辑
+│   ├── admin-images.js     # 图片管理逻辑
+│   └── data-loader.js      # 数据加载器（唯一的取数入口，见 §2）
 │
-└── data/                   # 所有数据（可由后台一键同步覆盖）
-    ├── vow-data.js         # 精灵(Vowmon)数据
-    ├── skills-data.js      # 技能数据
-    ├── traits-data.js      # 特性数据
-    ├── items-data.js       # 物品数据
-    └── natures-data.js     # 性格数据（宝可梦 25 性格 + 能力配色，只读）
+└── functions/              # Cloudflare Pages Functions
+    ├── data/[[path]].js    # /data/* 反代 vowmon_data 的 JSON
+    └── img/[[path]].js     # /img/*  反代 vowmon_imgs 的图片
 ```
 
 **引用路径举例**（页面都在根目录，所以统一带文件夹前缀）：
@@ -84,10 +82,11 @@ vowmon/
 <script src="js/type-config.js"></script>
 <script src="js/category-config.js"></script>
 <script src="js/tag-config.js"></script>
-<script src="data/vow-data.js"></script>
+<script src="js/data-loader.js"></script>
+<!-- 数据不用再写 script 标签，页面里用 VowmonData.ready([...]) 拉取 -->
 ```
 
-> 新增页面时，放根目录；新增的 css 放 `css/`，js 放 `js/`，数据放 `data/`，并在页面里按上面的前缀引用。
+> 新增页面时，放根目录；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
 
 ---
 
@@ -116,7 +115,7 @@ vowmon/
   - **性格速查表**：横轴「降低的能力」× 纵轴「提高的能力」的 5×5 矩阵，交叉格显示对应性格，点击可定位到卡片；下方列出 5 种中性性格。
   - **性格卡片**：每张显示中文 / 日文 / 英文名、能力修正（如「攻击 +10% / 特攻 -10%」）。
   - 筛选：按「提高的能力 / 降低的能力」多选，以及按名称（中 / 日 / 英）搜索。
-  - 数据唯一来源是 `data/natures-data.js`（`allNaturesData` + `natureStats` 能力配色），为只读数据，不由后台同步覆盖。
+  - 数据唯一来源是 `vowmon_data/natures-data.json`（`natures` → `allNaturesData`、`stats` → `natureStats` 能力配色），为只读数据，不由后台同步覆盖。
 - **物品图鉴 items.html**：物品的浏览与详情页，列表 / 详情是同一个页面（`items.html?id=i001` 直达某件物品，前进后退可用）：
   - **列表**：顶部大标题 + 「已筛 / 当前大类总数」计数；搜索（名称、描述、获取方式、分组都会命中）；分组胶囊筛选（只显示数据里实际有物品的分组，带数量角标）；`默认 / 名称 / 分组` 三种排序。
   - **大类 Tab**：数据里出现两个及以上的「物品 / 精灵果实 / 精灵蛋」时才显示，只有一个大类时自动隐藏。
@@ -159,7 +158,7 @@ vowmon/
   - 后台上传的命名规则是 `sprites/{编号}_s.png`（如 `401_s.png`），第二张起依次 `_s2`、`_s3`；旧数据里的 `_shiny{n}` 依然能识别，取序号时会跳过已被占用的；
   - 上传的图统一压缩为 PNG，尺寸受「同步配置 → 上传压缩尺寸」控制；
   - 只有图鉴卡片用得到它——有异色的卡片悬停显示异色图，没有的保持原来的放大动效。
-- **物品（item）**：`data/items-data.js` 的 `allItemsData` 数组，字段如下：
+- **物品（item）**：`vowmon_data/items-data.json` 里的 `items` 数组（同文件还有 `kinds` / `groups` / `categories` 三组自定义列表），字段如下：
   - `id`：`i001` 这类内部编号，只用于深链（`items.html?id=i001`）与图标命名，**前台不展示**；
   - `name`：物品名（名称做重复校验，图鉴里不出现同名物品）；
   - `kind`：大类，取值只能是 `itemKinds`（物品 / 精灵果实 / 精灵蛋），空值归到「物品」；
@@ -226,12 +225,45 @@ vowmon/
 
 ---
 
-## 2. 数据与同步机制
+## 2. 数据与同步机制（站点与数据解耦）
 
-- **Token 安全**：你在后台配置的 Fine-grained Token 仅保存在浏览器 `localStorage`，绝不上传。
-- **多仓支持**：后台配置支持逗号分隔多个数据仓库（如 `vowmon_data_1, vowmon_data_2`），同步时将自动逐个推送。
-- **一键同步**：在后台修改数据后，点击右上角“一键同步”即可将最新的 JS 数据文件推送到 GitHub 数据仓库根目录（文件名为 `vow-data.js` / `skills-data.js` / `traits-data.js` / `items-data.js`），前台刷新即可拉取。
-- **仓库内路径**：数据文件在站点里的位置是 `data/xxx-data.js`，推送到 GitHub 数据仓库时放在该仓库根目录，两者互不影响。
+**三个仓库各管一件事**：
+
+| 仓库 | 放什么 | 谁读它 |
+|---|---|---|
+| `vowmon` | 站点本体（HTML / CSS / JS），**不含任何数据** | GitHub Pages、Cloudflare Pages |
+| `vowmon_data` | 唯一数据源，5 个 JSON | 前台运行时拉取、后台读写 |
+| `vowmon_imgs` | 按编号命名的 PNG | 前台通过 `/img/*` 反代读取 |
+
+**前台怎么读**：页面里没有 `<script src="data/xxx.js">` 了，统一走 `js/data-loader.js`：
+
+```text
+VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); });
+```
+
+加载器依次尝试 `dataCdnBase`（默认本站 `/data/*` 反代）→ jsDelivr → raw.githubusercontent，任何一个成功就把 JSON 里的字段赋给对应全局变量，然后才挂载 Vue；全都失败会显示带「重新加载」按钮的错误页，不会白屏。
+
+**后台怎么读写**：
+
+- 编辑 → 写 `localStorage` 草稿 → 点「一键同步」把 JSON 推到数据仓库根目录；
+- 打开后台时先按 `?fresh` 拉远端 JSON，本机有草稿则优先用草稿（避免丢未同步的改动）；
+- 想用远端覆盖本机，点顶栏的「从仓库拉取」（会弹确认框）。
+
+**JSON 结构**（每份是一个对象，字段名与全局变量一一对应）：
+
+| 文件 | 字段 → 全局变量 |
+|---|---|
+| `vow-data.json` | `pets` → `allPetsData` |
+| `skills-data.json` | `skills` → `allSkillsData` |
+| `traits-data.json` | `traits` → `allTraitsData` |
+| `items-data.json` | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData` |
+| `natures-data.json` | `natures` → `allNaturesData`、`stats` → `natureStats` |
+
+**缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
+
+**Token 安全**：后台填的 Fine-grained Token 只存在浏览器 `localStorage`，不会上传到任何仓库。
+
+**多数据仓库**：`dataRepos` 支持逗号分隔多个仓库，同步时逐个推送；但**前台只读 `dataCdnBase` 指向的那一个**，多仓只作备份用途，别指望前台自动合并。
 ---
 
 ## 3. 规模上限与性能（千只精灵）
@@ -295,7 +327,7 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 - **图片**：单页 30 张卡片，每张最多 2 个 `<img>`（主图 + 异色），都带 `loading="lazy"`。若以后单页图片明显变多，先考虑降 `pageSize` 而不是加虚拟滚动。
 - **后台保存**：每次改动都会 `JSON.stringify` 全量写入 `localStorage`（1000 条约 3.9ms）。`localStorage` 单域上限约 5MB，按当前单条 ~677 字节算，可存约 7000 条；接近上限时应改为分片存储或直接把数据文件作为唯一数据源。
-- **一键同步**：推送的是 `data/*.js` 文本（1000 条约 677KB），GitHub Contents API 单文件上限远高于此，暂时无需改用 Git Data API。
+- **一键同步**：推送的是 JSON 文本（1000 条约 677KB），GitHub Contents API 单文件上限远高于此，暂时无需改用 Git Data API。
 
 ## 4. 部署（GitHub Pages + Cloudflare Pages）
 

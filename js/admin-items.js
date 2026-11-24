@@ -10,6 +10,7 @@
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted, watch } = Vue;
+VowmonData.ready(['items'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -525,16 +526,17 @@ createApp({
 
             isSyncing.value = true;
             // 自定义列表跟着数据一起同步，否则前台读不到新加的类型 / 分组
-            const content = '// items-data.js\n' +
-                'const itemKindsData = ' + JSON.stringify(kinds.value, null, 4) + ';\n' +
-                'const itemGroupsData = ' + JSON.stringify(groups.value, null, 4) + ';\n' +
-                'const itemCategoriesData = ' + JSON.stringify(categories.value, null, 4) + ';\n\n' +
-                'const allItemsData = ' + JSON.stringify(items.value, null, 4) + ';\n';
+            const content = JSON.stringify({
+                kinds: kinds.value,
+                groups: groups.value,
+                categories: categories.value,
+                items: items.value
+            }, null, 4) + '\n';
 
             try {
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(
-                        cfg.token, cfg.owner, repo, 'items-data.js',
+                        cfg.token, cfg.owner, repo, 'items-data.json',
                         content, 'update items data'
                     );
                 }
@@ -587,6 +589,40 @@ createApp({
             }, true);
         });
 
+        // 从数据仓库拉取最新数据（数据仓库是唯一数据源，会覆盖本机草稿）
+        const pullFromRepo = async () => {
+            const repo = String(config.value.dataRepos || '').split(/[\s,，]+/).map(s => s.trim()).filter(Boolean)[0];
+            if (!config.value.token || !config.value.owner || !repo) {
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
+                return;
+            }
+            const ok = await VowmonDialog.confirm(
+                '将从「' + repo + '」读取 items-data.json（含类型 / 分组 / 细分类），并覆盖本机未同步的改动。继续？',
+                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
+            );
+            if (!ok) return;
+
+            isSyncing.value = true;
+            try {
+                const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'items-data.json');
+                if (!bag || !Array.isArray(bag.items)) throw new Error('仓库里没有 items-data.json，或字段不是 items 数组');
+
+                items.value = normalizeItems(bag.items);
+                localStorage.setItem('vowmon_items_data', JSON.stringify(items.value));
+                localStorage.setItem(KINDS_KEY, JSON.stringify(bag.kinds || []));
+                localStorage.setItem(GROUPS_KEY, JSON.stringify(bag.groups || []));
+                localStorage.setItem(CATS_KEY, JSON.stringify(bag.categories || []));
+                initPickers();
+                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + items.value.length + ' 件物品', 'success', { duration: 3200 });
+            } catch (err) {
+                VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err)
+                });
+            } finally {
+                isSyncing.value = false;
+            }
+        };
+
         return {
             itemKinds, itemGroups,
             getItemGroupIcon, getItemGroupColor,
@@ -606,7 +642,9 @@ createApp({
             addKind, removeKind, addGroup, removeGroup, addCategory, removeCategory,
             // 分组图标
             groupIconPresets, currentGroupIcon, chooseGroupIcon,
-            syncToGitHub
+            syncToGitHub,
+            pullFromRepo
         };
     }
 }).mount('#app');
+});

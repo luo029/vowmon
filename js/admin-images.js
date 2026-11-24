@@ -9,6 +9,7 @@
    依赖：Vue3 / type-config.js / vow-data.js / github-api.js / common-ui.js
    ========================================================================== */
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+VowmonData.ready(['pets'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -469,3 +470,4 @@ createApp({
         };
     }
 }).mount('#app');
+});

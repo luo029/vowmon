@@ -1,4 +1,5 @@
 const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
+VowmonData.ready(['pets'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -593,14 +594,14 @@ createApp({
             }
             isSyncing.value = true;
             try {
-                const jsString = `// vow-data.js\nconst allPetsData = ` + JSON.stringify(pets.value, null, 4) + ';\n';
+                const jsonString = JSON.stringify({ pets: pets.value }, null, 4) + '\n';
                 
                 // 解析多个数据仓库
                 const repos = config.value.dataRepos.split(',').map(s => s.trim()).filter(s => s);
                 for (let repo of repos) {
                     await GitHubSync.uploadFile(
                         config.value.token, config.value.owner, repo,
-                        'vow-data.js', jsString, 'Admin Panel: Update vow data', false
+                        'vow-data.json', jsonString, 'Admin Panel: Update vow data', false
                     );
                 }
                 
@@ -609,6 +610,41 @@ createApp({
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',
                     title: '同步失败',
+                    detail: error && error.message ? error.message : String(error)
+                });
+            } finally {
+                isSyncing.value = false;
+            }
+        };
+
+        // 从数据仓库拉取最新数据（数据仓库是唯一数据源，会覆盖本机草稿）
+        const pullFromRepo = async () => {
+            const repo = String(config.value.dataRepos || '').split(/[\s,，]+/).map(s => s.trim()).filter(Boolean)[0];
+            if (!config.value.token || !config.value.owner || !repo) {
+                VowmonDialog.alert('请先在【同步配置】中填写 Token、用户名和数据仓库名。', {
+                    type: 'warning', title: '还没配置好', okText: '去配置'
+                }).then(() => switchTab('settings'));
+                return;
+            }
+            const ok = await VowmonDialog.confirm(
+                '将从「' + repo + '」读取 vow-data.json，并覆盖本机未同步的改动。继续？',
+                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
+            );
+            if (!ok) return;
+
+            isSyncing.value = true;
+            try {
+                const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'vow-data.json');
+                if (!bag || !Array.isArray(bag.pets)) throw new Error('仓库里没有 vow-data.json，或字段不是 pets 数组');
+
+                pets.value = JSON.parse(JSON.stringify(bag.pets));
+                localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+                listPage.value = 1;
+                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + pets.value.length + ' 条精灵数据', 'success', { duration: 3200 });
+            } catch (error) {
+                VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '拉取失败',
                     detail: error && error.message ? error.message : String(error)
                 });
             } finally {
@@ -630,9 +666,10 @@ createApp({
             deleteTargetName,
             closeModal,
             closeAllDropdowns, toggleDropdown, selectOption, openSelectionModal, selectFromModal,
-            openEditor, savePet, openDeleteConfirm, confirmDelete, saveConfig, syncToGitHub, toggleType, 
+            openEditor, savePet, openDeleteConfirm, confirmDelete, saveConfig, syncToGitHub, pullFromRepo, toggleType, 
             triggerFileUpload, handleFileUpload, updatePreview, getThumbUrl, getTypeIcon, getTypeColor,
             window
         };
     }
 }).mount('#app');
+});

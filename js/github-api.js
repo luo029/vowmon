@@ -51,6 +51,43 @@ class GitHubSync {
         return true;
     }
 
+    /**
+     * 从仓库读取一个文本文件（后台「从数据仓库拉取」用）。
+     * 文件不存在返回 null，其它错误抛出。
+     * 走 Contents API（不是 CDN），所以拿到的永远是最新提交，且有 token 时私有仓库也能读。
+     */
+    static async downloadFile(token, owner, repo, path, branch = 'main') {
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${encodeURIComponent(branch)}`;
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(url, { headers });
+        if (res.status === 404) return null;
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || ('读取失败：HTTP ' + res.status));
+        }
+
+        const data = await res.json();
+        if (!data || !data.content) return null;
+
+        const bin = atob(String(data.content).replace(/\s/g, ''));
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    /** 读取并解析 JSON；文件不存在返回 null */
+    static async downloadJson(token, owner, repo, path, branch = 'main') {
+        const text = await this.downloadFile(token, owner, repo, path, branch);
+        if (!text) return null;
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error(path + ' 不是合法的 JSON：' + e.message);
+        }
+    }
+
     // 列出某个仓库目录下所有文件（用于图片管理，遍历多仓库）
     // 返回一个数组：[{ name, path, sha, size, download_url, type }]
     // 目录不存在时返回 []，其它错误抛出
