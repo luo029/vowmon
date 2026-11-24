@@ -17,7 +17,7 @@
          （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
 
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
 const RANK_BANDS = [
     { name: '初灵', min: 1,   max: 15 },
@@ -43,6 +43,12 @@ const LV_META = {
     '完美': { color: '#BA7517', desc: '0.1s · 可组合技' }
 };
 const GENDERS = ['雄', '雌', '未知'];
+const TAX_FIELDS = [
+    { key: 'domain', label: '域' }, { key: 'kingdom', label: '界' },
+    { key: 'phylum', label: '门' }, { key: 'class', label: '纲' },
+    { key: 'order', label: '目' }, { key: 'family', label: '科' },
+    { key: 'genus', label: '属' }, { key: 'species', label: '种' }
+];
 
 function stageNameOf(level) {
     const lv = Number(level) || 0;
@@ -70,6 +76,10 @@ function normalizeIndividual(v) {
     p.bloodlineSkill = String(p.bloodlineSkill == null ? '' : p.bloodlineSkill);
     p.bloodlineAttr = String(p.bloodlineAttr == null ? '' : p.bloodlineAttr);
     p.level = Number(p.level) || 0;
+    const TAX_KEYS = ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'];
+    const tax = (p.taxonomy && typeof p.taxonomy === 'object') ? p.taxonomy : {};
+    p.taxonomy = {};
+    TAX_KEYS.forEach(k => { p.taxonomy[k] = String(tax[k] == null ? '' : tax[k]); });
     p.ownerId = String(p.ownerId == null ? '' : p.ownerId);
     p.items = Array.isArray(p.items)
         ? p.items.map(t => String(t).trim()).filter(t => t && t.trim())
@@ -115,6 +125,7 @@ const app = createApp({
             nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
             level: 1, ownerId: '', items: [],
+            taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
             contractDate: '', contractChapter: '', milestones: [],
             experience: '', notes: ''
         });
@@ -282,7 +293,13 @@ const app = createApp({
         };
         /* 独立弹窗添加特性：列表只负责显示，不再是一条假输入框 */
         const traitAdding = ref(false);
-        const openTraitInput = () => { traitAdding.value = true; traitInput.value = ''; showTraitMenu.value = false; };
+        const traitInputEl = ref(null);
+        const openTraitInput = () => {
+            traitAdding.value = true;
+            traitInput.value = '';
+            showTraitMenu.value = false;
+            nextTick(() => { if (traitInputEl.value && traitInputEl.value.focus) traitInputEl.value.focus(); });
+        };
         const cancelTraitInput = () => { traitAdding.value = false; traitInput.value = ''; showTraitMenu.value = false; };
         const addTraitViaDialog = async () => {
             const name = await VowmonDialog.prompt('输入特性名', {
@@ -393,11 +410,23 @@ const app = createApp({
         /* --------------------------------------------------- 血脉技能：属性 → 技能两级选择 */
         const attrOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData)) ? typeData.map(t => t.name) : [];
         const bloodlineSkillOptions = computed(() => {
-            const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
+            const fam = String(form.value.taxonomy && form.value.taxonomy.family || '');
+            const families = (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData && typeof allBloodlineFamiliesData === 'object')
+                ? allBloodlineFamiliesData : {};
             const cur = String(form.value.bloodlineSkill || '');
-            const list = all.filter(s => s && s.type === form.value.bloodlineAttr).map(s => String(s.name || '')).filter(Boolean);
-            if (cur && !list.includes(cur)) list.unshift(cur);   // 兼容旧数据 / 自定义名
-            return list;
+            let list = [];
+            if (fam && families[fam] && Array.isArray(families[fam].skills)) {
+                /* 同一科共用族尊下发的十八系技能；选了血脉属性就优先显示对应系 */
+                const rows = families[fam].skills;
+                let picked = rows.filter(s => s && s.type === form.value.bloodlineAttr).map(s => String(s.name || ''));
+                if (!picked.length) picked = rows.map(s => String((s && s.name) || '')).filter(Boolean);
+                list = picked;
+            } else {
+                const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
+                list = all.filter(s => s && s.type === form.value.bloodlineAttr).map(s => String(s.name || '')).filter(Boolean);
+            }
+            if (cur && !list.includes(cur)) list = list.concat([cur]);   // 兼容旧数据 / 自定义名
+            return list.filter(Boolean);
         });
         /* 换属性时清空已选技能，避免选到别的属性的技能 */
         const bloodlineAttrModel = computed({
@@ -539,7 +568,7 @@ const app = createApp({
             cardColor, stageColorOf, stageColorOfName, bloodColorOf,
             lvColorOf, lvDescOf,
             stageName: stageNameOf, RANK_BANDS,
-            GENDERS, BLOODLINES, SKILL_LEVELS,
+            GENDERS, BLOODLINES, SKILL_LEVELS, TAX_FIELDS, traitInputEl,
             natureOptions, natureHintOf, ownerOptions,
             attrOptions, bloodlineSkillOptions, bloodlineAttrModel,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,

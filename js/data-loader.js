@@ -59,7 +59,7 @@
         // 血脉技能（每个属性一技，后台可维护）
         bloodlineSkills: {
             file: 'bloodline-skills-data.json', label: '血脉技能',
-            keys: { skills: 'allBloodlineSkillsData' }
+            keys: { skills: 'allBloodlineSkillsData', families: 'allBloodlineFamiliesData' }
         },
         // 书内档案：御兽精灵（书中个体，与图鉴的「种族」分开存）
         individuals: {

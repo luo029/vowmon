@@ -20,6 +20,40 @@ const app = createApp({
     setup() {
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data' });
         const skills = ref([]);
+        const families = ref({});
+        const familyOptions = computed(() => Object.keys(families.value));
+        const activeFamily = ref('');
+        const familyForm = ref({ name: '', zun: '', skills: {} });
+        const loadFamily = (name) => {
+            activeFamily.value = name;
+            const f = families.value[name] || { zun: '', skills: {} };
+            const picks = {};
+            typeOptions.forEach(t => { picks[t] = (f.skills || {})[t] || ''; });
+            familyForm.value = { name: name || '', zun: f.zun || '', skills: picks };
+        };
+        const saveFamily = () => {
+            const name = String(familyForm.value.name || '').trim();
+            if (!name) { VowmonDialog.toast('请填写科名', 'warning'); return; }
+            const picks = {};
+            typeOptions.forEach(t => { picks[t] = String((familyForm.value.skills || {})[t] || '').trim(); });
+            families.value = Object.assign({}, families.value, { [name]: { zun: String(familyForm.value.zun || '').trim(), skills: picks } });
+            activeFamily.value = name;
+            saveLocal();
+            VowmonDialog.toast('已保存「' + name + '」的族尊技能包；记得一键同步', 'success');
+        };
+        const deleteFamily = () => {
+            const name = activeFamily.value;
+            if (!name) return;
+            VowmonDialog.confirm('确定删除「' + VowmonDialog.esc(name) + '」的技能包吗？', { type: 'danger', html: true, okText: '删除' }).then(ok => {
+                if (!ok) return;
+                const next = Object.assign({}, families.value);
+                delete next[name];
+                families.value = next;
+                loadFamily('');
+                saveLocal();
+                VowmonDialog.toast('已删除', 'success');
+            });
+        };
         const search = ref('');
         const isSyncing = ref(false);
         const showModal = ref(false);
@@ -49,7 +83,7 @@ const app = createApp({
         };
 
         const saveLocal = () => {
-            if (window.VowmonStore) VowmonStore.save('bloodlineSkills', { skills: skills.value });
+            if (window.VowmonStore) VowmonStore.save('bloodlineSkills', { skills: skills.value, families: families.value });
         };
 
         const openAdd = () => {
@@ -96,7 +130,7 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ skills: skills.value }, null, 1) + '\n';
+                const content = JSON.stringify({ skills: skills.value, families: families.value }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'bloodline-skills-data.json', content, 'update bloodline skills data');
                 }
@@ -120,7 +154,9 @@ const app = createApp({
                 const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'bloodline-skills-data.json');
                 if (!bag || !Array.isArray(bag.skills)) throw new Error('仓库里没有 bloodline-skills-data.json 或字段不是 skills 数组');
                 skills.value = bag.skills.map(normalizeSkill);
-                if (window.VowmonStore) VowmonStore.replace('bloodlineSkills', { skills: skills.value });
+                families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
+                loadFamily(Object.keys(families.value)[0] || '');
+                if (window.VowmonStore) VowmonStore.replace('bloodlineSkills', { skills: skills.value, families: families.value });
                 VowmonDialog.toast('已从仓库拉取 ' + skills.value.length + ' 个血脉技能', 'success');
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', { type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err) });
@@ -136,11 +172,15 @@ const app = createApp({
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('bloodlineSkills') : null;
                 const bag = mirror || (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || { skills: [] };
                 skills.value = (bag.skills || []).map(normalizeSkill);
+                families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
+                loadFamily(Object.keys(families.value)[0] || '');
             } catch (e) { console.error('血脉技能初始化失败', e); }
         });
 
         return {
-            config, skills, search, filtered, isSyncing,
+            config, skills, families, familyOptions, activeFamily, familyForm,
+            loadFamily, saveFamily, deleteFamily,
+            search, filtered, isSyncing,
             showModal, isEdit, form, typeOptions, typeColor,
             openAdd, openEdit, save, askDelete, closeModal,
             syncToGitHub, pullFromRepo

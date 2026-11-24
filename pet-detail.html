@@ -96,6 +96,8 @@
         .bl-type { font-size: 11px; font-weight: 900; color: #fff; padding: 3px 10px; border-radius: 999px; flex-shrink: 0; }
         .bl-skill-row b { font-size: 13.5px; color: #2d3748; }
         .bl-note { font-size: 12px; color: #a0aec0; margin-left: auto; text-align: right; }
+        .tax-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; color: #4a5568; background: #f1f5f9; border-radius: 999px; padding: 5px 12px; margin: 0 6px 6px 0; }
+        .tax-chip b { color: #2b6cb0; }
         .bl-foot { font-size: 11.5px; color: #a0aec0; margin-top: 10px; line-height: 1.8; }
 
         /* 种族值条 */
@@ -298,6 +300,12 @@
                 </div>
 
                 <!-- 血脉技能 -->
+                <div class="info-card" v-if="taxonomyRows.length">
+                    <h2><i class="fa-solid fa-sitemap"></i> 分类学</h2>
+                    <div class="tax-chip" v-for="r in taxonomyRows" :key="r.label"><b>{{ r.label }}</b>{{ r.value }}</div>
+                </div>
+
+                <!-- 血脉技能 -->
                 <div class="info-card" v-if="bloodlineSkillRows.length">
                     <h2><i class="fa-solid fa-dna"></i> 可用血脉技能 <span class="total-badge font-num">{{ bloodlineSkillRows.length }}</span></h2>
                     <div class="bl-skill-row" v-for="s in bloodlineSkillRows" :key="s.id">
@@ -360,7 +368,7 @@
 <script src="js/type-chart.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/vowmon-utils.js?v=20261125a"></script>
-<script src="js/data-loader.js?v=20261126a"></script>
+<script src="js/data-loader.js?v=20261126b"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
 VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
@@ -488,14 +496,27 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
             /* ---------------- 血脉技能（按种族属性匹配） ---------------- */
             const bloodlineSkillRows = computed(() => {
                 if (!pet.value) return [];
+                const fam = String((pet.value.taxonomy && pet.value.taxonomy.family) || '');
+                const families = (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData && typeof allBloodlineFamiliesData === 'object') ? allBloodlineFamiliesData : {};
+                if (fam && families[fam] && Array.isArray(families[fam].skills)) {
+                    return families[fam].skills.map((s, i) => ({
+                        id: 'fam-' + i, name: String((s && s.name) || ''),
+                        type: String((s && s.type) || ''),
+                        note: String(families[fam].zun || '族尊授予')
+                    }));
+                }
                 const types = (pet.value.types || []).map(t => String(t));
                 const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
                 return all.filter(s => types.includes(String(s.type || ''))).map(s => ({
-                    id: String(s.id || s.name),
-                    name: String(s.name || ''),
-                    type: String(s.type || ''),
-                    note: String(s.note || '')
+                    id: String(s.id || s.name), name: String(s.name || ''), type: String(s.type || ''), note: String(s.note || '')
                 }));
+            });
+            const taxonomyRows = computed(() => {
+                if (!pet.value || !pet.value.taxonomy) return [];
+                return [
+                    ['域', 'domain'], ['界', 'kingdom'], ['门', 'phylum'], ['纲', 'class'],
+                    ['目', 'order'], ['科', 'family'], ['属', 'genus'], ['种', 'species']
+                ].filter(([label, key]) => pet.value.taxonomy[key]).map(([label, key]) => ({ label, value: String(pet.value.taxonomy[key]) }));
             });
 
             /* ---------------- 进化链 ---------------- */
@@ -592,7 +613,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
                 heightText, weightText,
-                abilityRows, evoNodes, bloodlineSkillRows,
+                abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows,
                 attackGroups, defendGroups
             };
         }
