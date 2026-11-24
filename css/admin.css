@@ -716,3 +716,6 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 }
 .pick-icon-opt:hover { border-color: #90cdf4; background: #ebf8ff; color: #2b6cb0; }
 .pick-icon-opt.active { border-color: #4299e1; background: #ebf8ff; color: #2b6cb0; box-shadow: 0 0 0 2px rgba(66,153,225,.18); }
+
+/* 防止 Vue 挂载前的原始模板闪烁（FOUC）：挂载完成前隐藏整个应用容器 */
+[v-cloak] { display: none !important; }
