@@ -101,3 +101,7 @@ body.no-anim .vow-tip { transition: none; }
 .vta-head b { font-size: 15px; color: #2d3748; }
 .vta-big { flex: 1; min-height: 320px; margin: 16px 18px; padding: 14px; border: 1px solid #dbe4ec; border-radius: 12px; font-size: 14px; line-height: 1.9; font-family: inherit; color: #2d3748; outline: none; resize: vertical; }
 .vta-foot { padding: 12px 18px; border-top: 1px solid #e8edf2; display: flex; justify-content: flex-end; }
+
+/* vow-select 可输入模式：直接打字即新建，下拉选择已有项 */
+.vsel-input { border: 1px solid #dbe4ec; cursor: text; text-align: left; font-size: 14px; font-family: inherit; background: #fbfdff; }
+.vsel-input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); outline: none; background: #fff; }

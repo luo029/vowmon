@@ -14,33 +14,23 @@ function normalizeSkill(s) {
     return o;
 }
 
-VowmonData.ready(['bloodlineSkills', 'pets']).then(function () {
+VowmonData.ready(['bloodlineSkills', 'individuals']).then(function () {
 
 const app = createApp({
     setup() {
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data' });
         const skills = ref([]);
-        const pets = ref([]);
+        const individuals = ref([]);
         const families = ref({});
         const familyOptions = computed(() => Object.keys(families.value));
         const activeFamily = ref('');
-        const familyForm = ref({ name: '', zun: '', skills: {}, speciesIds: [] });
-        const newFamily = async () => {
-            const name = await VowmonDialog.prompt('输入新科名', { title: '新建科', okText: '创建' });
-            const v = String(name == null ? '' : name).trim();
-            if (!v) return;
-            if (families.value[v]) { VowmonDialog.toast('这个科已经存在，请直接选择', 'warning'); return; }
-            activeFamily.value = '';
-            loadFamily('');
-            familyForm.value.name = v;
-            VowmonDialog.toast('已填入科名「' + v + '」，填好族尊和技能后点保存', 'success');
-        };
+        const familyForm = ref({ name: '', zun: '', skills: {} });
         const loadFamily = (name) => {
             activeFamily.value = name;
-            const f = families.value[name] || { zun: '', skills: {}, speciesIds: [] };
+            const f = families.value[name] || { zun: '', skills: {} };
             const picks = {};
             typeOptions.forEach(t => { picks[t] = (f.skills || {})[t] || ''; });
-            familyForm.value = { name: name || '', zun: f.zun || '', skills: picks, speciesIds: Array.isArray(f.speciesIds) ? f.speciesIds.slice() : [] };
+            familyForm.value = { name: name || '', zun: f.zun || '', skills: picks };
         };
         const saveFamily = () => {
             const name = String(familyForm.value.name || '').trim();
@@ -49,18 +39,8 @@ const app = createApp({
             typeOptions.forEach(t => { picks[t] = String((familyForm.value.skills || {})[t] || '').trim(); });
             families.value = Object.assign({}, families.value, { [name]: {
                 zun: String(familyForm.value.zun || '').trim(),
-                skills: picks,
-                speciesIds: (familyForm.value.speciesIds || []).slice()
+                skills: picks
             } });
-            /* 批量把选中的精灵归到该科：写回图鉴数据本机镜像 */
-            const ids = (familyForm.value.speciesIds || []).map(String);
-            let changed = false;
-            pets.value.forEach(p => {
-                if (!ids.includes(String(p.id))) return;
-                if (!p.taxonomy || typeof p.taxonomy !== 'object') p.taxonomy = {};
-                if (p.taxonomy.family !== name) { p.taxonomy.family = name; changed = true; }
-            });
-            if (changed && window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
             activeFamily.value = name;
             saveLocal();
             VowmonDialog.toast('已保存「' + name + '」的族尊技能包；记得一键同步', 'success');
@@ -78,22 +58,6 @@ const app = createApp({
                 VowmonDialog.toast('已删除', 'success');
             });
         };
-        /* 关联精灵：选中的精灵自动归入该科 */
-        const showPetModal = ref(false);
-        const petSearch = ref('');
-        const filteredPets = computed(() => {
-            const kw = petSearch.value.trim().toLowerCase();
-            if (!kw) return pets.value;
-            return pets.value.filter(p => [p.name, p.id].join(' ').toLowerCase().includes(kw));
-        });
-        const togglePet = (p) => {
-            const id = String(p.id);
-            const arr = familyForm.value.speciesIds || (familyForm.value.speciesIds = []);
-            const i = arr.indexOf(id);
-            if (i > -1) arr.splice(i, 1); else arr.push(id);
-        };
-        const isPetPicked = (p) => (familyForm.value.speciesIds || []).includes(String(p.id));
-
         const search = ref('');
         const isSyncing = ref(false);
         const showModal = ref(false);
@@ -103,6 +67,10 @@ const app = createApp({
 
         const typeOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData))
             ? typeData.map(t => t.name) : [];
+        /* 族尊从御兽精灵档案里选（也可直接输入新名字） */
+        const zunOptions = computed(() => (individuals.value || [])
+            .map(p => String((p.nickname && String(p.nickname).trim()) || (p.speciesId ? '#' + p.speciesId : '')).trim())
+            .filter(Boolean));
         const typeIcon = (name) => {
             const t = (typeof typeData !== 'undefined' && Array.isArray(typeData) ? typeData : []).find(x => x.name === name);
             return (t && t.icon) || 'fa-solid fa-circle';
@@ -216,16 +184,15 @@ const app = createApp({
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('bloodlineSkills') : null;
                 const bag = mirror || (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || { skills: [] };
                 skills.value = (bag.skills || []).map(normalizeSkill);
-                pets.value = (typeof allPetsData !== 'undefined' && Array.isArray(allPetsData)) ? allPetsData : [];
+                individuals.value = (typeof allIndividualsData !== 'undefined' && Array.isArray(allIndividualsData)) ? allIndividualsData : [];
                 families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
                 loadFamily(Object.keys(families.value)[0] || '');
             } catch (e) { console.error('血脉技能初始化失败', e); }
         });
 
         return {
-            config, skills, families, familyOptions, activeFamily, familyForm, newFamily, typeIcon,
-            loadFamily, saveFamily, deleteFamily,
-            pets, showPetModal, petSearch, filteredPets, togglePet, isPetPicked,
+            config, skills, families, familyOptions, activeFamily, familyForm, typeIcon, zunOptions,
+            individuals, loadFamily, saveFamily, deleteFamily,
             search, filtered, isSyncing,
             showModal, isEdit, form, typeOptions, typeColor,
             openAdd, openEdit, save, askDelete, closeModal,

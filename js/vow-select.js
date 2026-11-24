@@ -28,7 +28,8 @@
             modelValue: { type: String, default: '' },
             options: { type: Array, default: function () { return []; } },
             placeholder: { type: String, default: '请选择' },
-            disabled: { type: Boolean, default: false }
+            disabled: { type: Boolean, default: false },
+            creatable: { type: Boolean, default: false }
         },
         emits: ['update:modelValue'],
         data: function () { return { open: false }; },
@@ -43,6 +44,12 @@
                     };
                 });
             },
+            menuList: function () {
+                if (!this.creatable) return this.list;
+                var q = String(this.modelValue || '').trim().toLowerCase();
+                if (!q) return this.list;
+                return this.list.filter(function (o) { return o.label.toLowerCase().includes(q); }).slice(0, 8);
+            },
             current: function () {
                 var v = this.modelValue;
                 return this.list.find(function (o) { return o.value === v; }) || null;
@@ -51,6 +58,10 @@
         methods: {
             toggle: function () { if (!this.disabled) this.open = !this.open; },
             pick: function (o) { this.$emit('update:modelValue', o.value); this.open = false; },
+            onType: function (e) {
+                this.$emit('update:modelValue', e.target.value);
+                this.open = true;
+            },
             onDoc: function (e) {
                 if (this.open && this.$el && !this.$el.contains(e.target)) this.open = false;
             },
@@ -62,14 +73,15 @@
         unmounted: function () { document.removeEventListener('click', this.onDoc); },
         template:
             '<div class="vsel" :class="{ open: open, disabled: disabled }" @keydown="onKey">' +
-            '  <button type="button" class="vsel-trigger" :disabled="disabled" @click.stop="toggle">' +
+            '  <input v-if="creatable" type="text" class="vsel-trigger vsel-input" :value="modelValue" :placeholder="placeholder" :disabled="disabled" @input="onType" @focus="open = true">' +
+            '  <button v-else type="button" class="vsel-trigger" :disabled="disabled" @click.stop="toggle">' +
             '    <span class="vsel-label" v-if="current">{{ current.label }}<small class="vsel-hint" v-if="current.hint">{{ current.hint }}</small></span>' +
             '    <span class="vsel-placeholder" v-else>{{ placeholder }}</span>' +
             '    <i class="fa-solid fa-chevron-down vsel-arrow"></i>' +
             '  </button>' +
             '  <transition name="vsel">' +
             '    <div class="vsel-menu" v-if="open">' +
-            '      <div class="vsel-opt" v-for="o in list" :key="o.value"' +
+            '      <div class="vsel-opt" v-for="o in menuList" :key="o.value"' +
             '           :class="{ on: o.value === modelValue }" @click.stop="pick(o)">' +
             '        <span class="vsel-opt-label">{{ o.label }}<small class="vsel-hint" v-if="o.hint">{{ o.hint }}</small></span>' +
             '        <i class="fa-solid fa-check vsel-opt-check" v-if="o.value === modelValue"></i>' +
