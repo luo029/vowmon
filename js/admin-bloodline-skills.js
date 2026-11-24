@@ -25,6 +25,16 @@ const app = createApp({
         const familyOptions = computed(() => Object.keys(families.value));
         const activeFamily = ref('');
         const familyForm = ref({ name: '', zun: '', skills: {}, speciesIds: [] });
+        const newFamily = async () => {
+            const name = await VowmonDialog.prompt('输入新科名', { title: '新建科', okText: '创建' });
+            const v = String(name == null ? '' : name).trim();
+            if (!v) return;
+            if (families.value[v]) { VowmonDialog.toast('这个科已经存在，请直接选择', 'warning'); return; }
+            activeFamily.value = '';
+            loadFamily('');
+            familyForm.value.name = v;
+            VowmonDialog.toast('已填入科名「' + v + '」，填好族尊和技能后点保存', 'success');
+        };
         const loadFamily = (name) => {
             activeFamily.value = name;
             const f = families.value[name] || { zun: '', skills: {}, speciesIds: [] };
@@ -93,6 +103,10 @@ const app = createApp({
 
         const typeOptions = (typeof typeData !== 'undefined' && Array.isArray(typeData))
             ? typeData.map(t => t.name) : [];
+        const typeIcon = (name) => {
+            const t = (typeof typeData !== 'undefined' && Array.isArray(typeData) ? typeData : []).find(x => x.name === name);
+            return (t && t.icon) || 'fa-solid fa-circle';
+        };
         const typeColor = (name) => {
             const t = (typeof typeData !== 'undefined' && Array.isArray(typeData) ? typeData : []).find(x => x.name === name);
             return (t && t.color) || '#a0aec0';
@@ -209,7 +223,7 @@ const app = createApp({
         });
 
         return {
-            config, skills, families, familyOptions, activeFamily, familyForm,
+            config, skills, families, familyOptions, activeFamily, familyForm, newFamily, typeIcon,
             loadFamily, saveFamily, deleteFamily,
             pets, showPetModal, petSearch, filteredPets, togglePet, isPetPicked,
             search, filtered, isSyncing,

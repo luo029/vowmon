@@ -100,12 +100,12 @@
         .trait-input-box input { flex: 1 1 140px; min-width: 100px; padding: 4px 0; border: 0 !important; box-shadow: none !important; background: transparent !important; }
         .trait-input-box input::placeholder { color: #cbd5e0; }
         .trait-search-icon { color: #718096; font-size: 13px; }
-        .trait-list { min-height: 44px; max-height: 92px; overflow-y: auto; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; }
+        .trait-list { min-height: 44px; max-height: 92px; overflow-y: auto; padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fbfdff; flex: 0 0 180px; width: 180px; }
         .trait-empty { font-size: 12.5px; color: #cbd5e0; font-weight: 700; }
         .trait-line { display: flex; align-items: stretch; gap: 8px; }
-        .trait-line .trait-list { flex: 1; min-width: 0; }
+        .trait-line .trait-list { flex: 0 0 180px; min-width: 0; }
         .trait-edit-inline { display: flex; align-items: center; gap: 6px; flex: 1.6; min-width: 0; }
-        .trait-add-btn { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed #4299e1; background: #f0f7ff; color: #2b6cb0; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; }
+        .trait-add-btn { flex: none; width: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed #4299e1; background: #f0f7ff; color: #2b6cb0; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; }
         .trait-add-btn i { font-size: 15px; }
         .trait-add-btn:hover { background: #4299e1; color: #fff; border-style: solid; }
         .trait-add-mini { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px; background: #38a169; color: #fff; cursor: pointer; }
@@ -176,15 +176,16 @@
 
         .lv-tag { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12px; font-weight: 900; letter-spacing: .05em; padding: 7px 18px; border-radius: 999px; color: #fff; flex-shrink: 0; }
         /* 基本信息三列紧凑排版 */
-        .basic-grid { grid-template-columns: 1fr 1fr 1.25fr; }
+        .basic-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+        .basic-grid .form-group { min-width: 0; }
         .basic-grid .seg-opt { padding: 8px 11px; }
         .basic-grid .species-pick { gap: 7px; }
         .basic-grid .sp-view { flex: 1; min-width: 0; min-height: 46px; padding: 5px 8px; gap: 7px; }
         .basic-grid .sp-view img { width: 34px; height: 34px; }
         .basic-grid .sp-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .basic-grid .sp-btn { padding: 8px 11px; }
-        .level-row { display: flex; align-items: center; gap: 12px; grid-column: 1 / -1; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 14px; }
-        .level-row input { flex: none; width: 80px; padding: 8px 10px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; color: #2d3748; font-size: 14px; font-weight: 800; text-align: center; outline: none; font-family: inherit; }
+        .level-row { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 8px 10px; }
+        .level-row input { flex: none; width: 72px; padding: 8px 10px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; color: #2d3748; font-size: 14px; font-weight: 800; text-align: center; outline: none; font-family: inherit; }
         .level-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
         .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
@@ -319,12 +320,11 @@
                                 <button type="button" class="sp-btn" @click.stop="openSpeciesModal" title="选择种族"><i class="fa-solid fa-paw"></i></button>
                             </div>
                         </div>
-                        <div class="level-row">
-                            <span class="lv-label" style="min-width: 66px; font-weight: 900; color: #4a5568;">等级 <i class="tip" data-tip="填 1-100 即可；阶段由等级自动推导（初灵→升灵→族尊→基座→灵相→律冠→元灵→元）">?</i></span>
-                            <input type="text" inputmode="numeric" v-model.number="form.level">
-                            <i class="fa-solid fa-arrow-right lv-arrow"></i>
-                            <span class="lv-label">当前阶段</span>
-                            <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
+                        <div class="form-group"><label>等级 <i class="tip" data-tip="填 1-100；阶段自动推导">?</i></label>
+                            <div class="level-row compact">
+                                <input type="text" inputmode="numeric" v-model.number="form.level">
+                                <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
+                            </div>
                         </div>
                         <div class="form-group"><label>性格 <i class="tip" data-tip="图鉴性格，影响种族值成长倾向">?</i></label>
                             <vow-select v-model="form.nature" :options="natureOptions" placeholder="（未定性格）"></vow-select>
