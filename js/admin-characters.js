@@ -52,7 +52,7 @@ function normalizeCharacter(c) {
 
 VowmonData.ready(['characters', 'individuals'], { fresh: true }).then(function () {
 
-createApp({
+const app = createApp({
     setup() {
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data', imgRepos: 'vowmon_imgs', imgCdnBase: '' });
 
@@ -329,5 +329,7 @@ createApp({
             syncToGitHub, pullFromRepo
         };
     }
-}).mount('#app');
+});
+app.component('vow-textarea', window.VowTextarea);
+app.mount('#app');
 });

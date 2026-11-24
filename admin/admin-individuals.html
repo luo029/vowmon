@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125b">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
@@ -97,7 +97,9 @@
         .trait-chips input { border: 0; outline: none; background: transparent; width: 180px; font-size: 13px; font-family: inherit; }
         .trait-input-box { position: relative; min-height: 44px; padding: 8px 12px 8px 34px; border: 1px solid #dbe4ec; border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
         .trait-input-box:focus-within { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .trait-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #a0aec0; pointer-events: none; }
+        .trait-input-box input { flex: 1 1 140px; min-width: 100px; padding: 4px 0; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+        .trait-input-box input::placeholder { color: #cbd5e0; }
+        .trait-search-icon { color: #718096; font-size: 13px; }
         .td-head { font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .06em; padding: 6px 11px 4px; }
         .td-none { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #a0aec0; }
 
@@ -127,8 +129,6 @@
         .ms-add { margin-top: 2px; }
 
         /* 字段提示：默认不占位置，悬浮显示说明 */
-        .tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-left: 5px; border-radius: 50%; background: #edf2f7; color: #718096; font-size: 10px; font-style: normal; font-weight: 900; cursor: help; vertical-align: middle; }
-        .tip:hover { background: #4299e1; color: #fff; }
 
         /* ============ 技能胶囊 ============ */
         .skill-row { display: grid; grid-template-columns: 1fr auto 34px; gap: 10px; align-items: center; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
@@ -152,7 +152,11 @@
         .sp-cell .sp-n { font-size: 12px; font-weight: 800; color: #2d3748; margin-top: 3px; }
         .sp-cell .sp-i { font-size: 10.5px; color: #a0aec0; font-weight: 700; }
 
-        .lv-tag { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: #fff; }
+        .lv-tag { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12px; font-weight: 900; letter-spacing: .05em; padding: 7px 18px; border-radius: 999px; color: #fff; flex-shrink: 0; }
+        .level-row { display: flex; align-items: center; gap: 12px; grid-column: span 2; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 14px; }
+        .level-row input { flex: none; width: 180px; }
+        .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
+        .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
     </style>
 </head>
 <body>
@@ -262,7 +266,7 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-circle-info"></i> 基本信息</div>
                     <div class="form-grid">
-                        <div class="form-group"><label>昵称 <i class="tip" title="可以不填；留空则直接用种族名当称呼">?</i></label><input v-model="form.nickname" placeholder=""></div>
+                        <div class="form-group"><label>昵称 <i class="tip" data-tip="可以不填；留空则直接用种族名当称呼">?</i></label><input v-model="form.nickname" placeholder=""></div>
                         <div class="form-group"><label>性别</label>
                             <div class="seg-group">
                                 <button type="button" class="seg-opt" v-for="g in GENDERS" :key="g"
@@ -270,7 +274,7 @@
                                         @click="form.gender = (form.gender === g ? '' : g)">{{ g }}</button>
                             </div>
                         </div>
-                        <div class="form-group" style="grid-column: span 2;"><label>种族 <i class="tip" title="从精灵图鉴选择；若该种族只有一个特性会自动填入">?</i></label>
+                        <div class="form-group" style="grid-column: span 2;"><label>种族 <i class="tip" data-tip="从精灵图鉴选择；若该种族只有一个特性会自动填入">?</i></label>
                             <div class="species-pick">
                                 <div class="sp-view">
                                     <img v-if="formSpeciesImage" :src="formSpeciesImage" alt="">
@@ -283,11 +287,12 @@
                                 <button type="button" class="sp-btn" @click.stop="openSpeciesModal"><i class="fa-solid fa-paw"></i> 选择种族</button>
                             </div>
                         </div>
-                        <div class="form-group"><label>等级 <i class="tip" title="填 1-100 即可；阶段由等级自动推导（初灵→升灵→族尊→基座→灵相→律冠→元灵→元）">?</i></label>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="number" min="1" max="100" v-model.number="form.level">
-                                <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
-                            </div>
+                        <div class="level-row">
+                            <span class="lv-label" style="min-width: 66px; font-weight: 900; color: #4a5568;">等级 <i class="tip" data-tip="填 1-100 即可；阶段由等级自动推导（初灵→升灵→族尊→基座→灵相→律冠→元灵→元）">?</i></span>
+                            <input type="number" min="1" max="100" v-model.number="form.level">
+                            <i class="fa-solid fa-arrow-right lv-arrow"></i>
+                            <span class="lv-label">当前阶段</span>
+                            <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
                         </div>
                     </div>
                 </div>
@@ -295,12 +300,12 @@
                 <!-- 性格 · 习性 · 特性 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-heart"></i> 性格 · 习性 · 特性</div>
-                    <div class="form-group" style="margin-bottom: 14px;"><label>性格 <i class="tip" title="图鉴性格，影响种族值成长倾向">?</i></label>
+                    <div class="form-group" style="margin-bottom: 14px;"><label>性格 <i class="tip" data-tip="图鉴性格，影响种族值成长倾向">?</i></label>
                         <vow-select v-model="form.nature" :options="natureOptions" placeholder="（未定性格）"></vow-select>
                         <div class="nature-hint" v-if="form.nature && natureHintOf(form.nature)">{{ form.nature }}：{{ natureHintOf(form.nature) }}</div>
                     </div>
-                    <div class="form-group" style="margin-bottom: 14px;"><label>习性 <i class="tip" title="这只精灵的脾气秉性，自由描述">?</i></label><textarea v-model="form.personality" rows="2" placeholder=""></textarea></div>
-                    <div class="form-group"><label>特性 <i class="tip" title="输入关键词搜索图鉴特性；回车可自由添加图鉴里没有的">?</i></label>
+                    <div class="form-group" style="margin-bottom: 14px;"><label>习性 <i class="tip" data-tip="这只精灵的脾气秉性，自由描述">?</i></label><vow-textarea v-model="form.personality" :rows="2"></vow-textarea></div>
+                    <div class="form-group"><label>特性 <i class="tip" data-tip="输入关键词搜索图鉴特性；回车可自由添加图鉴里没有的">?</i></label>
                         <div class="trait-wrap">
                             <div class="trait-chips trait-input-box">
                                 <i class="fa-solid fa-magnifying-glass trait-search-icon"></i>
@@ -321,7 +326,7 @@
 
                 <!-- 技能与熟练度 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-bolt"></i> 技能与熟练度 <i class="tip" title="点击技能胶囊可修改熟练度；新增时输入关键词搜索技能表。熟练度：入门(80%威力)→熟练(满威力)→专精(不失败，可开皆传)→完美(0.1s，可组合技)。皆传的迅疾/刚猛在出手时再选。">?</i></div>
+                    <div class="sect-title"><i class="fa-solid fa-bolt"></i> 技能与熟练度 <i class="tip" data-tip="点击技能胶囊可修改熟练度；新增时输入关键词搜索技能表。熟练度：入门(80%威力)→熟练(满威力)→专精(不失败，可开皆传)→完美(0.1s，可组合技)。皆传的迅疾/刚猛在出手时再选。">?</i></div>
                     <div class="skill-chips">
                         <template v-for="(s, i) in form.skills" :key="i">
                             <button v-if="editingSkillIndex !== i && s.name" type="button" class="skill-chip"
@@ -356,7 +361,7 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-dna"></i> 血脉</div>
                     <div class="form-grid">
-                        <div class="form-group"><label>血脉类型 <i class="tip" title="异变 / 黑暗 / 光明 / 属性血脉">?</i></label>
+                        <div class="form-group"><label>血脉类型 <i class="tip" data-tip="异变 / 黑暗 / 光明 / 属性血脉">?</i></label>
                             <div class="seg-group">
                                 <button type="button" class="seg-opt" v-for="b in BLOODLINES" :key="b"
                                         :class="{ on: form.bloodline === b }"
@@ -364,10 +369,10 @@
                                         @click="form.bloodline = b">{{ b }}</button>
                             </div>
                         </div>
-                        <div class="form-group"><label>血脉属性 <i class="tip" title="属性血脉时填写">?</i></label>
+                        <div class="form-group"><label>血脉属性 <i class="tip" data-tip="属性血脉时填写">?</i></label>
                             <input v-model="form.bloodlineAttr" :disabled="form.bloodline !== '属性'" placeholder="">
                         </div>
-                        <div class="form-group" style="grid-column: span 2;"><label>血脉技能 <i class="tip" title="属性血脉为族群授予的技能">?</i></label><input v-model="form.bloodlineSkill" placeholder=""></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>血脉技能 <i class="tip" data-tip="属性血脉为族群授予的技能">?</i></label><input v-model="form.bloodlineSkill" placeholder=""></div>
                     </div>
                 </div>
 
@@ -375,8 +380,8 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
                     <div class="contract-panel">
-                        <div><label>契约日 <i class="tip" title="书内时间或现实日期均可">?</i></label><input v-model="form.contractDate" placeholder=""></div>
-                        <div><label>契约章节 <i class="tip" title="记录在书的第几章">?</i></label><input v-model="form.contractChapter" placeholder=""></div>
+                        <div><label>契约日 <i class="tip" data-tip="书内时间或现实日期均可">?</i></label><input v-model="form.contractDate" placeholder=""></div>
+                        <div><label>契约章节 <i class="tip" data-tip="记录在书的第几章">?</i></label><input v-model="form.contractChapter" placeholder=""></div>
                     </div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
@@ -395,11 +400,11 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-user-shield"></i> 归属与道具</div>
                     <div class="form-grid">
-                        <div class="form-group"><label>主人 <i class="tip" title="来自御兽人物档案">?</i></label>
+                        <div class="form-group"><label>主人 <i class="tip" data-tip="来自御兽人物档案">?</i></label>
                             <vow-select v-model="form.ownerId" :options="ownerOptions" placeholder="（未定 / 无主）"></vow-select>
                         </div>
-                        <div class="form-group"><label>携带道具 <i class="tip" title="多个道具用逗号分隔">?</i></label><input v-model="itemsInput" placeholder=""></div>
-                        <div class="form-group" style="grid-column: span 2;"><label>经历 <i class="tip" title="这只精灵的故事">?</i></label><textarea v-model="form.experience" rows="3" placeholder=""></textarea></div>
+                        <div class="form-group"><label>携带道具 <i class="tip" data-tip="多个道具用逗号分隔">?</i></label><input v-model="itemsInput" placeholder=""></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>经历 <i class="tip" data-tip="这只精灵的故事">?</i></label><vow-textarea v-model="form.experience" :rows="3"></vow-textarea></div>
                         <div class="form-group" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
                     </div>
                 </div>
@@ -445,8 +450,10 @@
 <script src="../js/data-loader.js?v=20261125b"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/vow-tip.js?v=20261125"></script>
+<script src="../js/vow-textarea.js?v=20261125"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261125"></script>
-<script src="../js/admin-individuals.js?v=20261125e"></script>
+<script src="../js/admin-individuals.js?v=20261125f"></script>
 </body>
 </html>

@@ -77,20 +77,39 @@ const app = createApp({
         const iframeSrc = ref('');
         const frameRef = ref(null);
 
+        /* 旧本地草稿可能没有「势力版图」，用仓库数据补齐该页与全部文本块 */
+        function withFactions(bag) {
+            const pages = Array.isArray(bag.pages) ? bag.pages.map(p => Object.assign({}, p)) : [];
+            const blocks = Object.assign({}, bag.blocks || {});
+            const remotePages = Array.isArray(window.allLorePages) ? window.allLorePages : [];
+            const remoteBlocks = (window.allLoreBlocks && typeof window.allLoreBlocks === 'object') ? window.allLoreBlocks : {};
+            if (!pages.some(p => p.id === 'factions')) {
+                const rp = remotePages.find(p => p.id === 'factions');
+                pages.push(rp ? Object.assign({}, rp) : { id: 'factions', title: '势力版图', file: 'factions.html', count: 0 });
+            }
+            Object.keys(remoteBlocks).forEach(k => {
+                if (k.indexOf('factions.') === 0 && !blocks[k]) blocks[k] = remoteBlocks[k];
+            });
+            const f = pages.find(p => p.id === 'factions');
+            if (f) f.count = Object.keys(blocks).filter(k => k.indexOf('factions.') === 0).length;
+            return { pages: pages, blocks: blocks };
+        }
+
         function takeData() {
             const pages = Array.isArray(window.allLorePages) ? JSON.parse(JSON.stringify(window.allLorePages)) : [];
             const blocks = (window.allLoreBlocks && typeof window.allLoreBlocks === 'object')
                 ? JSON.parse(JSON.stringify(window.allLoreBlocks)) : {};
             pages.forEach(p => { if (!p.title) p.title = PAGE_TITLES[p.id] || p.id; });
-            return { pages: pages, blocks: blocks };
+            return withFactions({ pages: pages, blocks: blocks });
         }
 
         function applyData(bag) {
+            const merged = withFactions(bag);
             data.value = {
-                pages: (Array.isArray(bag.pages) ? bag.pages : []).map(p => ({
+                pages: (Array.isArray(merged.pages) ? merged.pages : []).map(p => ({
                     id: p.id, title: p.title || PAGE_TITLES[p.id] || p.id, file: p.file || '', count: p.count || 0
                 })),
-                blocks: JSON.parse(JSON.stringify(bag.blocks || {}))
+                blocks: JSON.parse(JSON.stringify(merged.blocks || {}))
             };
             loaded.value = true;
             if (!activePage.value && data.value.pages.length) {
@@ -413,6 +432,21 @@ const app = createApp({
                 if (!activePage.value) pickPage('ranks');
             }
             if (window.VowmonStore) isDirty.value = !!VowmonStore.isDirty('lore');
+
+            /* 旧本机草稿可能缺「势力版图」整页：从数据仓库补齐，不影响已有编辑 */
+            if (!Object.keys(data.value.blocks || {}).some(k => k.indexOf('factions.') === 0)) {
+                fetch('https://vowmon.pages.dev/data/lore-data.json', { cache: 'no-store' })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(bag => {
+                        if (!bag || !bag.blocks) return;
+                        const merged = withFactions({ pages: data.value.pages, blocks: data.value.blocks });
+                        Object.keys(bag.blocks).forEach(k => {
+                            if (k.indexOf('factions.') === 0 && !merged.blocks[k]) merged.blocks[k] = bag.blocks[k];
+                        });
+                        data.value = merged;
+                    })
+                    .catch(() => {});
+            }
 
             // 其他标签页改了 lore 数据且当前没在编辑 → 跟进
             document.addEventListener('vowmon:data-changed', function (e) {

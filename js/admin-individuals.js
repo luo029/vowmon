@@ -521,5 +521,6 @@ const app = createApp({
     }
 });
 app.component('vow-select', window.VowSelect);
+app.component('vow-textarea', window.VowTextarea);
 app.mount('#app');
 });
