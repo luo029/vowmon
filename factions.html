@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Vowmon Wiki - 势力版图</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --accent: #1971c2;
+            --accent-soft: #e7f0fa;
+            --accent-deep: #14538f;
+            --gold: #d4a017;
+            --gold-soft: #fdf6e0;
+            --ink: #22344a;
+            --ink-2: #47617e;
+            --ink-3: #8598b0;
+            --line: #e2eaf3;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+            background: #f5f8fc;
+            color: var(--ink-2);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .page { max-width: 960px; margin: 0 auto; padding: 30px 20px 70px; }
+
+        /* ---------------- 页首横幅 ---------------- */
+        .banner {
+            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #14538f 0%, #1971c2 55%, #2f8fd8 100%);
+            border-radius: 22px; padding: 40px 38px 36px; color: #fff;
+            box-shadow: 0 14px 38px rgba(25,113,194,.28);
+        }
+        .banner::after {
+            content: ''; position: absolute; right: -70px; top: -70px;
+            width: 240px; height: 240px; border-radius: 50%;
+            background: rgba(255,255,255,.1); pointer-events: none;
+        }
+        .banner::before {
+            content: ''; position: absolute; right: 40px; bottom: -90px;
+            width: 190px; height: 190px; border-radius: 50%;
+            background: rgba(255,255,255,.08); pointer-events: none;
+        }
+        .banner-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 800; letter-spacing: .3em; text-indent: .3em;
+            background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
+            padding: 6px 15px; border-radius: 999px;
+        }
+        .banner h1 { margin-top: 16px; font-size: 38px; font-weight: 900; letter-spacing: .1em; }
+        .banner .banner-sub { margin-top: 10px; font-size: 14px; font-weight: 700; letter-spacing: .12em; opacity: .88; }
+        .banner .banner-desc { margin-top: 18px; max-width: 640px; font-size: 13.5px; line-height: 2; opacity: .9; }
+        .banner .banner-desc b { color: #ffd76e; font-weight: 800; }
+
+        /* ---------------- 分区标题 ---------------- */
+        .sec { margin-top: 38px; }
+        .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .sec-no {
+            width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 900; color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            box-shadow: 0 4px 12px rgba(25,113,194,.3);
+        }
+        .sec-head h2 { font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: .06em; }
+        .sec-head .sec-en { font-size: 11px; font-weight: 800; letter-spacing: .22em; color: var(--ink-3); margin-left: 2px; }
+        .sec-head .sec-rule { flex: 1; height: 1px; background: var(--line); }
+
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 26px; box-shadow: 0 3px 14px rgba(34,52,74,.05);
+        }
+
+        /* ---------------- 联盟制度 ---------------- */
+        .law-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .law-card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 22px 20px; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(34,52,74,.05);
+        }
+        .law-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--law-color, var(--accent)); }
+        .law-icon {
+            width: 46px; height: 46px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; background: var(--law-color, var(--accent));
+            box-shadow: 0 5px 14px var(--law-shadow, rgba(25,113,194,.3));
+        }
+        .law-card h3 { margin-top: 14px; font-size: 17px; font-weight: 900; color: var(--ink); }
+        .law-card h3 small { font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--ink-3); margin-left: 8px; }
+        .law-card p { margin-top: 10px; font-size: 13px; line-height: 1.95; color: var(--ink-2); }
+        .law-card p b { color: var(--law-color, var(--accent-deep)); }
+
+        /* ---------------- 九牧地区 ---------------- */
+        .jiumu { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 3px 14px rgba(34,52,74,.05); }
+        .jiumu-head { background: linear-gradient(135deg, #14538f, #2f8fd8); color: #fff; padding: 26px 30px; position: relative; overflow: hidden; }
+        .jiumu-head::after { content: ''; position: absolute; right: -50px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,.1); }
+        .jiumu-head .j-tag { font-size: 11px; font-weight: 800; letter-spacing: .28em; text-indent: .28em; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); padding: 5px 13px; border-radius: 999px; }
+        .jiumu-head h3 { margin-top: 12px; font-size: 24px; font-weight: 900; letter-spacing: .08em; }
+        .jiumu-head .j-sub { margin-top: 8px; font-size: 12.5px; font-weight: 700; opacity: .88; letter-spacing: .06em; }
+        .jiumu-body { padding: 22px 30px 26px; }
+        .jiumu-body p { font-size: 13px; line-height: 2.05; color: var(--ink-2); margin-bottom: 10px; }
+        .jiumu-body p b { color: var(--accent-deep); }
+        .j-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .j-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--accent-deep); background: var(--accent-soft); border: 1px solid #cadcf0; padding: 6px 14px; border-radius: 999px; }
+        .j-chip i { font-size: 10.5px; }
+
+        /* ---------------- 权职体系 ---------------- */
+        .post-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .post-table th {
+            background: var(--accent-soft); color: var(--accent-deep);
+            font-weight: 900; text-align: left; padding: 12px 16px;
+            border-bottom: 2px solid #cadcf0; letter-spacing: .04em;
+            white-space: nowrap;
+        }
+        .post-table td { padding: 13px 16px; border-bottom: 1px solid var(--line); color: var(--ink-2); line-height: 1.8; vertical-align: top; }
+        .post-table tr:last-child td { border-bottom: 0; }
+        .post-table .post-name { font-weight: 900; color: var(--ink); white-space: nowrap; font-size: 14px; }
+        .post-table .post-name .post-en { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; color: var(--ink-3); margin-top: 2px; }
+        .post-badge {
+            display: inline-flex; align-items: center; font-size: 11px; font-weight: 800;
+            padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+        }
+        .post-badge.gov { background: var(--gold-soft); color: #a3720b; border: 1px solid #ecd9a0; }
+        .post-badge.mil { background: #fcebeb; color: #a32d2d; border: 1px solid #f3c2c2; }
+        .post-badge.honor { background: var(--accent-soft); color: var(--accent-deep); border: 1px solid #cadcf0; }
+
+        .alias-note { margin-top: 14px; background: var(--gold-soft); border: 1px solid #ecd9a0; border-radius: 12px; padding: 14px 18px; font-size: 12.5px; line-height: 2; color: #7a5a14; }
+        .alias-note b { color: #a3720b; }
+
+        /* ---------------- 三大协会 ---------------- */
+        .assoc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .assoc-card {
+            background: #fff; border: 1px solid var(--line); border-radius: 16px;
+            padding: 24px 20px; text-align: left; position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(34,52,74,.05);
+        }
+        .assoc-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--assoc-color, var(--accent)); background: var(--assoc-soft, var(--accent-soft)); }
+        .assoc-card h3 { margin-top: 13px; font-size: 16px; font-weight: 900; color: var(--ink); }
+        .assoc-card .assoc-duties { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .assoc-card .assoc-duties span { font-size: 12.5px; font-weight: 700; color: var(--ink-2); display: flex; align-items: baseline; gap: 7px; }
+        .assoc-card .assoc-duties span i { color: var(--assoc-color, var(--accent)); font-size: 9px; flex-shrink: 0; transform: translateY(-1px); }
+
+        /* ---------------- 荒野提示 ---------------- */
+        .wild-note { margin-top: 30px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 18px; padding: 26px 30px; color: #dfe6ed; position: relative; overflow: hidden; }
+        .wild-note::after { content: ''; position: absolute; right: -40px; bottom: -70px; width: 190px; height: 190px; border-radius: 50%; background: rgba(255,255,255,.06); }
+        .wild-note h3 { font-size: 17px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .wild-note h3 i { color: #ff8787; }
+        .wild-note p { margin-top: 10px; font-size: 13px; line-height: 2; }
+        .wild-note p b { color: #ff8787; }
+
+        /* ---------------- 相关设定 ---------------- */
+        .related { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 38px; }
+        .related a {
+            display: inline-flex; align-items: center; gap: 9px;
+            font-size: 13.5px; font-weight: 800; color: var(--accent-deep); text-decoration: none;
+            border: 1px solid #cadcf0; border-radius: 999px;
+            padding: 10px 22px; background: #fff;
+            transition: border-color .2s ease, background .2s ease;
+        }
+        .related a:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+        .page-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-3); line-height: 2; }
+
+        /* ---------------- 入场动画 ---------------- */
+        .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+        .reveal.in { opacity: 1; transform: none; }
+        .no-anim .reveal { opacity: 1 !important; transform: none !important; }
+        .no-anim .related a { transition: none !important; }
+
+        @media (max-width: 800px) {
+            .law-grid, .assoc-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .page { padding: 18px 14px 50px; }
+            .banner { padding: 30px 22px 28px; border-radius: 18px; }
+            .banner h1 { font-size: 30px; }
+            .card { padding: 20px 16px; }
+            .jiumu-head { padding: 22px 20px; }
+            .jiumu-body { padding: 18px 20px 22px; }
+            .post-table th, .post-table td { padding: 10px 10px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
+    <script src="js/navbar.js?v=20261125c" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+</head>
+<body>
+<div id="site-navbar"></div>
+
+<div class="page">
+
+    <header class="banner reveal in">
+        <span class="banner-tag" data-lore="factions.c1"><i class="fa-solid fa-flag"></i> 世界观 · 势力版图</span>
+        <h1 data-lore="factions.c2">联盟与势力</h1>
+        <div class="banner-sub" data-lore="factions.c3">地区划界，联盟治世 —— 文明止步之处，即是荒野</div>
+        <p class="banner-desc" data-lore="factions.c4">
+            人类的秩序以<b>「地区」</b>为界，每个地区都有自己的<b>「联盟」</b>。
+            政治与军事分立，名号与实力并行——而联盟的地图之外，是任何法律都管不到的荒野。
+        </p>
+    </header>
+
+    <!-- 一、联盟制度 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">壹</span>
+            <h2 data-lore="factions.c5">联盟制度</h2>
+            <span class="sec-en">LEAGUE SYSTEM</span>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="law-grid">
+            <div class="law-card" style="--law-color:#1971c2; --law-shadow:rgba(25,113,194,.3)">
+                <div class="law-icon"><i class="fa-solid fa-map"></i></div>
+                <h3 data-lore="factions.c6">地区划分<small>REGION</small></h3>
+                <p data-lore="factions.c7">世界按<b>地区</b>划分，每个地区都是一个独立的文明圈，拥有自己的联盟、大赛与名号体系。目前已知的主要地区为<b>九牧地区</b>。</p>
+            </div>
+            <div class="law-card" style="--law-color:#d4a017; --law-shadow:rgba(212,160,23,.28)">
+                <div class="law-icon"><i class="fa-solid fa-landmark"></i></div>
+                <h3 data-lore="factions.c8">地区联盟<small>LEAGUE</small></h3>
+                <p data-lore="factions.c9">每个地区都有自己的<b>联盟</b>，统管本地区的御兽师认证、大赛举办与秩序维持。政治与军事分立：政治最高管理者为<b>盟主</b>，军事最高管理者为<b>戎枢</b>。</p>
+            </div>
+            <div class="law-card" style="--law-color:#495057; --law-shadow:rgba(73,80,87,.3)">
+                <div class="law-icon"><i class="fa-solid fa-mountain"></i></div>
+                <h3 data-lore="factions.c10">荒野<small>WILDS</small></h3>
+                <p data-lore="factions.c11">地区之外，为<b>荒野</b>——不受任何联盟管辖的法外之地，也是许多邪恶势力藏身之所。踏入荒野，联盟的保护即告终结。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 二、九牧地区 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">贰</span>
+            <h2 data-lore="factions.c12">九牧地区 · 九牧联盟</h2>
+            <span class="sec-en">JIUMU REGION</span>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="jiumu">
+            <div class="jiumu-head">
+                <span class="j-tag">主要舞台 · REGION NO.1</span>
+                <h3 data-lore="factions.c13">九牧地区</h3>
+                <div class="j-sub">JIUMU REGION · 九牧联盟 LEAGUE</div>
+            </div>
+            <div class="jiumu-body">
+                <p data-lore="factions.c14">故事的<b>主要舞台</b>。九牧地区由<b>九牧联盟</b>治理，沿用联盟制的通用秩序：盟主执掌政务，戎枢执掌军事，地方上由各阶段御兽师分层构成实力与名号体系。</p>
+                <p data-lore="factions.c15">御兽师在九牧联盟的阶梯上逐级攀登——从<b>初生</b>、<b>精英</b>一路到<b>职业</b>及以上，参加联盟大赛、争取称号，最终向<b>大冠</b>之位发起挑战。</p>
+                <div class="j-chips">
+                    <span class="j-chip"><i class="fa-solid fa-crown"></i> 盟主 · 政治中枢</span>
+                    <span class="j-chip"><i class="fa-solid fa-shield-halved"></i> 戎枢 · 军事中枢</span>
+                    <span class="j-chip"><i class="fa-solid fa-medal"></i> 大冠 · 地区最强</span>
+                    <span class="j-chip"><i class="fa-solid fa-scale-balanced"></i> 三大协会</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 三、权职体系 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">叁</span>
+            <h2 data-lore="factions.c16">权职体系</h2>
+            <span class="sec-en">RANKS &amp; TITLES</span>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="card" style="padding: 10px 6px;">
+            <table class="post-table">
+                <thead>
+                    <tr>
+                        <th style="width: 150px;" data-lore="factions.c17">名号</th>
+                        <th style="width: 130px;" data-lore="factions.c18">性质</th>
+                        <th data-lore="factions.c19">含义与由来</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c20">盟主<span class="post-en">LEAGUE MASTER</span></td>
+                        <td data-lore="factions.c21"><span class="post-badge gov">政治最高</span></td>
+                        <td data-lore="factions.c22">一个地区联盟的<b>政治最高管理者</b>，执掌政务、法度与联盟日常运转。</td>
+                    </tr>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c23">戎枢<span class="post-en">WAR PIVOT</span></td>
+                        <td data-lore="factions.c24"><span class="post-badge mil">军事最高</span></td>
+                        <td data-lore="factions.c25">一个地区联盟的<b>军事最高管理者</b>，执掌武力、征伐与防务。</td>
+                    </tr>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c26">大冠<span class="post-en">GRAND CROWN</span></td>
+                        <td data-lore="factions.c27"><span class="post-badge honor">实力名号</span></td>
+                        <td data-lore="factions.c28"><b>地区最强训练家</b>的名号，是所有御兽师攀登联盟阶梯的终点。</td>
+                    </tr>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c29">太宰<span class="post-en">GRAND STEWARD</span></td>
+                        <td data-lore="factions.c30"><span class="post-badge honor">实力名号</span></td>
+                        <td data-lore="factions.c31"><b>地区四大承相</b>的合称名号。承相阶段（对应精灵灵相期）的顶尖存在。</td>
+                    </tr>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c32">首座<span class="post-en">PRIME SEAT</span></td>
+                        <td data-lore="factions.c33"><span class="post-badge honor">属性名号</span></td>
+                        <td data-lore="factions.c34">地区<b>各属性最强的枢座</b>的名号。一属性一座，十八系各争其位。</td>
+                    </tr>
+                    <tr>
+                        <td class="post-name" data-lore="factions.c35">大君<span class="post-en">GRAND SOVEREIGN</span></td>
+                        <td data-lore="factions.c36"><span class="post-badge mil">政军兼任</span></td>
+                        <td data-lore="factions.c37">若有人<b>同时兼任政治、军事最高统治者</b>，即可获得的名号——权柄归于一身。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="alias-note">
+            <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i><b>古今叫法对照：</b>「精英」「职业」是现代叫法，原本叫做<b>「领英」「执业」</b>。御兽师参加职业大赛夺得冠军后，会多出一个<b>「称号」</b>，成为称号职业——比一般职业更强。称号一般以名号相称，类似围棋的「名人」「天元」，仅限职业阶段。
+        </div>
+    </section>
+
+    <!-- 四、三大协会 -->
+    <section class="sec reveal">
+        <div class="sec-head">
+            <span class="sec-no">肆</span>
+            <h2 data-lore="factions.c38">三大协会</h2>
+            <span class="sec-en">THREE ASSOCIATIONS</span>
+            <span class="sec-rule"></span>
+        </div>
+        <div class="assoc-grid">
+            <div class="assoc-card" style="--assoc-color:#1971c2; --assoc-soft:#e7f0fa">
+                <div class="assoc-icon"><i class="fa-solid fa-paw"></i></div>
+                <h3 data-lore="factions.c39">精灵协会</h3>
+                <div class="assoc-duties">
+                    <span><i class="fa-solid fa-circle"></i>精灵备案</span>
+                    <span><i class="fa-solid fa-circle"></i>掌握技能备案</span>
+                    <span><i class="fa-solid fa-circle"></i>联盟大赛举办方</span>
+                </div>
+            </div>
+            <div class="assoc-card" style="--assoc-color:#d4a017; --assoc-soft:#fdf6e0">
+                <div class="assoc-icon"><i class="fa-solid fa-id-badge"></i></div>
+                <h3 data-lore="factions.c40">御兽师协会</h3>
+                <div class="assoc-duties">
+                    <span><i class="fa-solid fa-circle"></i>御兽师等级备案</span>
+                    <span><i class="fa-solid fa-circle"></i>等级认证</span>
+                    <span><i class="fa-solid fa-circle"></i>定期考察</span>
+                </div>
+            </div>
+            <div class="assoc-card" style="--assoc-color:#2f9e44; --assoc-soft:#e6f4ea">
+                <div class="assoc-icon"><i class="fa-solid fa-flask"></i></div>
+                <h3 data-lore="factions.c41">学术协会</h3>
+                <div class="assoc-duties">
+                    <span><i class="fa-solid fa-circle"></i>学术研究</span>
+                    <span><i class="fa-solid fa-circle"></i>科研课题资金发放</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 荒野 -->
+    <section class="sec reveal">
+        <div class="wild-note">
+            <h3 data-lore="factions.c42"><i class="fa-solid fa-triangle-exclamation"></i> 荒野警示 · WILDS NOTICE</h3>
+            <p data-lore="factions.c43">九牧的地图之外，没有任何法律。<b>杀人越货</b>之事在荒野屡见不鲜，也是邪恶势力的藏身之所。穿越荒野的商队必须雇佣<b>职业级以上</b>的御兽师护卫——而即便如此，也没有人敢保证一定能活着回来。</p>
+        </div>
+    </section>
+
+    <!-- 相关设定 -->
+    <nav class="related reveal">
+        <a href="ranks.html"><i class="fa-solid fa-layer-group"></i> 等级体系</a>
+        <a href="trainers.html"><i class="fa-solid fa-user-shield"></i> 御兽师图鉴</a>
+        <a href="individuals.html"><i class="fa-solid fa-paw"></i> 御兽精灵档案</a>
+        <a href="characters.html"><i class="fa-solid fa-users"></i> 御兽人物档案</a>
+        <a href="lore.html"><i class="fa-solid fa-scroll"></i> 元域演化史</a>
+    </nav>
+
+    <footer class="page-footer reveal">
+        本篇为世界观设定文本，辑录自「传世石板」与九牧联盟公开档案，仅作设定呈现。
+    </footer>
+
+</div>
+
+<script src="js/data-loader.js?v=20261125b"></script>
+<script src="js/lore-apply.js?v=20261125a"></script>
+
+<script>
+(function () {
+    'use strict';
+    /* ---------- 入场动画：滚到视口内淡入（.no-anim 时 CSS 直接全显） ---------- */
+    var revealed = document.querySelectorAll('.reveal:not(.in)');
+    var noAnim = false;
+    try { noAnim = localStorage.getItem('vowmon_anim_on') === 'false'; } catch (e) { noAnim = false; }
+    if (noAnim || !('IntersectionObserver' in window)) {
+        revealed.forEach(function (el) { el.classList.add('in'); });
+    } else {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+            });
+        }, { threshold: 0.08 });
+        revealed.forEach(function (el) { io.observe(el); });
+    }
+})();
+</script>
+
+</body>
+</html>

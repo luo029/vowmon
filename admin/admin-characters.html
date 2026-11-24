@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 御兽人物管理</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-users"></i> 御兽人物管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步人物档案' }}
+            </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin-lore.html"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
+                <a href="admin-individuals.html"><i class="fa-solid fa-paw"></i> 御兽精灵</a>
+                <a href="admin-characters.html" class="active"><i class="fa-solid fa-users"></i> 御兽人物</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">御兽人物档案 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ characters.length }} 位人物</span></h2>
+                <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽人物</button>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <input v-model="searchName" placeholder="搜索姓名 / 势力 / 头衔 / 简介关键词..." style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit;">
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th><th>势力</th><th>头衔</th><th>存款</th><th>精灵</th><th>物品</th><th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in filteredList" :key="item.id">
+                            <td><b>{{ item.name }}</b></td>
+                            <td>{{ item.faction || '—' }}</td>
+                            <td>{{ item.title || '—' }}</td>
+                            <td><b class="font-num">{{ fmtMoney(item.money) }}</b> <small style="color:#a0aec0;">联盟币</small></td>
+                            <td><span class="font-num">{{ (item.petIds || []).length }}</span> 只</td>
+                            <td><span class="font-num">{{ (item.inventory || []).length }}</span> 件</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" @click="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-danger btn-sm" @click="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr v-if="!filteredList.length"><td colspan="7" style="text-align:center; color:#a0aec0; padding: 30px;">暂无御兽人物档案</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" style="width: 680px; max-height: 88vh; overflow-y: auto;" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑御兽人物' : '添加御兽人物' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label>姓名 <span class="opt">必填</span></label><input v-model="form.name"></div>
+                    <div class="form-group"><label>头衔 / 称号</label><input v-model="form.title" placeholder="如：职业（称号）/ 首座 / 大冠"></div>
+
+                    <div class="form-group"><label>所属势力</label>
+                        <input v-model="form.faction" list="factionList" placeholder="如：九牧联盟">
+                        <datalist id="factionList"><option>九牧联盟</option><option>荒野</option></datalist>
+                    </div>
+                    <div class="form-group"><label>存款 <span class="opt">联盟币</span></label><input type="number" min="0" v-model.number="form.money"></div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>物品栏 <span class="opt">每行一件：道具名|备注</span></label>
+                        <div class="sub-row" v-for="(it, i) in form.inventory" :key="i" style="grid-template-columns: 1fr 1fr 40px; display: grid; gap: 8px; margin-bottom: 8px;">
+                            <input v-model="it.name" placeholder="道具名（可引用物品图鉴里的名称）">
+                            <input v-model="it.note" placeholder="备注，如 ×2">
+                            <button class="btn btn-danger btn-sm" style="align-self:center;" @click="form.inventory.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <button class="btn btn-outline btn-sm" @click="addInventory"><i class="fa-solid fa-plus"></i> 添加物品</button>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>持有的御兽精灵 <span class="opt">先在「御兽精灵」页录入个体，再来关联</span></label>
+                        <div class="trait-chips">
+                            <span class="trait-chip" v-for="p in pickedPets" :key="p.id">
+                                <i class="fa-solid fa-paw" style="color: #4299e1;"></i>{{ indLabel(p) }}
+                                <i class="fa-solid fa-xmark chip-x" @click="removePet(p.id)"></i>
+                            </span>
+                            <span v-if="!pickedPets.length" class="trait-chip-empty">还没有持有精灵</span>
+                            <button type="button" class="btn btn-outline btn-sm" @click.stop="openPetModal"><i class="fa-solid fa-plus"></i> 关联精灵</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;"><label>人物简介</label><textarea v-model="form.bio" class="custom-textarea" rows="3"></textarea></div>
+                    <div class="form-group full" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="saveItem">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 精灵关联弹窗（多选） -->
+    <div class="modal-overlay" v-if="showPetModal" @vowmon:modal-close="closeModal('pet')" style="z-index: 1100;">
+        <div class="selection-modal" @click.stop>
+            <div class="modal-header">
+                <h3>关联持有的御兽精灵</h3>
+                <button class="btn-close" @click="showPetModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="petSearchInput" placeholder="输入昵称 / 种族 / 编号搜索...">
+            </div>
+            <div class="selection-list">
+                <div class="selection-item" v-for="p in filteredPets" :key="p.id"
+                     :style="form.petIds.includes(p.id) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                     @click="togglePet(p)">
+                    <div class="item-name">
+                        <i class="fa-solid" :class="form.petIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.petIds.includes(p.id) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
+                        {{ p.nickname }}
+                    </div>
+                    <div class="item-desc">{{ speciesLabel(p.speciesId) }}</div>
+                </div>
+                <div v-if="!filteredPets.length" class="empty-state">暂无御兽精灵档案，请先到「御兽精灵」页录入</div>
+            </div>
+            <div class="selection-pagination" style="justify-content: flex-end;">
+                <span style="font-weight: bold; margin-right: 12px;">已勾选 <b style="color:#4299e1;">{{ form.petIds.length }}</b> 只</span>
+                <button class="btn btn-primary" style="padding: 4px 14px;" @click="showPetModal = false">完成</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../js/site-config.js?v=20261124e"></script>
+<script src="../js/data-loader.js?v=20261125b"></script>
+<script src="../js/github-api.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/dialog.js?v=20261124e"></script>
+<script src="../js/admin-characters.js?v=20261125a"></script>
+</body>
+</html>

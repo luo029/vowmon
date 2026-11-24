@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Vowmon Wiki - 御兽精灵档案</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
+
+        .container { max-width: 1200px; margin: 26px auto 40px; padding: 0 20px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; border-bottom: 2px solid #f0f4f8; padding-bottom: 15px; }
+        .header h2 { font-size: 24px; color: #2c3e50; font-weight: 900; }
+        .header .count { font-size: 14px; color: #a0aec0; margin-left: 10px; font-weight: normal; }
+
+        /* 筛选区 */
+        .filter-bar { background: #fffdf8; border: 1px solid #fcecd7; border-radius: 16px; padding: 16px 20px; margin-bottom: 22px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .filter-bar .search-box { position: relative; flex: 1; min-width: 200px; }
+        .filter-bar .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 14px; }
+        .filter-bar .search-box input { width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 14px; background: #fff; font-family: inherit; transition: border-color .2s; }
+        .filter-bar .search-box input:focus { border-color: #ff6b6b; }
+        .filter-select { padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; font-size: 13.5px; font-weight: 700; color: #4a5568; outline: none; cursor: pointer; font-family: inherit; }
+        .filter-select:focus { border-color: #ff6b6b; }
+
+        /* 卡片墙 */
+        .ind-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 15px; }
+        .ind-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; display: flex; flex-direction: column; }
+        .ind-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,.08); border-color: #ff6b6b; }
+        .ind-card .ic-img { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--card-c, #e2e8f0) 0%, #f7fbfe 90%); }
+        .ind-card .ic-img img { width: 130px; height: 130px; object-fit: contain; }
+        .ind-card .ic-stage { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 900; color: #fff; background: var(--stage-c, #718096); padding: 3px 11px; border-radius: 999px; }
+        .ind-card .ic-level { position: absolute; top: 10px; right: 10px; font-size: 11.5px; font-weight: 900; color: #4a5568; background: rgba(255,255,255,.9); border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 999px; }
+        .ind-card .ic-body { padding: 12px 14px 14px; border-top: 1px dashed #f0f4f8; }
+        .ind-card .ic-name { font-size: 16px; font-weight: 900; color: #2d3748; display: flex; align-items: center; gap: 7px; }
+        .ind-card .ic-name .ic-gender { font-size: 11px; font-weight: 800; color: #d4537e; background: #fbeaf0; padding: 1px 8px; border-radius: 999px; }
+        .ind-card .ic-species { margin-top: 3px; font-size: 12px; color: #a0aec0; font-weight: 700; }
+        .ind-card .ic-owner { margin-top: 9px; font-size: 12px; font-weight: 800; color: #185FA5; display: flex; align-items: center; gap: 6px; }
+        .ind-card .ic-owner i { font-size: 10.5px; }
+        .ind-card .ic-foot { margin-top: 9px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .mini-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; color: #fff; display: inline-flex; align-items: center; gap: 4px; }
+
+        /* 详情 */
+        .crumb-bar { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .crumb-left a { display: inline-flex; align-items: center; gap: 6px; color: #718096; text-decoration: none; font-size: 13px; font-weight: 800; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #e2e8f0; transition: color .15s, border-color .15s; }
+        .crumb-left a:hover { color: #ff6b6b; border-color: #ff6b6b; }
+        .detail-wrap { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
+
+        .pet-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .pet-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 13px; padding: 5px 12px; border-radius: 10px; }
+        .pet-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; }
+        .pet-name-bar .gender-tag { font-size: 12px; font-weight: 800; color: #d4537e; background: #fbeaf0; border-radius: 999px; padding: 4px 12px; }
+        .pet-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
+        .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
+        .type-pill i { font-size: 10px; }
+
+        .showcase { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.6); box-shadow: 0 12px 32px rgba(45,55,72,.14);
+            background: radial-gradient(95% 75% at 80% 8%, rgba(255,255,255,.5), transparent 58%),
+                        linear-gradient(160deg, var(--sc-c1, #bee3f8) 0%, var(--sc-c2, #e8f4fd) 55%, #f9fbfe 100%); }
+        .showcase .stage { position: relative; height: 330px; display: flex; align-items: center; justify-content: center; }
+        .showcase .stage img { width: 240px; height: 240px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.2)); }
+        .showcase .stage img.float { animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
+        @keyframes petFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
+        .pet-shadow { width: 120px; height: 14px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.24) 0%, transparent 68%); }
+        .showcase .level-band { position: absolute; top: 14px; left: 14px; z-index: 3; font-size: 13px; font-weight: 900; color: #fff; background: var(--stage-c, #718096); padding: 6px 16px; border-radius: 999px; box-shadow: 0 3px 10px rgba(45,55,72,.18); }
+        .showcase .owner-band { position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 3; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.88); border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+        .showcase .owner-band:hover { box-shadow: 0 5px 14px rgba(45,55,72,.18); transform: translateY(-1px); }
+        .showcase .owner-band .ob-label { font-size: 10.5px; font-weight: 800; color: #a0aec0; letter-spacing: .1em; }
+        .showcase .owner-band .ob-name { font-size: 15px; font-weight: 900; color: #2d3748; }
+        .showcase .owner-band .ob-arrow { margin-left: auto; color: #a0aec0; font-size: 12px; }
+
+        .info-card { background: #fff; border: 1px solid #e8edf2; border-radius: 18px; padding: 20px 22px; margin-bottom: 16px; }
+        .info-card h2 { font-size: 16px; font-weight: 900; color: #1a202c; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .info-card h2 i { color: #ff6b6b; font-size: 14px; }
+
+        .personality { font-size: 14px; line-height: 2; color: #4a5568; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .info-box { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 12px 14px; }
+        .info-box .lbl { font-size: 11px; font-weight: 800; color: #a0aec0; margin-bottom: 4px; }
+        .info-box .val { font-size: 14px; font-weight: 800; color: #2d3748; word-break: break-all; }
+        .info-box .val small { font-size: 11px; color: #a0aec0; font-weight: 700; }
+
+        /* 技能与熟练度 */
+        .skill-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f6; margin-bottom: 8px; flex-wrap: wrap; }
+        .skill-row:last-child { margin-bottom: 0; }
+        .skill-row .sk-name { font-size: 14px; font-weight: 900; color: #2d3748; min-width: 96px; }
+        .lv-chip { font-size: 11.5px; font-weight: 900; padding: 4px 13px; border-radius: 999px; color: #fff; }
+        .mode-chip { font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 999px; }
+        .mode-chip.fast { background: #e1f5ee; color: #0F6E56; border: 1px solid #9FE1CB; }
+        .mode-chip.heavy { background: #fcebeb; color: #A32D2D; border: 1px solid #F7C1C1; }
+        .skill-row .sk-desc { font-size: 11.5px; color: #a0aec0; font-weight: 700; margin-left: auto; }
+        .skill-foot { margin-top: 10px; font-size: 11.5px; color: #a0aec0; line-height: 1.9; }
+
+        .trait-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .trait-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900; color: #185FA5; background: #E6F1FB; border: 1px solid #B5D4F4; padding: 7px 16px; border-radius: 999px; }
+
+        .item-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: #fffdf6; border: 1px solid #f2e6cf; margin-bottom: 8px; font-size: 13.5px; font-weight: 800; color: #7a5a14; }
+        .item-row:last-child { margin-bottom: 0; }
+        .item-row i { color: #d4a017; }
+        .item-row .it-note { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #a0aec0; }
+
+        .exp-block { font-size: 13.5px; line-height: 2.1; color: #4a5568; white-space: pre-line; }
+        .exp-block::first-letter { font-size: 150%; font-weight: 900; color: var(--stage-c, #718096); }
+
+        .blood-band { display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 13px 16px; }
+        .blood-band .bl-chip { font-size: 13px; font-weight: 900; color: #fff; padding: 6px 16px; border-radius: 999px; }
+        .blood-band .bl-desc { font-size: 12.5px; color: #718096; font-weight: 700; line-height: 1.8; }
+
+        .empty-state { text-align: center; color: #a0aec0; padding: 60px 20px; font-weight: 700; background: #fff; border-radius: 18px; border: 1px solid #e8edf2; max-width: 720px; margin: 40px auto; }
+        .empty-state i { font-size: 34px; display: block; margin-bottom: 14px; }
+
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+
+        @media (max-width: 900px) {
+            .detail-wrap { grid-template-columns: 1fr; gap: 14px; padding: 0 12px; }
+            .container { padding: 0 12px; }
+            .showcase .stage { height: 270px; }
+            .showcase .stage img { width: 195px; height: 195px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
+    <script src="js/navbar.js?v=20261125c" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <template v-if="ind">
+        <!-- 详情模式 -->
+        <div class="crumb-bar">
+            <div class="crumb-left">
+                <a href="individuals.html"><i class="fa-solid fa-arrow-left"></i> 御兽精灵档案</a>
+            </div>
+        </div>
+
+        <div class="detail-wrap">
+            <div>
+                <div class="pet-name-bar">
+                    <span class="id-badge font-num">{{ ind.nickname }}</span>
+                    <h1>{{ ind.nickname }}</h1>
+                    <span class="gender-tag" v-if="ind.gender">{{ ind.gender }}</span>
+                    <div class="type-icons">
+                        <span class="type-pill" v-for="t in speciesTypes" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
+                    </div>
+                </div>
+
+                <div class="showcase" :style="showcaseStyle">
+                    <div class="level-band" :style="{ background: stageColor(ind) }">
+                        {{ stageName(ind) }} · Lv.{{ ind.level }}
+                    </div>
+                    <div class="stage">
+                        <img :class="{ float: isAnimOn }" v-if="speciesImage" :src="speciesImage" :alt="speciesName">
+                        <i v-else class="fa-solid fa-paw" style="font-size: 80px; color: #cbd5e0;"></i>
+                    </div>
+                    <div class="pet-shadow"></div>
+                    <div class="owner-band" v-if="owner" @click="gotoCharacter(owner.id)" title="查看主人档案">
+                        <span class="ob-label">主人<br>OWNER</span>
+                        <span class="ob-name">{{ owner.name }}<small style="font-size:11px; color:#a0aec0; font-weight:700;"> {{ owner.title ? '· ' + owner.title : '' }}</small></span>
+                        <i class="fa-solid fa-chevron-right ob-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="info-card">
+                    <h2><i class="fa-solid fa-feather-pointed"></i> 种族档案</h2>
+                    <div class="info-grid">
+                        <div class="info-box"><div class="lbl">种族</div><div class="val">
+                            <template v-if="species">
+                                <a :href="'pet-detail.html?id=' + encodeURIComponent(species.id)" style="color:#185FA5; text-decoration:none;">{{ species.name }} №{{ species.id }}</a>
+                            </template>
+                            <template v-else>{{ ind.speciesId }}（图鉴未收录）</template>
+                        </div></div>
+                        <div class="info-box"><div class="lbl">等级</div><div class="val font-num">Lv.{{ ind.level }} <small>· {{ stageName(ind) }}</small></div></div>
+                        <div class="info-box" v-if="ind.gender"><div class="lbl">性别</div><div class="val">{{ ind.gender }}</div></div>
+                        <div class="info-box" v-if="owner"><div class="lbl">主人</div><div class="val">
+                            <a :href="'characters.html?id=' + encodeURIComponent(owner.id)" style="color:#185FA5; text-decoration:none;">{{ owner.name }}</a>
+                        </div></div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h2><i class="fa-solid fa-heart"></i> 性格</h2>
+                    <p class="personality">{{ ind.personality || '尚未记录。' }}</p>
+                </div>
+
+                <div class="info-card" v-if="ind.traits && ind.traits.length">
+                    <h2><i class="fa-solid fa-crown"></i> 特性</h2>
+                    <div class="trait-row">
+                        <span class="trait-chip" v-for="t in ind.traits" :key="t"><i class="fa-solid fa-crown"></i>{{ t }}</span>
+                    </div>
+                </div>
+
+                <div class="info-card" v-if="ind.skills && ind.skills.length">
+                    <h2><i class="fa-solid fa-bolt"></i> 技能与熟练度</h2>
+                    <div class="skill-row" v-for="(s, i) in ind.skills" :key="i">
+                        <span class="sk-name">{{ s.name }}</span>
+                        <span class="lv-chip" :style="{ background: lvColor(s.level) }">{{ s.level }}</span>
+                        <span class="mode-chip fast" v-if="s.mode === '迅疾'">皆传 · 迅疾</span>
+                        <span class="mode-chip heavy" v-if="s.mode === '刚猛'">皆传 · 刚猛</span>
+                        <span class="sk-desc">{{ lvDesc(s.level) }}</span>
+                    </div>
+                    <div class="skill-foot">熟练度档位：入门（80% 威力 · 10s）→ 熟练（满威力 · 3s）→ 专精（不失败 · 1s，可开皆传）→ 完美（0.1s，可组合技）</div>
+                </div>
+
+                <div class="info-card" v-if="ind.bloodline && ind.bloodline !== '无'">
+                    <h2><i class="fa-solid fa-dna"></i> 血脉</h2>
+                    <div class="blood-band">
+                        <span class="bl-chip" :style="{ background: bloodColor(ind.bloodline) }">{{ ind.bloodline }}血脉</span>
+                        <span class="bl-desc">
+                            <template v-if="ind.bloodline === '属性'">
+                                属性血脉（不改变属性）<b v-if="ind.bloodlineAttr"> · {{ ind.bloodlineAttr }}系</b><template v-if="ind.bloodlineSkill"> · 血脉技能「{{ ind.bloodlineSkill }}」</template>
+                            </template>
+                            <template v-else-if="ind.bloodline === '异变'">可控可逆异变，改变形态，战力大增</template>
+                            <template v-else-if="ind.bloodline === '黑暗'">固定四技能，黑暗堕落气息，神智提高易叛逆</template>
+                            <template v-else-if="ind.bloodline === '光明'">固定四技能，光明神圣气息</template>
+                            <template v-else>{{ ind.bloodline }}</template>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-card" v-if="ind.items && ind.items.length">
+                    <h2><i class="fa-solid fa-suitcase"></i> 携带道具</h2>
+                    <div class="item-row" v-for="it in ind.items" :key="it">
+                        <i class="fa-solid fa-box-open"></i> {{ it }}
+                    </div>
+                </div>
+
+                <div class="info-card" v-if="ind.experience">
+                    <h2><i class="fa-solid fa-book-open"></i> 经历</h2>
+                    <p class="exp-block" :style="{ '--stage-c': stageColor(ind) }">{{ ind.experience }}</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 列表模式 -->
+    <template v-else-if="loaded">
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h2>御兽精灵档案 <span class="count font-num">{{ filteredIndividuals.length }} 位个体</span></h2>
+                </div>
+                <div class="view-toggle" style="display:flex; gap:5px; background:#f7fafc; padding:5px; border-radius:20px;">
+                    <a href="#" class="active" style="text-decoration:none; padding:6px 20px; border-radius:15px; font-size:14px; font-weight:bold; color:#2c3e50; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.05);">书内档案</a>
+                    <a href="vowdex.html" style="text-decoration:none; padding:6px 20px; border-radius:15px; font-size:14px; font-weight:bold; color:#718096;">种族图鉴</a>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" v-model="searchName" placeholder="搜索昵称、种族、经历关键词...">
+                </div>
+                <select class="filter-select" v-model="filterOwner">
+                    <option value="">全部主人</option>
+                    <option v-for="c in characters" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+                <select class="filter-select" v-model="filterStage">
+                    <option value="">全部阶段</option>
+                    <option v-for="b in RANK_BANDS" :key="b.name" :value="b.name">{{ b.name }}（{{ b.min }}-{{ b.max === 9999 ? '' : b.max }}）</option>
+                </select>
+                <select class="filter-select" v-model="filterBlood">
+                    <option value="">全部血脉</option>
+                    <option>异变</option><option>黑暗</option><option>光明</option><option>属性</option><option>无</option>
+                </select>
+            </div>
+
+            <div class="ind-grid" v-if="filteredIndividuals.length">
+                <div class="ind-card" v-for="p in filteredIndividuals" :key="p.id"
+                     :style="{ '--card-c': cardColor(p) }"
+                     :title="'点击查看 ' + p.nickname + ' 的详细档案'"
+                     @click="gotoIndividual(p)">
+                    <div class="ic-img">
+                        <span class="ic-stage" :style="{ background: stageColor(p) }">{{ stageName(p) }}</span>
+                        <span class="ic-level font-num">Lv.{{ p.level }}</span>
+                        <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname">
+                        <i v-else class="fa-solid fa-paw" style="font-size: 50px; color: #cbd5e0;"></i>
+                    </div>
+                    <div class="ic-body">
+                        <div class="ic-name">{{ p.nickname }}<span class="ic-gender" v-if="p.gender">{{ p.gender }}</span></div>
+                        <div class="ic-species">{{ speciesNameOf(p) || '未关联种族' }}</div>
+                        <div class="ic-owner" v-if="ownerNameOf(p)"><i class="fa-solid fa-user-shield"></i> {{ ownerNameOf(p) }}</div>
+                        <div class="ic-foot">
+                            <span class="mini-chip" v-if="p.bloodline && p.bloodline !== '无'" :style="{ background: bloodColor(p.bloodline) }"><i class="fa-solid fa-dna"></i>{{ p.bloodline }}</span>
+                            <span class="mini-chip" v-for="t in (p.traits || []).slice(0, 2)" :key="t" style="background:#185FA5;"><i class="fa-solid fa-crown"></i>{{ t }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-state" v-else>
+                <i class="fa-solid fa-paw"></i>
+                暂无符合条件的御兽精灵档案<br>
+                <small style="font-weight:600;">可在管理者后台「御兽精灵」中录入书中的精灵个体</small>
+            </div>
+        </div>
+    </template>
+
+    <div class="container" v-else>
+        <div class="empty-state"><i class="fa-solid fa-paw"></i>正在加载档案数据…</div>
+    </div>
+</div>
+
+<script src="js/type-config.js?v=20261124"></script>
+<script src="js/site-config.js?v=20261124"></script>
+<script src="js/data-loader.js?v=20261125b"></script>
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
+
+    /* 精灵等级八阶：由等级自动推导阶段 */
+    const RANK_BANDS = [
+        { name: '初灵', min: 1,   max: 15 },
+        { name: '升灵', min: 16,  max: 36 },
+        { name: '族尊', min: 37,  max: 50 },
+        { name: '基座', min: 51,  max: 60 },
+        { name: '灵相', min: 61,  max: 70 },
+        { name: '律冠', min: 71,  max: 89 },
+        { name: '元灵', min: 90,  max: 99 },
+        { name: '元',   min: 100, max: 9999 }
+    ];
+    const STAGE_COLORS = {
+        '初灵': '#8bc34a', '升灵': '#26a69a', '族尊': '#5c6bc0', '基座': '#ba7517',
+        '灵相': '#1971c2', '律冠': '#7048e8', '元灵': '#d4a017', '元': '#e24b4a'
+    };
+
+    createApp({
+        setup() {
+            const params = new URLSearchParams(window.location.search);
+            const urlId = (params.get('id') || '').trim();
+            const notFound = ref(false);
+            const loaded = ref(false);
+
+            const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
+
+            /* ---------------- 数据 ---------------- */
+            const individuals = ref([]);
+            const pets = ref([]);
+            const characters = ref([]);
+            VowmonData.onChange('individuals', (data) => {
+                individuals.value = (data && data.individuals) || allIndividualsData || [];
+            });
+            VowmonData.onChange('characters', (data) => {
+                characters.value = (data && data.characters) || allCharactersData || [];
+            });
+
+            const normalize = (v) => {
+                const p = Object.assign({}, v || {});
+                p.nickname = String(p.nickname == null ? '' : p.nickname);
+                p.speciesId = String(p.speciesId == null ? '' : p.speciesId);
+                p.level = Number(p.level) || 0;
+                p.traits = Array.isArray(p.traits) ? p.traits : [];
+                p.skills = Array.isArray(p.skills) ? p.skills : [];
+                p.items = Array.isArray(p.items) ? p.items : [];
+                p.bloodline = p.bloodline || '无';
+                return p;
+            };
+            individuals.value = (allIndividualsData || []).map(normalize);
+            pets.value = allPetsData || [];
+            characters.value = allCharactersData || [];
+
+            const ind = computed(() => individuals.value.find(p => p.id === urlId) || null);
+
+            /* ---------------- 图片 ---------------- */
+            let siteConfig = {};
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {}; } catch (e) { siteConfig = {}; }
+            const IMG_RAW = String(siteConfig.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            const IMG_BASE = IMG_RAW ? IMG_RAW + '/' : '';
+            const getImgUrl = (path) => {
+                if (!path) return '';
+                if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) return path;
+                return IMG_BASE + String(path).replace(/^\/+/, '');
+            };
+
+            /* ---------------- 属性 ---------------- */
+            const typeMap = new Map(typeData.map(t => [t.name, t]));
+            const getTypeColor = (type) => (typeMap.get(type) || {}).color || '#ccc';
+            const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
+
+            /* ---------------- 种族引用 ---------------- */
+            const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
+            const speciesNameOf = (p) => { const s = speciesOf(p); return s ? (s.name + ' №' + s.id) : ''; };
+            const speciesImageOf = (p) => { const s = speciesOf(p); return s && s.image ? getImgUrl(s.image) : ''; };
+
+            const species = computed(() => ind.value ? speciesOf(ind.value) : null);
+            const speciesTypes = computed(() => (species.value && species.value.types) || []);
+            const speciesName = computed(() => species.value ? species.value.name : '');
+            const speciesImage = computed(() => species.value && species.value.image ? getImgUrl(species.value.image) : '');
+
+            /* ---------------- 阶段推导 ---------------- */
+            const stageName = (p) => {
+                const lv = Number(p.level) || 0;
+                if (lv <= 0) return '未记录';
+                const band = RANK_BANDS.find(b => lv >= b.min && lv <= b.max);
+                return band ? band.name : '未记录';
+            };
+            const stageColor = (p) => STAGE_COLORS[stageName(p)] || '#718096';
+            const cardColor = (p) => {
+                const s = speciesOf(p);
+                const t = s && s.types && s.types[0] ? getTypeColor(s.types[0]) : '#cbd5e0';
+                return t + '55';
+            };
+            const showcaseStyle = computed(() => {
+                if (!ind.value) return {};
+                const s = speciesOf(ind.value);
+                const c = s && s.types && s.types[0] ? getTypeColor(s.types[0]) : '#90cdf4';
+                return { '--sc-c1': c + 'aa', '--sc-c2': c + '2e' };
+            });
+
+            /* ---------------- 主人引用 ---------------- */
+            const ownerOf = (p) => characters.value.find(c => c.id === p.ownerId) || null;
+            const ownerNameOf = (p) => { const c = ownerOf(p); return c ? c.name : ''; };
+            const owner = computed(() => ind.value ? ownerOf(ind.value) : null);
+            const gotoCharacter = (id) => { if (id) window.location.href = 'characters.html?id=' + encodeURIComponent(id); };
+            const gotoIndividual = (p) => { if (p && p.id) window.location.href = 'individuals.html?id=' + encodeURIComponent(p.id); };
+
+            /* ---------------- 熟练度 / 血脉配色 ---------------- */
+            const LV_META = {
+                '入门': { color: '#90a4ae', desc: '80% 威力 · 有概率失败 · 10s' },
+                '熟练': { color: '#378ADD', desc: '满威力 · 稳定释放 · 3s' },
+                '专精': { color: '#7F77DD', desc: '满威力 · 不失败 · 1s' },
+                '完美': { color: '#BA7517', desc: '不失败 · 0.1s · 可组合技' }
+            };
+            const lvColor = (lv) => (LV_META[lv] || {}).color || '#cbd5e0';
+            const lvDesc = (lv) => (LV_META[lv] || {}).desc || '';
+            const BLOOD_COLORS = { '异变': '#7F77DD', '黑暗': '#37474F', '光明': '#d4a017', '属性': '#0F6E56', '无': '#90a4ae' };
+            const bloodColor = (b) => BLOOD_COLORS[b] || '#90a4ae';
+
+            /* ---------------- 筛选 ---------------- */
+            const searchName = ref('');
+            const filterOwner = ref('');
+            const filterStage = ref('');
+            const filterBlood = ref('');
+            const filteredIndividuals = computed(() => {
+                const kw = searchName.value.trim().toLowerCase();
+                return individuals.value.filter(p => {
+                    if (filterOwner.value && p.ownerId !== filterOwner.value) return false;
+                    if (filterStage.value && stageName(p) !== filterStage.value) return false;
+                    if (filterBlood.value && (p.bloodline || '无') !== filterBlood.value) return false;
+                    if (!kw) return true;
+                    const hay = [p.nickname, speciesNameOf(p), p.personality, p.experience].join(' ').toLowerCase();
+                    return hay.includes(kw);
+                });
+            });
+
+            onMounted(() => {
+                loaded.value = true;
+                if (!isAnimOn.value) document.body.classList.add('no-anim');
+                document.addEventListener('vowmon:anim-changed', (e) => {
+                    isAnimOn.value = e && e.detail ? !!e.detail.on : (localStorage.getItem('vowmon_anim_on') !== 'false');
+                    document.body.classList.toggle('no-anim', !isAnimOn.value);
+                });
+                setTimeout(() => { if (urlId && !ind.value) notFound.value = true; }, 0);
+            });
+
+            return {
+                ind, notFound, loaded, isAnimOn, RANK_BANDS,
+                individuals, characters, filteredIndividuals,
+                searchName, filterOwner, filterStage, filterBlood,
+                getTypeColor, getTypeIcon,
+                species, speciesTypes, speciesName, speciesImage,
+                speciesImageOf, speciesNameOf,
+                stageName, stageColor, cardColor, showcaseStyle,
+                owner, ownerNameOf, gotoCharacter, gotoIndividual,
+                lvColor, lvDesc, bloodColor
+            };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

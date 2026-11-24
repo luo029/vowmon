@@ -34,6 +34,18 @@
     var NAV = [
         { key: 'home', label: '首页', href: 'index.html' },
         {
+            key: 'records', label: '书内档案', href: 'individuals.html',
+            columns: [
+                {
+                    title: '书中个体',
+                    links: [
+                        { label: '御兽精灵', href: 'individuals.html' },
+                        { label: '御兽人物', href: 'characters.html' }
+                    ]
+                }
+            ]
+        },
+        {
             key: 'dex', label: '图鉴', href: 'vowdex.html',
             columns: [
                 {
@@ -59,6 +71,7 @@
                         { label: '等级体系', href: 'ranks.html' },
                         { label: '血脉图鉴', href: 'bloodlines.html' },
                         { label: '御兽师图鉴', href: 'trainers.html' },
+                        { label: '势力版图', href: 'factions.html' },
                         { label: '十八生态界', soon: true },
                         { label: '元域演化史', href: 'lore.html' }
                     ]
@@ -89,6 +102,8 @@
     // 文件名 -> 高亮哪个菜单
     var ACTIVE_MAP = {
         'index.html': 'home',
+        'individuals.html': 'records',
+        'characters.html': 'records',
         'vowdex.html': 'dex',
         'list.html': 'dex',
         'skills.html': 'dex',
@@ -98,6 +113,7 @@
         'ranks.html': 'dex',
         'bloodlines.html': 'dex',
         'trainers.html': 'dex',
+        'factions.html': 'dex',
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',

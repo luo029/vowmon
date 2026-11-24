@@ -25,6 +25,7 @@ PAGES = [
     {"id": "ranks",      "title": "等级体系",   "file": "ranks.html"},
     {"id": "bloodlines", "title": "血脉图鉴",   "file": "bloodlines.html"},
     {"id": "trainers",   "title": "御兽师图鉴", "file": "trainers.html"},
+    {"id": "factions",   "title": "势力版图",   "file": "factions.html"},
     {"id": "lore",       "title": "元域演化史", "file": "lore.html"},
 ]
 

@@ -38,12 +38,14 @@ const FALLBACK_FILES = {
     ranks: 'ranks.html',
     bloodlines: 'bloodlines.html',
     trainers: 'trainers.html',
+    factions: 'factions.html',
     lore: 'lore.html'
 };
 const PAGE_TITLES = {
     ranks: '等级体系',
     bloodlines: '血脉图鉴',
     trainers: '御兽师图鉴',
+    factions: '势力版图',
     lore: '元域演化史'
 };
 

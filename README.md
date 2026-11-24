@@ -24,6 +24,9 @@ vowmon/
 ├── index.html              # 首页
 ├── vowdex.html             # 精灵图鉴
 ├── pet-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
+├── individuals.html        # 御兽精灵档案（书中精灵个体：性格/技能熟练度/血脉/主人/经历，?id=直达详情）
+├── characters.html         # 御兽人物档案（书中角色：势力/头衔/联盟币存款/物品栏/持有精灵，?id=直达详情）
+├── factions.html           # 势力版图（联盟制度 / 九牧地区·九牧联盟 / 权职体系 / 三大协会，已纳入页面内容 CMS）
 ├── list.html               # 精灵列表
 ├── skills.html             # 技能图鉴
 ├── skill-detail.html       # 技能详情（?id=技能id，列出可学精灵：自学 / 技能石）
@@ -47,6 +50,8 @@ vowmon/
 │   ├── admin-traits.html   # 后台 - 特性管理
 │   ├── admin-items.html    # 后台 - 物品管理
 │   ├── admin-lore.html     # 后台 - 页面内容管理（可视化 + 列表双模式，世界观文本块）
+│   ├── admin-individuals.html # 后台 - 御兽精灵档案管理（书中个体）
+│   ├── admin-characters.html  # 后台 - 御兽人物档案管理（书中角色）
 │   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
@@ -73,6 +78,8 @@ vowmon/
 │   ├── admin-traits.js     # 特性后台逻辑
 │   ├── admin-items.js      # 物品后台逻辑
 │   ├── admin-images.js     # 图片管理逻辑
+│   ├── admin-individuals.js # 御兽精灵档案管理逻辑（individuals-data.json）
+│   ├── admin-characters.js  # 御兽人物档案管理逻辑（characters-data.json）
 │   ├── admin-lore.js       # 页面内容管理逻辑（可视化就地编辑 + 列表逐块编辑）
 │   └── data-loader.js      # 数据加载器（唯一的取数入口，见 §2）
 │
@@ -138,6 +145,12 @@ vowmon/
   - **顶部**：左「图鉴总览」返回按钮 + 右侧上 / 下一只精灵芯片（按编号排序，带迷你头像）；
   - **入口**：vowdex.html 图鉴卡片点击、skill-detail.html 可学精灵卡片点击；
   - **动效开关**：浮动、流动背景全部跟随 `vowmon_anim_on`，关 = 完全静止（body 加 `.no-anim`）；其他标签页切换开关时本页实时响应（监听 `vowmon:anim-changed`）。
+- **书内档案（御兽精灵 individuals.html / 御兽人物 characters.html）**：存放小说里的精灵**个体**与**人物**，和精灵图鉴（种族百科）相互独立，通过编号/ID 互相引用：
+  - **御兽精灵**：昵称、性别、种族（引用图鉴编号，自动带出立绘/属性）、性格、特性（引用特性库）、技能+熟练度（入门/熟练/专精[皆传：迅疾/刚猛]/完美）、血脉（异变/黑暗/光明/属性+血脉技能）、等级与阶段（**阶段由等级自动推导**：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 / 灵相61-70 / 律冠71-89 / 元灵90-99 / 元100）、主人（引用人物 id）、携带道具、经历；
+  - **御兽人物**：姓名、头衔/称号、所属势力、存款（联盟币）、物品栏、持有精灵（引用御兽精灵 id）、人物简介；
+  - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `pet-detail.html`；
+  - 后台对应 `admin-individuals.html` / `admin-characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
+- **势力版图 factions.html**：世界观设定页（联盟制度 / 九牧地区·九牧联盟 / 权职体系：盟主、戎枢、大冠、太宰、首座、大君与古今叫法对照 / 三大协会 / 荒野警示），已纳入页面内容 CMS（lore-data.json 中的 `factions.*` 文本块）。
 - **特性大全 traits.html**：表格展示全部特性（ abilities ）。支持搜索与按关联属性筛选，并列出每个特性「拥有该特性的精灵」。
 - **性格大全 natures.html**（布局参照洛克王国 wiki，数据采用宝可梦 25 性格，仅保留能力修正部分）：
   - 性格影响能力值：一项 **+10%**、另一项 **-10%**；另有 5 种中性性格（勤奋 / 坦率 / 害羞 / 浮躁 / 认真）无任何修正。
@@ -350,6 +363,8 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 | `traits-data.json` | `traits` → `allTraitsData` |
 | `items-data.json` | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData` |
 | `natures-data.json` | `natures` → `allNaturesData`、`stats` → `natureStats` |
+| `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体） |
+| `characters-data.json` | `characters` → `allCharactersData`（书内档案：御兽人物） |
 | `lore-data.json` | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块） |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。

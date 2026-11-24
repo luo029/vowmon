@@ -56,6 +56,16 @@
             file: 'natures-data.json', label: '性格',
             keys: { natures: 'allNaturesData', stats: 'natureStats' }
         },
+        // 书内档案：御兽精灵（书中个体，与图鉴的「种族」分开存）
+        individuals: {
+            file: 'individuals-data.json', label: '御兽精灵',
+            keys: { individuals: 'allIndividualsData' }
+        },
+        // 书内档案：御兽人物（书中角色，持有精灵 / 物品栏 / 存款）
+        characters: {
+            file: 'characters-data.json', label: '御兽人物',
+            keys: { characters: 'allCharactersData' }
+        },
         // 页面内容（世界观四页的文本块）：blocks 是「页.序 → {label, html}」的扁平映射，
         // 前台 js/lore-apply.js 拿它替换 [data-lore] 元素的内容
         lore: {

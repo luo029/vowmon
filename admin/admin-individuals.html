@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 御兽精灵管理</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <style>
+        .lv-tag { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: #fff; }
+        .stage-tag { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #edf2f7; color: #4a5568; }
+        .sub-row { display: grid; grid-template-columns: 1fr 130px 130px; gap: 8px; margin-bottom: 8px; }
+        .sub-row .row-x { align-self: center; }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-paw"></i> 御兽精灵管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步精灵档案' }}
+            </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin-lore.html"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
+                <a href="admin-individuals.html" class="active"><i class="fa-solid fa-paw"></i> 御兽精灵</a>
+                <a href="admin-characters.html"><i class="fa-solid fa-users"></i> 御兽人物</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 20px;">御兽精灵档案 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ individuals.length }} 位个体</span></h2>
+                <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽精灵</button>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <input v-model="searchName" placeholder="搜索昵称 / 种族 / 主人 / 经历关键词..." style="width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-family: inherit;" @focus="searchFocused = true" @blur="searchFocused = false">
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>昵称</th><th>种族</th><th>主人</th><th>等级 / 阶段</th><th>血脉</th><th>技能</th><th style="width: 120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in filteredList" :key="item.id">
+                            <td><b>{{ item.nickname }}</b><small v-if="item.gender" style="color:#a0aec0;"> · {{ item.gender }}</small></td>
+                            <td>{{ speciesLabel(item.speciesId) }}</td>
+                            <td>{{ ownerLabel(item.ownerId) }}</td>
+                            <td><span class="stage-tag">{{ stageName(item.level) }}</span> <b class="font-num">Lv.{{ item.level }}</b></td>
+                            <td>{{ item.bloodline || '无' }}</td>
+                            <td><span class="font-num">{{ (item.skills || []).length }}</span> 个</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" @click="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-danger btn-sm" @click="openDeleteConfirm(indexOfItem(item), item.nickname)"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr v-if="!filteredList.length"><td colspan="7" style="text-align:center; color:#a0aec0; padding: 30px;">暂无御兽精灵档案</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
+        <div class="modal" style="width: 720px; max-height: 88vh; overflow-y: auto;" @click.stop>
+            <div class="modal-header">
+                <h3>{{ isEdit ? '编辑御兽精灵' : '添加御兽精灵' }}</h3>
+                <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label>昵称 <span class="opt">必填</span></label><input v-model="form.nickname"></div>
+                    <div class="form-group"><label>性别</label>
+                        <select v-model="form.gender"><option value=""></option><option>雄</option><option>雌</option><option>未知</option></select>
+                    </div>
+
+                    <div class="form-group"><label>种族（精灵图鉴编号）</label>
+                        <div style="display:flex; gap:8px;">
+                            <input :value="speciesLabel(form.speciesId)" readonly placeholder="点击右侧按钮选择">
+                            <button class="btn btn-outline" @click.stop="openSpeciesModal"><i class="fa-solid fa-paw"></i> 选择</button>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>等级 <span class="opt">1-100，阶段自动推导</span></label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="number" min="1" max="100" v-model.number="form.level">
+                            <span class="stage-tag">{{ stageName(form.level) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;"><label>性格</label><textarea v-model="form.personality" class="custom-textarea" rows="2"></textarea></div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>特性 <span class="opt">点选图鉴特性或输入自定义</span></label>
+                        <div class="trait-chips">
+                            <span class="trait-chip" v-for="t in form.traits" :key="t">{{ t }}<i class="fa-solid fa-xmark chip-x" @click="removeTrait(t)"></i></span>
+                            <input v-model="traitInput" placeholder="输入特性名，回车添加" style="border:0; outline:none; background:transparent; width: 170px; font-size: 13px;" @keydown.enter.prevent="addTrait" list="traitList">
+                            <datalist id="traitList"><option v-for="t in traitNames" :key="t" :value="t"></option></datalist>
+                        </div>
+                    </div>
+
+                    <div class="form-group full" style="grid-column: span 2;">
+                        <label>技能与熟练度 <span class="opt">入门 / 熟练 / 专精（可开皆传） / 完美</span></label>
+                        <div class="sub-row" v-for="(s, i) in form.skills" :key="i">
+                            <input v-model="s.name" placeholder="技能名">
+                            <select v-model="s.level"><option>入门</option><option>熟练</option><option>专精</option><option>完美</option></select>
+                            <select v-model="s.mode"><option value="">无皆传</option><option>迅疾</option><option>刚猛</option></select>
+                            <button class="btn btn-danger btn-sm row-x" @click="form.skills.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <button class="btn btn-outline btn-sm" @click="addSkill"><i class="fa-solid fa-plus"></i> 添加技能</button>
+                    </div>
+
+                    <div class="form-group"><label>血脉</label>
+                        <select v-model="form.bloodline"><option>无</option><option>异变</option><option>黑暗</option><option>光明</option><option>属性</option></select>
+                    </div>
+                    <div class="form-group"><label>血脉属性 <span class="opt">属性血脉时填写</span></label>
+                        <input v-model="form.bloodlineAttr" :disabled="form.bloodline !== '属性'" placeholder="如：冰">
+                    </div>
+                    <div class="form-group full" style="grid-column: span 2;"><label>血脉技能 <span class="opt">属性血脉为族群授予的技能</span></label><input v-model="form.bloodlineSkill"></div>
+
+                    <div class="form-group"><label>主人</label>
+                        <select v-model="form.ownerId"><option value="">（未定 / 无主）</option><option v-for="c in characters" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+                    </div>
+                    <div class="form-group"><label>携带道具 <span class="opt">逗号分隔</span></label><input v-model="itemsInput" placeholder="神秘水滴, 净化药剂"></div>
+
+                    <div class="form-group full" style="grid-column: span 2;"><label>经历</label><textarea v-model="form.experience" class="custom-textarea" rows="3"></textarea></div>
+                    <div class="form-group full" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showModal = false">取消</button>
+                <button class="btn btn-primary" @click="saveItem">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 种族选择弹窗（单选） -->
+    <div class="modal-overlay" v-if="showSpeciesModal" @vowmon:modal-close="closeModal('species')" style="z-index: 1100;">
+        <div class="selection-modal" @click.stop>
+            <div class="modal-header">
+                <h3>选择种族（精灵图鉴）</h3>
+                <button class="btn-close" @click="showSpeciesModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="speciesSearchInput" placeholder="输入精灵名称 / 编号搜索...">
+            </div>
+            <div class="selection-list">
+                <div class="selection-item" v-for="pet in filteredSpecies" :key="pet.id"
+                     :style="form.speciesId === pet.id ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                     @click="pickSpecies(pet)">
+                    <div class="item-name">{{ pet.name }}</div>
+                    <div class="item-desc">#{{ pet.id }}</div>
+                </div>
+                <div v-if="!filteredSpecies.length" class="empty-state">没有找到相关精灵</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../js/site-config.js?v=20261124e"></script>
+<script src="../js/type-config.js?v=20261124e"></script>
+<script src="../js/data-loader.js?v=20261125b"></script>
+<script src="../js/github-api.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/dialog.js?v=20261124e"></script>
+<script src="../js/admin-individuals.js?v=20261125a"></script>
+</body>
+</html>
