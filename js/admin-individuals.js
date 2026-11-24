@@ -281,6 +281,9 @@ const app = createApp({
             form.value.traits = form.value.traits.filter(t => t !== name);
         };
         /* 独立弹窗添加特性：列表只负责显示，不再是一条假输入框 */
+        const traitAdding = ref(false);
+        const openTraitInput = () => { traitAdding.value = true; traitInput.value = ''; showTraitMenu.value = false; };
+        const cancelTraitInput = () => { traitAdding.value = false; traitInput.value = ''; showTraitMenu.value = false; };
         const addTraitViaDialog = async () => {
             const name = await VowmonDialog.prompt('输入特性名', {
                 title: '添加特性',
@@ -524,6 +527,7 @@ const app = createApp({
             GENDERS, BLOODLINES, SKILL_LEVELS,
             natureOptions, natureHintOf, ownerOptions,
             showTraitMenu, onTraitInput, traitSuggestions, addTrait, pickTrait, removeTrait, addTraitViaDialog, traitFromBook,
+            traitAdding, openTraitInput, cancelTraitInput,
             activeSkillIndex, skillSuggestions, setSkillName,
             editingSkillIndex, skillTypeIcon, newSkill, editSkill, finishSkill, removeSkill,
             addMilestone,
