@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Vowmon Wiki - 元域演化史</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+            background: #0b0e1a;
+            color: #c9d2e3;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ---------------- 星空背景（纯 CSS，无图片，无动画循环） ---------------- */
+        .sky {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9) 50%, transparent 51%),
+                radial-gradient(1px 1px at 28% 64%, rgba(255,255,255,.65) 50%, transparent 51%),
+                radial-gradient(1.5px 1.5px at 44% 32%, rgba(214,226,255,.8) 50%, transparent 51%),
+                radial-gradient(1px 1px at 62% 78%, rgba(255,255,255,.6) 50%, transparent 51%),
+                radial-gradient(1.8px 1.8px at 76% 22%, rgba(255,244,214,.85) 50%, transparent 51%),
+                radial-gradient(1px 1px at 88% 55%, rgba(255,255,255,.55) 50%, transparent 51%),
+                radial-gradient(1.2px 1.2px at 8% 82%, rgba(214,226,255,.7) 50%, transparent 51%),
+                radial-gradient(1px 1px at 52% 8%, rgba(255,255,255,.5) 50%, transparent 51%),
+                radial-gradient(1.4px 1.4px at 92% 88%, rgba(255,244,214,.7) 50%, transparent 51%),
+                radial-gradient(1px 1px at 36% 92%, rgba(255,255,255,.5) 50%, transparent 51%),
+                radial-gradient(1px 1px at 68% 45%, rgba(255,255,255,.45) 50%, transparent 51%),
+                radial-gradient(1px 1px at 18% 48%, rgba(214,226,255,.55) 50%, transparent 51%),
+                radial-gradient(420px 300px at 82% 12%, rgba(111,53,252,.14), transparent 70%),
+                radial-gradient(520px 380px at 12% 88%, rgba(99,144,240,.12), transparent 70%),
+                radial-gradient(380px 300px at 50% 55%, rgba(212,175,55,.06), transparent 70%);
+        }
+        .sky::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(1200px 600px at 50% -10%, rgba(63,76,120,.35), transparent 65%);
+        }
+
+        .page {
+            position: relative; z-index: 1;
+            max-width: 860px; margin: 0 auto;
+            padding: 34px 20px 70px;
+        }
+
+        /* ---------------- 卷首 ---------------- */
+        .hero { text-align: center; padding: 40px 16px 26px; }
+        .hero-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 800; letter-spacing: .35em; text-indent: .35em;
+            color: #d4af37; border: 1px solid rgba(212,175,55,.4);
+            padding: 6px 16px; border-radius: 999px;
+            background: rgba(212,175,55,.07);
+        }
+        .hero h1 {
+            margin-top: 22px; font-size: 44px; font-weight: 900; letter-spacing: .12em;
+            background: linear-gradient(180deg, #f4e9c8 20%, #d4af37 90%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            text-shadow: 0 0 40px rgba(212,175,55,.18);
+        }
+        .hero-sub { margin-top: 12px; font-size: 13px; font-weight: 700; letter-spacing: .5em; text-indent: .5em; color: #6f7ba0; }
+        .hero-desc { margin: 26px auto 0; max-width: 560px; font-size: 14px; line-height: 2.1; color: #9aa5c4; font-weight: 600; }
+        .hero-desc b { color: #e8d48b; }
+        .seeds { margin-top: 22px; display: flex; justify-content: center; gap: 12px; }
+        .gold-rule { width: 220px; height: 1px; margin: 26px auto 0; background: linear-gradient(90deg, transparent, rgba(212,175,55,.75), transparent); position: relative; }
+        .gold-rule::after {
+            content: '✦'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%);
+            color: #d4af37; font-size: 13px; background: #0b0e1a; padding: 0 10px;
+        }
+
+        /* ---------------- 石板卡 ---------------- */
+        .tablet {
+            margin-top: 34px;
+            background: linear-gradient(163deg, #2b3244 0%, #1d2331 58%, #171c28 100%);
+            border: 1px solid rgba(212,175,55,.30);
+            border-radius: 20px;
+            padding: 30px 34px 32px;
+            box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+            position: relative;
+        }
+        .tablet::before {
+            content: ''; position: absolute; inset: 7px;
+            border: 1px solid rgba(212,175,55,.13); border-radius: 14px; pointer-events: none;
+        }
+        .tablet-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .chapter-no {
+            flex-shrink: 0; font-size: 12px; font-weight: 900; letter-spacing: .2em; text-indent: .2em;
+            color: #1d2331; background: linear-gradient(135deg, #f0dc9a, #d4af37);
+            padding: 6px 13px; border-radius: 999px;
+        }
+        .tablet-head h2 { font-size: 21px; font-weight: 900; letter-spacing: .1em; color: #f0e6c8; }
+        .tablet-head .rule { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212,175,55,.45), transparent); }
+        .tablet-body p { font-size: 15px; line-height: 2.25; color: #b9c2d8; margin-bottom: 14px; font-weight: 500; }
+        .tablet-body p:last-child { margin-bottom: 0; }
+        .tablet-body p.quote { color: #e8d48b; font-weight: 800; letter-spacing: .04em; }
+
+        /* ---------------- 关键词胶囊（JS 渲染） ---------------- */
+        .kw { display: inline-flex; align-items: center; gap: 5px; padding: 2px 11px; border-radius: 999px; font-size: 13px; font-weight: 800; line-height: 1.7; vertical-align: 1px; white-space: nowrap; }
+        .kw i { font-size: 11px; }
+        .kw-type { color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+        .kw-meta {
+            color: #f6efd8;
+            background: linear-gradient(135deg, rgba(139,92,246,.85), rgba(212,175,55,.85));
+            box-shadow: 0 2px 10px rgba(111,53,252,.3);
+        }
+
+        /* ---------------- 隐藏石板 ---------------- */
+        .hidden-tablet { border-color: rgba(238,153,172,.4); }
+        .hidden-tablet .chapter-no { background: linear-gradient(135deg, #fbc4d4, #ee99ac); color: #3d1f2a; }
+        .hidden-tablet .tablet-head h2 { color: #fbe3ea; }
+        .hidden-tablet .rule { background: linear-gradient(90deg, rgba(238,153,172,.5), transparent); }
+        .hidden-wrap { position: relative; }
+        .hidden-body { transition: filter .5s ease, opacity .5s ease; }
+        .hidden-tablet.locked .hidden-body { filter: blur(9px); opacity: .35; user-select: none; pointer-events: none; }
+        .hidden-overlay {
+            position: absolute; inset: -8px; z-index: 2;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+            transition: opacity .4s ease;
+        }
+        .hidden-tablet:not(.locked) .hidden-overlay { opacity: 0; pointer-events: none; }
+        .hidden-hint { font-size: 12px; font-weight: 700; letter-spacing: .25em; text-indent: .25em; color: #ee99ac; }
+        .hidden-btn {
+            display: inline-flex; align-items: center; gap: 9px;
+            font-size: 14px; font-weight: 900; letter-spacing: .1em;
+            color: #3d1f2a; background: linear-gradient(135deg, #fbc4d4, #ee99ac);
+            border: 0; border-radius: 999px; padding: 11px 26px; cursor: pointer;
+            box-shadow: 0 6px 22px rgba(238,153,172,.35);
+        }
+        .hidden-btn:hover { filter: brightness(1.06); }
+
+        /* ---------------- 终章 ---------------- */
+        .finale { border-color: rgba(212,175,55,.45); background: linear-gradient(163deg, #33294a 0%, #241f38 55%, #1a1728 100%); }
+        .finale .tablet-head h2 { color: #f4e9c8; }
+        .finale-sign { margin-top: 22px; text-align: right; font-size: 13px; font-weight: 800; letter-spacing: .2em; color: #8a7f5a; }
+
+        /* ---------------- 页脚 ---------------- */
+        .lore-footer { margin-top: 40px; text-align: center; font-size: 12px; font-weight: 600; color: #586180; line-height: 2; }
+
+        /* ---------------- 入场动画（受动效开关控制） ---------------- */
+        .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal.in { opacity: 1; transform: none; }
+        .no-anim .reveal { opacity: 1 !important; transform: none !important; }
+        .no-anim .hidden-body { transition: none !important; }
+        .no-anim .hidden-overlay { transition: none !important; }
+
+        @media (max-width: 640px) {
+            .page { padding: 22px 14px 50px; }
+            .hero { padding: 26px 6px 18px; }
+            .hero h1 { font-size: 32px; }
+            .hero-sub { letter-spacing: .3em; text-indent: .3em; }
+            .tablet { padding: 24px 20px 26px; border-radius: 16px; }
+            .tablet-body p { font-size: 14px; line-height: 2.1; }
+            .tablet-head h2 { font-size: 18px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
+    <script src="js/navbar.js?v=20261125a" defer></script>
+    <script src="js/type-config.js"></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true"></div>
+
+<div class="page">
+
+    <header class="hero">
+        <span class="hero-tag"><i class="fa-solid fa-tablets"></i> 世界观 · 十八生态界</span>
+        <h1>元域演化史</h1>
+        <div class="hero-sub">十八生态界演化史诗</div>
+        <p class="hero-desc">
+            下面这些文字，辑录自散落在各界的<b>传世石板</b>。<br>
+            石板之上刻着世界尚未被记住的模样——最初的元、三颗种子，以及从种子里长出来的整个元域。
+        </p>
+        <div class="seeds">
+            <span class="kw kw-type" style="background:#EE8130"><i class="fa-solid fa-fire"></i> 火</span>
+            <span class="kw kw-type" style="background:#7AC74C"><i class="fa-solid fa-leaf"></i> 草</span>
+            <span class="kw kw-type" style="background:#6390F0"><i class="fa-solid fa-droplet"></i> 水</span>
+        </div>
+        <div class="gold-rule"></div>
+    </header>
+
+    <section class="tablet reveal">
+        <div class="tablet-head">
+            <span class="chapter-no">第一章</span>
+            <h2>最初之元</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="tablet-body lore-text">
+            <p>很久很久以前，宇宙连个壳子都没有。</p>
+            <p>最初的神明【元】，不耐永恒的寂寥，于是创造精灵，创造世界，取名【元域】。</p>
+            <p>赐予万物存续之基，是为【力】；</p>
+            <p>划定森严天地序列，是为【位】；</p>
+            <p>留下统御万灵法则，是为【权】。</p>
+            <p>祂又扔下三颗初始的种子——</p>
+            <p>【火】、【草】、【水】。</p>
+            <p class="quote">“去繁衍吧。”</p>
+            <p>神明留下这句话，就彻底失踪了。</p>
+        </div>
+    </section>
+
+    <section class="tablet reveal">
+        <div class="tablet-head">
+            <span class="chapter-no">第二章</span>
+            <h2>万物演化</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="tablet-body lore-text">
+            <p>岁月流转，三颗种子生根发芽，孕育出无尽的生态。</p>
+            <p>【草】长得太茂盛，于是诞生了啃食一切的【虫】；草木枯荣交替，腐朽深处，【毒】悄然滋生。</p>
+            <p>【火】烧遍了山野，烧剩的灰烬化作【岩】与【地】，升腾的烟尘孕育了【飞行】。</p>
+            <p>【水】在极寒中结成【冰】，在水面上招来了【电】。</p>
+            <p>而当大地深处的岩石被地火反复熔炼，最终褪去了泥土的软弱，化作了坚不可摧的【钢】。</p>
+        </div>
+    </section>
+
+    <section class="tablet reveal">
+        <div class="tablet-head">
+            <span class="chapter-no">第三章</span>
+            <h2>生灵之变</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="tablet-body lore-text">
+            <p>生灵滋生，智慧与灵魂随之萌芽。</p>
+            <p>有生灵精神超脱物外，化作【超能力】；有生灵死后的执念不愿消散，化作【幽灵】。</p>
+            <p>有飞禽走兽，无元素之天赋，归于【一般】。</p>
+            <p>凡俗生灵为了生存而挥拳相向，诞生了极致的肉体搏杀，是为【格斗】；为了生存而诡计多端，诞生了【恶】之暗面。</p>
+        </div>
+    </section>
+
+    <section class="tablet reveal">
+        <div class="tablet-head">
+            <span class="chapter-no">第四章</span>
+            <h2>龙蛇之变</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="tablet-body lore-text">
+            <p>在暗不见天日的泥土中，曾有一族，名为【蛇】。</p>
+            <p>它们不甘匍匐，借水化蛟、入火生翼、乃至交融剧毒与死气，百炼成钢。</p>
+            <p>当其他族群还在为生存挣扎时，它们早已矗立在云端之上。</p>
+            <p>万千族群的仰望与臣服，无尽岁月的挣扎与野心，化作了最坚实的托举。</p>
+            <p>虚空在它们的咆哮中破碎，它们剥离了所有借来的外物躯壳，自诩为——【龙】！</p>
+        </div>
+    </section>
+
+    <section class="tablet hidden-tablet locked reveal" id="hiddenTablet">
+        <div class="tablet-head">
+            <span class="chapter-no">隐藏石板</span>
+            <h2>立于龙上之物</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="hidden-wrap">
+            <div class="hidden-body tablet-body lore-text">
+                <p>然而，巨龙也会战栗。</p>
+                <p>那来自星月的微光，能让最狂暴的元素平息，能让龙族引以为傲的利爪与法则，在嬉笑间化为虚无。</p>
+                <p>巨龙立于众生之上，它们立于巨龙之上。</p>
+                <p>带着【妖精】般的戏谑。</p>
+            </div>
+            <div class="hidden-overlay">
+                <span class="hidden-hint">石板蒙尘，似有文字若隐若现</span>
+                <button type="button" class="hidden-btn" id="revealBtn"><i class="fa-solid fa-hand-sparkles"></i> 触摸石板</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="tablet finale reveal">
+        <div class="tablet-head">
+            <span class="chapter-no">终章</span>
+            <h2>石板尾声</h2>
+            <span class="rule"></span>
+        </div>
+        <div class="tablet-body lore-text">
+            <p class="quote">“喂，看到这里的人类啊，不要以为十七界就是世界的全部。”</p>
+            <p class="quote">“界壁之外，还有着不属于自然演化的‘异端’正在虎视眈眈。”</p>
+            <p class="quote">“还有……龙族真的毫无弱点吗？世界上真的不存在克制它们的力量吗？”</p>
+            <p class="quote">“去探索吧，去寻找那些缺失的拼图。”</p>
+            <p class="quote">“等【元】归来的那一天，可别交出一份不及格的答卷哦。”</p>
+            <div class="finale-sign">—— 传世石板 · 尾声</div>
+        </div>
+    </section>
+
+    <footer class="lore-footer">
+        本篇为世界观设定文本，辑录自「传世石板」，仅作设定呈现。<br>
+        十八生态界的界域志，敬请期待后续更新。
+    </footer>
+
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ---------- 关键词胶囊：把正文里的【X】渲染成属性色 / 神秘色 pill ---------- */
+    var typeMap = {};
+    if (window.typeData && typeof window.typeData.forEach === 'function') {
+        window.typeData.forEach(function (t) { typeMap[t.name] = t; });
+    }
+    // 文中简称 → 属性配置
+    var alias = { '岩': '岩石', '地': '地面' };
+    // 不是属性的概念词（神明 / 三律 / 蛇族），用紫金「神秘」样式
+    var metaWords = { '元': 1, '元域': 1, '力': 1, '位': 1, '权': 1, '蛇': 1 };
+
+    function buildPill(word) {
+        var name = alias[word] || word;
+        var t = typeMap[name];
+        var span = document.createElement('span');
+        if (t) {
+            span.className = 'kw kw-type';
+            span.style.background = t.color;
+            span.innerHTML = '<i class="' + t.icon + '"></i>' + word;
+        } else if (metaWords[word]) {
+            span.className = 'kw kw-meta';
+            span.innerHTML = '<i class="fa-solid fa-diamond"></i>' + word;
+        } else {
+            span.className = 'kw kw-meta';
+            span.innerHTML = word;
+        }
+        return span;
+    }
+
+    document.querySelectorAll('.lore-text').forEach(function (block) {
+        var walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null);
+        var nodes = [];
+        while (walker.nextNode()) {
+            if (walker.currentNode.nodeValue.indexOf('【') > -1) nodes.push(walker.currentNode);
+        }
+        nodes.forEach(function (node) {
+            var frag = document.createDocumentFragment();
+            var rest = node.nodeValue;
+            var re = /【(.+?)】/g;
+            var m, last = 0;
+            while ((m = re.exec(rest)) !== null) {
+                if (m.index > last) frag.appendChild(document.createTextNode(rest.slice(last, m.index)));
+                frag.appendChild(buildPill(m[1]));
+                last = m.index + m[0].length;
+            }
+            if (last < rest.length) frag.appendChild(document.createTextNode(rest.slice(last)));
+            node.parentNode.replaceChild(frag, node);
+        });
+    });
+
+    /* ---------- 隐藏石板解锁 ---------- */
+    var tablet = document.getElementById('hiddenTablet');
+    var btn = document.getElementById('revealBtn');
+    if (btn) btn.addEventListener('click', function () {
+        tablet.classList.remove('locked');
+    });
+
+    /* ---------- 入场动画：滚到视口内淡入（.no-anim 时 CSS 直接全显） ---------- */
+    var revealed = document.querySelectorAll('.reveal');
+    var noAnim = false;
+    try { noAnim = localStorage.getItem('vowmon_anim_on') === 'false'; } catch (e) { noAnim = false; }
+    if (noAnim || !('IntersectionObserver' in window)) {
+        revealed.forEach(function (el) { el.classList.add('in'); });
+    } else {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+            });
+        }, { threshold: 0.12 });
+        revealed.forEach(function (el) { io.observe(el); });
+    }
+})();
+</script>
+
+</body>
+</html>

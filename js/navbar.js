@@ -57,7 +57,7 @@
                     title: '世界观',
                     links: [
                         { label: '十八生态界', soon: true },
-                        { label: '元域演化史', soon: true }
+                        { label: '元域演化史', href: 'lore.html' }
                     ]
                 }
             ]
@@ -91,6 +91,7 @@
         'skills.html': 'dex',
         'traits.html': 'dex',
         'natures.html': 'dex',
+        'lore.html': 'dex',
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',
