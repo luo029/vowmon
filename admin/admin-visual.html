@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 可视化编辑</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124j">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <style>
+        /* —— 可视化编辑器专属样式 —— */
+        .visual-hint {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: #ebf3ff; border: 1px solid #b6d4fb; color: #2b4bc0;
+            border-radius: 10px; padding: 10px 16px; font-size: 13.5px; line-height: 1.8;
+            margin-bottom: 14px;
+        }
+        .visual-hint b { font-weight: 900; }
+        .visual-hint .vh-kbd {
+            display: inline-block; background: #fff; border: 1px solid #c3d7f5; border-radius: 6px;
+            padding: 1px 7px; font: 11.5px Consolas, monospace; color: #2d3748; margin: 0 2px;
+        }
+        .visual-page-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .visual-page-tab { cursor: pointer; user-select: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #dbe4f0; background: #fff; font-size: 13px; font-weight: 800; color: #4a5568; transition: none; }
+        .visual-page-tab:hover { border-color: #90cdf4; }
+        .visual-page-tab.active { background: #4c6ef5; border-color: #4c6ef5; color: #fff; }
+        .visual-frame-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
+        .visual-frame { display: block; width: 100%; height: 74vh; min-height: 480px; border: 0; border-radius: 8px; background: #fff; }
+        .visual-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; line-height: 1.8; margin-bottom: 16px; }
+        .dirty-badge {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800;
+            background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; border-radius: 999px; padding: 3px 10px;
+        }
+        @media (max-width: 640px) {
+            .visual-frame { height: 62vh; }
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-wand-magic-sparkles"></i> 可视化编辑
+            <span class="dirty-badge" v-if="isDirty"><i class="fa-solid fa-circle" style="font-size:7px"></i> 有未同步修改</span>
+        </h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing || !loaded">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步页面内容' }}
+            </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav">
+                <a href="index.html"><i class="fa-solid fa-book"></i> 精灵管理</a>
+                <a href="admin-skills.html"><i class="fa-solid fa-fire"></i> 技能管理</a>
+                <a href="admin-traits.html"><i class="fa-solid fa-leaf"></i> 特性管理</a>
+                <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
+                <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
+                <a href="admin-lore.html"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
+                <a href="admin-visual.html" class="active"><i class="fa-solid fa-wand-magic-sparkles"></i> 可视化编辑</a>
+                <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="visual-warn" v-if="loadError">
+                <b><i class="fa-solid fa-circle-exclamation"></i> 还没有页面内容数据。</b>
+                请确认 lore-data.json 已发布到数据仓库，或点右上角「从仓库拉取」。
+                在此之前可以打开页面查看，但保存的文本块会以新键写入。
+            </div>
+
+            <div class="visual-hint">
+                <span><b><i class="fa-solid fa-hand-pointer"></i> 用法：</b>在下方页面里<b>点击任意文字</b>即可就地编辑，改完点顶部浮条上的「保存」。</span>
+                <span>悬停时会用蓝色虚线框标出可编辑的文本块；保存后前台立即生效，最后记得「一键同步」。</span>
+                <span><span class="vh-kbd">Esc</span> 取消编辑 · <span class="vh-kbd">Ctrl</span>+<span class="vh-kbd">Enter</span> 快速保存</span>
+            </div>
+
+            <div class="visual-page-tabs" v-if="loaded">
+                <span class="visual-page-tab" v-for="p in data.pages" :key="p.id"
+                      :class="{ active: activePage === p.id }" @click="pickPage(p.id)">
+                    {{ p.title }}
+                </span>
+            </div>
+
+            <div class="visual-frame-card">
+                <iframe ref="frameRef" class="visual-frame" :src="iframeSrc" @load="onFrameLoad" title="页面可视化编辑预览"></iframe>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="../js/data-loader.js?v=20261125a"></script>
+<script src="../js/github-api.js?v=20261124e"></script>
+<script src="../js/common-ui.js?v=20261124f"></script>
+<script src="../js/dialog.js?v=20261124e"></script>
+<script src="../js/admin-visual.js?v=20261125b"></script>
+</body>
+</html>

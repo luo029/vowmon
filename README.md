@@ -46,6 +46,7 @@ vowmon/
 │   ├── admin-traits.html   # 后台 - 特性管理
 │   ├── admin-items.html    # 后台 - 物品管理
 │   ├── admin-lore.html     # 后台 - 页面内容管理（世界观文本块）
+│   ├── admin-visual.html   # 后台 - 可视化编辑（iframe 里点文本就地改）
 │   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
@@ -72,6 +73,8 @@ vowmon/
 │   ├── admin-traits.js     # 特性后台逻辑
 │   ├── admin-items.js      # 物品后台逻辑
 │   ├── admin-images.js     # 图片管理逻辑
+│   ├── admin-lore.js       # 页面内容管理逻辑（lore-data.json 文本块）
+│   ├── admin-visual.js     # 可视化编辑器逻辑（iframe 就地编辑）
 │   └── data-loader.js      # 数据加载器（唯一的取数入口，见 §2）
 │
 └── functions/              # Cloudflare Pages Functions
@@ -178,6 +181,11 @@ vowmon/
   - 文本里可用 `<b>加粗</b>`、`<br/>` 换行、`<i class="fa-…"></i>` 图标；元域演化史里的【属性】关键词在替换后会自动重新渲染成属性胶囊（监听 `vowmon:lore-applied`）；
   - **机制**：四页正文的文本元素带 `data-lore="页.序"` 键，`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容；数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
   - **改页面结构必须重跑 `_tools/lore_gen.py`**（需要 `pip install beautifulsoup4`）：它会按 DOM 顺序重新注入 data-lore 键并重新生成 lore-data.json——脚本按「文档顺序 + 序号」编键，增删元素后老键会错位，必须重新对齐。
+- **admin-visual.html**：可视化编辑（所见即所得）。和 admin-lore.html 共用同一份 lore-data.json：
+  - 页面里用 iframe 直接渲染真实前台页（等级体系 / 血脉 / 御兽师 / 元域演化史四个页签切换），悬停任意文本块会显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；
+  - 「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；「一键同步」「从仓库拉取」与 admin-lore 一致；
+  - 实现要点：`js/admin-visual.js` 给 iframe 文档注入样式 + 捕获阶段拦截点击（链接 / 按钮不跳转；`.vw-edit-bar` 浮条内部和 lore 页「触摸石板」按钮放行）；只接管 `[data-lore]` 文本块，页面其它部分不可误改；
+  - 适合日常改文案；批量调整 / 查找替换仍建议用 admin-lore.html 的列表编辑。
 
 ### 1.05.3 数据里的分类口径
 

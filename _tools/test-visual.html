@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>visual-editor-test</title>
+<style>body{font:14px Consolas}#log{white-space:pre-wrap}</style>
+</head>
+<body>
+<div id="log">running…</div>
+<iframe id="f" src="../admin/admin-visual.html" style="width:1200px;height:800px"></iframe>
+<script>
+var log = [];
+function say(m){ log.push(m); document.getElementById('log').textContent = log.join('\n'); document.title = 'TEST-RUNNING'; }
+
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function clickEl(el){
+  var ev = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+  el.dispatchEvent(ev);
+}
+
+(async function(){
+  try {
+    var f = document.getElementById('f');
+    var doc, rdoc;
+    // 1. 等 Vue 挂载 + iframe(可视化编辑页) 再嵌套加载 ranks 页
+    for (var i = 0; i < 60; i++) {
+      await sleep(500);
+      try { doc = f.contentDocument; } catch(e) { doc = null; }
+      var inner = doc && doc.querySelector('iframe.visual-frame');
+      try { rdoc = inner && inner.contentDocument; } catch(e) { rdoc = null; }
+      if (rdoc && rdoc.querySelector('[data-lore="ranks.c3"]')) break;
+    }
+    if (!rdoc || !rdoc.querySelector('[data-lore="ranks.c3"]')) throw new Error('嵌套 iframe 未加载出 ranks 页文本块');
+    say('1 嵌套 iframe 加载 ranks 页 OK，data-lore 块存在');
+
+    // 2. 模拟点击 ranks.c3 文本块
+    var el = rdoc.querySelector('[data-lore="ranks.c3"]');
+    var origHtml = el.innerHTML;
+    clickEl(el);
+    await sleep(300);
+    if (!el.isContentEditable) throw new Error('点击后未进入编辑态');
+    var bar = rdoc.querySelector('.vw-edit-bar');
+    if (!bar) throw new Error('编辑浮条未出现');
+    if (bar.textContent.indexOf('ranks.c3') < 0) throw new Error('浮条未显示块标识: ' + bar.textContent);
+    say('2 点击进入编辑态 OK（contenteditable + 浮条 ' + bar.textContent.slice(0, 40) + '…）');
+
+    // 3. Esc 取消
+    rdoc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await sleep(200);
+    if (el.isContentEditable || rdoc.querySelector('.vw-edit-bar')) throw new Error('Esc 取消失败');
+    if (el.innerHTML !== origHtml) throw new Error('取消后内容未还原');
+    say('3 Esc 取消 + 内容还原 OK');
+
+    // 4. 再次编辑并保存
+    clickEl(el);
+    await sleep(200);
+    el.textContent = 'TEST-VISUAL-EDIT 测试文本';
+    clickEl(rdoc.querySelector('.vw-edit-bar .vw-bar-save'));
+    await sleep(800);
+    var mirror = JSON.parse(localStorage.getItem('vowmon_mirror_lore') || '{}');
+    if (!mirror.blocks || !mirror.blocks['ranks.c3'] || mirror.blocks['ranks.c3'].html.indexOf('TEST-VISUAL-EDIT') < 0) {
+      throw new Error('镜像里 ranks.c3 未更新: ' + JSON.stringify(mirror.blocks && mirror.blocks['ranks.c3']).slice(0,120));
+    }
+    say('4 保存写回镜像 vowmon_mirror_lore OK');
+
+    // 5. 等 iframe 自动重载，验证前台文本已更新
+    var updated = false;
+    for (var j = 0; j < 30; j++) {
+      await sleep(500);
+      try { doc = f.contentDocument; } catch(e) { doc = null; }
+      var inner2 = doc && doc.querySelector('iframe.visual-frame');
+      try { rdoc = inner2 && inner2.contentDocument; } catch(e) { rdoc = null; }
+      if (rdoc && rdoc.querySelector('[data-lore="ranks.c3"]') &&
+          rdoc.querySelector('[data-lore="ranks.c3"]').innerHTML.indexOf('TEST-VISUAL-EDIT') > -1) { updated = true; break; }
+    }
+    if (!updated) throw new Error('重载后前台未显示新文本');
+    say('5 保存后自动重载 + 前台生效 OK');
+
+    // 6. 还原数据（直接写镜像回原始 html，并重载验证还原）
+    mirror.blocks['ranks.c3'].html = origHtml;
+    localStorage.setItem('vowmon_mirror_lore', JSON.stringify(mirror));
+    f.contentWindow.location.reload();
+    await sleep(4000);
+    doc = f.contentDocument;
+    var inner3 = doc && doc.querySelector('iframe.visual-frame');
+    rdoc = inner3 && inner3.contentDocument;
+    var back = rdoc && rdoc.querySelector('[data-lore="ranks.c3"]');
+    if (!back || back.innerHTML !== origHtml) throw new Error('还原失败');
+    say('6 还原原始文本 OK');
+
+    document.title = 'TEST-PASS';
+    log.push('ALL PASS');
+    document.getElementById('log').textContent = log.join('\n');
+  } catch (err) {
+    document.title = 'TEST-FAIL :: ' + (err && err.message ? err.message : err);
+    log.push('FAIL: ' + (err && err.message ? err.message : err));
+    document.getElementById('log').textContent = log.join('\n');
+  }
+})();
+</script>
+</body>
+</html>
