@@ -194,6 +194,7 @@ createApp({
         // 精灵池（来自 vow-data.json），支持按属性筛选 + 勾选 + 全选/取消全选
         const pets = ref([]);
         const learnerFilter = ref('');   // '' = 全部属性；否则为属性名
+        const learnerSearch = ref('');   // 按名称/编号搜索
 
         const learnerPool = computed(() => (pets.value || []).map(p => ({
             id: p.id,
@@ -202,8 +203,11 @@ createApp({
         })).filter(p => p.name));
 
         const filteredLearnerPets = computed(() => {
-            if (!learnerFilter.value) return learnerPool.value;
-            return learnerPool.value.filter(p => p.types.includes(learnerFilter.value));
+            let list = learnerPool.value;
+            if (learnerFilter.value) list = list.filter(p => p.types.includes(learnerFilter.value));
+            const q = learnerSearch.value.trim();
+            if (q) list = list.filter(p => p.name.includes(q) || String(p.id || '').includes(q));
+            return list;
         });
 
         const hasLearner = (name) => (form.value.learners || []).includes(name);
@@ -441,7 +445,7 @@ createApp({
             getTypeIcon, getTypeColor,
             getCategoryIcon, getCategoryColor,
             getTagIcon, getTagColor,
-            learnerFilter, filteredLearnerPets,
+            learnerFilter, learnerSearch, filteredLearnerPets,
             hasLearner, toggleLearner, selectAllLearners, clearLearners, allFilteredSelected,
             showColSettings, allColumns, visibleCols,
             config,

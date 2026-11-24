@@ -130,17 +130,36 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 
 .settings-card { background: #fff; padding: 26px; border-radius: 14px; border: 1px solid #edf2f7; max-width: 620px; box-shadow: 0 1px 3px rgba(45,55,72,.05); }
 
-/* 技能编辑：可学会精灵选择器 */
-.learner-picker { border: 1px solid #e2e8f0; border-radius: 10px; background: #f9fafc; padding: 10px; }
-.learner-filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.learner-type-pills { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+/* 技能编辑：可学会精灵选择器（工具栏 + 紧凑属性胶囊 + 可滚动网格） */
+.learner-picker { border: 1px solid #e2e8f0; border-radius: 12px; background: #f9fafc; padding: 12px; }
+.learner-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.learner-search {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 6px 12px;
+}
+.learner-search i { color: #a0aec0; font-size: 12px; flex: 0 0 auto; }
+.learner-search input { border: none; outline: none; background: transparent; font-size: 13px; width: 100%; color: #2d3748; }
+.learner-search input::placeholder { color: #cbd5e0; }
+.learner-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+.learner-type-pills {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;
+    padding-bottom: 10px; border-bottom: 1px dashed #e2e8f0;
+}
+.learner-type-pills .type-pill-option {
+    padding: 3px 10px; font-size: 12px; border-radius: 999px; border: 1px solid #e2e8f0;
+    background: #fff; gap: 4px; display: inline-flex; align-items: center; cursor: pointer;
+}
+.learner-type-pills .type-pill-option i { font-size: 11px; }
+.learner-type-pills .type-pill-option.active { color: #fff !important; }
 .learner-pill-all { color: #4a5568; border: 1px solid #cbd5e0; }
 .learner-pill-all.active { background: #4a5568; border-color: #4a5568; color: #fff; }
-.learner-actions { display: flex; gap: 6px; flex: 0 0 auto; }
 .learner-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px;
-    max-height: 220px; overflow-y: auto; padding: 2px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px;
+    max-height: 240px; overflow-y: auto; padding: 2px;
+    scrollbar-width: thin; scrollbar-color: #cbd5e0 transparent;
 }
+.learner-grid::-webkit-scrollbar { width: 6px; }
+.learner-grid::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
 .learner-check {
     display: flex; align-items: center; gap: 7px; padding: 6px 9px;
     background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
