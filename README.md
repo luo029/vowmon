@@ -45,8 +45,7 @@ vowmon/
 │   ├── admin-skills.html   # 后台 - 技能管理
 │   ├── admin-traits.html   # 后台 - 特性管理
 │   ├── admin-items.html    # 后台 - 物品管理
-│   ├── admin-lore.html     # 后台 - 页面内容管理（世界观文本块）
-│   ├── admin-visual.html   # 后台 - 可视化编辑（iframe 里点文本就地改）
+│   ├── admin-lore.html     # 后台 - 页面内容管理（可视化 + 列表双模式，世界观文本块）
 │   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
@@ -73,8 +72,7 @@ vowmon/
 │   ├── admin-traits.js     # 特性后台逻辑
 │   ├── admin-items.js      # 物品后台逻辑
 │   ├── admin-images.js     # 图片管理逻辑
-│   ├── admin-lore.js       # 页面内容管理逻辑（lore-data.json 文本块）
-│   ├── admin-visual.js     # 可视化编辑器逻辑（iframe 就地编辑）
+│   ├── admin-lore.js       # 页面内容管理逻辑（可视化就地编辑 + 列表逐块编辑）
 │   └── data-loader.js      # 数据加载器（唯一的取数入口，见 §2）
 │
 └── functions/              # Cloudflare Pages Functions
@@ -175,17 +173,14 @@ vowmon/
   - 图标上传走和精灵图一致的压缩流程（`js/image-utils.js`），存为 `items/{id}.png`；不传图片就用图标字体，`颜色` 决定图标颜色。
   - 名称会做重复校验；新建时 id 自动生成为 `i001`、`i002`…，仅用于深链和图标命名，不在前台显示。
 - **admin-images.html**：图片管理。双标签设计——「仓库图片」扫描并管理所有图片仓库里的图（异色图会计入使用方，标注为「某某（异色）」，不会误报成未使用）；「精灵图片」核对每只精灵的图片是否真实存在，卡片标题上会带「异色 ×N」角标，支持上传 / 删除 / 绑定到精灵。
-- **admin-lore.html**：页面内容管理。世界观四页（ranks / bloodlines / trainers / lore）的**全部正文文本块**在这里编辑：
-  - 左侧按页签列出文本块（带中文标签与键名），右侧 textarea 编辑 + 实时预览；支持按标题 / 内容 / 键名搜索；
-  - 「保存到本机」= `VowmonStore.save('lore', …)` 写镜像，前台**立即**生效；「一键同步」= 推 `lore-data.json` 到数据仓库（其他设备 / 协作者可见）；「从仓库拉取」覆盖本机草稿；
+- **admin-lore.html**：页面内容管理，**双模式**（右上角切换，默认可视化），世界观四页（ranks / bloodlines / trainers / lore）的正文文本块都在这里编辑：
+  - **可视化模式（所见即所得，默认）**：iframe 直接渲染真实前台页（四个页签切换），悬停任意文本块显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；
+  - **列表模式**：左侧按页签列出文本块（带中文标签与键名），右侧 textarea 编辑 + 实时预览；支持按标题 / 内容 / 键名搜索；适合批量调整 / 查找替换；
+  - 「一键同步」= 推 `lore-data.json` 到数据仓库（其他设备 / 协作者可见）；「从仓库拉取」覆盖本机草稿；两种模式共用同一份数据；
   - 文本里可用 `<b>加粗</b>`、`<br/>` 换行、`<i class="fa-…"></i>` 图标；元域演化史里的【属性】关键词在替换后会自动重新渲染成属性胶囊（监听 `vowmon:lore-applied`）；
-  - **机制**：四页正文的文本元素带 `data-lore="页.序"` 键，`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容；数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
-  - **改页面结构必须重跑 `_tools/lore_gen.py`**（需要 `pip install beautifulsoup4`）：它会按 DOM 顺序重新注入 data-lore 键并重新生成 lore-data.json——脚本按「文档顺序 + 序号」编键，增删元素后老键会错位，必须重新对齐。
-- **admin-visual.html**：可视化编辑（所见即所得）。和 admin-lore.html 共用同一份 lore-data.json：
-  - 页面里用 iframe 直接渲染真实前台页（等级体系 / 血脉 / 御兽师 / 元域演化史四个页签切换），悬停任意文本块会显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；
-  - 「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；「一键同步」「从仓库拉取」与 admin-lore 一致；
-  - 实现要点：`js/admin-visual.js` 给 iframe 文档注入样式 + 捕获阶段拦截点击（链接 / 按钮不跳转；`.vw-edit-bar` 浮条内部和 lore 页「触摸石板」按钮放行）；只接管 `[data-lore]` 文本块，页面其它部分不可误改；
-  - 适合日常改文案；批量调整 / 查找替换仍建议用 admin-lore.html 的列表编辑。
+  - **可编辑范围**：四页正文里带 `data-lore="页.序"` 键的元素——段落、表格单元格、列表、**各级标题（h1-h4）**、机制卡 / 提示框 / 血脉行、banner 标语、数值等基本全覆盖；图标、装饰序号（壹贰 / 英文饰条）不可编辑；`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容，数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
+  - **改页面结构必须重跑 `_tools/lore_gen.py`**（需要 `pip install beautifulsoup4`）：默认 **extend 合并模式**——已有 `data-lore` 的元素保持旧键不动（内容以现有 JSON 为准），只给新出现的元素续号新键，**不会错位**；`--fresh` 才全量重编号（慎用）。脚本会自动清理嵌套标记（内层块会被外层块整体覆盖导致编辑丢失）。
+  - 实现要点：可视化模式由 `js/admin-lore.js` 给 iframe 文档注入样式 + 捕获阶段拦截点击（链接 / 按钮不跳转；`.vw-edit-bar` 浮条内部和 lore 页「触摸石板」按钮放行）。
 
 ### 1.05.3 数据里的分类口径
 

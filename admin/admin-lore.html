@@ -14,12 +14,34 @@
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
-        /* —— 页面内容编辑器专属样式 —— */
-        .lore-editor-grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
-        .lore-page-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .lore-page-tab { cursor: pointer; user-select: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #dbe4f0; background: #fff; font-size: 13px; font-weight: 800; color: #4a5568; transition: none; }
-        .lore-page-tab:hover { border-color: #90cdf4; }
-        .lore-page-tab.active { background: #4c6ef5; border-color: #4c6ef5; color: #fff; }
+        /* —— 页面内容编辑器专属样式（可视化 + 列表双模式） —— */
+
+        /* 模式切换 */
+        .mode-switch { display: inline-flex; border: 1.5px solid #dbe4f0; border-radius: 999px; overflow: hidden; background: #fff; }
+        .mode-switch button { border: 0; background: transparent; padding: 7px 16px; font-size: 13px; font-weight: 800; color: #4a5568; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .mode-switch button.active { background: #4c6ef5; color: #fff; }
+
+        /* 可视化模式 */
+        .visual-hint {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: #ebf3ff; border: 1px solid #b6d4fb; color: #2b4bc0;
+            border-radius: 10px; padding: 10px 16px; font-size: 13.5px; line-height: 1.8;
+            margin-bottom: 14px;
+        }
+        .visual-hint b { font-weight: 900; }
+        .visual-hint .vh-kbd {
+            display: inline-block; background: #fff; border: 1px solid #c3d7f5; border-radius: 6px;
+            padding: 1px 7px; font: 11.5px Consolas, monospace; color: #2d3748; margin: 0 2px;
+        }
+        .visual-page-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .visual-page-tab { cursor: pointer; user-select: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #dbe4f0; background: #fff; font-size: 13px; font-weight: 800; color: #4a5568; transition: none; }
+        .visual-page-tab:hover { border-color: #90cdf4; }
+        .visual-page-tab.active { background: #4c6ef5; border-color: #4c6ef5; color: #fff; }
+        .visual-frame-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
+        .visual-frame { display: block; width: 100%; height: 74vh; min-height: 480px; border: 0; border-radius: 8px; background: #fff; }
+
+        /* 列表模式 */
+        .lore-editor-grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; margin-top: 14px; }
         .lore-block-list { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .lore-block-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #edf2f7; background: #f8fafc; }
         .lore-block-search input { flex: 1; border: 1px solid #dbe4f0; border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
@@ -45,19 +67,32 @@
         .lore-empty { padding: 40px; text-align: center; color: #a0aec0; }
         .lore-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; line-height: 1.8; }
         .unsaved-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-left: 6px; }
+        .dirty-badge {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800;
+            background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; border-radius: 999px; padding: 3px 10px;
+        }
         @media (max-width: 900px) {
             .lore-editor-grid { grid-template-columns: 1fr; }
             .lore-block-scroll { max-height: 300px; }
+        }
+        @media (max-width: 640px) {
+            .visual-frame { height: 62vh; }
         }
     </style>
 </head>
 <body>
 <div id="app" v-cloak>
     <header class="topbar">
-        <h1><i class="fa-solid fa-file-pen"></i> 页面内容管理</h1>
+        <h1><i class="fa-solid fa-file-pen"></i> 页面内容管理
+            <span class="dirty-badge" v-if="isDirty"><i class="fa-solid fa-circle" style="font-size:7px"></i> 有未同步修改</span>
+        </h1>
         <div class="topbar-actions">
+            <div class="mode-switch" title="可视化：在真实页面里点击文字直接改；列表：按文本块逐个查找编辑">
+                <button :class="{ active: viewMode === 'visual' }" @click="toggleView('visual')"><i class="fa-solid fa-wand-magic-sparkles"></i> 可视化</button>
+                <button :class="{ active: viewMode === 'list' }" @click="toggleView('list')"><i class="fa-solid fa-list"></i> 列表编辑</button>
+            </div>
             <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
-            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing || !loaded">
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing || (!loaded && viewMode === 'list')">
                 <i class="fa-brands fa-github" v-if="!isSyncing"></i>
                 <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
                 {{ isSyncing ? '正在同步...' : '一键同步页面内容' }}
@@ -75,69 +110,86 @@
                 <a href="admin-items.html"><i class="fa-solid fa-box-open"></i> 物品管理</a>
                 <a href="admin-images.html"><i class="fa-solid fa-images"></i> 图片管理</a>
                 <a href="admin-lore.html" class="active"><i class="fa-solid fa-file-pen"></i> 页面内容</a>
-                <a href="admin-visual.html"><i class="fa-solid fa-wand-magic-sparkles"></i> 可视化编辑</a>
                 <a href="index.html?tab=settings"><i class="fa-solid fa-gear"></i> 同步配置</a>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="lore-warn" v-if="loadError" style="margin-bottom: 16px;">
+            <div class="lore-warn" v-if="loadError">
                 <b><i class="fa-solid fa-circle-exclamation"></i> 还没有页面内容数据。</b>
                 请确认 lore-data.json 已发布到数据仓库，或点右上角「从仓库拉取」。
-                在此之前，前台四页（等级体系 / 血脉 / 御兽师 / 元域演化史）会显示内置文本。
+                在此之前，前台四页会显示内置文本；可视化模式下保存的块会以新键写入。
             </div>
 
-            <div class="lore-warn" v-if="hasUnsaved" style="margin-bottom: 16px; background:#fff7ed; border-color:#fdba74; color:#9a3412;">
-                <b><i class="fa-solid fa-triangle-exclamation"></i> 有未保存的修改。</b>
-                编辑只在本页生效，点「保存到本机」后前台立即更新；「一键同步」才会推到数据仓库（其他设备 / 其他人可见）。
-            </div>
-
-            <div class="lore-editor-grid" v-if="loaded">
-                <div>
-                    <div class="lore-page-tabs">
-                        <span class="lore-page-tab" v-for="p in data.pages" :key="p.id"
-                              :class="{ active: activePage === p.id }" @click="pickPage(p.id)">
-                            {{ p.title }}
-                        </span>
-                    </div>
-                    <div class="lore-block-list">
-                        <div class="lore-block-search">
-                            <i class="fa-solid fa-magnifying-glass" style="color:#a0aec0"></i>
-                            <input v-model="searchQuery" placeholder="搜索文本块（标题 / 内容 / 键名）…">
-                        </div>
-                        <div class="lore-block-scroll">
-                            <div class="lore-block-item" v-for="key in pageBlockKeys" :key="key"
-                                 :class="{ active: activeKey === key }" @click="pickBlock(key)">
-                                <div class="lb-label">{{ data.blocks[key].label }}<span class="unsaved-dot" v-if="activeKey === key && hasUnsaved"></span></div>
-                                <div class="lb-key">{{ key }}</div>
-                            </div>
-                            <div class="lore-empty" v-if="!pageBlockKeys.length">没有匹配的文本块</div>
-                        </div>
-                    </div>
+            <!-- ============ 可视化模式 ============ -->
+            <template v-if="viewMode === 'visual'">
+                <div class="visual-hint">
+                    <span><b><i class="fa-solid fa-hand-pointer"></i> 用法：</b>在下方页面里<b>点击任意文字</b>即可就地编辑，改完点顶部浮条上的「保存」。</span>
+                    <span>悬停时会用蓝色虚线框标出可编辑的文本块；保存后前台立即生效，最后记得「一键同步」。</span>
+                    <span><span class="vh-kbd">Esc</span> 取消编辑 · <span class="vh-kbd">Ctrl</span>+<span class="vh-kbd">Enter</span> 快速保存</span>
                 </div>
 
-                <div class="lore-editor-pane">
-                    <template v-if="currentBlock">
-                        <div class="lore-editor-head">
-                            <h3>{{ currentLabel }}</h3>
-                            <span class="le-key">{{ activeKey }}</span>
-                        </div>
-                        <textarea class="lore-html-input" v-model="currentHtml"
-                                  spellcheck="false" placeholder="在这里编辑文本…"></textarea>
-                        <div style="margin: 12px 0 8px; display:flex; justify-content: space-between; align-items:center;">
-                            <span style="font-size:12px; color:#a0aec0;">
-                                <i class="fa-solid fa-eye"></i> 实时预览（下方）
-                                <span style="margin-left:12px;">&lt;b&gt;加粗、&lt;br/&gt;换行、&lt;i class=&quot;fa-…&quot;&gt;图标 可用</span>
+                <div class="visual-page-tabs" v-if="loaded">
+                    <span class="visual-page-tab" v-for="p in data.pages" :key="p.id"
+                          :class="{ active: activePage === p.id }" @click="pickPage(p.id)">
+                        {{ p.title }}
+                    </span>
+                </div>
+
+                <div class="visual-frame-card">
+                    <iframe ref="frameRef" class="visual-frame" :src="iframeSrc" @load="onFrameLoad" title="页面可视化编辑预览"></iframe>
+                </div>
+            </template>
+
+            <!-- ============ 列表模式 ============ -->
+            <template v-else-if="loaded">
+                <div class="lore-editor-grid">
+                    <div>
+                        <div class="lore-page-tabs">
+                            <span class="lore-page-tab" v-for="p in data.pages" :key="p.id"
+                                  :class="{ active: activePage === p.id }" @click="pickPage(p.id)">
+                                {{ p.title }}
                             </span>
-                            <button class="btn btn-primary" @click="saveLocal" :disabled="saving">
-                                <i class="fa-solid fa-floppy-disk"></i> 保存到本机
-                            </button>
                         </div>
-                        <div class="lore-preview" v-html="currentHtml"></div>
-                    </template>
-                    <div class="lore-empty" v-else>从左侧选择一个文本块开始编辑</div>
+                        <div class="lore-block-list">
+                            <div class="lore-block-search">
+                                <i class="fa-solid fa-magnifying-glass" style="color:#a0aec0"></i>
+                                <input v-model="searchQuery" placeholder="搜索文本块（标题 / 内容 / 键名）…">
+                            </div>
+                            <div class="lore-block-scroll">
+                                <div class="lore-block-item" v-for="key in pageBlockKeys" :key="key"
+                                     :class="{ active: activeKey === key }" @click="pickBlock(key)">
+                                    <div class="lb-label">{{ data.blocks[key].label }}<span class="unsaved-dot" v-if="isDirty"></span></div>
+                                    <div class="lb-key">{{ key }}</div>
+                                </div>
+                                <div class="lore-empty" v-if="!pageBlockKeys.length">没有匹配的文本块</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lore-editor-pane">
+                        <template v-if="currentBlock">
+                            <div class="lore-editor-head">
+                                <h3>{{ currentLabel }}</h3>
+                                <span class="le-key">{{ activeKey }}</span>
+                            </div>
+                            <textarea class="lore-html-input" v-model="currentHtml"
+                                      spellcheck="false" placeholder="在这里编辑文本…"></textarea>
+                            <div style="margin: 12px 0 8px; display:flex; justify-content: space-between; align-items:center;">
+                                <span style="font-size:12px; color:#a0aec0;">
+                                    <i class="fa-solid fa-eye"></i> 实时预览（下方）
+                                    <span style="margin-left:12px;">&lt;b&gt;加粗、&lt;br/&gt;换行、&lt;i class=&quot;fa-…&quot;&gt;图标 可用</span>
+                                </span>
+                                <button class="btn btn-primary" @click="saveLocal" :disabled="saving">
+                                    <i class="fa-solid fa-floppy-disk"></i> 保存到本机
+                                </button>
+                            </div>
+                            <div class="lore-preview" v-html="currentHtml"></div>
+                        </template>
+                        <div class="lore-empty" v-else>从左侧选择一个文本块开始编辑</div>
+                    </div>
                 </div>
-            </div>
+            </template>
         </main>
     </div>
 </div>
@@ -146,6 +198,6 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-lore.js?v=20261125a"></script>
+<script src="../js/admin-lore.js?v=20261125b"></script>
 </body>
 </html>

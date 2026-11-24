@@ -7,7 +7,7 @@
 </head>
 <body>
 <div id="log">running…</div>
-<iframe id="f" src="../admin/admin-visual.html" style="width:1200px;height:800px"></iframe>
+<iframe id="f" src="../admin/admin-lore.html" style="width:1200px;height:800px"></iframe>
 <script>
 var log = [];
 function say(m){ log.push(m); document.getElementById('log').textContent = log.join('\n'); document.title = 'TEST-RUNNING'; }
@@ -50,6 +50,16 @@ function clickEl(el){
     if (el.isContentEditable || rdoc.querySelector('.vw-edit-bar')) throw new Error('Esc 取消失败');
     if (el.innerHTML !== origHtml) throw new Error('取消后内容未还原');
     say('3 Esc 取消 + 内容还原 OK');
+
+    // 3.5 新增覆盖范围：机制卡文本（.mech-txt）也应可编辑
+    var mech = rdoc.querySelector('div.mech-txt[data-lore]');
+    if (!mech) throw new Error('机制卡 .mech-txt 没有打上 data-lore 标记');
+    clickEl(mech);
+    await sleep(200);
+    if (!mech.isContentEditable || !rdoc.querySelector('.vw-edit-bar')) throw new Error('机制卡块无法进入编辑态');
+    rdoc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await sleep(200);
+    say('3.5 新覆盖块（.mech-txt ' + mech.getAttribute('data-lore') + '）可编辑 OK');
 
     // 4. 再次编辑并保存
     clickEl(el);

@@ -1,13 +1,49 @@
 /* ==========================================================================
-   Vowmon Wiki 后台 —— 页面内容管理（世界观文本块）
+   Vowmon Wiki 后台 —— 页面内容管理（双模式：可视化 + 列表编辑）
    --------------------------------------------------------------------------
-   数据链路：
+   数据链路（两种模式共用同一份 lore-data.json）：
      编辑文本块 -> VowmonStore.save('lore', data) 写入本机镜像（前台立即生效）
                 -> 点「一键同步」把 lore-data.json 推到 GitHub 数据仓库
                 -> 前台 lore-apply.js 把 JSON 里的 html 覆盖到 [data-lore] 元素
+
+   可视化模式：iframe 渲染真实前台页面，点击 [data-lore] 文本块就地编辑
+              （contenteditable + 顶部浮条），保存后 iframe 自动重载。
+   列表模式：  按页签 + 搜索逐块查找，textarea 编辑 + 实时预览。
    ========================================================================== */
 
 const { createApp, ref, computed, onMounted } = Vue;
+
+/* 注入到 iframe 里的编辑态样式 */
+const FRAME_CSS = [
+    '[data-lore]{ cursor: pointer !important; outline: 2px dashed rgba(76,110,245,0) !important; outline-offset: 2px; border-radius: 4px; }',
+    '[data-lore]:hover{ outline-color: rgba(76,110,245,.65) !important; background: rgba(76,110,245,.06); }',
+    '.vw-editing{ outline: 2px solid #4c6ef5 !important; outline-offset: 3px !important;',
+    '  background: rgba(76,110,245,.05) !important; cursor: text !important;',
+    '  box-shadow: 0 0 0 6px rgba(76,110,245,.12); }',
+    '.vw-edit-bar{ position: fixed; top: 12px; left: 50%; transform: translateX(-50%);',
+    '  z-index: 2147483000; display: flex; align-items: center; gap: 10px;',
+    '  background: #1f2937; color: #f9fafb; padding: 8px 14px; border-radius: 999px;',
+    '  box-shadow: 0 8px 24px rgba(0,0,0,.35); font: 12.5px/1.4 "Inter","Microsoft YaHei",sans-serif; }',
+    '.vw-bar-label{ font-weight: 800; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+    '.vw-bar-hint{ color: #9ca3af; font-size: 11px; white-space: nowrap; }',
+    '.vw-bar-btn{ border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; font-size: 12.5px; }',
+    '.vw-bar-save{ background: #4c6ef5; color: #fff; }',
+    '.vw-bar-cancel{ background: #374151; color: #e5e7eb; }',
+    '.vw-bar-btn:hover{ filter: brightness(1.15); }'
+].join('\n');
+
+const FALLBACK_FILES = {
+    ranks: 'ranks.html',
+    bloodlines: 'bloodlines.html',
+    trainers: 'trainers.html',
+    lore: 'lore.html'
+};
+const PAGE_TITLES = {
+    ranks: '等级体系',
+    bloodlines: '血脉图鉴',
+    trainers: '御兽师图鉴',
+    lore: '元域演化史'
+};
 
 VowmonData.softReady(['lore']).then(function () {
 
@@ -28,30 +64,200 @@ const app = createApp({
         const loaded = ref(false);
         const loadError = ref('');
         const isSyncing = ref(false);
-        const hasUnsaved = ref(false);
         const saving = ref(false);
-
+        const isDirty = ref(false);
+        const viewMode = ref('visual');   // 默认可视化
         const activePage = ref('');
         const activeKey = ref('');
         const searchQuery = ref('');
-
-        const PAGE_TITLES = {
-            ranks: '等级体系',
-            bloodlines: '血脉图鉴',
-            trainers: '御兽师图鉴',
-            lore: '元域演化史'
-        };
+        const iframeSrc = ref('');
+        const frameRef = ref(null);
 
         function takeData() {
             const pages = Array.isArray(window.allLorePages) ? JSON.parse(JSON.stringify(window.allLorePages)) : [];
             const blocks = (window.allLoreBlocks && typeof window.allLoreBlocks === 'object')
                 ? JSON.parse(JSON.stringify(window.allLoreBlocks)) : {};
-            // 兜底标题
             pages.forEach(p => { if (!p.title) p.title = PAGE_TITLES[p.id] || p.id; });
             return { pages: pages, blocks: blocks };
         }
 
-        /* ------------------------------------------------------------ 计算属性 */
+        function applyData(bag) {
+            data.value = {
+                pages: (Array.isArray(bag.pages) ? bag.pages : []).map(p => ({
+                    id: p.id, title: p.title || PAGE_TITLES[p.id] || p.id, file: p.file || '', count: p.count || 0
+                })),
+                blocks: JSON.parse(JSON.stringify(bag.blocks || {}))
+            };
+            loaded.value = true;
+            if (!activePage.value && data.value.pages.length) {
+                pickPage(data.value.pages[0].id);
+            }
+        }
+
+        function pageFile(id) {
+            const p = data.value.pages.find(x => x.id === id);
+            return (p && p.file) ? p.file : (FALLBACK_FILES[id] || id + '.html');
+        }
+
+        /* ------------------------------------------------------------- 模式切换 */
+        const toggleView = (mode) => {
+            if (viewMode.value === mode) return;
+            cancelEdit();               // 离开可视化模式前先退出编辑态
+            viewMode.value = mode;
+        };
+
+        const pickPage = (id) => {
+            cancelEdit();
+            activePage.value = id;
+            const keys = Object.keys(data.value.blocks).filter(k => k.indexOf(id + '.') === 0);
+            if (!keys.some(k => k === activeKey.value)) activeKey.value = keys.length ? keys[0] : '';
+            iframeSrc.value = '../' + pageFile(id);
+        };
+        const pickBlock = (key) => { activeKey.value = key; };
+
+        /* ------------------------------------------------- 可视化模式：就地编辑 */
+        let editing = null;   // { key, el, original }
+        let editBar = null;
+
+        function onFrameLoad() {
+            setupFrame();
+            if (pendingScroll > 0) {
+                try { iframeRef().contentWindow.scrollTo(0, pendingScroll); } catch (e) { /* ignore */ }
+                pendingScroll = 0;
+            }
+        }
+
+        function iframeRef() { return frameRef.value; }
+
+        function setupFrame() {
+            const iframe = iframeRef();
+            if (!iframe || !iframe.contentDocument) return;
+            const doc = iframe.contentDocument;
+            editing = null;
+            editBar = null;
+            try {
+                const style = doc.createElement('style');
+                style.textContent = FRAME_CSS;
+                (doc.head || doc.documentElement).appendChild(style);
+            } catch (e) { /* ignore */ }
+
+            // 捕获阶段拦下所有点击：链接/按钮一律不跳转，文本块进入编辑。
+            // 编辑浮条内部的按钮要正常工作，直接放行。
+            doc.addEventListener('click', function (e) {
+                if (e.target.closest && e.target.closest('.vw-edit-bar')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                // 元域演化史的「触摸石板」按钮：编辑模式下直接解锁
+                if (e.target.closest && e.target.closest('#revealBtn')) {
+                    const tablet = doc.getElementById('hiddenTablet');
+                    if (tablet) tablet.classList.remove('locked');
+                    return;
+                }
+                const el = e.target.closest ? e.target.closest('[data-lore]') : null;
+                if (el) startEdit(el, doc);
+            }, true);
+
+            doc.addEventListener('keydown', function (e) {
+                if (!editing) return;
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                } else if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.key === 's' || e.key === 'S')) {
+                    e.preventDefault();
+                    saveEdit();
+                }
+            }, true);
+        }
+
+        function blockLabel(key) {
+            const b = data.value.blocks[key];
+            return (b && b.label) ? b.label : key;
+        }
+
+        function startEdit(el, doc) {
+            if (editing) return;
+            const key = el.getAttribute('data-lore');
+            if (!key) return;
+            editing = { key: key, el: el, original: el.innerHTML };
+            el.classList.add('vw-editing');
+            el.setAttribute('contenteditable', 'true');
+            try { el.focus(); } catch (e) { /* ignore */ }
+
+            const bar = doc.createElement('div');
+            bar.className = 'vw-edit-bar';
+            bar.innerHTML =
+                '<span class="vw-bar-label"></span>' +
+                '<button type="button" class="vw-bar-btn vw-bar-save">保存</button>' +
+                '<button type="button" class="vw-bar-btn vw-bar-cancel">取消</button>' +
+                '<span class="vw-bar-hint">Esc 取消 · Ctrl+Enter 保存</span>';
+            doc.body.appendChild(bar);
+            bar.querySelector('.vw-bar-save').addEventListener('click', saveEdit);
+            bar.querySelector('.vw-bar-cancel').addEventListener('click', cancelEdit);
+            editBar = bar;
+            updateBar();
+        }
+
+        function updateBar() {
+            if (!editBar || !editing) return;
+            editBar.querySelector('.vw-bar-label').textContent =
+                '正在编辑：' + blockLabel(editing.key) + '（' + editing.key + '）';
+        }
+
+        function finishEdit() {
+            if (!editing) return;
+            const el = editing.el;
+            el.classList.remove('vw-editing');
+            el.removeAttribute('contenteditable');
+            if (editBar && editBar.parentNode) editBar.parentNode.removeChild(editBar);
+            editBar = null;
+            editing = null;
+        }
+
+        function cancelEdit() {
+            if (!editing) return;
+            editing.el.innerHTML = editing.original;
+            finishEdit();
+        }
+
+        function saveEdit() {
+            if (!editing) return;
+            const key = editing.key;
+            const html = editing.el.innerHTML;
+            const label = blockLabel(key);
+            if (data.value.blocks[key]) {
+                data.value.blocks[key].html = html;
+            } else {
+                data.value.blocks[key] = { label: key, html: html };
+            }
+            finishEdit();
+            try {
+                if (window.VowmonStore) {
+                    VowmonStore.save('lore', JSON.parse(JSON.stringify({
+                        pages: data.value.pages, blocks: data.value.blocks
+                    })));
+                }
+                isDirty.value = true;
+            } catch (err) {
+                VowmonDialog.alert('保存失败：' + (err && err.message ? err.message : err), { type: 'danger', title: '保存失败' });
+                return;
+            }
+            VowmonDialog.toast('「' + label + '」已保存，前台已生效。改完记得点「一键同步」推到仓库', 'success', { duration: 3600 });
+            reloadFrame();
+        }
+
+        let pendingScroll = 0;
+        function reloadFrame() {
+            const iframe = iframeRef();
+            if (!iframe || !iframe.contentWindow) return;
+            try { pendingScroll = iframe.contentWindow.scrollY || 0; } catch (e) { pendingScroll = 0; }
+            try {
+                iframe.contentWindow.location.reload();
+            } catch (e) {
+                iframeSrc.value = iframeSrc.value; // 触发重载的兜底
+            }
+        }
+
+        /* ------------------------------------------------- 列表模式：逐块编辑 */
         const pageTitle = computed(() => {
             const p = data.value.pages.find(x => x.id === activePage.value);
             return p ? (p.title || p.id) : '';
@@ -82,19 +288,11 @@ const app = createApp({
             set: (val) => {
                 if (currentBlock.value) {
                     currentBlock.value.html = val;
-                    hasUnsaved.value = true;
+                    isDirty.value = true;
                 }
             }
         });
         const currentLabel = computed(() => (currentBlock.value ? currentBlock.value.label : ''));
-
-        /* ---------------------------------------------------------------- 动作 */
-        const pickPage = (id) => {
-            activePage.value = id;
-            const keys = Object.keys(data.value.blocks).filter(k => k.indexOf(id + '.') === 0);
-            activeKey.value = keys.length ? keys[0] : '';
-        };
-        const pickBlock = (key) => { activeKey.value = key; };
 
         // 保存到本机（前台立即生效；「未同步」状态会一直亮着直到一键同步）
         const saveLocal = () => {
@@ -102,7 +300,7 @@ const app = createApp({
             try {
                 const payload = JSON.parse(JSON.stringify(data.value));
                 if (window.VowmonStore) VowmonStore.save('lore', payload);
-                hasUnsaved.value = false;
+                isDirty.value = true;
                 VowmonDialog.toast('已保存到本机，前台已生效。改完记得点「一键同步」推到仓库', 'success', { duration: 3600 });
             } catch (err) {
                 VowmonDialog.alert('保存失败：' + (err && err.message ? err.message : err), { type: 'danger', title: '保存失败' });
@@ -111,6 +309,7 @@ const app = createApp({
             }
         };
 
+        /* ------------------------------------------------------------ 一键同步 */
         const targetRepos = () => String(config.value.dataRepos || '')
             .split(/[\s,，]+/).map(s => s.trim()).filter(Boolean);
 
@@ -119,15 +318,12 @@ const app = createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return false;
             }
-            if (hasUnsaved.value) {
-                VowmonDialog.alert('有未保存的修改，请先点「保存到本机」再同步。', { type: 'warning', title: '先保存' });
-                return false;
-            }
             return true;
         };
 
-        // 一键同步：把 lore-data.json 推到数据仓库
+        // 一键同步：把 lore-data.json 推到数据仓库（先退出可视化编辑态）
         const syncToGitHub = async () => {
+            cancelEdit();
             if (!ensureConfig()) return;
             const cfg = config.value;
             const repos = targetRepos();
@@ -138,6 +334,7 @@ const app = createApp({
                     await GitHubSync.uploadFile(cfg.token, cfg.owner, repo, 'lore-data.json', content, 'update page content');
                 }
                 if (window.VowmonStore) VowmonStore.markSynced('lore');
+                isDirty.value = false;
                 VowmonDialog.toast('页面内容同步成功，前台一两分钟后更新', 'success');
             } catch (err) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
@@ -151,6 +348,7 @@ const app = createApp({
 
         // 从数据仓库拉取（覆盖本机草稿）
         const pullFromRepo = async () => {
+            cancelEdit();
             const cfg = config.value;
             const repo = targetRepos()[0];
             if (!cfg.token || !cfg.owner || !repo) {
@@ -170,6 +368,8 @@ const app = createApp({
                 }
                 applyData(bag);
                 if (window.VowmonStore) VowmonStore.replace('lore', bag);
+                isDirty.value = false;
+                if (viewMode.value === 'visual') reloadFrame();
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + Object.keys(bag.blocks).length + ' 个文本块', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
@@ -180,20 +380,6 @@ const app = createApp({
                 isSyncing.value = false;
             }
         };
-
-        function applyData(bag) {
-            data.value = {
-                pages: (Array.isArray(bag.pages) ? bag.pages : []).map(p => ({
-                    id: p.id, title: p.title || PAGE_TITLES[p.id] || p.id, file: p.file || '', count: p.count || 0
-                })),
-                blocks: JSON.parse(JSON.stringify(bag.blocks || {}))
-            };
-            loaded.value = true;
-            hasUnsaved.value = false;
-            if (!activePage.value && data.value.pages.length) {
-                pickPage(data.value.pages[0].id);
-            }
-        }
 
         /* ------------------------------------------------------------ 初始化 */
         onMounted(() => {
@@ -212,21 +398,26 @@ const app = createApp({
                 applyData({ pages: window.allLorePages, blocks: window.allLoreBlocks });
             } else {
                 loadError.value = true;
+                // 没有数据也要能打开可视化模式的第一页
+                if (!activePage.value) pickPage('ranks');
             }
+            if (window.VowmonStore) isDirty.value = !!VowmonStore.isDirty('lore');
 
-            // 其他标签页改了 lore 数据且本页没有未保存修改 → 跟进
+            // 其他标签页改了 lore 数据且当前没在编辑 → 跟进
             document.addEventListener('vowmon:data-changed', function (e) {
-                if (e && e.detail && e.detail.key === 'lore' && !hasUnsaved.value && e.detail.data) {
+                if (e && e.detail && e.detail.key === 'lore' && !editing && e.detail.data) {
                     applyData(e.detail.data);
+                    isDirty.value = window.VowmonStore ? !!VowmonStore.isDirty('lore') : isDirty.value;
                 }
             });
         });
 
         return {
-            config, data, loaded, loadError, isSyncing, hasUnsaved, saving,
-            activePage, activeKey, searchQuery,
+            config, data, loaded, loadError, isSyncing, saving, isDirty,
+            viewMode, activePage, activeKey, searchQuery, iframeSrc, frameRef,
+            toggleView, pickPage, pickBlock, onFrameLoad,
             pageTitle, pageBlockKeys, currentBlock, currentHtml, currentLabel,
-            pickPage, pickBlock, saveLocal, syncToGitHub, pullFromRepo
+            saveLocal, syncToGitHub, pullFromRepo
         };
     }
 });
