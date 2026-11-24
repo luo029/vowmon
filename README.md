@@ -36,6 +36,12 @@ vowmon/
 ├── admin-items.html        # 后台 - 物品管理
 ├── admin-images.html       # 后台 - 图片管理
 ├── README.md               # 本文件
+├── .nojekyll               # 让 GitHub Pages 跳过 Jekyll 处理
+├── _headers                # Cloudflare Pages 响应头（静态资源缓存策略）
+├── _routes.json            # Cloudflare Pages：只让 /img/* 进 Functions
+│
+├── .github/workflows/      # push 到 main 自动部署 Cloudflare Pages
+├── functions/img/[[path]].js  # CF Pages Function：图片反向代理（见 §4.3）
 │
 ├── css/                    # 所有样式
 │   ├── style.css           # 前台统一样式
@@ -290,3 +296,77 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 - **图片**：单页 30 张卡片，每张最多 2 个 `<img>`（主图 + 异色），都带 `loading="lazy"`。若以后单页图片明显变多，先考虑降 `pageSize` 而不是加虚拟滚动。
 - **后台保存**：每次改动都会 `JSON.stringify` 全量写入 `localStorage`（1000 条约 3.9ms）。`localStorage` 单域上限约 5MB，按当前单条 ~677 字节算，可存约 7000 条；接近上限时应改为分片存储或直接把数据文件作为唯一数据源。
 - **一键同步**：推送的是 `data/*.js` 文本（1000 条约 677KB），GitHub Contents API 单文件上限远高于此，暂时无需改用 Git Data API。
+
+## 4. 部署（GitHub Pages + Cloudflare Pages）
+
+站点是纯静态的，同一份代码同时发布到两个地方，随便哪个能打开都能用。
+
+### 4.1 线上地址
+
+| 平台 | 地址 | 发布方式 |
+|---|---|---|
+| GitHub Pages | https://luo029.github.io/vowmon/ | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
+| Cloudflare Pages | https://vowmon.pages.dev/ | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy` |
+
+两个地址内容一致，只有图片加速走的是 Cloudflare（见 4.3）。
+
+### 4.2 GitHub Pages
+
+- 已经在仓库 Settings → Pages 里选好 `main` 分支根目录，不需要额外的构建步骤；
+- 根目录的 `.nojekyll` 让 GitHub 跳过 Jekyll：不用等它跑一遍构建，也不会因为文件名下划线被过滤；
+- 全部链接都是相对路径（`css/style.css` 而不是 `/css/style.css`），所以在 `luo029.github.io/vowmon/` 这种子路径下也能正常跳转；
+- **不要**再给这个仓库加"用 Actions 发布 Pages"的工作流：PAT 需要 `pages=write` + `administration=write` 才能开启 Pages，而分支发布本身已经够了，多一条工作流只会多一堆失败记录。
+
+### 4.3 图片加速：`/img/*` 反向代理
+
+图片仓库 `vowmon_imgs` 里的原图不直接给浏览器访问，而是经本站 Cloudflare Pages Function 代理：
+
+```text
+浏览器  https://vowmon.pages.dev/img/sprites/001.png
+   ↓  functions/img/[[path]].js
+源站    https://raw.githubusercontent.com/luo029/vowmon_imgs/main/sprites/001.png
+回退    https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main/sprites/001.png
+```
+
+要点：
+
+- **只在第一次回源**，之后由 CF 边缘节点直接返回（响应头 `CF-Cache-Status: HIT`），国内访问不再依赖 GitHub 的连通性；
+- 缓存 **1 小时**。后台覆盖上传同名图片后，最迟 1 小时生效；想立刻看到新图，在图片地址后面加个 `?v=任意值` 即可破缓存（缓存键带 query）；
+- 只代理图片后缀（png/jpg/webp/gif/svg/avif/bmp/ico），并且拦掉 `..` 路径，不会变成通用代理；
+- `_routes.json` 把 Functions 的触发范围限制成 `/img/*`，其余静态文件不消耗函数调用额度（免费额度 10 万次/天）；
+- 前台取值在 `js/site-config.js` 的 `imgCdnBase`。想换回 jsDelivr 直连，改成 `https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main` 即可；后台「同步配置」里的 `imgCdnBase` 优先级更高，只影响你自己这台浏览器。
+
+### 4.4 一键发布流程
+
+```text
+git add -A && git commit -m "..." && git push
+```
+
+- GitHub Pages：push 后 30~60 秒自动更新；
+- Cloudflare Pages：仓库 Secret `CLOUDFLARE_API_TOKEN`（权限只要 Account → Cloudflare Pages: Edit）配合工作流自动部署，同样 1 分钟左右。
+
+不想走 CI、想手动传一次：
+
+```text
+npx wrangler pages deploy . --project-name=vowmon --branch=main
+```
+
+前提是本机有 `CLOUDFLARE_API_TOKEN` 环境变量，或者先 `wrangler login`。
+
+### 4.5 缓存策略（`_headers` + 函数头）
+
+| 路径 | Cache-Control | 说明 |
+|---|---|---|
+| `/img/*` | `max-age=3600` | 由函数设置，图换了最多 1 小时后生效 |
+| `/css/*`、`/js/*` | `max-age=1800` | 改版 30 分钟内全量生效 |
+| `/data/*` | `max-age=60` | 后台一保存就能很快被访客看到 |
+| `*.html` | 不显式设置 | 每次协商缓存，保证页面结构改动立刻生效 |
+
+改样式/脚本后如果自己看不到变化，`Ctrl+F5` 强刷一次即可（访客最多等 30 分钟）。
+
+### 4.6 出问题时先看这里
+
+- **图 404**：先在浏览器直接打开 `https://raw.githubusercontent.com/luo029/vowmon_imgs/main/<路径>` 确认文件真的在仓库里；再试 `https://vowmon.pages.dev/img/<路径>`。都正常说明是数据里的路径写错了（少了 `sprites/` 之类）。
+- **图不更新**：CF 缓存 1 小时，加 `?v=2` 破缓存，或等一小时。
+- **Cloudflare 部署失败**：看 Actions 日志；最常见是 Secret 过期/被删（`CLOUDFLARE_API_TOKEN`），去 Cloudflare「我的个人资料 → API 令牌」重新建一个并更新 Secret。
+- **GitHub Pages 404**：确认 Settings → Pages 里的分支还是 `main` / `(root)`，以及 `index.html` 在仓库根目录。

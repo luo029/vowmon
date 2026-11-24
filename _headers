@@ -1,0 +1,17 @@
+# Cloudflare Pages 响应头（静态文件缓存策略）
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# 注意：/img/* 由 functions/img/[[path]].js 处理，缓存头在函数里设置，这里不要重复声明
+
+# 样式与脚本：改版后 1 小时内生效，够用又不至于每次全量回源
+/css/*
+  Cache-Control: public, max-age=1800
+/js/*
+  Cache-Control: public, max-age=1800
+
+# 数据文件更新最频繁（后台一保存就变），缓存压到 1 分钟
+/data/*
+  Cache-Control: public, max-age=60

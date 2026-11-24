@@ -12,5 +12,7 @@
  * 换了图片仓库 / 换成 Cloudflare Pages 域名时，改这里一处即可。
  */
 window.VOWMON_SITE_CONFIG = {
-    imgCdnBase: 'https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main'
+    // 走本站 /img/* 反向代理（Cloudflare Pages Functions），由 CF 边缘缓存回源 GitHub。
+    // 想换回 jsDelivr 直连就填：https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main
+    imgCdnBase: 'https://vowmon.pages.dev/img'
 };

@@ -1,0 +1,29 @@
+name: Deploy to Cloudflare Pages
+
+# 纯静态站点：push 到 main 就同时发布到 Cloudflare Pages
+# 需要仓库 Secret：CLOUDFLARE_API_TOKEN（权限只要 Account > Cloudflare Pages: Edit）
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 57c66c877efefd22ecc3422c9d05025e
+          command: pages deploy . --project-name=vowmon --branch=main
