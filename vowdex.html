@@ -91,8 +91,10 @@
 
         /* 异色：有异色图的卡片，悬停不再放大，而是淡出普通图、淡入异色图 */
         .card-img .shiny {
-            position: absolute; top: 10px; right: 10px; bottom: 10px; left: 10px;
-            width: auto; height: auto; max-height: none; display: block;
+            position: absolute; top: 10px; left: 10px;
+            /* 不能只设四边 + auto 尺寸：img 会按自然尺寸渲染导致错位，必须显式定宽高 */
+            width: calc(100% - 20px); height: calc(100% - 20px);
+            max-height: none; display: block;
             object-fit: contain; opacity: 0; z-index: 1;
         }
         .pet-card.has-shiny:hover .card-img img { transform: none; }
