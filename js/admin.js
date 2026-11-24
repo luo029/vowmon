@@ -109,6 +109,7 @@ createApp({
             ability: '', abilityEffect: '',
             ability2: '', ability2Effect: '',           // 第二特性（多特性随机触发其一）
             hiddenAbility: '', hiddenAbilityEffect: '', // 隐藏特性（不填默认为空）
+            evoFrom: [], evoTo: [],                     // 进化链：进化自 / 进化为（存精灵 id，可多选）
             eggGroup: '', rideable: '', height: '', weight: '',
             image: '', shiny: [], description: '',
             stats: { hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 0 }
@@ -253,6 +254,66 @@ createApp({
             showSelectionModal.value = false;
         };
 
+        /* -------------------------------------------------------- 进化链选择 */
+        const showEvoModal = ref(false);
+        const evoTarget = ref('evoTo');          // 'evoFrom' | 'evoTo'
+        const evoSearchQuery = ref('');
+        const evoSelection = ref([]);            // 弹窗内的临时多选
+
+        const petNameById = (id) => {
+            const p = pets.value.find(x => String(x.id) === String(id));
+            return p ? p.name : id;
+        };
+
+        const filteredEvoPets = computed(() => {
+            const q = evoSearchQuery.value.trim();
+            const list = pets.value.filter(p => String(p.id || '') !== String(form.id || ''));
+            const matched = q ? list.filter(p => (p.name || '').includes(q) || String(p.id || '').includes(q)) : list;
+            return matched.slice(0, 60);
+        });
+
+        const openEvoModal = (target) => {
+            evoTarget.value = target;
+            evoSearchQuery.value = '';
+            evoSelection.value = [...(Array.isArray(form[target]) ? form[target] : [])];
+            showEvoModal.value = true;
+        };
+        const toggleEvoPick = (id) => {
+            const i = evoSelection.value.findIndex(x => String(x) === String(id));
+            if (i > -1) evoSelection.value.splice(i, 1);
+            else evoSelection.value.push(id);
+        };
+        const confirmEvoModal = () => {
+            const target = evoTarget.value;
+            const other = target === 'evoFrom' ? 'evoTo' : 'evoFrom';
+            const oldIds = [...(Array.isArray(form[target]) ? form[target] : [])];
+            const newIds = [...evoSelection.value];
+            form[target] = newIds;
+            // 双向自动关联：对方精灵的反向字段同步加上/移除自己
+            const myId = String(form.id || '');
+            if (myId) {
+                const removed = oldIds.filter(id => !newIds.some(x => String(x) === String(id)));
+                const added = newIds.filter(id => !oldIds.some(x => String(x) === String(id)));
+                pets.value.forEach(p => {
+                    const pid = String(p.id || '');
+                    if (!pid) return;
+                    if (p[other] && !Array.isArray(p[other])) p[other] = [p[other]];
+                    if (!Array.isArray(p[other])) p[other] = [];
+                    if (removed.some(id => String(id) === pid)) {
+                        p[other] = p[other].filter(x => String(x) !== myId);
+                    }
+                    if (added.some(id => String(id) === pid) && !p[other].some(x => String(x) === myId)) {
+                        p[other].push(myId);
+                    }
+                });
+            }
+            showEvoModal.value = false;
+        };
+        const removeEvo = (target, id) => {
+            if (!Array.isArray(form[target])) form[target] = [];
+            form[target] = form[target].filter(x => String(x) !== String(id));
+        };
+
         // 表单交互
         const closeAllDropdowns = () => { 
             activeDropdown.value = ''; 
@@ -311,6 +372,11 @@ createApp({
             }
             // 兼容早期没有 shiny 字段的旧数据
             if (!Array.isArray(form.shiny)) form.shiny = [];
+            // 兼容进化链字段：旧数据可能是单个 id 字符串或缺失
+            if (form.evoFrom && !Array.isArray(form.evoFrom)) form.evoFrom = [form.evoFrom];
+            if (!Array.isArray(form.evoFrom)) form.evoFrom = [];
+            if (form.evoTo && !Array.isArray(form.evoTo)) form.evoTo = [form.evoTo];
+            if (!Array.isArray(form.evoTo)) form.evoTo = [];
             shinyInput.value = '';
             
             if (form.image) {
@@ -721,6 +787,8 @@ createApp({
             showColSettings, allColumns, visibleCols,
             showSelectionModal, selectionType, selectionSearchQuery, selectionPage,
             filteredSelectionList, paginatedSelectionList,
+            showEvoModal, evoTarget, evoSearchQuery, evoSelection,
+            petNameById, filteredEvoPets, openEvoModal, toggleEvoPick, confirmEvoModal, removeEvo,
             listPage, listPageSize, paginatedPets,
             deleteTargetName,
             closeModal,

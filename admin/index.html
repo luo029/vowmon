@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124">
+    <link rel="stylesheet" href="../css/admin.css?v=20261124b">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261124b">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261124b">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261124b">
 </head>
 <body>
 <div id="app" v-cloak>
@@ -357,6 +357,35 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>进化链 <span style="font-weight: 400; color: #a0aec0; font-size: 12px;">（按阶段从已有精灵中选择，可多选）</span></label>
+                            <div class="evo-chain-row">
+                                <div class="evo-chain-box">
+                                    <div class="evo-chain-title"><i class="fa-solid fa-seedling" style="color: #48bb78;"></i> 进化自（前一阶段）</div>
+                                    <div class="evo-chips">
+                                        <span class="evo-chip" v-for="id in form.evoFrom" :key="'from' + id">
+                                            {{ petNameById(id) }}
+                                            <i class="fa-solid fa-xmark" @click="removeEvo('evoFrom', id)"></i>
+                                        </span>
+                                        <span v-if="!form.evoFrom.length" class="evo-chip-empty">未设置</span>
+                                        <button type="button" class="btn btn-outline btn-sm" @click="openEvoModal('evoFrom')"><i class="fa-solid fa-plus"></i> 选择</button>
+                                    </div>
+                                </div>
+                                <div class="evo-chain-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                                <div class="evo-chain-box">
+                                    <div class="evo-chain-title"><i class="fa-solid fa-dragon" style="color: #805ad5;"></i> 进化为（后一阶段）</div>
+                                    <div class="evo-chips">
+                                        <span class="evo-chip" v-for="id in form.evoTo" :key="'to' + id">
+                                            {{ petNameById(id) }}
+                                            <i class="fa-solid fa-xmark" @click="removeEvo('evoTo', id)"></i>
+                                        </span>
+                                        <span v-if="!form.evoTo.length" class="evo-chip-empty">未设置</span>
+                                        <button type="button" class="btn btn-outline btn-sm" @click="openEvoModal('evoTo')"><i class="fa-solid fa-plus"></i> 选择</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="hint">双向不用都填：在二阶精灵上填「进化自」即可，对应的一阶精灵会自动关联；进化链支持分支（如多种进化方向）。</p>
+                        </div>
                         <div class="form-group">
                             <label>阶级 (Rank)</label>
                             <input v-model="form.rank" placeholder="如：初灵">
@@ -502,15 +531,55 @@
         </div>
     </div>
 
+    <!-- 进化链选择弹窗（多选） -->
+    <div class="modal-overlay" v-if="showEvoModal" @vowmon:modal-close="showEvoModal = false" style="z-index: 1100;">
+        <div class="selection-modal" @click.stop>
+            <div class="modal-header">
+                <h3>选择{{ evoTarget === 'evoFrom' ? '进化自（前一阶段）' : '进化为（后一阶段）' }}</h3>
+                <button class="btn-close" @click="showEvoModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="evoSearchQuery" placeholder="按名称或编号搜索精灵...">
+            </div>
+
+            <div class="selection-list" style="max-height: 320px;">
+                <div
+                    class="selection-item"
+                    v-for="p in filteredEvoPets"
+                    :key="p.id"
+                    :style="evoSelection.some(x => String(x) === String(p.id)) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                    @click="toggleEvoPick(p.id)"
+                >
+                    <div class="item-name">
+                        <i class="fa-solid" :class="evoSelection.some(x => String(x) === String(p.id)) ? 'fa-square-check' : 'fa-square'" :style="evoSelection.some(x => String(x) === String(p.id)) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
+                        {{ p.name }} <span style="color:#a0aec0; font-size:12px;">#{{ p.id }}</span>
+                    </div>
+                    <div class="item-desc">{{ p.stage || '' }}</div>
+                </div>
+                <div v-if="filteredEvoPets.length === 0" class="empty-state">没有找到相关精灵（自己不会出现在候选里）</div>
+            </div>
+
+            <div class="selection-pagination" style="justify-content: space-between;">
+                <span>已选 {{ evoSelection.length }} 只</span>
+                <div class="page-controls">
+                    <button class="btn btn-outline" @click="evoSelection = []">清空</button>
+                    <button class="btn btn-primary" @click="confirmEvoModal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<script src="../js/site-config.js?v=20261124"></script>
-<script src="../js/type-config.js?v=20261124"></script>
-<script src="../js/data-loader.js?v=20261124"></script>
-<script src="../js/github-api.js?v=20261124"></script>
-<script src="../js/image-utils.js?v=20261124"></script>
-<script src="../js/common-ui.js?v=20261124"></script>
-<script src="../js/dialog.js?v=20261124"></script>
-<script src="../js/admin.js?v=20261124"></script>
+<script src="../js/site-config.js?v=20261124b"></script>
+<script src="../js/type-config.js?v=20261124b"></script>
+<script src="../js/data-loader.js?v=20261124b"></script>
+<script src="../js/github-api.js?v=20261124b"></script>
+<script src="../js/image-utils.js?v=20261124b"></script>
+<script src="../js/common-ui.js?v=20261124b"></script>
+<script src="../js/dialog.js?v=20261124b"></script>
+<script src="../js/admin.js?v=20261124b"></script>
 </body>
 </html>
