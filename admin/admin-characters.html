@@ -37,7 +37,7 @@
         .cha-card .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); }
         .cha-card .cha-name { font-size: 16.5px; font-weight: 900; color: #2d3748; line-height: 1.3; }
         .cha-card .cha-title { font-size: 12px; color: #a0aec0; font-weight: 700; margin-top: 1px; }
-        .cha-card .faction-tag { margin-left: auto; font-size: 11px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+        .cha-card .faction-tag { margin-left: auto; max-width: 48%; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
         .cha-card .money-line { margin-top: 12px; display: flex; align-items: baseline; gap: 7px; background: linear-gradient(150deg, #fffdf6, #fdf6e3); border: 1px solid #f2e6cf; border-radius: 12px; padding: 9px 14px; }
         .cha-card .money-line i { color: #d4a017; font-size: 15px; }
         .cha-card .money-line .m-num { font-size: 17px; font-weight: 900; color: #9c6b0e; }
@@ -49,27 +49,31 @@
         .cha-card .pet-row img { width: 34px; height: 34px; object-fit: contain; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 9px; padding: 2px; }
         .cha-card .pet-row .pet-more { font-size: 11px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 4px 9px; }
         .cha-card .pet-row .pet-none { font-size: 11.5px; color: #cbd5e0; font-weight: 700; }
-        .cha-card .ops { position: absolute; top: 12px; right: 12px; z-index: 5; display: flex; gap: 6px; opacity: .55; transition: opacity .15s; }
-        .cha-card:hover .ops { opacity: 1; }
-        .cha-card .faction-tag { transition: opacity .15s; pointer-events: none; }
-        .cha-card:hover .faction-tag { opacity: 0; }
-        .op-btn { width: 34px; height: 34px; border-radius: 9px; border: none; cursor: pointer; font-size: 13px; color: #fff; display: flex; align-items: center; justify-content: center; transition: filter .15s, transform .15s; box-shadow: 0 2px 6px rgba(45,55,72,.18); }
+        /* 操作按钮独占卡片底部一行，不再与势力标签重叠 */
+        .cha-card .ops { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8edf2; }
+        .op-btn { min-width: 40px; height: 32px; padding: 0 12px; gap: 6px; border-radius: 9px; border: none; cursor: pointer; font-size: 12.5px; font-weight: 800; color: #fff; display: inline-flex; align-items: center; justify-content: center; transition: filter .15s, transform .15s; font-family: inherit; }
+        .op-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
         .op-btn:hover { filter: brightness(1.12); }
         .op-btn.edit { background: #4299e1; }
         .op-btn.del { background: #e53e3e; }
         .empty-box { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; background: #fff; border: 1px dashed #dbe4ec; border-radius: 16px; }
         .empty-box i { font-size: 34px; display: block; margin-bottom: 12px; }
 
-        /* ============ 编辑弹窗 ============ */
-        .sect { margin-bottom: 18px; }
-        .sect-title { font-size: 13px; font-weight: 900; color: #b7791f; letter-spacing: .06em; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+        /* ============ 编辑弹窗 · 分区卡片式排版 ============ */
+        .modal-body { background: #f5f8fb; padding: 18px 20px 20px; }
+        .sect { background: #fff; border: 1px solid #e5ecf3; border-radius: 14px; padding: 16px 18px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(45,55,72,.04); }
+        .sect:last-child { margin-bottom: 0; }
+        .sect-title { font-size: 13.5px; font-weight: 900; color: #b7791f; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed #e8edf2; display: flex; align-items: center; gap: 8px; }
         .sect-title i { font-size: 12px; }
-        .sect-title::after { content: ''; flex: 1; height: 1px; background: #e8edf2; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 6px; display: block; }
+        .sect-title::after { content: none; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; display: block; }
         .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fbfdff; transition: border-color .15s, box-shadow .15s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .modal .modal-header { background: linear-gradient(120deg, #fffaf0, #fff 70%); border-bottom: 1px solid #f0e4cc; }
+        .modal .modal-footer { position: sticky; bottom: 0; z-index: 2; background: #fff; border-top: 1px solid #e8edf2; }
+
         .inv-row { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
         .inv-head { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .04em; padding: 0 2px 4px; }
         .inv-row input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
@@ -77,11 +81,21 @@
         .inv-row .row-x, .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
-        /* ============ 契约 / 成就经历 ============ */
-        .ms-row { display: grid; grid-template-columns: 130px 1fr 140px 34px; gap: 8px; margin-bottom: 8px; }
-        .ms-row input { padding: 8px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
-        .ms-row input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .ms-row .ms-note { grid-column: 1 / 4; }
+        /* ============ 契约信息 + 成就经历卡片 ============ */
+        .contract-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: linear-gradient(150deg, #fffdf6, #fffaf0); border: 1px solid #f1e4c9; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+        .contract-panel label { display: block; font-size: 12px; font-weight: 900; color: #9c6b0e; margin-bottom: 7px; }
+        .contract-panel label small { font-size: 10.5px; font-weight: 700; color: #b7791f; margin-left: 5px; }
+        .contract-panel input { width: 100%; padding: 9px 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; }
+        .contract-panel input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+        .ms-head-row { display: grid; grid-template-columns: 28px minmax(100px, .8fr) minmax(150px, 1.6fr) minmax(110px, .9fr) 32px; gap: 8px; align-items: center; }
+        .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .ms-item input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
+        .ms-item input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .ms-note { width: 100%; margin-top: 8px; }
+        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 32px; width: 32px; }
+        .ms-del:hover { background: #fee; }
+        .ms-add { margin-top: 2px; }
 
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
     </style>
@@ -146,10 +160,6 @@
             <div class="cha-grid" v-if="filteredList.length">
                 <div class="cha-card" v-for="item in filteredList" :key="item.id"
                      :style="{ '--accent': factionColor(item.faction) }">
-                    <div class="ops">
-                        <button class="op-btn edit" title="编辑" @click.stop="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i></button>
-                        <button class="op-btn del" title="删除" @click.stop="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i></button>
-                    </div>
                     <div class="head">
                         <div class="avatar">{{ avatarChar(item.name) }}</div>
                         <div>
@@ -177,6 +187,10 @@
                         </template>
                         <span class="pet-none" v-else>还没有关联的精灵</span>
                     </div>
+                    <div class="ops">
+                        <button class="op-btn edit" title="编辑" @click.stop="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i> 编辑</button>
+                        <button class="op-btn del" title="删除" @click.stop="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i> 删除</button>
+                    </div>
                 </div>
             </div>
             <div class="empty-box" v-else>
@@ -188,7 +202,7 @@
 
     <!-- 编辑弹窗 -->
     <div class="modal-overlay" v-if="showModal" @vowmon:modal-close="closeModal('edit')">
-        <div class="modal" style="width: 720px; max-height: 88vh; overflow-y: auto;" @click.stop>
+        <div class="modal" style="width: 820px; max-height: 90vh; overflow-y: auto;" @click.stop>
             <div class="modal-header">
                 <h3>{{ isEdit ? '编辑御兽人物 · ' + form.name : '添加御兽人物' }}</h3>
                 <button class="btn-close" @click="showModal = false"><i class="fa-solid fa-xmark"></i></button>
@@ -210,18 +224,21 @@
                 <!-- 契约与成就经历 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>首次契约日 <span class="opt">书内时间或现实日期均可</span></label><input v-model="form.contractDate" placeholder="如：九牧历三年·谷雨 / 2026-03-15"></div>
-                        <div class="form-group"><label>契约章节</label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
+                    <div class="contract-panel">
+                        <div><label>首次契约日 <small>书内时间 / 现实日期</small></label><input v-model="form.contractDate" placeholder="如：九牧历三年·谷雨"></div>
+                        <div><label>契约章节 <small>书中第几章</small></label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
                     </div>
-                    <div class="ms-row" v-for="(m, i) in form.milestones" :key="i">
-                        <input v-model="m.chapter" placeholder="章节，如：第 38 章">
-                        <input v-model="m.title" placeholder="事件，如：契约第二只精灵 / 晋升大冠">
-                        <input v-model="m.date" placeholder="日期（选填）">
-                        <button type="button" class="row-x" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
-                        <input class="ms-note" v-model="m.note" placeholder="补充说明（选填）">
+                    <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
+                        <div class="ms-head-row">
+                            <span class="ms-num font-num">{{ i + 1 }}</span>
+                            <input v-model="m.chapter" placeholder="章节，如：第 38 章">
+                            <input v-model="m.title" placeholder="事件，如：契约沐沐 / 晋升戎枢">
+                            <input v-model="m.date" placeholder="日期（选填）">
+                            <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <input class="ms-note" v-model="m.note" placeholder="补充说明（选填），如：因护城战功获破格提拔">
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
+                    <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
                 </div>
 
                 <!-- 物品栏 -->
