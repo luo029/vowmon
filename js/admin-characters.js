@@ -91,7 +91,12 @@ createApp({
             const s = petMap.value.get(String(p && p.speciesId));
             return s && s.image ? getImgUrl(s.image) : '';
         };
-        const indLabel = (p) => p.nickname + (p.speciesId ? '（' + speciesLabel(p.speciesId) + '）' : '');
+        /* 昵称选填：没起昵称就直接叫种族名 */
+        const indLabel = (p) => {
+            const nick = p && p.nickname && String(p.nickname).trim();
+            if (nick) return nick + (p.speciesId ? '（' + speciesLabel(p.speciesId) + '）' : '');
+            return p.speciesId ? speciesLabel(p.speciesId) : '未命名精灵';
+        };
         const pickedPets = computed(() => form.value.petIds.map(id => indById.value.get(String(id))).filter(Boolean));
         const petsOf = (c) => (c.petIds || []).map(id => indById.value.get(String(id))).filter(Boolean);
 
@@ -195,7 +200,7 @@ createApp({
             const pool = individuals.value;
             if (!kw) return pool;
             return pool.filter(p =>
-                [p.nickname, speciesLabel(p.speciesId), String(p.id)].join(' ').toLowerCase().includes(kw)
+                [p.nickname, indLabel(p), speciesLabel(p.speciesId), String(p.id)].join(' ').toLowerCase().includes(kw)
             );
         });
         const togglePet = (p) => {

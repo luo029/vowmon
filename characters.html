@@ -148,11 +148,11 @@
                     <h2><i class="fa-solid fa-paw"></i> 持有精灵 <span class="total-badge font-num">{{ chaPets.length }} 只</span></h2>
                     <div class="pet-grid" v-if="chaPets.length">
                         <div class="pet-card" v-for="p in chaPets" :key="p.id"
-                             :title="'查看 ' + p.nickname + ' 的档案'"
+                             :title="'查看 ' + indName(p) + ' 的档案'"
                              @click="gotoIndividual(p.id)">
-                            <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname">
+                            <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indName(p)">
                             <i v-else class="fa-solid fa-paw" style="font-size: 40px; color: #cbd5e0; line-height: 72px;"></i>
-                            <div class="p-name">{{ p.nickname }}</div>
+                            <div class="p-name">{{ indName(p) }}</div>
                             <div class="p-stage" :style="{ background: stageColor(p) }">{{ stageName(p) }}</div>
                             <div class="p-lv font-num">Lv.{{ p.level }}</div>
                         </div>
@@ -208,7 +208,7 @@
                         <div class="cc-bio" v-if="c.bio">{{ c.bio }}</div>
                         <div class="cc-pets">
                             <template v-for="p in petsPreview(c)" :key="p.id">
-                                <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname" :title="p.nickname">
+                                <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indName(p)" :title="indName(p)">
                             </template>
                             <span class="cc-none" v-if="!petsPreview(c).length">暂无契约精灵</span>
                         </div>
@@ -293,6 +293,13 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
 
             const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
             const speciesImageOf = (p) => { const s = speciesOf(p); return s && s.image ? getImgUrl(s.image) : ''; };
+            /* 昵称选填：没起昵称就直接叫种族名 */
+            const indName = (p) => {
+                const nick = p && p.nickname && String(p.nickname).trim();
+                if (nick) return nick;
+                const s = speciesOf(p);
+                return s ? s.name : '未命名精灵';
+            };
 
             const stageName = (p) => {
                 const lv = Number(p.level) || 0;
@@ -347,7 +354,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 characters, filteredCharacters, factions,
                 searchName, filterFaction,
                 chaPets, inventory, petsPreview,
-                speciesImageOf, stageName, stageColor,
+                speciesImageOf, stageName, stageColor, indName,
                 fmtMoney, gotoIndividual, gotoCharacter
             };
         }

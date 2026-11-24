@@ -7,6 +7,12 @@
      前台 individuals.html 读取生效。
    等级八阶：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 /
              灵相61-70 / 律冠71-89 / 元灵90-99 / 元100
+   字段说明：
+     nickname  昵称（选填！很多精灵直接拿种族名当称呼）
+     nature    性格（图鉴性格，影响种族值成长倾向，数据来自 natures-data.json）
+     personality 习性（自由描述这只精灵的脾气，与「性格」是两回事）
+     traits    特性（可从图鉴特性搜索选择，也可自由输入）
+     skills    技能 + 熟练度（皆传模式迅疾/刚猛是出手时选的，档案里不存）
    注意：模板里用到的每个方法/状态都必须在 setup 的 return 里
          （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
@@ -29,6 +35,14 @@ const STAGE_COLORS = {
 };
 const BLOODLINES = ['无', '异变', '黑暗', '光明', '属性'];
 const BLOOD_COLORS = { '异变': '#7F77DD', '黑暗': '#37474F', '光明': '#d4a017', '属性': '#0F6E56' };
+const SKILL_LEVELS = ['入门', '熟练', '专精', '完美'];
+const LV_META = {
+    '入门': { color: '#90a4ae', desc: '80% 威力' },
+    '熟练': { color: '#378ADD', desc: '满威力' },
+    '专精': { color: '#7F77DD', desc: '不失败 · 可开皆传' },
+    '完美': { color: '#BA7517', desc: '0.1s · 可组合技' }
+};
+const GENDERS = ['雄', '雌', '未知'];
 
 function stageNameOf(level) {
     const lv = Number(level) || 0;
@@ -42,14 +56,14 @@ function normalizeIndividual(v) {
     p.id = String(p.id == null ? '' : p.id);
     p.nickname = String(p.nickname == null ? '' : p.nickname);
     p.speciesId = String(p.speciesId == null ? '' : p.speciesId);
-    p.gender = String(p.gender == null ? '' : p.gender);
+    p.gender = GENDERS.includes(p.gender) ? p.gender : '';
+    p.nature = String(p.nature == null ? '' : p.nature);
     p.personality = String(p.personality == null ? '' : p.personality);
     p.traits = Array.isArray(p.traits) ? p.traits.map(t => String(t)).filter(t => t && t.trim()) : [];
     p.skills = Array.isArray(p.skills)
         ? p.skills.map(s => ({
             name: String((s && s.name) || '').trim(),
-            level: ['入门', '熟练', '专精', '完美'].includes(s && s.level) ? s.level : '入门',
-            mode: ['迅疾', '刚猛'].includes(s && s.mode) ? s.mode : ''
+            level: SKILL_LEVELS.includes(s && s.level) ? s.level : '入门'
         })).filter(s => s.name)
         : [];
     p.bloodline = BLOODLINES.includes(p.bloodline) ? p.bloodline : '无';
@@ -65,9 +79,9 @@ function normalizeIndividual(v) {
     return p;
 }
 
-VowmonData.ready(['individuals', 'pets', 'characters'], { fresh: true }).then(function () {
+VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures'], { fresh: true }).then(function () {
 
-createApp({
+const app = createApp({
     setup() {
         /* ------------------------------------------------------------ 同步配置 */
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data', imgRepos: 'vowmon_imgs', imgCdnBase: '' });
@@ -88,7 +102,7 @@ createApp({
 
         const defaultForm = () => ({
             id: '', nickname: '', speciesId: '', gender: '',
-            personality: '', traits: [], skills: [],
+            nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
             level: 1, ownerId: '', items: [],
             experience: '', notes: ''
@@ -133,6 +147,13 @@ createApp({
             const s = speciesOf(item && item.speciesId);
             return s && s.image ? getImgUrl(s.image) : '';
         };
+        /* 昵称选填：没起昵称就直呼种族名 */
+        const displayName = (item) => {
+            const nick = item && item.nickname && String(item.nickname).trim();
+            if (nick) return nick;
+            const s = speciesOf(item && item.speciesId);
+            return s ? s.name : '未命名精灵';
+        };
         const ownerLabel = (id) => {
             const c = chaById.value.get(String(id));
             return c ? c.name : (id ? '未知主人' : '无主 / 未定');
@@ -145,11 +166,13 @@ createApp({
         const stageColorOf = (item) => STAGE_COLORS[stageNameOf(item && item.level)] || '#718096';
         const stageColorOfName = (name) => STAGE_COLORS[name] || '#718096';
         const bloodColorOf = (b) => BLOOD_COLORS[b] || '#90a4ae';
+        const lvColorOf = (lv) => (LV_META[lv] || {}).color || '#90a4ae';
+        const lvDescOf = (lv) => (LV_META[lv] || {}).desc || '';
 
-        const traitNames = computed(() =>
-            (typeof allTraitsData !== 'undefined' && Array.isArray(allTraitsData))
-                ? allTraitsData.map(t => t.name).filter(Boolean) : []
-        );
+        /* 图鉴特性（traits-data.json）；图鉴性格（natures-data.json，影响种族值） */
+        const allTraits = (typeof allTraitsData !== 'undefined' && Array.isArray(allTraitsData)) ? allTraitsData : [];
+        const traitNames = allTraits.map(t => String(t.name || '')).filter(Boolean);
+        const allNatures = (typeof allNaturesData !== 'undefined' && Array.isArray(allNaturesData)) ? allNaturesData : [];
 
         const nextId = () => {
             let max = 0;
@@ -172,7 +195,7 @@ createApp({
             const kw = searchName.value.trim().toLowerCase();
             if (!kw) return individuals.value;
             return individuals.value.filter(p =>
-                [p.nickname, speciesLabel(p.speciesId), ownerLabel(p.ownerId), p.personality, p.experience]
+                [p.nickname, displayName(p), speciesLabel(p.speciesId), ownerLabel(p.ownerId), p.personality, p.experience]
                     .join(' ').toLowerCase().includes(kw)
             );
         });
@@ -206,6 +229,7 @@ createApp({
             traitInput.value = '';
             itemsInput.value = form.value.items.join(', ');
             showSpeciesModal.value = false;
+            showTraitMenu.value = false;
             showModal.value = true;
         };
         /* 模板里的「选择种族」按钮（必须是已定义的方法，见文件头注释） */
@@ -214,20 +238,42 @@ createApp({
             showSpeciesModal.value = true;
         };
 
-        const addTrait = () => {
+        /* --------------------------------------------------- 特性（可搜索） */
+        const showTraitMenu = ref(false);
+        /* 输入关键词过滤图鉴特性；已添加的不重复提示；也允许自由输入图鉴里没有的 */
+        const traitSuggestions = computed(() => {
+            const kw = traitInput.value.trim().toLowerCase();
+            return traitNames
+                .filter(n => !form.value.traits.includes(n))
+                .filter(n => !kw || n.toLowerCase().includes(kw))
+                .slice(0, 8);
+        });
+        const addTrait = (e) => {
+            /* 中文输入法回车确认拼音时也会触发 keydown（isComposing / 229），不能当成「添加」 */
+            if (e && (e.isComposing || e.keyCode === 229)) return;
             const name = traitInput.value.trim();
             if (!name) return;
             if (!form.value.traits.includes(name)) form.value.traits.push(name);
             traitInput.value = '';
+            showTraitMenu.value = false;
+        };
+        const pickTrait = (name) => {
+            if (!form.value.traits.includes(name)) form.value.traits.push(name);
+            traitInput.value = '';
+            showTraitMenu.value = false;
         };
         const removeTrait = (name) => {
             form.value.traits = form.value.traits.filter(t => t !== name);
         };
-        const addSkill = () => { form.value.skills.push({ name: '', level: '入门', mode: '' }); };
+        const traitFromBook = (name) => traitNames.includes(name);
 
+        /* --------------------------------------------------- 技能与熟练度 */
+        const addSkill = () => { form.value.skills.push({ name: '', level: '入门' }); };
+
+        /* ------------------------------------------------------------- 保存 */
         const saveItem = () => {
-            if (!form.value.nickname || !String(form.value.nickname).trim()) {
-                VowmonDialog.toast('请填写昵称', 'warning');
+            if (!form.value.speciesId) {
+                VowmonDialog.toast('请先选择种族（昵称可以不填，默认用种族名当称呼）', 'warning');
                 return;
             }
             const item = normalizeIndividual(form.value);
@@ -256,6 +302,20 @@ createApp({
                 deleteTargetIndex.value = -1;
             });
         };
+
+        /* --------------------------------------------------- 性格（影响种族值） */
+        const natureOptions = computed(() => allNatures.map(n => ({
+            value: String(n.name || ''),
+            label: String(n.name || ''),
+            hint: (n.up ? '+' + n.up : '') + (n.up && n.down ? ' / ' : '') + (n.down ? '-' + n.down : '')
+        })).filter(n => n.value));
+        const natureHintOf = (name) => {
+            const n = allNatures.find(x => x.name === name);
+            return n ? ((n.up ? '+' + n.up : '') + (n.up && n.down ? ' / ' : '') + (n.down ? '-' + n.down : '')) : '';
+        };
+
+        /* --------------------------------------------------- 主人下拉选项 */
+        const ownerOptions = computed(() => characters.value.map(c => ({ value: c.id, label: c.name })));
 
         /* --------------------------------------------------- 种族选择（单选） */
         const filteredSpecies = computed(() => {
@@ -346,6 +406,12 @@ createApp({
                 if (savedConfig) config.value = Object.assign({}, config.value, JSON.parse(savedConfig));
             } catch (err) { console.warn('同步配置解析失败', err); }
 
+            /* 点击特性搜索框以外的区域时，收起特性下拉 */
+            document.addEventListener('click', (e) => {
+                const wrap = e.target && e.target.closest ? e.target.closest('.trait-wrap') : null;
+                if (!wrap) showTraitMenu.value = false;
+            });
+
             try {
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('individuals') : null;
                 if (mirror && Array.isArray(mirror.individuals)) {
@@ -365,15 +431,21 @@ createApp({
             showModal, isEdit, form, traitInput, itemsInput,
             searchName, filteredList, indexOfItem,
             avgLevel, bloodCount, ownerCount,
-            speciesLabel, speciesImageOf, ownerLabel,
+            speciesLabel, speciesImageOf, ownerLabel, displayName,
             cardColor, stageColorOf, stageColorOfName, bloodColorOf,
+            lvColorOf, lvDescOf,
             stageName: stageNameOf, RANK_BANDS,
-            openEditor, addTrait, removeTrait, addSkill, saveItem,
+            GENDERS, BLOODLINES, SKILL_LEVELS,
+            natureOptions, natureHintOf, ownerOptions,
+            showTraitMenu, traitSuggestions, addTrait, pickTrait, removeTrait, traitFromBook,
+            openEditor, addSkill, saveItem,
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,
             openSpeciesModal, formSpeciesLabel, formSpeciesImage, formStageColor,
             syncToGitHub, pullFromRepo
         };
     }
-}).mount('#app');
+});
+app.component('vow-select', window.VowSelect);
+app.mount('#app');
 });

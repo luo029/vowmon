@@ -79,6 +79,9 @@
         .info-card h2 i { color: #ff6b6b; font-size: 14px; }
 
         .personality { font-size: 14px; line-height: 2; color: #4a5568; }
+        .nature-band { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .nature-chip { font-size: 12.5px; font-weight: 900; color: #fff; background: #d4537e; padding: 4px 14px; border-radius: 999px; box-shadow: 0 2px 6px rgba(45,55,72,.16); }
+        .nature-desc { font-size: 12.5px; font-weight: 700; color: #2b6cb0; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .info-box { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 12px 14px; }
         .info-box .lbl { font-size: 11px; font-weight: 800; color: #a0aec0; margin-bottom: 4px; }
@@ -156,8 +159,8 @@
         <div class="detail-wrap">
             <div>
                 <div class="pet-name-bar">
-                    <span class="id-badge font-num">{{ ind.nickname }}</span>
-                    <h1>{{ ind.nickname }}</h1>
+                    <span class="id-badge font-num">{{ indName(ind) }}</span>
+                    <h1>{{ indName(ind) }}</h1>
                     <span class="gender-tag" v-if="ind.gender">{{ ind.gender }}</span>
                     <div class="type-icons">
                         <span class="type-pill" v-for="t in speciesTypes" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
@@ -214,6 +217,10 @@
 
                 <div class="info-card">
                     <h2><i class="fa-solid fa-heart"></i> 性格</h2>
+                    <div class="nature-band" v-if="ind.nature">
+                        <span class="nature-chip">{{ ind.nature }}</span>
+                        <span class="nature-desc" v-if="natureHint(ind.nature)">种族值倾向：{{ natureHint(ind.nature) }}</span>
+                    </div>
                     <p class="personality">{{ ind.personality || '尚未记录。' }}</p>
                 </div>
 
@@ -229,11 +236,9 @@
                     <div class="skill-row" v-for="(s, i) in ind.skills" :key="i">
                         <span class="sk-name">{{ s.name }}</span>
                         <span class="lv-chip" :style="{ background: lvColor(s.level) }">{{ s.level }}</span>
-                        <span class="mode-chip fast" v-if="s.mode === '迅疾'">皆传 · 迅疾</span>
-                        <span class="mode-chip heavy" v-if="s.mode === '刚猛'">皆传 · 刚猛</span>
                         <span class="sk-desc">{{ lvDesc(s.level) }}</span>
                     </div>
-                    <div class="skill-foot">熟练度档位：入门（80% 威力 · 10s）→ 熟练（满威力 · 3s）→ 专精（不失败 · 1s，可开皆传）→ 完美（0.1s，可组合技）</div>
+                    <div class="skill-foot">熟练度档位：入门（80% 威力 · 10s）→ 熟练（满威力 · 3s）→ 专精（不失败 · 1s，可开皆传）→ 完美（0.1s，可组合技）。皆传的两种模式（迅疾 / 刚猛）在出手时选择。</div>
                 </div>
 
                 <div class="info-card" v-if="ind.bloodline && ind.bloodline !== '无'">
@@ -302,16 +307,16 @@
             <div class="ind-grid" v-if="filteredIndividuals.length">
                 <div class="ind-card" v-for="p in filteredIndividuals" :key="p.id"
                      :style="{ '--card-c': cardColor(p) }"
-                     :title="'点击查看 ' + p.nickname + ' 的详细档案'"
+                     :title="'点击查看 ' + indName(p) + ' 的详细档案'"
                      @click="gotoIndividual(p)">
                     <div class="ic-img">
                         <span class="ic-stage" :style="{ background: stageColor(p) }">{{ stageName(p) }}</span>
                         <span class="ic-level font-num">Lv.{{ p.level }}</span>
-                        <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname">
+                        <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indName(p)">
                         <i v-else class="fa-solid fa-paw" style="font-size: 50px; color: #cbd5e0;"></i>
                     </div>
                     <div class="ic-body">
-                        <div class="ic-name">{{ p.nickname }}<span class="ic-gender" v-if="p.gender">{{ p.gender }}</span></div>
+                        <div class="ic-name">{{ indName(p) }}<span class="ic-gender" v-if="p.gender">{{ p.gender }}</span></div>
                         <div class="ic-species">{{ speciesNameOf(p) || '未关联种族' }}</div>
                         <div class="ic-owner" v-if="ownerNameOf(p)"><i class="fa-solid fa-user-shield"></i> {{ ownerNameOf(p) }}</div>
                         <div class="ic-foot">
@@ -340,7 +345,7 @@
 <script src="js/data-loader.js?v=20261125b"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
+VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function () {
 
     /* 精灵等级八阶：由等级自动推导阶段 */
     const RANK_BANDS = [
@@ -381,6 +386,7 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
             const normalize = (v) => {
                 const p = Object.assign({}, v || {});
                 p.nickname = String(p.nickname == null ? '' : p.nickname);
+                p.nature = String(p.nature == null ? '' : p.nature);
                 p.speciesId = String(p.speciesId == null ? '' : p.speciesId);
                 p.level = Number(p.level) || 0;
                 p.traits = Array.isArray(p.traits) ? p.traits : [];
@@ -415,6 +421,19 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
             const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
             const speciesNameOf = (p) => { const s = speciesOf(p); return s ? (s.name + ' №' + s.id) : ''; };
             const speciesImageOf = (p) => { const s = speciesOf(p); return s && s.image ? getImgUrl(s.image) : ''; };
+            /* 昵称选填：没起昵称就直接叫种族名 */
+            const indName = (p) => {
+                const nick = p && p.nickname && String(p.nickname).trim();
+                if (nick) return nick;
+                const s = speciesOf(p);
+                return s ? s.name : '未命名精灵';
+            };
+            /* 性格（影响种族值倾向）：从 natures-data.json 取加减说明 */
+            const natureHint = (name) => {
+                const n = (typeof allNaturesData !== 'undefined' && Array.isArray(allNaturesData) ? allNaturesData : [])
+                    .find(x => x.name === name);
+                return n ? ((n.up ? '+' + n.up : '') + (n.up && n.down ? ' / ' : '') + (n.down ? '-' + n.down : '')) : '';
+            };
 
             const species = computed(() => ind.value ? speciesOf(ind.value) : null);
             const speciesTypes = computed(() => (species.value && species.value.types) || []);
@@ -475,7 +494,7 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
                     if (filterStage.value && stageName(p) !== filterStage.value) return false;
                     if (filterBlood.value && (p.bloodline || '无') !== filterBlood.value) return false;
                     if (!kw) return true;
-                    const hay = [p.nickname, speciesNameOf(p), p.personality, p.experience].join(' ').toLowerCase();
+                    const hay = [p.nickname, indName(p), speciesNameOf(p), p.personality, p.experience].join(' ').toLowerCase();
                     return hay.includes(kw);
                 });
             });
@@ -500,7 +519,7 @@ VowmonData.ready(['individuals', 'pets', 'characters']).then(function () {
                 stageName, stageColor, cardColor, showcaseStyle,
                 levelPercent, segWidth, segStart,
                 owner, ownerNameOf, gotoCharacter, gotoIndividual,
-                lvColor, lvDesc, bloodColor
+                lvColor, lvDesc, bloodColor, indName, natureHint
             };
         }
     }).mount('#app');

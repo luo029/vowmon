@@ -57,3 +57,27 @@ body:not(.no-anim) .delete-modal { animation: vmodal-rise .18s cubic-bezier(.16,
 .item-desc { font-size: 12px; color: #a0aec0; }
 .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
 .selection-pagination { padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; font-size: 13px; color: #4a5568; font-weight: 600; }
+
+/* ============ vow-select 自定义下拉（替代原生 select 的系统菜单） ============ */
+.vsel { position: relative; width: 100%; }
+.vsel-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; cursor: pointer; font-family: inherit; font-size: 14px; text-align: left; transition: border-color .15s, box-shadow .15s; }
+.vsel-trigger:hover { border-color: #b8cbe0; }
+.vsel.open .vsel-trigger { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+.vsel.disabled { opacity: .55; }
+.vsel.disabled .vsel-trigger { cursor: not-allowed; }
+.vsel-label, .vsel-opt-label { font-weight: 700; color: #2d3748; display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
+.vsel-hint { font-size: 11px; font-weight: 700; color: #a0aec0; white-space: nowrap; }
+.vsel-placeholder { color: #a0aec0; font-weight: 600; }
+.vsel-arrow { font-size: 11px; color: #a0aec0; transition: transform .18s; flex-shrink: 0; }
+.vsel.open .vsel-arrow { transform: rotate(180deg); }
+.vsel-menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 1300; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; max-height: 300px; overflow-y: auto; }
+.vsel-opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px; border-radius: 9px; cursor: pointer; font-size: 13.5px; transition: background .12s; }
+.vsel-opt:hover { background: #ebf8ff; }
+.vsel-opt.on { background: #ebf8ff; color: #2b6cb0; }
+.vsel-opt.on .vsel-opt-label { color: #2b6cb0; }
+.vsel-opt-check { font-size: 12px; color: #4299e1; flex-shrink: 0; }
+.vsel-empty { padding: 16px 0; text-align: center; font-size: 12.5px; color: #a0aec0; font-weight: 700; }
+.vsel-enter-active, .vsel-leave-active { transition: opacity .16s, transform .16s; }
+.vsel-enter-from, .vsel-leave-to { opacity: 0; transform: translateY(-5px); }
+body.no-anim .vsel-enter-active, body.no-anim .vsel-leave-active,
+body.no-anim .vsel-arrow { transition: none; }
