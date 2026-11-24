@@ -790,5 +790,30 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .evo-chip-empty { font-size: 12px; color: #a0aec0; }
 .evo-chain-arrow { display: flex; align-items: center; color: #a0aec0; font-size: 14px; }
 
+/* 特性管理：持有精灵芯片（普通/隐藏切换） */
+.trait-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.trait-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #bee3f8; border-radius: 999px;
+    padding: 3px 6px 3px 10px; font-size: 13px; color: #2d3748; font-weight: 600;
+}
+.trait-chip.is-hidden { border-color: #d6bcfa; background: #faf5ff; }
+.chip-slot-btn {
+    border: none; background: #ebf8ff; color: #2b6cb0; font-size: 11px; font-weight: 700;
+    border-radius: 999px; padding: 2px 7px; cursor: pointer; transition: background .12s;
+}
+.trait-chip.is-hidden .chip-slot-btn { background: #f3e8ff; color: #6b46c1; }
+.chip-slot-btn:hover { background: #d6bcfa; color: #fff; }
+.trait-chip .chip-x { cursor: pointer; color: #a0aec0; font-size: 11px; padding: 2px; }
+.trait-chip .chip-x:hover { color: #e53e3e; }
+.trait-chip-empty { font-size: 12px; color: #a0aec0; }
+/* 特性管理：表格持有精灵列 */
+.trait-owner-list { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.trait-owner-pill {
+    display: inline-flex; align-items: center; background: #ebf8ff; color: #2b6cb0;
+    border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 700;
+}
+.trait-owner-pill.hidden { background: #f3e8ff; color: #6b46c1; }
+
 /* 防止 Vue 挂载前的原始模板闪烁（FOUC）：挂载完成前隐藏整个应用容器 */
 [v-cloak] { display: none !important; }

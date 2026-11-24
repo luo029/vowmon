@@ -45,7 +45,8 @@ createApp({
             id: '',
             name: '',
             types: [],
-            pokemons: [],
+            pokemons: [],        // 常规特性持有者（精灵名）
+            hiddenPokemons: [],  // 隐藏特性持有者（精灵名）
             effect: ''
         });
 
@@ -144,6 +145,7 @@ createApp({
                 const copy = JSON.parse(JSON.stringify(trait));
                 if (!Array.isArray(copy.types)) copy.types = [];
                 if (!Array.isArray(copy.pokemons)) copy.pokemons = [];
+                if (!Array.isArray(copy.hiddenPokemons)) copy.hiddenPokemons = [];
                 form.value = copy;
             } else {
                 isEdit.value = false;
@@ -162,6 +164,8 @@ createApp({
             const item = JSON.parse(JSON.stringify(form.value));
             item.name = String(item.name).trim();
             if (!item.id) item.id = nextTraitId();
+            if (!Array.isArray(item.pokemons)) item.pokemons = [];
+            if (!Array.isArray(item.hiddenPokemons)) item.hiddenPokemons = [];
 
             if (isEdit.value && editIndex.value > -1) {
                 traits.value.splice(editIndex.value, 1, item);
@@ -170,7 +174,9 @@ createApp({
             }
 
             saveLocal();
+            syncTraitToPets(item);
             showModal.value = false;
+            VowmonDialog.toast('已保存，并同步到相关精灵档案', 'success');
         };
 
         /* ---------------------------------------------------------------- 删除 */
@@ -194,18 +200,72 @@ createApp({
             deleteTargetIndex.value = -1;
         };
 
-        /* ------------------------------------------------------------ 选精灵 */
+        /* ------------------------------------------------------------ 选精灵（多选 + 普通/隐藏切换） */
         const openPokemonModal = () => {
             pokemonSearchQuery.value = '';
             pokemonPage.value = 1;
             showPokemonSearchModal.value = true;
         };
 
-        const selectPokemon = (pet) => {
-            if (pet && pet.name && !form.value.pokemons.includes(pet.name)) {
-                form.value.pokemons.push(pet.name);
+        // 是否已勾选（常规或隐藏都算）
+        const isPokemonPicked = (pet) => {
+            const name = pet && pet.name;
+            if (!name) return false;
+            return form.value.pokemons.includes(name) || form.value.hiddenPokemons.includes(name);
+        };
+
+        // 点击候选：勾选 → 加入常规；再次点击 → 移除（常规/隐藏都移除）
+        const togglePokemonSelect = (pet) => {
+            const name = pet && pet.name;
+            if (!name) return;
+            if (isPokemonPicked(pet)) {
+                form.value.pokemons = form.value.pokemons.filter(n => n !== name);
+                form.value.hiddenPokemons = form.value.hiddenPokemons.filter(n => n !== name);
+            } else {
+                form.value.pokemons.push(name);
             }
-            showPokemonSearchModal.value = false;
+        };
+
+        // 常规 ↔ 隐藏 互相切换
+        const flipPokemonSlot = (name) => {
+            if (form.value.pokemons.includes(name)) {
+                form.value.pokemons = form.value.pokemons.filter(n => n !== name);
+                if (!form.value.hiddenPokemons.includes(name)) form.value.hiddenPokemons.push(name);
+            } else {
+                form.value.hiddenPokemons = form.value.hiddenPokemons.filter(n => n !== name);
+                if (!form.value.pokemons.includes(name)) form.value.pokemons.push(name);
+            }
+        };
+
+        const removePokemon = (name) => {
+            form.value.pokemons = form.value.pokemons.filter(n => n !== name);
+            form.value.hiddenPokemons = form.value.hiddenPokemons.filter(n => n !== name);
+        };
+
+        // 保存特性时，把勾选结果双向同步进精灵档案：
+        //   常规 → 依次落位 pet.ability / pet.ability2（已占则填另一个）
+        //   隐藏 → pet.hiddenAbility
+        //   从勾选中移除的精灵，对应槽位上的该特性会被清掉
+        const syncTraitToPets = (item) => {
+            const name = item.name;
+            const effect = item.effect || '';
+            const normal = new Set(item.pokemons || []);
+            const hidden = new Set(item.hiddenPokemons || []);
+            pets.value.forEach(pet => {
+                if (pet.ability === name && !normal.has(pet.name)) { pet.ability = ''; pet.abilityEffect = ''; }
+                if (pet.ability2 === name && !normal.has(pet.name)) { pet.ability2 = ''; pet.ability2Effect = ''; }
+                if (pet.hiddenAbility === name && !hidden.has(pet.name)) { pet.hiddenAbility = ''; pet.hiddenAbilityEffect = ''; }
+                if (normal.has(pet.name) && pet.ability !== name && pet.ability2 !== name) {
+                    if (!pet.ability) { pet.ability = name; if (!pet.abilityEffect) pet.abilityEffect = effect; }
+                    else { pet.ability2 = name; if (!pet.ability2Effect) pet.ability2Effect = effect; }
+                }
+                if (hidden.has(pet.name) && pet.hiddenAbility !== name) {
+                    pet.hiddenAbility = name;
+                    if (!pet.hiddenAbilityEffect) pet.hiddenAbilityEffect = effect;
+                }
+            });
+            localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+            if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
         };
 
         /* ---------------------------------------------------------------- 同步 */
@@ -355,6 +415,7 @@ createApp({
             confirmDelete,
             openPokemonModal,
             selectPokemon,
+            isPokemonPicked, togglePokemonSelect, flipPokemonSlot, removePokemon,
             syncToGitHub,
             pullFromRepo
         };

@@ -83,8 +83,12 @@
                             </td>
                             <!-- 超过3个精灵则显示省略号 -->
                             <td v-if="visibleCols.includes('pokemons')">
-                                {{ trait.pokemons.slice(0, 3).join(', ') }}
-                                <span v-if="trait.pokemons.length > 3" style="color:#a0aec0;">...</span>
+                                <span class="trait-owner-list">
+                                    <span class="trait-owner-pill" v-for="n in trait.pokemons.slice(0, 2)" :key="n">{{ n }}</span>
+                                    <span class="trait-owner-pill hidden" v-for="n in trait.hiddenPokemons.slice(0, 2)" :key="'h' + n">★{{ n }}</span>
+                                    <span v-if="(trait.pokemons.length + trait.hiddenPokemons.length) > 4" style="color:#a0aec0; font-size:12px;">等 {{ trait.pokemons.length + trait.hiddenPokemons.length }} 只</span>
+                                    <span v-if="!(trait.pokemons.length + trait.hiddenPokemons.length)" style="color:#cbd5e0; font-size:12px;">—</span>
+                                </span>
                             </td>
                             <td v-if="visibleCols.includes('effect')" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ trait.effect }}</td>
                             <td style="text-align: right; white-space: nowrap;">
@@ -122,12 +126,20 @@
                     </div>
                     
                     <div class="form-group full" style="grid-column: span 2;">
-                        <label>拥有该特性的精灵</label>
-                        <div class="input-with-btn">
-                            <input v-model="pokemonsStr" placeholder="逗号分隔，或点击右侧搜索">
-                            <button class="btn btn-outline btn-icon" @click.stop="openPokemonModal">
-                                <i class="fa-solid fa-magnifying-glass"></i> 搜索精灵
-                            </button>
+                        <label>拥有该特性的精灵 <span class="opt">点「隐」可切换为隐藏特性，保存时自动同步到精灵档案</span></label>
+                        <div class="trait-chips">
+                            <span class="trait-chip" v-for="n in form.pokemons" :key="'p' + n">
+                                <i class="fa-solid fa-paw" style="color: #4299e1;"></i>{{ n }}
+                                <button type="button" class="chip-slot-btn" title="切换为隐藏特性" @click="flipPokemonSlot(n)">隐</button>
+                                <i class="fa-solid fa-xmark chip-x" @click="removePokemon(n)"></i>
+                            </span>
+                            <span class="trait-chip is-hidden" v-for="n in form.hiddenPokemons" :key="'h' + n">
+                                <i class="fa-solid fa-star" style="color: #805ad5;"></i>{{ n }}
+                                <button type="button" class="chip-slot-btn" title="切换为常规特性" @click="flipPokemonSlot(n)">普</button>
+                                <i class="fa-solid fa-xmark chip-x" @click="removePokemon(n)"></i>
+                            </span>
+                            <span v-if="!form.pokemons.length && !form.hiddenPokemons.length" class="trait-chip-empty">还没有精灵持有该特性</span>
+                            <button type="button" class="btn btn-outline btn-sm" @click.stop="openPokemonModal"><i class="fa-solid fa-plus"></i> 添加精灵</button>
                         </div>
                     </div>
                     
@@ -141,38 +153,43 @@
         </div>
     </div>
 
-    <!-- 精灵搜索弹窗 -->
+    <!-- 精灵搜索弹窗（多选：点击勾选，加入后可在芯片上切换 普通/隐藏） -->
     <div class="modal-overlay" v-if="showPokemonSearchModal" @vowmon:modal-close="closeModal('pokemon')" style="z-index: 1100;">
         <div class="selection-modal" @click.stop>
             <div class="modal-header">
                 <h3>选择拥有该特性的精灵</h3>
                 <button class="btn-close" @click="showPokemonSearchModal = false"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
+
             <div class="selection-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input v-model="pokemonSearchQuery" placeholder="输入精灵名称搜索..." @input="pokemonPage = 1">
+                <input v-model="pokemonSearchQuery" placeholder="输入精灵名称 / 编号搜索..." @input="pokemonPage = 1">
             </div>
-            
+
             <div class="selection-list">
-                <div 
-                    class="selection-item" 
-                    v-for="pet in paginatedPokemons" 
+                <div
+                    class="selection-item"
+                    v-for="pet in paginatedPokemons"
                     :key="pet.id"
-                    @click="selectPokemon(pet)"
+                    :style="isPokemonPicked(pet) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                    @click="togglePokemonSelect(pet)"
                 >
-                    <div class="item-name">{{ pet.name }}</div>
-                    <div class="item-desc">{{ pet.id }}</div>
+                    <div class="item-name">
+                        <i class="fa-solid" :class="isPokemonPicked(pet) ? 'fa-square-check' : 'fa-square'" :style="isPokemonPicked(pet) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
+                        {{ pet.name }}
+                    </div>
+                    <div class="item-desc">#{{ pet.id }}</div>
                 </div>
                 <div v-if="paginatedPokemons.length === 0" class="empty-state">没有找到相关精灵</div>
             </div>
-            
-            <div class="selection-pagination">
-                <span>共 {{ filteredPokemons.length }} 条</span>
+
+            <div class="selection-pagination" style="justify-content: space-between;">
+                <span>共 {{ filteredPokemons.length }} 只 · 已勾选 <b style="color:#4299e1;">{{ form.pokemons.length + form.hiddenPokemons.length }}</b> 只</span>
                 <div class="page-controls">
                     <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="pokemonPage === 1" @click="pokemonPage--">上一页</button>
                     <span style="font-weight: bold; margin: 0 10px;">{{ pokemonPage }} / {{ Math.ceil(filteredPokemons.length / 10) || 1 }}</span>
                     <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="pokemonPage >= Math.ceil(filteredPokemons.length / 10)" @click="pokemonPage++">下一页</button>
+                    <button class="btn btn-primary" style="padding: 4px 14px; margin-left: 8px;" @click="showPokemonSearchModal = false">完成</button>
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
-VowmonData.ready(['pets'], { fresh: true }).then(function () {
+VowmonData.ready(['pets', 'traits'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -22,6 +22,8 @@ createApp({
             }
         };
         const pets = ref([]);
+        // 特性库（traits-data.json），用于：① 特性候选池 ② 保存精灵时双向同步特性 ↔ 精灵关联
+        const traits = ref([]);
         const showModal = ref(false);
         const isEdit = ref(false);
         const editIndex = ref(-1);
@@ -124,6 +126,12 @@ createApp({
             } else if (typeof allPetsData !== 'undefined') {
                 pets.value = JSON.parse(JSON.stringify(allPetsData));
             }
+            const storedTraits = localStorage.getItem('vowmon_traits_data');
+            if (storedTraits) {
+                try { traits.value = JSON.parse(storedTraits); } catch (e) { traits.value = []; }
+            } else if (typeof allTraitsData !== 'undefined') {
+                traits.value = JSON.parse(JSON.stringify(allTraitsData));
+            }
             const storedConfig = localStorage.getItem('vowmon_sync_config');
             if (storedConfig) {
                 try {
@@ -210,8 +218,11 @@ createApp({
 
         const rawSelectionList = computed(() => {
             if (selectionType.value === 'ability') {
-                // 汇总已有特性候选：特性 1 / 特性 2 / 隐藏特性 都计入
+                // 汇总特性候选：特性库（traits-data）优先，再补精灵档案里的 特性1/特性2/隐藏特性
                 const map = new Map();
+                traits.value.forEach(t => {
+                    if (t && t.name && !map.has(t.name)) map.set(t.name, t.effect || '无说明');
+                });
                 pets.value.forEach(p => {
                     if (p.ability && !map.has(p.ability)) map.set(p.ability, p.abilityEffect || '无说明');
                     if (p.ability2 && !map.has(p.ability2)) map.set(p.ability2, p.ability2Effect || '无说明');
@@ -672,11 +683,77 @@ createApp({
 
             if (isEdit.value) pets.value[editIndex.value] = petData;
             else pets.value.unshift(petData);
-            
+
             saveToLocal();
             // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
             if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
+            // 双向互通：把精灵的特性写回特性库（traits-data）——
+            //   特性1/特性2 → 该特性的 pokemons；隐藏特性 → hiddenPokemons；
+            //   精灵上已删掉的特性会从对应特性条目里移除；特性库里没有的自动创建
+            syncPetTraitsToTraitList(petData);
             showModal.value = false;
+        };
+
+        // 特性 ↔ 精灵 双向同步（精灵编辑器侧）
+        const nextTraitIdLocal = () => {
+            let max = 0;
+            traits.value.forEach(t => {
+                const m = String((t && t.id) || '').trim().match(/^t(\d+)$/);
+                if (m) max = Math.max(max, parseInt(m[1], 10));
+            });
+            return 't' + String(max + 1).padStart(3, '0');
+        };
+
+        const syncPetTraitsToTraitList = (petData) => {
+            const petName = petData.name;
+            if (!petName) return;
+            const normal = [petData.ability, petData.ability2].filter(n => n && String(n).trim());
+            const hidden = (petData.hiddenAbility && String(petData.hiddenAbility).trim()) ? [petData.hiddenAbility] : [];
+            const normalSet = new Set(normal);
+            const hiddenSet = new Set(hidden);
+            let changed = false;
+
+            traits.value.forEach(t => {
+                if (!t || !t.name) return;
+                if (!Array.isArray(t.pokemons)) t.pokemons = [];
+                if (!Array.isArray(t.hiddenPokemons)) t.hiddenPokemons = [];
+                const shouldNormal = normalSet.has(t.name);
+                const shouldHidden = hiddenSet.has(t.name);
+                if (!shouldNormal && !shouldHidden) {
+                    const before = t.pokemons.length + t.hiddenPokemons.length;
+                    t.pokemons = t.pokemons.filter(n => n !== petName);
+                    t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== petName);
+                    if (before !== t.pokemons.length + t.hiddenPokemons.length) changed = true;
+                } else if (shouldHidden) {
+                    if (!t.hiddenPokemons.includes(petName)) { t.hiddenPokemons.push(petName); changed = true; }
+                    if (t.pokemons.includes(petName)) { t.pokemons = t.pokemons.filter(n => n !== petName); changed = true; }
+                } else {
+                    if (!t.pokemons.includes(petName)) { t.pokemons.push(petName); changed = true; }
+                    if (t.hiddenPokemons.includes(petName)) { t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== petName); changed = true; }
+                }
+            });
+
+            // 精灵上填写但特性库里不存在的特性 → 自动创建条目
+            const ensureTrait = (name, effect, isHidden) => {
+                if (!name || traits.value.some(t => t.name === name)) return;
+                traits.value.unshift({
+                    id: nextTraitIdLocal(),
+                    name,
+                    types: Array.isArray(petData.types) ? JSON.parse(JSON.stringify(petData.types)) : [],
+                    pokemons: isHidden ? [] : [petName],
+                    hiddenPokemons: isHidden ? [petName] : [],
+                    effect: effect || ''
+                });
+                changed = true;
+            };
+            ensureTrait(petData.ability, petData.abilityEffect, false);
+            ensureTrait(petData.ability2, petData.ability2Effect, false);
+            ensureTrait(petData.hiddenAbility, petData.hiddenAbilityEffect, true);
+
+            if (changed) {
+                localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
+                if (window.VowmonStore) VowmonStore.save('traits', { traits: traits.value });
+            }
         };
 
         // 删除逻辑：确认弹窗走统一的 VowmonDialog（js/dialog.js + css/dialog.css）
@@ -764,6 +841,15 @@ createApp({
                 pets.value = JSON.parse(JSON.stringify(bag.pets));
                 localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
                 if (window.VowmonStore) VowmonStore.replace('pets', { pets: pets.value });
+                // 顺带刷新特性库（保持精灵 ↔ 特性关联一致）
+                try {
+                    const tbag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'traits-data.json');
+                    if (tbag && Array.isArray(tbag.traits)) {
+                        traits.value = JSON.parse(JSON.stringify(tbag.traits));
+                        localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
+                        if (window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
+                    }
+                } catch (e) { /* traits-data 拉取失败不影响精灵数据 */ }
                 listPage.value = 1;
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + pets.value.length + ' 条精灵数据', 'success', { duration: 3200 });
             } catch (error) {
