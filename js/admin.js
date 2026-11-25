@@ -615,6 +615,7 @@ createApp({
             let ok = 0;
             let fail = 0;
             let bytes = 0;
+            const errors = [];
 
             for (let i = 0; i < files.length; i++) {
                 shinyProgress.value = `处理中 ${i + 1}/${files.length}`;
@@ -625,6 +626,7 @@ createApp({
                     ok++;
                 } catch (err) {
                     console.error('异色图片上传失败', err);
+                    errors.push(err && err.message ? err.message : String(err));
                     fail++;
                 }
             }
@@ -636,9 +638,12 @@ createApp({
             if (ok && !fail) {
                 VowmonDialog.toast(`已上传 ${ok} 张异色图片\n已压缩为 ${config.value.imgSize || 512}px 以内的 PNG（${ImageUtils.formatBytes(bytes)}）`, 'success', { duration: 3600 });
             } else if (ok && fail) {
-                VowmonDialog.toast(`成功 ${ok} 张，失败 ${fail} 张（详见控制台）`, 'warning', { duration: 3600 });
+                VowmonDialog.alert(`成功 ${ok} 张，失败 ${fail} 张。\n\n失败原因：\n${errors.slice(0, 3).join('\n')}`, {
+                    type: 'warning',
+                    title: '部分失败'
+                });
             } else {
-                VowmonDialog.alert('异色图片上传失败，请检查 Token 权限 / 图片仓库名。', {
+                VowmonDialog.alert(errors[0] || '上传失败，请检查 Token 权限 / 图片仓库名。', {
                     type: 'danger',
                     title: '上传失败'
                 });

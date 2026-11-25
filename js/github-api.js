@@ -1,4 +1,21 @@
 class GitHubSync {
+    /** 把 GitHub 的 HTTP 状态码翻译成能直接指导操作的中文提示 */
+    static explainHttpError(res, owner, repo, action) {
+        const act = action || '操作';
+        if (res.status === 401) {
+            return 'Token 无效或已过期（401）。Fine-grained Token 有有效期，请在【同步配置】里换一个新 Token。';
+        }
+        if (res.status === 403) {
+            return '没有权限（403）。请检查 Fine-grained Token 是否授权了 ' + (owner || '目标') + '/' + (repo || '目标仓库') +
+                ' 的 Contents (Read & Write) 权限；若多次操作也可能是触发了 GitHub API 限流，稍后再试。';
+        }
+        if (res.status === 404) {
+            return '仓库不存在或 Token 未授权（404）。请确认仓库名 ' + (owner ? owner + '/' : '') + (repo || '') +
+                ' 拼写正确，且 Token 的 Repository access 包含这个仓库。';
+        }
+        return act + '失败（HTTP ' + res.status + '）。';
+    }
+
     static async getFileSha(token, owner, repo, path) {
         const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
         try {
@@ -13,7 +30,7 @@ class GitHubSync {
                 return data.sha;
             }
             if (res.status === 404) return null;
-            throw new Error('获取文件状态失败，请检查 Token 权限或仓库名');
+            throw new Error(this.explainHttpError(res, owner, repo, '读取文件状态'));
         } catch (e) {
             throw e;
         }
@@ -42,11 +59,12 @@ class GitHubSync {
         });
 
         if (!res.ok) {
-            const err = await res.json();
-            if (res.status === 403 || res.status === 401) {
-                throw new Error('没有权限。请检查 Fine-grained Token 是否授权了该仓库的 Contents (Read & Write) 权限。');
+            let ghMsg = '';
+            try { ghMsg = (await res.json()).message || ''; } catch (e) { /* 响应不是 JSON 时忽略 */ }
+            if (res.status === 401 || res.status === 403 || res.status === 404) {
+                throw new Error(this.explainHttpError(res, owner, repo, '上传'));
             }
-            throw new Error(err.message || '上传失败');
+            throw new Error('上传失败（HTTP ' + res.status + (ghMsg ? '：' + ghMsg : '') + '）');
         }
         return true;
     }
