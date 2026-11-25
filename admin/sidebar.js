@@ -24,7 +24,13 @@
         { href: 'index.html?tab=settings', icon: 'fa-solid fa-gear', label: '同步配置', tab: 'settings' }
     ];
 
-    var page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    // /admin（目录本身、无尾斜杠）也要当作 index 页：直接取 pop 会得到 'admin'，补成 '/' 再取
+    var path = location.pathname;
+    if (/\/admin$/.test(path)) path += '/';
+    var page = (path.split('/').pop() || 'index.html').toLowerCase();
+    // CF Pages 会把 /admin/xxx.html 308 成无扩展名的 /admin/xxx，
+    // 这里补回 .html 再比对，否则所有非 index 页都丢失选中态
+    if (page && page.indexOf('.') === -1) page += '.html';
     var onIndex = page === 'index.html' || page === '';
     var indexTab = new URLSearchParams(location.search).get('tab') || 'sprites';
     if (!onIndex) indexTab = null;
@@ -42,10 +48,13 @@
                 '<i class="' + item.icon + '"></i> ' + item.label + '</a>';
         }).join('');
 
-        /* 精灵管理页：Tab 项拦截点击，派发事件给 Vue（不刷新页面） */
+        /* 精灵管理页：Tab 项拦截点击，派发事件给 Vue（不刷新页面）。
+           注意：只在 index 页上拦截；在其他后台页点击要放行，
+           让浏览器正常跳转到 index.html?tab=xxx，否则永远跳不过去 */
         mount.addEventListener('click', function (e) {
             var a = e.target.closest('a[data-tab]');
             if (!a || !a.getAttribute('data-tab')) return;
+            if (!onIndex) return;   // 非 index 页：放行默认跳转
             e.preventDefault();
             var tab = a.getAttribute('data-tab');
             setActive(tab);
