@@ -48,25 +48,36 @@ class GitHubSync {
         const body = { message, content: base64Content };
         if (sha) body.sha = sha;
 
-        const res = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-
-        if (!res.ok) {
-            let ghMsg = '';
-            try { ghMsg = (await res.json()).message || ''; } catch (e) { /* 响应不是 JSON 时忽略 */ }
-            if (res.status === 401 || res.status === 403 || res.status === 404) {
-                throw new Error(this.explainHttpError(res, owner, repo, '上传'));
-            }
-            throw new Error('上传失败（HTTP ' + res.status + (ghMsg ? '：' + ghMsg : '') + '）');
+        // GitHub 的 5xx 大多是服务器瞬时错误，自动重试 2 次（间隔递增），别直接让用户失败
+        const RETRY_DELAYS = [800, 1600];
+        let res = null;
+        let ghMsg = '';
+        for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+            if (attempt > 0) await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt - 1]));
+            res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) return true;
+            try { ghMsg = (await res.json()).message || ''; } catch (e) { ghMsg = ''; }
+            if (res.status < 500) break;   // 4xx 是确定性错误，重试没意义
         }
-        return true;
+
+        if (res.status === 401 || res.status === 403 || res.status === 404) {
+            throw new Error(this.explainHttpError(res, owner, repo, '上传'));
+        }
+        if (res.status === 409) {
+            throw new Error('远端文件刚被其他操作修改过（409）。刷新页面后重新同步一次即可。');
+        }
+        if (res.status >= 500) {
+            throw new Error('GitHub 服务器暂时出错（HTTP ' + res.status + (ghMsg ? '：' + ghMsg : '') + '），已自动重试仍失败。请等一两分钟再同步一次。');
+        }
+        throw new Error('上传失败（HTTP ' + res.status + (ghMsg ? '：' + ghMsg : '') + '）');
     }
 
     /**
