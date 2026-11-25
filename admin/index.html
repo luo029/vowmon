@@ -18,7 +18,40 @@
         .tax-cell label { display: block; font-size: 12px; font-weight: 900; color: #4a5568; margin-bottom: 5px; text-align: center; }
         .tax-cell input { width: 100%; padding: 8px 6px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; text-align: center; background: #fbfdff; }
         .tax-cell input:focus { border-color: #4299e1; box-shadow: 0 0 0 2px rgba(66,153,225,.12); }
-        .realm-edit-ico { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 11px; color: #fff; font-size: 16px; flex-shrink: 0; box-shadow: 0 3px 8px rgba(45,55,72,.18); }
+        /* —— 天地图鉴 Tab —— */
+        .realm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 18px; }
+        .realm-card { background: #fff; border: 1px solid #e8eef4; border-radius: 16px; padding: 18px 18px 16px; box-shadow: 0 1px 3px rgba(45,55,72,.05); display: flex; flex-direction: column; gap: 12px; transition: box-shadow .2s; }
+        .realm-card:hover { box-shadow: 0 6px 18px rgba(45,55,72,.09); }
+        .rc-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed #e8eef4; }
+        .rc-ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 13px; color: #fff; font-size: 19px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); }
+        .rc-name { flex: 1; min-width: 0; border: 1px solid transparent; border-radius: 10px; background: #f7fafc; padding: 9px 14px; font-size: 16px; font-weight: 900; font-family: inherit; color: #2d3748; outline: none; transition: all .15s; }
+        .rc-name:hover { border-color: #dbe4ec; }
+        .rc-name:focus { background: #fff; border-color: var(--rc, #4299e1); box-shadow: 0 0 0 3px rgba(66,153,225,.13); }
+        .rc-count { flex-shrink: 0; font-size: 12.5px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 5px 13px; white-space: nowrap; }
+        .rc-desc { width: 100%; min-height: 76px; font-size: 13.5px; line-height: 1.7; }
+        .rc-members { background: #f8fafc; border: 1px solid #edf2f7; border-radius: 12px; padding: 12px; }
+        .rc-m-title { font-size: 12.5px; font-weight: 900; color: #4a5568; margin-bottom: 9px; display: flex; align-items: center; gap: 6px; }
+        .rc-m-title i { color: var(--rc, #4299e1); }
+        .rc-m-title small { font-weight: normal; color: #a0aec0; font-size: 11.5px; }
+        .rc-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+        .rc-chip { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 4px 11px 4px 5px; font-size: 12.5px; font-weight: 700; color: #2d3748; box-shadow: 0 1px 2px rgba(45,55,72,.06); }
+        .rc-chip img { width: 24px; height: 24px; object-fit: contain; background: #f4f7f9; border-radius: 50%; padding: 1px; }
+        .rc-chip .rc-x { color: #cbd5e0; cursor: pointer; font-size: 12px; transition: color .15s; padding: 2px; }
+        .rc-chip .rc-x:hover { color: #e53e3e; }
+        .rc-empty { font-size: 12px; color: #cbd5e0; font-weight: 700; padding: 4px 0; }
+        .rc-add { position: relative; display: flex; align-items: center; }
+        .rc-add > i { position: absolute; left: 11px; color: #a0aec0; font-size: 13px; pointer-events: none; }
+        .rc-add input { width: 100%; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; padding: 9px 12px 9px 32px; font-size: 13px; font-family: inherit; color: #2d3748; outline: none; transition: border-color .15s, box-shadow .15s; }
+        .rc-add input:focus { border-color: var(--rc, #4299e1); box-shadow: 0 0 0 3px rgba(66,153,225,.13); }
+        .rc-add-list { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 12px 30px rgba(45,55,72,.16); overflow: hidden; max-height: 240px; overflow-y: auto; }
+        .rc-add-item { display: flex; align-items: center; gap: 10px; padding: 8px 13px; cursor: pointer; font-size: 13px; color: #2d3748; transition: background .12s; }
+        .rc-add-item:hover { background: #f0f7ff; }
+        .rc-add-item img { width: 28px; height: 28px; object-fit: contain; background: #f4f7f9; border-radius: 8px; padding: 1px; }
+        .rc-add-item .rc-add-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rc-add-item .rc-add-name b { color: #a0aec0; margin-right: 6px; }
+        .rc-add-item > i { color: #38a169; }
+        .realm-actions { display: flex; gap: 10px; margin-top: 6px; }
+        @media (max-width: 900px) { .realm-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -142,36 +175,56 @@
                 </div>
             </div>
 
-            <!-- 天地图鉴 Tab：类别名称与说明自定义 -->
+            <!-- 天地图鉴 Tab：类别名称/说明自定义 + 成员管理 -->
             <div v-if="currentTab === 'realm'" class="settings-layout">
                 <div class="settings-hero">
                     <div class="settings-hero-icon" style="background: linear-gradient(135deg, #d4a017, #b678e0);"><i class="fa-solid fa-mountain-sun"></i></div>
                     <div class="settings-hero-text">
                         <h2>天地图鉴</h2>
-                        <p>四个类别的名称与说明都在这里自定义，改完保存前台即刻生效，无需动代码。类别对应的精灵在【精灵管理 → 编辑 → 天地图鉴】里勾选。</p>
+                        <p>类别名称、说明与收录的精灵都在这里维护：改完点「保存」前台即刻生效；收录的精灵增删后即时生效，精灵数据记得一键同步。</p>
                     </div>
                 </div>
 
-                <div class="settings-card" v-for="r in REALM_KEYS" :key="r.key">
-                    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-                        <span class="realm-edit-ico" :style="{ background: r.color }"><i :class="r.icon"></i></span>
-                        <div>
-                            <b style="font-size:15px; color:#2d3748;">{{ realmLabels[r.key] || r.key }}</b>
-                            <div style="font-size:12px; color:#a0aec0; margin-top:2px;">{{ r.tip }}</div>
+                <div class="realm-grid">
+                    <div class="realm-card" v-for="r in REALM_KEYS" :key="r.key">
+                        <!-- 头部：图标 + 名称输入 + 数量 -->
+                        <div class="rc-head" :style="{ '--rc': r.color }">
+                            <span class="rc-ico" :style="{ background: r.color }"><i :class="r.icon"></i></span>
+                            <input class="rc-name" v-model="realmLabels[r.key]" placeholder="类别名称">
+                            <span class="rc-count font-num">{{ realmMembers(r.key).length }} 只</span>
+                        </div>
+
+                        <!-- 说明 -->
+                        <textarea class="custom-textarea rc-desc" v-model="realmDescs[r.key]" rows="3" placeholder="类别说明（展示在该分组标题下方）"></textarea>
+
+                        <!-- 成员管理 -->
+                        <div class="rc-members">
+                            <div class="rc-m-title"><i class="fa-solid fa-paw"></i> 收录精灵 <small>搜索添加 · 点 × 移除</small></div>
+                            <div class="rc-chips">
+                                <span class="rc-chip" v-for="v in realmMembers(r.key)" :key="v.id" :title="v.id">
+                                    <img :src="getThumbUrl(v.image)" alt="" loading="lazy" @error="hideImgOnError">
+                                    <span class="rc-chip-name">{{ v.name }}</span>
+                                    <i class="fa-solid fa-xmark rc-x" @click="removeRealmVow(r.key, v)"></i>
+                                </span>
+                                <span v-if="!realmMembers(r.key).length" class="rc-empty">还没有收录精灵</span>
+                            </div>
+                            <div class="rc-add">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input v-model="realmSearch[r.key]" placeholder="搜索名称 / 编号，回车外的点击添加…">
+                                <div class="rc-add-list" v-if="realmSearchResults(r.key).length">
+                                    <div class="rc-add-item" v-for="v in realmSearchResults(r.key)" :key="v.id" @click="addRealmVow(r.key, v)">
+                                        <img :src="getThumbUrl(v.image)" alt="" loading="lazy" @error="hideImgOnError">
+                                        <span class="rc-add-name"><b class="font-num">{{ v.id }}</b> {{ v.name }}</span>
+                                        <i class="fa-solid fa-circle-plus"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>类别名称</label>
-                        <input v-model="realmLabels[r.key]" :placeholder="'如：' + r.tip.slice(0, 12)">
-                    </div>
-                    <div class="form-group">
-                        <label>类别说明（展示在该分组标题下方）</label>
-                        <textarea v-model="realmDescs[r.key]" rows="3" style="width:100%; resize:vertical;"></textarea>
-                    </div>
                 </div>
 
-                <div style="display:flex; gap:10px; margin-top:4px;">
-                    <button class="btn btn-primary" @click="saveRealm" :disabled="isRealmSyncing"><i class="fa-solid fa-floppy-disk"></i> 保存（前台即刻生效）</button>
+                <div class="realm-actions">
+                    <button class="btn btn-primary" @click="saveRealm" :disabled="isRealmSyncing"><i class="fa-solid fa-floppy-disk"></i> 保存名称与说明</button>
                     <button class="btn btn-outline" @click="syncRealm" :disabled="isRealmSyncing">
                         <i class="fa-solid fa-cloud-arrow-up"></i> {{ isRealmSyncing ? '同步中…' : '一键同步到数据仓库' }}
                     </button>
@@ -658,6 +711,6 @@
 <script src="../js/image-utils.js?v=20261126s"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/admin.js?v=20261126w"></script>
+<script src="../js/admin.js?v=20261126x"></script>
 </body>
 </html>

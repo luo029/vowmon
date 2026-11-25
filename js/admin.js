@@ -442,10 +442,10 @@ createApp({
 
         /* 天地图鉴类别（天地图鉴页按此分组展示）：传说 / 梦幻 / 初始 / 晚成 */
         const REALM_META = [
-            { key: 'legendary', label: '传说精灵', icon: 'fa-solid fa-crown', color: '#d4a017' },
-            { key: 'mythical',  label: '梦幻精灵', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0' },
-            { key: 'starter',   label: '初始精灵', icon: 'fa-solid fa-seedling', color: '#48bb78' },
-            { key: 'late',      label: '晚成精灵', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
+            { key: 'legendary', label: '权柄精灵', icon: 'fa-solid fa-crown', color: '#d4a017' },
+            { key: 'mythical',  label: '遥世精灵', icon: 'fa-solid fa-cloud-moon', color: '#b678e0' },
+            { key: 'starter',   label: '伙伴精灵', icon: 'fa-solid fa-seedling', color: '#48bb78' },
+            { key: 'late',      label: '晚熟精灵', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
         ];
         const toggleRealm = (key) => {
             if (!Array.isArray(form.realmTags)) form.realmTags = [];
@@ -837,10 +837,10 @@ createApp({
         // 同步到多个仓库
         /* ———— 天地图鉴 Tab：四个类别的中文名与说明可自定义（存数据仓库 realm-data.json） ———— */
         const REALM_KEYS = [
-            { key: 'legendary', icon: 'fa-solid fa-crown', color: '#d4a017', tip: '族尊之上执掌权柄的精灵' },
-            { key: 'mythical', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0', tip: '幻兽' },
-            { key: 'starter', icon: 'fa-solid fa-seedling', color: '#48bb78', tip: '最初的搭档' },
-            { key: 'late', icon: 'fa-solid fa-hourglass-half', color: '#ed8936', tip: '准传说（最终种族值合计 600）' }
+            { key: 'legendary', icon: 'fa-solid fa-crown', color: '#d4a017' },
+            { key: 'mythical', icon: 'fa-solid fa-cloud-moon', color: '#b678e0' },
+            { key: 'starter', icon: 'fa-solid fa-seedling', color: '#48bb78' },
+            { key: 'late', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
         ];
         const DEFT_REALM_LABELS = { legendary: '权柄精灵', mythical: '遥世精灵', starter: '伙伴精灵', late: '晚熟精灵' };
         const DEFT_REALM_DESCS = {
@@ -874,6 +874,39 @@ createApp({
             if (window.VowmonStore) VowmonStore.save('realm', { labels: realmLabels.value, descs: realmDescs.value });
             VowmonDialog.toast('天地图鉴配置已保存，前台即刻生效；记得一键同步进仓库', 'success');
         };
+
+        /* ———— 天地图鉴 Tab 内直接管理类别成员（添加 / 移除精灵的 realmTags） ———— */
+        const realmSearch = ref({});
+        const realmMembers = (key) => vows.value.filter(v => Array.isArray(v.realmTags) && v.realmTags.includes(key));
+        const realmSearchResults = (key) => {
+            const q = String(realmSearch.value[key] || '').trim().toLowerCase();
+            if (!q) return [];
+            const members = realmMembers(key);
+            return vows.value
+                .filter(v => !members.includes(v))
+                .filter(v => String(v.name || '').toLowerCase().includes(q) || String(v.id || '').toLowerCase().includes(q))
+                .slice(0, 8);
+        };
+        const persistVowsQuick = () => {
+            saveToLocal();
+            // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
+            if (window.VowmonStore) VowmonStore.save('vows', { vows: vows.value });
+        };
+        const addRealmVow = (key, vow) => {
+            if (!vow) return;
+            if (!Array.isArray(vow.realmTags)) vow.realmTags = [];
+            if (!vow.realmTags.includes(key)) vow.realmTags.push(key);
+            realmSearch.value[key] = '';
+            persistVowsQuick();
+            VowmonDialog.toast('已加入「' + (realmLabels.value[key] || key) + '」', 'success', { duration: 1600 });
+        };
+        const removeRealmVow = (key, vow) => {
+            if (!vow || !Array.isArray(vow.realmTags)) return;
+            vow.realmTags = vow.realmTags.filter(t => t !== key);
+            persistVowsQuick();
+            VowmonDialog.toast('已移出「' + (realmLabels.value[key] || key) + '」', 'info', { duration: 1600 });
+        };
+        const hideImgOnError = (e) => { if (e && e.target) e.target.style.display = 'none'; };
         // 天地图鉴配置同步到数据仓库
         const syncRealm = async () => {
             if (!config.value.token || !config.value.owner || !config.value.dataRepos) {
@@ -992,6 +1025,7 @@ createApp({
             currentTab, switchTab, vows, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
             imgSizeOptions, REALM_META, toggleRealm,
             REALM_KEYS, realmLabels, realmDescs, isRealmSyncing, saveRealm, syncRealm,
+            realmSearch, realmMembers, realmSearchResults, addRealmVow, removeRealmVow, hideImgOnError,
             showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
             shinyFileInput, shinyInput, isShinyUploading, shinyProgress,

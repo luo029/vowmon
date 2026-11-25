@@ -102,10 +102,7 @@
         <section class="realm-section" v-for="g in realms" :key="g.key" :id="g.key">
             <div class="realm-head">
                 <div class="realm-ico" :style="{ background: g.color }"><i :class="g.icon"></i></div>
-                <div>
-                    <h2>{{ g.label }}</h2>
-                    <div class="en">{{ g.en }}</div>
-                </div>
+                <h2>{{ g.label }}</h2>
                 <span class="cnt font-num">{{ groupOf(g.key).length }} 只</span>
             </div>
             <div class="realm-desc" :style="{ borderLeftColor: g.color }">{{ g.desc }}</div>
@@ -162,10 +159,10 @@ VowmonData.ready(['vows']).then(function () {
                 late: '成长节奏更为缓慢的精灵。前期实力平平，需要长久陪伴与磨砺，待到后期才能解锁潜藏的力量。'
             };
             const REALM_META = [
-                { key: 'legendary', en: 'Authority', icon: 'fa-solid fa-crown', color: '#d4a017' },
-                { key: 'mythical', en: 'Farrealm', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0' },
-                { key: 'starter', en: 'Partner', icon: 'fa-solid fa-seedling', color: '#48bb78' },
-                { key: 'late', en: 'Late-Bloomer', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
+                { key: 'legendary', icon: 'fa-solid fa-crown', color: '#d4a017' },
+                { key: 'mythical', icon: 'fa-solid fa-cloud-moon', color: '#b678e0' },
+                { key: 'starter', icon: 'fa-solid fa-seedling', color: '#48bb78' },
+                { key: 'late', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
             ];
             const realmLabels = ref(Object.assign({}, DEFT_LABELS));
             const realmDescs = ref(Object.assign({}, DEFT_DESCS));
