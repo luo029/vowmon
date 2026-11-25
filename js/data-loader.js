@@ -309,9 +309,11 @@
     async function reconcile(key) {
         const meta = FILES[key];
         if (!meta) return null;
+        // 必须回源拉取（带 ?_=时间戳）：数据代理有 60 秒边缘缓存，
+        // 若用普通请求，刚同步完的新数据会被缓存里的旧值「对账」覆盖回去
         let remote;
         try {
-            remote = await fetchRemote(key, false);
+            remote = await fetchRemote(key, true);
         } catch (e) {
             return null;   // 云端取不到就保持现状，别把页面搞空
         }

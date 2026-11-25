@@ -351,9 +351,10 @@ const app = createApp({
             return true;
         };
 
-        // 一键同步：把 lore-data.json 推到数据仓库（先退出可视化编辑态）
+        // 一键同步：把 lore-data.json 推到数据仓库
+        // 正在编辑时先自动保存当前块，而不是静默撤销（否则改了等于白改，还误以为同步了）
         const syncToGitHub = async () => {
-            cancelEdit();
+            if (editing) saveEdit();
             if (!ensureConfig()) return;
             const cfg = config.value;
             const repos = targetRepos();
