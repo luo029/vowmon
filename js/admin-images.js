@@ -172,7 +172,9 @@ createApp({
                         name: f.name,
                         sha: f.sha,
                         size: f.size,
-                        url: fileUrl(r.repo, f.path),
+                        // 缩略图 URL 带上文件 sha 作缓存戳：同名替换上传后 sha 会变，
+                        // 新 URL 必然绕开 CF/浏览器缓存，刷新仓库立刻就能看到新图
+                        url: fileUrl(r.repo, f.path) + (f.sha ? '?v=' + String(f.sha).slice(0, 8) : ''),
                         usedBy: []
                     });
                     st.count++;

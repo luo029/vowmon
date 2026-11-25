@@ -23,6 +23,7 @@
             <button class="btn btn-primary" @click="loadAll" :disabled="isLoading">
                 <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isLoading }"></i> {{ isLoading ? '加载中...' : '刷新仓库' }}
             </button>
+            <span style="font-size: 12px; color: #a0aec0; font-weight: 600;" title="精灵管理里替换上传是即时上传，无需再同步；同名替换后文件清单不变，看缩略图即可确认新图（缩略图带版本戳不走旧缓存）">同名替换不改变文件清单，看缩略图确认</span>
         </div>
     </header>
 
@@ -336,7 +337,7 @@
 <script src="../js/image-utils.js?v=20261126s"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/admin-images.js?v=20261126s"></script>
+<script src="../js/admin-images.js?v=20261127a"></script>
 <script src="sidebar.js?v=20261127a"></script>
 </body>
 </html>
