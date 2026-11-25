@@ -106,8 +106,12 @@ createApp({
         // 图片压缩尺寸下拉项（统一由 js/image-utils.js 提供，避免两处写死）
         const imgSizeOptions = (window.ImageUtils && ImageUtils.SIZE_OPTIONS) || [256, 512, 768, 1024];
 
+        /* 阶数 → 位阶下限（最低标准线）：一阶=初灵、二阶=升灵、三阶=族尊；配色与御兽精灵八阶一致 */
+        const STAGE_RANK = { '一阶': { name: '初灵', color: '#8bc34a' }, '二阶': { name: '升灵', color: '#26a69a' }, '三阶': { name: '族尊', color: '#5c6bc0' } };
+
         const defaultForm = () => ({
-            id: '', name: '', types: [], stage: '一阶', evoPos: '初始', form: '主形态', rank: '',
+            /* 阶级（rank）已移除手工输入：位阶由阶数推导（一阶=初灵、二阶=升灵、三阶=族尊），是御兽精灵个体的属性 */
+            id: '', name: '', types: [], stage: '一阶', evoPos: '初始', form: '主形态',
             ability: '', abilityEffect: '',
             ability2: '', ability2Effect: '',           // 第二特性（多特性随机触发其一）
             hiddenAbility: '', hiddenAbilityEffect: '', // 隐藏特性（不填默认为空）
@@ -904,7 +908,7 @@ createApp({
 
         return {
             currentTab, switchTab, vows, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
-            imgSizeOptions,
+            imgSizeOptions, STAGE_RANK,
             showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
             shinyFileInput, shinyInput, isShinyUploading, shinyProgress,

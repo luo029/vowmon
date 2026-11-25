@@ -107,7 +107,7 @@
                                         </span>
                                     </div>
                                 </td>
-                                <td v-if="visibleCols.includes('stage')">{{ vow.stage }}</td>
+                                <td v-if="visibleCols.includes('stage')">{{ vow.stage }}<span :style="{ color: STAGE_RANK[vow.stage]?.color || '#a0aec0', fontWeight: 800, fontSize: '11px', marginLeft: '5px' }">{{ STAGE_RANK[vow.stage]?.name }}线</span></td>
                                 <td v-if="visibleCols.includes('form')">{{ vow.form }}</td>
                                 <td v-if="visibleCols.includes('ability')">{{ [vow.ability, vow.ability2].filter(Boolean).join(' / ') }}<span v-if="vow.hiddenAbility" style="color:#805ad5;"> ★{{ vow.hiddenAbility }}</span></td>
                                 <td v-if="visibleCols.includes('hp')">{{ vow.stats?.hp || 0 }}</td>
@@ -407,10 +407,6 @@
                             </div>
                             <p class="hint">双向不用都填：在二阶精灵上填「进化自」即可，对应的一阶精灵会自动关联；进化链支持分支（如多种进化方向）。</p>
                         </div>
-                        <div class="form-group">
-                            <label>阶级 (Rank)</label>
-                            <input v-model="form.rank" placeholder="如：初灵">
-                        </div>
                     </div>
                 </div>
 
@@ -605,6 +601,6 @@
 <script src="../js/image-utils.js?v=20261126s"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/admin.js?v=20261126s"></script>
+<script src="../js/admin.js?v=20261126t"></script>
 </body>
 </html>

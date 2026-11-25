@@ -116,6 +116,7 @@
         .info-box { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 12px 14px; }
         .info-box .lbl { font-size: 11px; font-weight: 800; color: #a0aec0; margin-bottom: 4px; }
         .info-box .val { font-size: 14px; font-weight: 800; color: #2d3748; word-break: break-all; }
+        .info-box .rank-line { display: inline-block; margin-left: 4px; padding: 1px 9px; border-radius: 999px; font-size: 11px; font-weight: 900; color: #fff; vertical-align: 1px; }
         .origin-note { margin-top: 10px; font-size: 11.5px; color: #a0aec0; line-height: 1.6; }
         .origin-note b { color: #718096; }
 
@@ -282,7 +283,7 @@
                 <div class="info-card">
                     <h2><i class="fa-solid fa-circle-info"></i> 资料</h2>
                     <div class="info-grid">
-                        <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }}</div></div>
+                        <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }} <span class="rank-line" :style="{ background: stageRank.color }">{{ stageRank.name }}线</span></div></div>
                         <div class="info-box" v-if="vow.form"><div class="lbl">形态</div><div class="val">{{ vow.form }}</div></div>
                         <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
                         <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
@@ -488,6 +489,10 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
             const heightText = computed(() => vow.value ? fmtNum(vow.value.height, 'm') : '');
             const weightText = computed(() => vow.value ? fmtNum(vow.value.weight, 'kg') : '');
 
+            /* 位阶下限由阶数推导（最低标准线）：一阶=初灵、二阶=升灵、三阶=族尊；配色与御兽精灵八阶一致 */
+            const STAGE_RANK = { '一阶': { name: '初灵', color: '#8bc34a' }, '二阶': { name: '升灵', color: '#26a69a' }, '三阶': { name: '族尊', color: '#5c6bc0' } };
+            const stageRank = computed(() => (vow.value && STAGE_RANK[vow.value.stage]) || { name: '', color: 'transparent' });
+
             /* ---------------- 特性 ---------------- */
             const abilityRows = computed(() => {
                 if (!vow.value) return [];
@@ -643,7 +648,7 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
                 getImgUrl, getTypeColor, getTypeIcon,
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
-                heightText, weightText,
+                heightText, weightText, stageRank,
                 abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows,
                 attackGroups, defendGroups, exportCard
             };

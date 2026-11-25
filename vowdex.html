@@ -174,13 +174,13 @@
                 <div class="filter-label">精灵阶数</div>
                 <div class="filter-options">
                     <div class="filter-btn" :class="{active: filters.stage.includes('一阶')}" @click="toggleFilter('stage', '一阶')">
-                        一阶 <span class="count-badge font-num">{{ stageCounts['一阶'] || 0 }}</span>
+                        一阶 · 初灵线 <span class="count-badge font-num">{{ stageCounts['一阶'] || 0 }}</span>
                     </div>
                     <div class="filter-btn" :class="{active: filters.stage.includes('二阶')}" @click="toggleFilter('stage', '二阶')">
-                        二阶 <span class="count-badge font-num">{{ stageCounts['二阶'] || 0 }}</span>
+                        二阶 · 升灵线 <span class="count-badge font-num">{{ stageCounts['二阶'] || 0 }}</span>
                     </div>
                     <div class="filter-btn" :class="{active: filters.stage.includes('三阶')}" @click="toggleFilter('stage', '三阶')">
-                        三阶 <span class="count-badge font-num">{{ stageCounts['三阶'] || 0 }}</span>
+                        三阶 · 族尊线 <span class="count-badge font-num">{{ stageCounts['三阶'] || 0 }}</span>
                     </div>
                 </div>
             </div>
