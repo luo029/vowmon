@@ -86,6 +86,7 @@
                 {
                     title: '查询与计算',
                     links: [
+                        { label: '⚔️ 精灵对战', href: 'battle/' },
                         { label: '⚖️ 属性克制计算器', href: 'reference/calculator.html' },
                         { label: '🎯 技能打击面计算器', href: 'reference/coverage.html' }
                     ]
@@ -122,6 +123,7 @@
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',
+        'battle.html': 'tools',
         'admin.html': 'tools',
         'admin-items.html': 'tools',
         'admin-images.html': 'tools'

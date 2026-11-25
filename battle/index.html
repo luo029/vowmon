@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>精灵对战模拟 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127e">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <script src="../js/navbar.js?v=20261127f" defer></script>
+    <script src="../js/type-config.js?v=20261126s"></script>
+    <script src="../js/type-chart.js?v=20261126s"></script>
+    <script src="../js/site-config.js?v=20261126s"></script>
+    <script src="../js/data-loader.js?v=20261126w"></script>
+    <script src="../js/battle-engine.js?v=20261126a"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2d3748; margin: 0; }
+        .battle-page { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+        .page-title { font-size: 22px; font-weight: 900; margin: 6px 0 4px; }
+        .page-sub { font-size: 13px; color: #718096; margin-bottom: 18px; }
+
+        /* ---- 编队区 ---- */
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .setup-card { background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 4px 18px rgba(45,55,72,.08); border-top: 4px solid #e53e3e; }
+        .setup-card.side-b { border-top-color: #3182ce; }
+        .setup-card h3 { margin: 0 0 10px; font-size: 15px; }
+        .seg-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .seg-opt { flex: 1; padding: 8px 0; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; color: #4a5568; }
+        .seg-opt.active { border-color: #e53e3e; color: #e53e3e; background: #fff5f5; }
+        .side-b .seg-opt.active { border-color: #3182ce; color: #3182ce; background: #ebf8ff; }
+        .picker-wrap { position: relative; }
+        .picker-input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; }
+        .picker-input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .picker-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.15); max-height: 240px; overflow-y: auto; }
+        .picker-item { padding: 9px 14px; font-size: 13.5px; cursor: pointer; display: flex; justify-content: space-between; }
+        .picker-item:hover { background: #f7fafc; }
+        .picker-item small { color: #a0aec0; }
+        .picked-card { margin-top: 12px; background: #f7fafc; border-radius: 12px; padding: 12px; }
+        .picked-top { display: flex; gap: 12px; align-items: center; }
+        .picked-img { width: 64px; height: 64px; object-fit: contain; background: #edf2f7; border-radius: 12px; }
+        .picked-name { font-weight: 900; font-size: 16px; }
+        .picked-sub { font-size: 12px; color: #718096; margin-top: 2px; }
+        .lvl-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+        .lvl-input { width: 70px; padding: 5px 8px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-weight: 700; }
+        .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; }
+        .stat-cell { background: #fff; border-radius: 8px; text-align: center; padding: 6px 2px; }
+        .stat-cell b { display: block; font-size: 13px; }
+        .stat-cell span { font-size: 10px; color: #a0aec0; }
+        .type-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; color: #fff; font-size: 11px; font-weight: 700; margin-right: 4px; }
+        .skill-preview { margin-top: 10px; font-size: 12px; color: #4a5568; line-height: 1.9; }
+        .skill-preview em { font-style: normal; background: #edf2f7; border-radius: 6px; padding: 1px 7px; margin-right: 4px; white-space: nowrap; display: inline-block; }
+
+        /* ---- 开战按钮 ---- */
+        .start-row { text-align: center; margin: 18px 0 6px; }
+        .btn-start { padding: 12px 52px; border: 0; border-radius: 999px; background: linear-gradient(135deg,#e53e3e,#3182ce); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(49,130,206,.35); }
+        .btn-start:disabled { opacity: .45; cursor: not-allowed; }
+        .btn-ghost { margin-left: 10px; padding: 12px 22px; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-weight: 700; color: #4a5568; cursor: pointer; }
+
+        /* ---- 对战区 ---- */
+        .arena { display: none; margin-top: 18px; background: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 4px 18px rgba(45,55,72,.08); }
+        .arena.show { display: block; }
+        .arena-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }
+        .fighter-panel { background: #f7fafc; border-radius: 14px; padding: 12px; position: relative; overflow: hidden; }
+        .fighter-panel.side-b { text-align: right; }
+        .fp-name { font-weight: 900; font-size: 16px; }
+        .fp-types { margin: 4px 0; }
+        .hp-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 14px; overflow: hidden; margin: 8px 0 4px; }
+        .hp-bar { height: 100%; border-radius: 999px; transition: width .5s ease, background .3s; }
+        .hp-num { font-size: 12px; color: #718096; font-weight: 700; }
+        .fp-img { width: 120px; height: 120px; object-fit: contain; transition: transform .2s; }
+        .fighter-panel.hit .fp-img { animation: hit-shake .4s; }
+        @keyframes hit-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+        .dmg-float { position: absolute; top: 30%; font-size: 26px; font-weight: 900; color: #e53e3e; text-shadow: 0 2px 6px rgba(0,0,0,.15); animation: float-up 1s ease-out forwards; pointer-events: none; }
+        .dmg-float.heal { color: #38a169; }
+        .fighter-panel.side-a .dmg-float { left: 40%; }
+        .fighter-panel.side-b .dmg-float { right: 40%; }
+        @keyframes float-up { 0%{opacity:0; transform:translateY(10px)} 25%{opacity:1} 100%{opacity:0; transform:translateY(-40px)} }
+        body.no-anim .dmg-float, body.no-anim .fighter-panel.hit .fp-img { animation: none; }
+        body.no-anim .hp-bar { transition: none; }
+
+        /* 天气 / 场地 */
+        .field-panel { text-align: center; min-width: 150px; }
+        .field-chip { display: inline-block; padding: 8px 14px; border-radius: 12px; font-weight: 900; font-size: 14px; color: #fff; margin-bottom: 6px; }
+        .field-desc { font-size: 11px; color: #718096; max-width: 160px; margin: 0 auto; line-height: 1.5; }
+        .field-btns { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+        .field-btn { border: 1.2px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 11px; padding: 4px 7px; cursor: pointer; color: #4a5568; }
+        .field-btn:hover { border-color: #4299e1; color: #4299e1; }
+
+        /* 出招区 */
+        .moves-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+        .moves-box { background: #f7fafc; border-radius: 14px; padding: 12px; }
+        .moves-box h4 { margin: 0 0 8px; font-size: 13px; color: #4a5568; }
+        .move-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+        .move-btn { padding: 8px 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; font-weight: 700; font-size: 13px; cursor: pointer; color: #2d3748; display: flex; align-items: center; gap: 6px; }
+        .move-btn:hover:not(:disabled) { border-color: #4299e1; }
+        .move-btn.selected { border-color: #4299e1; background: #ebf8ff; }
+        .move-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .move-cat { font-size: 10px; padding: 1px 6px; border-radius: 6px; color: #fff; }
+        .move-power { font-size: 10px; color: #a0aec0; }
+        .ai-row { margin-top: 8px; font-size: 12.5px; color: #4a5568; display: flex; align-items: center; gap: 6px; }
+        .exec-row { text-align: center; margin-top: 14px; }
+        .btn-exec { padding: 11px 44px; border: 0; border-radius: 999px; background: #2d3748; color: #fff; font-size: 15px; font-weight: 900; cursor: pointer; }
+        .btn-exec:disabled { opacity: .45; cursor: not-allowed; }
+
+        /* 战报 */
+        .battle-log { margin-top: 14px; background: #1a202c; color: #e2e8f0; border-radius: 14px; padding: 14px 16px; max-height: 260px; overflow-y: auto; font-size: 13.5px; line-height: 2; }
+        .battle-log .turn-tag { color: #f6ad55; font-weight: 900; margin-right: 8px; }
+        .battle-log .em-dmg { color: #fc8181; font-weight: 900; }
+        .battle-log .em-good { color: #68d391; }
+        .battle-log .em-bad { color: #a0aec0; }
+        .battle-log .em-field { color: #63b3ed; font-weight: 700; }
+        .over-banner { text-align: center; margin-top: 12px; font-size: 18px; font-weight: 900; color: #e53e3e; }
+
+        /* 移动端 */
+        @media (max-width: 640px) {
+            .setup-grid, .moves-row { grid-template-columns: 1fr; }
+            .arena-row { grid-template-columns: 1fr; }
+            .field-panel { order: -1; }
+            .fighter-panel.side-b { text-align: left; }
+            .fighter-panel.side-b .dmg-float { left: 40%; right: auto; }
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+            .fp-img { width: 90px; height: 90px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <div id="site-navbar"></div>
+
+    <main class="battle-page">
+        <div class="page-title">⚔️ 精灵对战模拟</div>
+        <div class="page-sub">选好双方精灵，逐回合出招。伤害按公式精确结算：属性克制、本系加成、天气、场地、随机波动全部生效——写文时可以直接照抄战报。</div>
+
+        <!-- 编队 -->
+        <div class="setup-grid">
+            <div class="setup-card" v-for="side in ['a','b']" :key="side" :class="'side-' + side">
+                <h3>{{ side === 'a' ? '🔴 我方（红方）' : '🔵 对方（蓝方）' }}</h3>
+                <div class="seg-row">
+                    <button type="button" class="seg-opt" :class="{active: cfg[side].mode === 'individual'}" @click="setMode(side, 'individual')">书内个体</button>
+                    <button type="button" class="seg-opt" :class="{active: cfg[side].mode === 'species'}" @click="setMode(side, 'species')">图鉴种族</button>
+                </div>
+                <div class="picker-wrap">
+                    <input class="picker-input" type="text" v-model="cfg[side].query"
+                           :placeholder="cfg[side].mode === 'individual' ? '搜索个体昵称 / 种族名…' : '搜索种族名 / 编号…'"
+                           @focus="cfg[side].open = true" @input="cfg[side].open = true">
+                    <div class="picker-list" v-if="cfg[side].open && pickerResults(side).length">
+                        <div class="picker-item" v-for="item in pickerResults(side).slice(0, 30)" :key="item.key" @mousedown.prevent="pick(side, item)">
+                            <span>{{ item.label }}</span><small>{{ item.sub }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="picked-card" v-if="cfg[side].picked">
+                    <div class="picked-top">
+                        <img class="picked-img" :src="cfg[side].picked.imgUrl" @error="cfg[side].picked.imgFail = true; $event.target.style.display='none'"
+                             v-show="!cfg[side].picked.imgFail" alt="">
+                        <div>
+                            <div class="picked-name">{{ cfg[side].picked.displayName }}</div>
+                            <div class="picked-sub">
+                                <span class="type-chip" v-for="t in cfg[side].picked.types" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                            </div>
+                            <div class="picked-sub" v-if="cfg[side].picked.natureName">性格：{{ cfg[side].picked.natureName }}</div>
+                        </div>
+                    </div>
+                    <div class="lvl-row">
+                        等级 <input class="lvl-input" type="number" min="1" max="100" v-model.number="cfg[side].level"> 级
+                        <span v-if="cfg[side].picked.mode === 'individual'" style="color:#a0aec0;">（来自书内档案，可临时改）</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-cell"><span>HP</span><b>{{ previewStats(side).hp }}</b></div>
+                        <div class="stat-cell"><span>攻击</span><b>{{ previewStats(side).atk }}</b></div>
+                        <div class="stat-cell"><span>防御</span><b>{{ previewStats(side).def }}</b></div>
+                        <div class="stat-cell"><span>特攻</span><b>{{ previewStats(side).spa }}</b></div>
+                        <div class="stat-cell"><span>特防</span><b>{{ previewStats(side).spd }}</b></div>
+                        <div class="stat-cell"><span>速度</span><b>{{ previewStats(side).spe }}</b></div>
+                    </div>
+                    <div class="skill-preview" v-if="cfg[side].picked.skillList.length">
+                        可用技能：
+                        <em v-for="s in cfg[side].picked.skillList" :key="s.name">{{ s.name }}</em>
+                        <div v-if="cfg[side].picked.skillNote" style="color:#dd6b20; margin-top:4px;">⚠ {{ cfg[side].picked.skillNote }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="start-row">
+            <button class="btn-start" :disabled="!readyToStart" @click="startBattle">⚔️ 开始对战</button>
+            <button class="btn-ghost" @click="resetAll">清空重选</button>
+        </div>
+
+        <!-- 对战区 -->
+        <div class="arena" :class="{show: started}">
+            <div class="arena-row">
+                <div class="fighter-panel side-a" :class="{hit: hitFlash.a}">
+                    <div class="fp-name">{{ fA ? fA.name : '' }}</div>
+                    <div class="fp-types">
+                        <span class="type-chip" v-for="t in (fA ? fA.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                    </div>
+                    <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct(fA) + '%', background: hpColor(fA)}"></div></div>
+                    <div class="hp-num">{{ fA ? fA.hp : 0 }} / {{ fA ? fA.maxHp : 0 }}　速度 {{ fA ? fA.stats.spe : 0 }}</div>
+                    <img class="fp-img" :src="fA ? fA.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
+                    <div class="dmg-float" v-if="float.a" :class="{heal: float.a.heal}">{{ float.a.text }}</div>
+                </div>
+
+                <div class="field-panel">
+                    <div class="field-chip" v-if="curWeather" :style="{background: curWeather.color}">{{ curWeather.icon }} {{ curWeather.name }}</div>
+                    <div class="field-chip" v-else style="background:#cbd5e0;">🌤️ 无天气</div>
+                    <div class="field-desc" v-if="curWeather">{{ curWeather.desc }}</div>
+                    <div class="field-chip" v-if="curTerrain" :style="{background: curTerrain.color}">{{ curTerrain.icon }} {{ curTerrain.name }}</div>
+                    <div class="field-desc" v-if="curTerrain">{{ curTerrain.desc }}</div>
+                    <div class="field-btns">
+                        <button class="field-btn" @click="setWeather(null)">无天气</button>
+                        <button class="field-btn" v-for="(w, k) in BattleEngine.WEATHERS" :key="k" @click="setWeather(k)">{{ w.icon }}{{ w.name }}</button>
+                    </div>
+                    <div class="field-btns">
+                        <button class="field-btn" @click="setTerrain(null)">无场地</button>
+                        <button class="field-btn" v-for="(t, k) in BattleEngine.TERRAINS" :key="k" @click="setTerrain(k)">{{ t.name }}</button>
+                    </div>
+                </div>
+
+                <div class="fighter-panel side-b" :class="{hit: hitFlash.b}">
+                    <div class="fp-name">{{ fB ? fB.name : '' }}</div>
+                    <div class="fp-types">
+                        <span class="type-chip" v-for="t in (fB ? fB.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                    </div>
+                    <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct(fB) + '%', background: hpColor(fB)}"></div></div>
+                    <div class="hp-num">{{ fB ? fB.hp : 0 }} / {{ fB ? fB.maxHp : 0 }}　速度 {{ fB ? fB.stats.spe : 0 }}</div>
+                    <img class="fp-img" :src="fB ? fB.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
+                    <div class="dmg-float" v-if="float.b" :class="{heal: float.b.heal}">{{ float.b.text }}</div>
+                </div>
+            </div>
+
+            <div class="moves-row">
+                <div class="moves-box">
+                    <h4>🔴 红方出招</h4>
+                    <div class="move-btns">
+                        <button type="button" class="move-btn" v-for="s in (fA ? fA.skills : [])" :key="s.name"
+                                :class="{selected: chosen.a === s}" :disabled="over || busy"
+                                @click="chosen.a = s">
+                            <span class="move-cat" :style="{background: typeColor(s.type)}">{{ s.category === '变化' ? '变' : s.category === '物理' ? '物' : '特' }}</span>
+                            {{ s.name }}
+                            <span class="move-power" v-if="s.power">{{ s.type }} · 威力 {{ s.power }}</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="moves-box">
+                    <h4>🔵 蓝方出招</h4>
+                    <div class="move-btns">
+                        <button type="button" class="move-btn" v-for="s in (fB ? fB.skills : [])" :key="s.name"
+                                :class="{selected: chosen.b === s}" :disabled="over || busy"
+                                @click="chosen.b = s">
+                            <span class="move-cat" :style="{background: typeColor(s.type)}">{{ s.category === '变化' ? '变' : s.category === '物理' ? '物' : '特' }}</span>
+                            {{ s.name }}
+                            <span class="move-power" v-if="s.power">{{ s.type }} · 威力 {{ s.power }}</span>
+                        </button>
+                    </div>
+                    <label class="ai-row"><input type="checkbox" v-model="aiB"> 蓝方随机出招（AI 代打）</label>
+                </div>
+            </div>
+
+            <div class="exec-row">
+                <button class="btn-exec" :disabled="!canExecute" @click="executeTurn">{{ over ? '对战已结束' : '▶ 执行回合' }}</button>
+            </div>
+
+            <div class="battle-log" ref="logEl">
+                <div v-for="(line, i) in log" :key="i">
+                    <span class="turn-tag" v-if="line.turn">{{ line.turn }}</span>
+                    <span v-html="line.html"></span>
+                </div>
+            </div>
+            <div class="over-banner" v-if="over">🏁 对战结束{{ winner ? '——' + winner + '获胜！' : '，双方同时倒下！' }}</div>
+        </div>
+    </main>
+</div>
+
+<script>
+VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () {
+    const { createApp, ref, reactive, computed } = Vue;
+
+    const app = createApp({
+        setup() {
+            const allVows = window.allVowsData || [];
+            const allSkills = window.allSkillsData || [];
+            const allIndividuals = window.allIndividualsData || [];
+            const allNatures = window.allNaturesData || [];
+            const IMG_BASE = (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '';
+            const BE = window.BattleEngine || BattleEngine;
+
+            const imgUrl = (path) => path ? (IMG_BASE + '/' + path) : '';
+            const typeColor = (name) => {
+                const t = (window.typeData || []).find(x => x.name === name);
+                return t ? t.color : '#a0aec0';
+            };
+            const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            /* ---------------- 编队 ---------------- */
+            const cfg = reactive({
+                a: { mode: 'individual', query: '', open: false, picked: null, level: 50 },
+                b: { mode: 'species', query: '', open: false, picked: null, level: 50 }
+            });
+
+            const individualEntries = allIndividuals.map(ind => {
+                const species = allVows.find(v => String(v.id) === String(ind.speciesId));
+                if (!species) return null;
+                const name = ind.nickname || species.name;
+                return {
+                    key: ind.id,
+                    kind: 'individual',
+                    ind: ind,
+                    species: species,
+                    label: name,
+                    sub: species.name + ' · Lv.' + (ind.level || 50)
+                };
+            }).filter(Boolean);
+
+            const speciesEntries = allVows.map(v => ({
+                key: 'sp-' + v.id,
+                kind: 'species',
+                species: v,
+                label: v.name,
+                sub: '№' + v.id
+            }));
+
+            const pickerResults = (side) => {
+                const c = cfg[side];
+                const pool = c.mode === 'individual' ? individualEntries : speciesEntries;
+                const q = String(c.query || '').trim().toLowerCase();
+                if (!q) return pool.slice(0, 30);
+                return pool.filter(p => (p.label + ' ' + p.sub).toLowerCase().includes(q));
+            };
+
+            // 个体模式：把个体技能名映射成技能对象；种族模式：从 learners 里找该种族可学的
+            const resolveSkills = (picked) => {
+                const note = [];
+                let list = [];
+                if (picked.mode === 'individual') {
+                    const ind = picked.ind;
+                    (ind.skills || []).forEach(s => {
+                        const def = allSkills.find(d => d.name === s.name);
+                        if (def) list.push(def);
+                        else note.push('技能「' + s.name + '」在图鉴里找不到，已跳过');
+                    });
+                } else {
+                    list = allSkills.filter(d => (d.learners || []).includes(picked.species.name));
+                }
+                // 保底：一个能用的都没有时塞个冲撞，页面不至于卡死
+                if (!list.length) {
+                    const tackle = allSkills.find(d => d.name === '冲撞') || { name: '冲撞', type: '一般', category: '物理', power: 40 };
+                    list = [tackle];
+                    note.push('没有找到可学技能，先用「冲撞」凑数');
+                }
+                return { list, note: note.join('；') };
+            };
+
+            const natureByName = (name) => allNatures.find(n => n.name === name) || null;
+
+            const buildPicked = (side, entry) => {
+                const c = cfg[side];
+                const species = entry.species;
+                const level = entry.kind === 'individual' ? (entry.ind.level || 50) : 50;
+                c.level = level;
+                const skillRes = resolveSkills({ mode: entry.kind, ind: entry.ind, species: species });
+                return {
+                    mode: entry.kind,
+                    vow: species,
+                    ind: entry.ind,
+                    displayName: entry.kind === 'individual' ? entry.label : species.name,
+                    natureName: entry.kind === 'individual' && entry.ind.nature ? entry.ind.nature : '',
+                    nature: entry.kind === 'individual' ? natureByName(entry.ind.nature) : null,
+                    types: species.types || [],
+                    imgUrl: imgUrl(species.image),
+                    imgFail: false,
+                    skillList: skillRes.list,
+                    skillNote: skillRes.note
+                };
+            };
+
+            const pick = (side, entry) => {
+                cfg[side].picked = buildPicked(side, entry);
+                cfg[side].open = false;
+                cfg[side].query = entry.label;
+            };
+
+            const setMode = (side, mode) => {
+                cfg[side].mode = mode;
+                cfg[side].picked = null;
+                cfg[side].query = '';
+            };
+
+            // 预览能力值：等级改了实时重算
+            const previewStats = (side) => {
+                const p = cfg[side].picked;
+                if (!p) return { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+                return BE.computeStats(p.vow.stats || {}, cfg[side].level, p.nature);
+            };
+
+            const readyToStart = computed(() => !!(cfg.a.picked && cfg.b.picked));
+
+            /* ---------------- 对战进行 ---------------- */
+            const started = ref(false);
+            const fA = ref(null);
+            const fB = ref(null);
+            const chosen = reactive({ a: null, b: null });
+            const aiB = ref(true);
+            const busy = ref(false);
+            const over = ref(false);
+            const winner = ref(null);
+            const log = ref([]);
+            const logEl = ref(null);
+            const turnNo = ref(0);
+            const hitFlash = reactive({ a: false, b: false });
+            const float = reactive({ a: null, b: null });
+            const field = reactive({ weather: null, terrain: null });
+            const curWeather = computed(() => field.weather ? BE.WEATHERS[field.weather] : null);
+            const curTerrain = computed(() => field.terrain ? BE.TERRAINS[field.terrain] : null);
+
+            const setWeather = (k) => { field.weather = k; pushLog('<span class="em-field">手动设置天气：' + (k ? BE.WEATHERS[k].name : '无') + '</span>'); };
+            const setTerrain = (k) => { field.terrain = k; pushLog('<span class="em-field">手动设置场地：' + (k ? BE.TERRAINS[k].name : '无') + '</span>'); };
+
+            const pushLog = (html, turn) => {
+                log.value.push({ html: html, turn: turn || '' });
+                requestAnimationFrame(() => {
+                    if (logEl.value) logEl.value.scrollTop = logEl.value.scrollHeight;
+                });
+            };
+
+            const startBattle = () => {
+                const fa = BE.buildFighter(cfg.a.picked.vow, {
+                    side: 'A', level: cfg.a.level, nature: cfg.a.picked.nature,
+                    skills: cfg.a.picked.skillList, displayName: cfg.a.picked.displayName,
+                    image: undefined
+                });
+                const fb = BE.buildFighter(cfg.b.picked.vow, {
+                    side: 'B', level: cfg.b.level, nature: cfg.b.picked.nature,
+                    skills: cfg.b.picked.skillList, displayName: cfg.b.picked.displayName,
+                    image: undefined
+                });
+                BE.initHp(fa); BE.initHp(fb);
+                fA.value = fa; fB.value = fb;
+                fa.imgUrl = cfg.a.picked.imgUrl; fb.imgUrl = cfg.b.picked.imgUrl;
+                started.value = true;
+                over.value = false; winner.value = null;
+                log.value = [];
+                turnNo.value = 0;
+                chosen.a = null; chosen.b = null;
+                field.weather = null; field.terrain = null;
+                pushLog('⚔️ 对战开始：<b>' + esc(fa.name) + '</b>（Lv.' + fa.level + '） vs <b>' + esc(fb.name) + '</b>（Lv.' + fb.level + '）');
+            };
+
+            const resetAll = () => {
+                started.value = false;
+                fA.value = null; fB.value = null;
+                cfg.a.picked = null; cfg.b.picked = null;
+                cfg.a.query = ''; cfg.b.query = '';
+                log.value = []; over.value = false; winner.value = null;
+            };
+
+            const hpPct = (f) => !f || !f.maxHp ? 0 : Math.round(f.hp / f.maxHp * 100);
+            const hpColor = (f) => {
+                const pct = hpPct(f);
+                return pct > 50 ? '#48bb78' : (pct > 20 ? '#d69e2e' : '#e53e3e');
+            };
+
+            // 把引擎事件渲染成战报 + 伤害飘字
+            const renderEvents = (result) => {
+                for (const ev of result.events) {
+                    if (ev.kind === 'attack') {
+                        if (ev.missed) { pushLog('<span class="em-bad">' + esc(ev.text) + '</span>'); continue; }
+                        const cls = ev.effectiveness > 1 ? 'em-good' : (ev.effectiveness < 1 ? 'em-bad' : '');
+                        const detail = ev.breakdown.length ? '<br><span class="em-bad" style="font-size:11.5px;">　' + esc(ev.breakdown.join('，')) + '</span>' : '';
+                        pushLog('<span class="' + cls + '">' + esc(ev.text) + '</span> 对 <b>' + esc(ev.defender) + '</b> 造成 <span class="em-dmg">' + ev.damage + '</span> 点伤害！' + detail, '');
+                        const side = (ev.defender === (fA.value && fA.value.name)) ? 'a' : 'b';
+                        showFloat(side, '-' + ev.damage, false);
+                    } else if (ev.kind === 'faint') {
+                        pushLog('<b style="color:#fc8181;">💀 ' + esc(ev.text) + '</b>');
+                    } else if (ev.kind === 'weather' || ev.kind === 'terrain') {
+                        pushLog('<span class="em-field">🌤 ' + esc(ev.text) + '</span>');
+                    } else if (ev.kind === 'chip') {
+                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                        showFloat(ev.side, '伤害', false);
+                    } else if (ev.kind === 'heal') {
+                        pushLog('<span class="em-good">' + esc(ev.text) + '</span>');
+                        showFloat(ev.side, '+' + (ev.hpAfter ? '' : '') + '回复', true);
+                    } else if (ev.kind === 'note') {
+                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                    }
+                }
+            };
+
+            const showFloat = (side, text, heal) => {
+                if (!text) return;
+                float[side] = { text: text, heal: heal };
+                if (!heal && text.startsWith('-')) hitFlash[side] = true;
+                setTimeout(() => { float[side] = null; hitFlash[side] = false; }, 1100);
+            };
+
+            const canExecute = computed(() => {
+                if (over.value || busy.value || !fA.value || !fB.value) return false;
+                return !!chosen.a || !!chosen.b;
+            });
+
+            const executeTurn = () => {
+                if (!canExecute.value) return;
+                // 蓝方 AI：随机挑一个技能
+                if (aiB.value && !chosen.b) {
+                    const pool = fB.value.skills;
+                    chosen.b = pool[Math.floor(Math.random() * pool.length)];
+                }
+                if (!chosen.a) { VowmonDialog ? null : null; pushLog('<span class="em-bad">红方还没选技能。</span>'); return; }
+                if (!chosen.b) { pushLog('<span class="em-bad">蓝方还没选技能（可勾选 AI 代打）。</span>'); return; }
+
+                busy.value = true;
+                turnNo.value++;
+                const tag = '回合 ' + turnNo.value;
+                pushLog('<b>—— ' + tag + ' ——</b>', tag);
+
+                const result = BE.executeTurn(fA.value, fB.value, chosen.a, chosen.b, field);
+                renderEvents(result);
+                chosen.a = null; chosen.b = null;
+
+                if (result.over) {
+                    over.value = true;
+                    winner.value = result.winner;
+                    if (result.winner) pushLog('<b style="color:#f6ad55;">🏆 ' + esc(result.winner) + ' 获胜！</b>');
+                }
+                busy.value = false;
+            };
+
+            // 点别处收起下拉
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.picker-wrap')) { cfg.a.open = false; cfg.b.open = false; }
+            });
+            // 动效开关
+            if (localStorage.getItem('vowmon_anim_on') === 'false') document.body.classList.add('no-anim');
+            document.addEventListener('vowmon:anim-changed', (e) => {
+                document.body.classList.toggle('no-anim', !(e.detail && e.detail.on));
+            });
+
+            return {
+                BattleEngine: BE,
+                cfg, pickerResults, pick, setMode, previewStats, readyToStart,
+                started, fA, fB, chosen, aiB, busy, over, winner, log, logEl,
+                curWeather, curTerrain, setWeather, setTerrain,
+                hpPct, hpColor, typeColor, startBattle, resetAll, executeTurn, canExecute,
+                hitFlash, float
+            };
+        }
+    }).mount('#app');
+}).catch(function (err) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#e53e3e;font-weight:700;">数据加载失败：' + (err && err.message || err) + '<br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border:0;border-radius:999px;background:#e53e3e;color:#fff;font-weight:700;cursor:pointer;">重新加载</button></div>';
+});
+</script>
+</body>
+</html>
