@@ -37,3 +37,7 @@
 /individuals.html /records/individuals 301
 /characters /records/characters 301
 /characters.html /records/characters 301
+# —— 更早的历史遗留（改名/搬迁前的旧地址）——
+/pet-detail /dex/vow-detail 301
+/pet-detail.html /dex/vow-detail 301
+/admin.html /admin/ 301

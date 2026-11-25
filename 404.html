@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>页面不存在 · Vowmon Wiki</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+               font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+               background: #f5f7fa; color: #2d3748; }
+        .card { text-align: center; padding: 48px 40px; background: #fff; border-radius: 20px;
+                box-shadow: 0 8px 30px rgba(45,55,72,.08); max-width: 480px; margin: 20px; }
+        .code { font-size: 64px; font-weight: 900; letter-spacing: .04em;
+                background: linear-gradient(135deg, #d4a017, #b678e0);
+                -webkit-background-clip: text; background-clip: text; color: transparent; }
+        h1 { font-size: 20px; margin: 12px 0 8px; }
+        p { font-size: 14px; color: #718096; line-height: 1.7; }
+        .note { margin-top: 14px; font-size: 13px; color: #d69e2e; font-weight: 700; }
+        a.btn { display: inline-block; margin-top: 22px; padding: 10px 26px; border-radius: 999px;
+                background: #2d3748; color: #fff; text-decoration: none; font-size: 14px; font-weight: 700; }
+        a.btn:hover { background: #4a5568; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="code">404</div>
+        <h1 id="ttl">页面不存在</h1>
+        <p id="msg">你要找的页面不存在，或者地址已经改变了。</p>
+        <div class="note" id="note" hidden>检测到旧地址，正在为你跳转到新位置…</div>
+        <a class="btn" href="/">回到首页</a>
+    </div>
+    <script>
+    /* ============================================================
+     * 智能兜底网：任何未知路径都会落到本页（CF Pages / GitHub Pages 均自动启用）。
+     * 旧地址在这里按「文件名 → 站点根相对新路径」映射后自动跳转；
+     * 以后再改名/移动页面而忘了写 _redirects，也会被这张网接住，不会出现
+     * 「掉进首页兜底、点导航永远回首页」的死循环。
+     * ============================================================ */
+    (function () {
+        var LEGACY = {
+            'vowdex': 'dex/vowdex.html', 'list': 'dex/list.html',
+            'vow-detail': 'dex/vow-detail.html', 'pet-detail': 'dex/vow-detail.html',
+            'realm-dex': 'dex/realm-dex.html',
+            'skills': 'reference/skills.html', 'skill-detail': 'reference/skill-detail.html',
+            'traits': 'reference/traits.html', 'items': 'reference/items.html',
+            'natures': 'reference/natures.html', 'bloodlines': 'reference/bloodlines.html',
+            'calculator': 'reference/calculator.html', 'coverage': 'reference/coverage.html',
+            'ranks': 'world/ranks.html', 'trainers': 'world/trainers.html',
+            'factions': 'world/factions.html', 'lore': 'world/lore.html',
+            'individuals': 'records/individuals.html', 'characters': 'records/characters.html',
+            'admin': 'admin/'
+        };
+        var segs = location.pathname.replace(/\/+$/, '').split('/');
+        var name = decodeURIComponent(segs.pop() || '').replace(/\.html$/i, '');
+        var base = segs.join('/');                    // 兼容 GitHub Pages 的 /vowmon/ 子路径
+        var target = LEGACY[name.toLowerCase()];
+        if (target) {
+            var suffix = (location.search || '') + (location.hash || '');
+            document.getElementById('note').hidden = false;
+            document.getElementById('msg').textContent = '「/' + name + '」已迁移到新位置。';
+            location.replace(base + '/' + target + suffix);
+        }
+    })();
+    </script>
+</body>
+</html>
