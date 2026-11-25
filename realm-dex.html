@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Vowmon Wiki - 天地图鉴</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'HarmonyOS Sans SC', 'MiSans', 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; background: #f4f7f9; color: #333; min-height: 100vh; }
+        .font-num { font-family: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: .01em; }
+
+        /* 主容器 */
+        .container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; }
+
+        /* 页头横幅 */
+        .hero { position: relative; border-radius: 20px; padding: 34px 34px 30px; margin-bottom: 22px; overflow: hidden; background: linear-gradient(135deg, #1c2a3a 0%, #274156 55%, #3a5568 100%); color: #fff; }
+        .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 82% 18%, rgba(255,215,110,.22) 0%, transparent 42%), radial-gradient(circle at 12% 88%, rgba(182,120,224,.18) 0%, transparent 40%); pointer-events: none; }
+        .hero h1 { position: relative; font-size: 30px; font-weight: 900; letter-spacing: .06em; display: flex; align-items: center; gap: 14px; }
+        .hero h1 i { color: #ffd76e; }
+        .hero .sub { position: relative; margin-top: 10px; font-size: 14.5px; line-height: 1.8; opacity: .88; max-width: 720px; }
+        .hero .en { position: relative; margin-top: 6px; font-size: 12px; font-weight: 800; letter-spacing: .22em; color: #ffd76e; text-transform: uppercase; opacity: .9; }
+
+        /* 分组跳转条 */
+        .jump-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
+        .jump-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; transition: all .2s; }
+        .jump-btn i { font-size: 13px; }
+        .jump-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 14px rgba(45,55,72,.12); }
+        .jump-btn .cnt { background: #edf2f7; color: #718096; font-size: 12px; padding: 1px 9px; border-radius: 12px; font-weight: normal; }
+
+        /* 分组区块 */
+        .realm-section { margin-bottom: 34px; scroll-margin-top: 90px; }
+        .realm-head { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #f0f4f8; padding-bottom: 12px; margin-bottom: 8px; }
+        .realm-ico { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 14px; color: #fff; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(45,55,72,.18); }
+        .realm-head h2 { font-size: 22px; font-weight: 900; color: #2c3e50; }
+        .realm-head .en { font-size: 11px; font-weight: 800; letter-spacing: .18em; color: #a0aec0; text-transform: uppercase; margin-top: 3px; }
+        .realm-head .cnt { margin-left: auto; font-size: 13px; font-weight: 800; color: #718096; background: #f1f5f9; padding: 5px 14px; border-radius: 999px; white-space: nowrap; }
+        .realm-desc { font-size: 13.5px; line-height: 1.8; color: #718096; background: #f8fafc; border-left: 3px solid #e2e8f0; border-radius: 0 10px 10px 0; padding: 10px 16px; margin-bottom: 16px; }
+
+        /* 图鉴卡片网格（与精灵图鉴同款） */
+        .vowdex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .vow-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .vow-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #ff6b6b; z-index: 2; position: relative; }
+        .card-top { position: relative; display: flex; justify-content: center; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #f0f4f8; background: #fdfdfd; }
+        .card-top .id { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #a0aec0; }
+        .card-top .name { font-size: 15px; font-weight: 900; color: #2c3e50; text-align: center; }
+        .card-img { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background: #fafbfc; min-height: 130px; }
+        .card-img img { width: 100%; max-height: 110px; object-fit: contain; transition: transform 0.2s, opacity 0.25s; }
+        .vow-card:hover .card-img img { transform: scale(1.1); }
+        .card-img .shiny { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); height: calc(100% - 20px); max-height: none; display: block; object-fit: contain; opacity: 0; z-index: 1; }
+        .vow-card.has-shiny:hover .card-img img { transform: none; }
+        .vow-card.has-shiny:hover .card-img .base { opacity: 0; }
+        .vow-card.has-shiny:hover .card-img .shiny { opacity: 1; }
+        .card-bottom { padding: 10px; display: flex; justify-content: center; gap: 6px; border-top: 1px dashed #f0f4f8; }
+        .card-bottom .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 12px; }
+
+        .empty-state { text-align: center; color: #a0aec0; font-size: 14px; font-weight: 700; background: #f8fafc; border: 1px dashed #dbe4ec; border-radius: 14px; padding: 26px 16px; }
+        .empty-state small { display: block; margin-top: 6px; font-size: 12px; color: #cbd5e0; font-weight: normal; }
+
+        /* 动画全局开关类 */
+        .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
+        .no-anim .vow-card:hover { transform: none; box-shadow: none; border-color: #e2e8f0; }
+        .no-anim .vow-card:hover .card-img img { transform: none; }
+
+        @media (max-width: 900px) {
+            .container { padding: 15px; margin: 10px; border-radius: 16px; }
+            .hero { padding: 24px 20px; border-radius: 16px; }
+            .hero h1 { font-size: 24px; }
+            .vowdex-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        }
+    </style>
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126v" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
+</head>
+<body>
+
+<div id="app">
+    <div id="site-navbar"></div>
+
+    <div class="container">
+        <!-- 页头 -->
+        <div class="hero">
+            <h1><i class="fa-solid fa-mountain-sun"></i> 天地图鉴</h1>
+            <div class="en">Codex of Heaven &amp; Earth</div>
+            <div class="sub">记录天地间超凡的存在——执掌权柄的传说、如幻似真的梦幻、御兽师最初的搭档，以及大器晚成的准传说。它们不属于寻常的图鉴序列，而是这个世界传说的一部分。</div>
+        </div>
+
+        <!-- 分组跳转 -->
+        <div class="jump-bar">
+            <a class="jump-btn" v-for="g in realms" :key="g.key" :href="'#' + g.key" :style="{ color: g.color }">
+                <i :class="g.icon"></i> {{ g.label }}
+                <span class="cnt font-num">{{ groupOf(g.key).length }}</span>
+            </a>
+        </div>
+
+        <!-- 四大分组 -->
+        <section class="realm-section" v-for="g in realms" :key="g.key" :id="g.key">
+            <div class="realm-head">
+                <div class="realm-ico" :style="{ background: g.color }"><i :class="g.icon"></i></div>
+                <div>
+                    <h2>{{ g.label }}</h2>
+                    <div class="en">{{ g.en }}</div>
+                </div>
+                <span class="cnt font-num">{{ groupOf(g.key).length }} 只</span>
+            </div>
+            <div class="realm-desc" :style="{ borderLeftColor: g.color }">{{ g.desc }}</div>
+
+            <div class="vowdex-grid" v-if="groupOf(g.key).length">
+                <div class="vow-card" :class="{ 'has-shiny': hasShiny(vow) }" v-for="vow in groupOf(g.key)" :key="g.key + '-' + vow.id"
+                     :title="'点击查看 ' + vow.name + ' 的图鉴详情'"
+                     @click="gotoDetail(vow)"
+                     @mouseenter="startShiny(vow)" @mouseleave="stopShiny(vow)">
+                    <div class="card-top">
+                        <span class="id font-num">{{ vow.id }}</span>
+                        <span class="name">{{ vow.name }}</span>
+                    </div>
+                    <div class="card-img">
+                        <img class="base" :src="getImgUrl(vow.image)" :alt="vow.name" loading="lazy" decoding="async" fetchpriority="high">
+                        <img v-if="hasShiny(vow)" class="shiny" :src="shinySrc(vow)" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
+                    </div>
+                    <div class="card-bottom">
+                        <span class="type-icon" v-for="t in vow.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
+                            <i :class="getTypeIcon(t)"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">
+                此分组暂未收录精灵
+                <small>可在后台「精灵管理 → 编辑 → 天地图鉴」勾选类别标签，勾选后会自动出现在这里</small>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/vowmon-utils.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+VowmonData.ready(['vows']).then(function () {
+
+    createApp({
+        setup() {
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', (data) => {
+                vows.value = VowmonUtils.normalizeAll((data && data.vows) || allVowsData);
+            });
+
+            /* 四大分组定义（后台 REALM_META 与此对应，改文案要两处同步） */
+            const realms = [
+                { key: 'legendary', label: '传说精灵', en: 'Legendary Vowmon', icon: 'fa-solid fa-crown', color: '#d4a017',
+                  desc: '立于【族尊】之上（不含族尊）、执掌了权柄的精灵。它们统辖一方阶元，同族借其伟力，也背负整层的托举。' },
+                { key: 'mythical', label: '梦幻精灵', en: 'Mythical Vowmon', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0',
+                  desc: '幻兽——如梦幻般稀有难寻的存在，传说之外的真实幻影，见之者寥寥。' },
+                { key: 'starter', label: '初始精灵', en: 'Starter Vowmon', icon: 'fa-solid fa-seedling', color: '#48bb78',
+                  desc: '最初的搭档——御兽师旅途起点的那只精灵，陪伴契约的起点，也见证成长的每一步。' },
+                { key: 'late', label: '晚成精灵', en: 'Late-Bloomer', icon: 'fa-solid fa-hourglass-half', color: '#ed8936',
+                  desc: '准传说——培养费劲、前期平平，但最终种族值合计 600 的大器晚成者。' }
+            ];
+
+            /* 按类别取精灵：realmTags 含该 key 的种族（一个精灵可同时属于多个分组） */
+            const groupOf = (key) => vows.value.filter(v => Array.isArray(v.realmTags) && v.realmTags.includes(key));
+
+            /* 动画开关（与全站一致：localStorage['vowmon_anim_on']） */
+            const isAnimOn = ref(localStorage.getItem('vowmon_anim_on') !== 'false');
+            const updateBodyClass = () => {
+                if (isAnimOn.value) document.body.classList.remove('no-anim');
+                else document.body.classList.add('no-anim');
+            };
+            document.addEventListener('vowmon:anim-changed', (e) => {
+                const on = e && e.detail ? !!e.detail.on : (localStorage.getItem('vowmon_anim_on') !== 'false');
+                if (isAnimOn.value !== on) {
+                    isAnimOn.value = on;
+                    updateBodyClass();
+                    if (!on) stopShiny();
+                }
+            });
+            onMounted(updateBodyClass);
+
+            /* 图片与属性（与精灵图鉴同源） */
+            let siteConfig = {};
+            try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {}; } catch(e){ siteConfig = {}; }
+            const IMG_RAW = String(siteConfig.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
+            const IMG_BASE = IMG_RAW ? IMG_RAW + '/' : '';
+            const getImgUrl = (path) => {
+                if (!path) return 'https://via.placeholder.com/150?text=No+Image';
+                if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) return path;
+                return IMG_BASE + String(path).replace(/^\/+/, '');
+            };
+            const typeMap = new Map(typeData.map(t => [t.name, t]));
+            const getTypeColor = (type) => (typeMap.get(type) || {}).color || '#ccc';
+            const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
+
+            /* 异色悬停轮播（与精灵图鉴同款逻辑） */
+            const hasShiny = (vow) => Array.isArray(vow && vow.shiny) && vow.shiny.length > 0;
+            const shinyVowId = ref('');
+            const shinyIdx = ref(0);
+            let shinyTimer = null;
+            let shinyTimerVowId = '';
+            const shinySrc = (vow) => {
+                if (!hasShiny(vow)) return '';
+                const list = vow.shiny;
+                const i = shinyVowId.value === vow.id ? (shinyIdx.value % list.length) : 0;
+                return getImgUrl(list[i]);
+            };
+            const stopShiny = (vow) => {
+                if (vow && shinyTimerVowId && shinyTimerVowId !== vow.id) return;
+                if (shinyTimer) { clearInterval(shinyTimer); shinyTimer = null; }
+                shinyTimerVowId = '';
+                shinyVowId.value = '';
+                shinyIdx.value = 0;
+            };
+            const startShiny = (vow) => {
+                stopShiny();
+                if (!hasShiny(vow)) return;
+                shinyVowId.value = vow.id;
+                shinyIdx.value = 0;
+                if (vow.shiny.length > 1 && isAnimOn.value) {
+                    shinyTimerVowId = vow.id;
+                    shinyTimer = setInterval(() => {
+                        shinyIdx.value = (shinyIdx.value + 1) % vow.shiny.length;
+                    }, 1100);
+                }
+            };
+
+            const gotoDetail = (vow) => {
+                if (!vow || !vow.id) return;
+                window.location.href = 'vow-detail.html?id=' + encodeURIComponent(vow.id);
+            };
+
+            return {
+                realms, groupOf,
+                isAnimOn,
+                getImgUrl, getTypeColor, getTypeIcon,
+                hasShiny, shinySrc, startShiny, stopShiny, gotoDetail
+            };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

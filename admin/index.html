@@ -411,6 +411,25 @@
                 </div>
 
                 <div class="form-section">
+                    <div class="section-title"><i class="fa-solid fa-mountain-sun"></i> 天地图鉴 <span style="font-size:12px;color:#a0aec0;font-weight:normal;">（可多选；勾选后会在前台「天地图鉴」页对应分组展示）</span></div>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>类别标签</label>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <span v-for="r in REALM_META" :key="r.key"
+                                      class="trait-chip"
+                                      :style="form.realmTags.includes(r.key) ? { background: r.color, color: '#fff', borderColor: r.color } : {}"
+                                      @click="toggleRealm(r.key)" style="cursor:pointer;">
+                                    <i :class="r.icon"></i> {{ r.label }}
+                                    <i v-if="form.realmTags.includes(r.key)" class="fa-solid fa-check chip-x" style="margin-left:2px;"></i>
+                                </span>
+                            </div>
+                            <p class="hint" style="margin-top:8px;">传说=族尊之上执掌权柄 · 梦幻=幻兽 · 初始=最初的搭档 · 晚成=准传说（最终种族值合计 600）</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <div class="section-title"><i class="fa-solid fa-leaf"></i> 生态与特性</div>
                     <div class="form-grid">
                         <div class="form-group">
@@ -601,6 +620,6 @@
 <script src="../js/image-utils.js?v=20261126s"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/admin.js?v=20261126u"></script>
+<script src="../js/admin.js?v=20261126v"></script>
 </body>
 </html>

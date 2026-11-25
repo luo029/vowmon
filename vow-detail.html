@@ -194,7 +194,7 @@
         }
     </style>
     <link rel="stylesheet" href="css/navbar.css?v=20261126s">
-    <script src="js/navbar.js?v=20261126s" defer></script>
+    <script src="js/navbar.js?v=20261126v" defer></script>
     <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
@@ -285,6 +285,7 @@
                     <div class="info-grid">
                         <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }} <span class="rank-line" :style="{ background: stageRank.color }">{{ stageRank.name }}线</span></div></div>
                         <div class="info-box" v-if="vow.form"><div class="lbl">形态</div><div class="val">{{ vow.form }}</div></div>
+                        <div class="info-box" v-if="realmLabels"><div class="lbl">天地类别</div><div class="val">{{ realmLabels }}</div></div>
                         <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
                         <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
                         <div class="info-box" v-if="vow.eggGroup"><div class="lbl">蛋组</div><div class="val">{{ vow.eggGroup }}</div></div>
@@ -493,6 +494,13 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
             const STAGE_RANK = { '一阶': { name: '初灵', color: '#8bc34a' }, '二阶': { name: '升灵', color: '#26a69a' }, '三阶': { name: '族尊', color: '#5c6bc0' } };
             const stageRank = computed(() => (vow.value && STAGE_RANK[vow.value.stage]) || { name: '', color: 'transparent' });
 
+            /* 天地图鉴类别（与 realm-dex.html 的 realms 定义对应） */
+            const REALM_LABELS = { legendary: '传说精灵', mythical: '梦幻精灵', starter: '初始精灵', late: '晚成精灵' };
+            const realmLabels = computed(() => {
+                const tags = vow.value && Array.isArray(vow.value.realmTags) ? vow.value.realmTags : [];
+                return tags.map(t => REALM_LABELS[t] || '').filter(Boolean).join(' · ');
+            });
+
             /* ---------------- 特性 ---------------- */
             const abilityRows = computed(() => {
                 if (!vow.value) return [];
@@ -648,7 +656,7 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
                 getImgUrl, getTypeColor, getTypeIcon,
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
-                heightText, weightText, stageRank,
+                heightText, weightText, stageRank, realmLabels,
                 abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows,
                 attackGroups, defendGroups, exportCard
             };

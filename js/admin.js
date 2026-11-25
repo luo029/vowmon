@@ -113,6 +113,7 @@ createApp({
             ability2: '', ability2Effect: '',           // 第二特性（多特性随机触发其一）
             hiddenAbility: '', hiddenAbilityEffect: '', // 隐藏特性（不填默认为空）
             evoFrom: [], evoTo: [],                     // 进化链：进化自 / 进化为（存精灵 id，可多选）
+            realmTags: [],                              // 天地图鉴类别：legendary/mythical/starter/late（天地图鉴页按此分组展示）
             eggGroup: '', rideable: '', height: '', weight: '',
             // 分类学：域界门纲目科属种（科决定族尊下发的十八系血脉技能）
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
@@ -416,6 +417,8 @@ createApp({
             }
             // 兼容早期没有 shiny 字段的旧数据
             if (!Array.isArray(form.shiny)) form.shiny = [];
+            // 天地图鉴类别：缺省为空数组（旧数据没有此字段）
+            if (!Array.isArray(form.realmTags)) form.realmTags = [];
             // 兼容进化链字段：旧数据可能是单个 id 字符串或缺失
             if (form.evoFrom && !Array.isArray(form.evoFrom)) form.evoFrom = [form.evoFrom];
             if (!Array.isArray(form.evoFrom)) form.evoFrom = [];
@@ -435,6 +438,20 @@ createApp({
             const index = form.types.indexOf(name);
             if (index > -1) form.types.splice(index, 1);
             else form.types.push(name);
+        };
+
+        /* 天地图鉴类别（天地图鉴页按此分组展示）：传说 / 梦幻 / 初始 / 晚成 */
+        const REALM_META = [
+            { key: 'legendary', label: '传说精灵', icon: 'fa-solid fa-crown', color: '#d4a017' },
+            { key: 'mythical',  label: '梦幻精灵', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0' },
+            { key: 'starter',   label: '初始精灵', icon: 'fa-solid fa-seedling', color: '#48bb78' },
+            { key: 'late',      label: '晚成精灵', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
+        ];
+        const toggleRealm = (key) => {
+            if (!Array.isArray(form.realmTags)) form.realmTags = [];
+            const index = form.realmTags.indexOf(key);
+            if (index > -1) form.realmTags.splice(index, 1);
+            else form.realmTags.push(key);
         };
 
         const updatePreview = () => {
@@ -905,7 +922,7 @@ createApp({
 
         return {
             currentTab, switchTab, vows, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
-            imgSizeOptions,
+            imgSizeOptions, REALM_META, toggleRealm,
             showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
             shinyFileInput, shinyInput, isShinyUploading, shinyProgress,

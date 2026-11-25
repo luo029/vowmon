@@ -52,6 +52,7 @@
                     title: '精灵资料',
                     links: [
                         { label: '精灵图鉴', href: 'vowdex.html' },
+                        { label: '天地图鉴', href: 'realm-dex.html' },
                         { label: '精灵列表', href: 'list.html' },
                         { label: '技能图鉴', href: 'skills.html' },
                         { label: '特性大全', href: 'traits.html' },
