@@ -1052,20 +1052,48 @@ createApp({
             }
             isSyncing.value = true;
             try {
-                const jsonString = JSON.stringify({ vows: vows.value }, null, 4) + '\n';
-                
-                // 解析多个数据仓库
+                // 解析多个数据仓库（差异对比取第一个仓库的当前版本）
                 const repos = config.value.dataRepos.split(',').map(s => s.trim()).filter(s => s);
+                const firstRepo = repos[0];
+
+                // 先取云端当前版本做 diff（文件不存在 = 首次同步，视为空）
+                let remoteBag = null;
+                try {
+                    remoteBag = await GitHubSync.downloadJson(config.value.token, config.value.owner, firstRepo, 'vow-data.json');
+                } catch (e) {
+                    throw e;   // Token / 网络错误直接中止，不做盲传
+                }
+
+                // 弹出差异预览：每条修改可单独勾选是否上传
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + firstRepo + '）',
+                    sections: [{
+                        label: '精灵',
+                        local: vows.value,
+                        remote: remoteBag && Array.isArray(remoteBag.vows) ? remoteBag.vows : [],
+                        key: v => v.id,
+                        name: v => v.name || v.nickname || v.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                // 只上传勾选的修改（未勾选的保持云端原样）
+                const jsonString = JSON.stringify({ vows: res.sections[0].merged }, null, 4) + '\n';
                 for (let repo of repos) {
                     await GitHubSync.uploadFile(
                         config.value.token, config.value.owner, repo,
                         'vow-data.json', jsonString, 'Admin Panel: Update vow data', false
                     );
                 }
-                
-                // 同步成功：本机镜像与云端一致，清掉「未同步」标记
-                if (window.VowmonStore) VowmonStore.markSynced('vows');
-                VowmonDialog.toast('数据已成功同步到所有配置的仓库', 'success', { duration: 3200 });
+
+                // 全选（完整同步）才清「未同步」标记；部分上传说明本机还有未推送的改动
+                if (res.all && window.VowmonStore) VowmonStore.markSynced('vows');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改到 ' + repos.length + ' 个仓库', 'success', { duration: 3200 });
             } catch (error) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',
@@ -1077,7 +1105,7 @@ createApp({
             }
         };
 
-        // 从数据仓库拉取最新数据（数据仓库是唯一数据源，会覆盖本机草稿）
+        // 从数据仓库拉取最新数据（弹出差异预览，每条修改可单独勾选是否拉取）
         const pullFromRepo = async () => {
             const repo = String(config.value.dataRepos || '').split(/[\s,，]+/).map(s => s.trim()).filter(Boolean)[0];
             if (!config.value.token || !config.value.owner || !repo) {
@@ -1086,20 +1114,36 @@ createApp({
                 }).then(() => switchTab('settings'));
                 return;
             }
-            const ok = await VowmonDialog.confirm(
-                '将从「' + repo + '」读取 vow-data.json，并覆盖本机未同步的改动。继续？',
-                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
-            );
-            if (!ok) return;
 
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'vow-data.json');
                 if (!bag || !Array.isArray(bag.vows)) throw new Error('仓库里没有 vow-data.json，或字段不是 vows 数组');
 
-                vows.value = JSON.parse(JSON.stringify(bag.vows));
+                // 弹出差异预览：每条修改可单独勾选是否覆盖本机
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [{
+                        label: '精灵',
+                        local: vows.value,
+                        remote: bag.vows,
+                        key: v => v.id,
+                        name: v => v.name || v.nickname || v.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                vows.value = JSON.parse(JSON.stringify(res.sections[0].merged));
                 localStorage.setItem('vowmon_vows_data', JSON.stringify(vows.value));
-                if (window.VowmonStore) VowmonStore.replace('vows', { vows: vows.value });
+                // 全选拉取 = 本机与云端完全一致 → replace（清脏标记）；
+                // 部分拉取 = 本机还有未推送的改动 → save（保留脏标记）
+                if (res.all && window.VowmonStore) VowmonStore.replace('vows', { vows: vows.value });
+                else if (window.VowmonStore) VowmonStore.save('vows', { vows: vows.value });
                 // 顺带刷新特性库（保持精灵 ↔ 特性关联一致）
                 try {
                     const tbag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'traits-data.json');
@@ -1114,7 +1158,7 @@ createApp({
                     }
                 } catch (e) { /* traits-data 拉取失败不影响精灵数据 */ }
                 listPage.value = 1;
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + vows.value.length + ' 条精灵数据', 'success', { duration: 3200 });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + vows.value.length + ' 条精灵）', 'success', { duration: 3200 });
             } catch (error) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',

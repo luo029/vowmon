@@ -602,12 +602,32 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value }, null, 1) + '\n';
+                // 先取云端当前版本做差异预览（文件不存在 = 首次同步，视为空）
+                const remoteBag = await GitHubSync.downloadJson(config.value.token, config.value.owner, targetRepos()[0], 'characters-data.json');
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + targetRepos()[0] + '）',
+                    sections: [{
+                        label: '御兽人物',
+                        local: characters.value,
+                        remote: remoteBag && Array.isArray(remoteBag.characters) ? remoteBag.characters : [],
+                        key: c => c.id,
+                        name: c => c.name || c.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                const content = JSON.stringify({ characters: res.sections[0].merged, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'characters-data.json', content, 'update characters data');
                 }
-                if (window.VowmonStore) VowmonStore.markSynced('characters');
-                VowmonDialog.toast('御兽人物档案同步成功，前台一两分钟后更新', 'success');
+                // 全选（完整同步）才清「未同步」标记
+                if (res.all && window.VowmonStore) VowmonStore.markSynced('characters');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改，前台一两分钟后更新', 'success');
             } catch (err) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '同步失败',
@@ -625,21 +645,36 @@ const app = createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return;
             }
-            const ok = await VowmonDialog.confirm(
-                '将从「' + repo + '」读取 characters-data.json，并覆盖本机未同步的改动。继续？',
-                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
-            );
-            if (!ok) return;
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'characters-data.json');
                 if (!bag || !Array.isArray(bag.characters)) throw new Error('仓库里没有 characters-data.json，或字段不是 characters 数组');
-                characters.value = bag.characters.map(normalizeCharacter);
+
+                // 弹出差异预览：每条修改可单独勾选是否覆盖本机
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [{
+                        label: '御兽人物',
+                        local: characters.value,
+                        remote: bag.characters,
+                        key: c => c.id,
+                        name: c => c.name || c.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                characters.value = res.sections[0].merged.map(normalizeCharacter);
                 factions.value = normalizeOrgList(bag.factions, DEFT_FACTIONS);
                 groups.value = normalizeOrgList(bag.groups, DEFT_GROUPS);
                 fieldTemplates.value = Array.isArray(bag.fieldTemplates) ? bag.fieldTemplates.map(String).filter(Boolean) : [];
-                if (window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value });
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + characters.value.length + ' 位御兽人物', 'success', { duration: 3200 });
+                if (res.all && window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value });
+                else if (window.VowmonStore) VowmonStore.save('characters', { characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + characters.value.length + ' 位御兽人物）', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '拉取失败',

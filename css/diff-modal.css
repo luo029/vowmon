@@ -1,0 +1,445 @@
+/* ==========================================================================
+   Vowmon 同步差异预览弹窗样式（唯一来源）
+   --------------------------------------------------------------------------
+   配套脚本：js/diff-modal.js（window.VowmonDiff）
+   类名前缀 vwdiff-，不与 .vdlg-*（dialog.js）、.modal-overlay（common-ui.js）冲突。
+   设计目标：美观、简洁 —— 白底大圆角卡片、彩色类型徽章、字段级 新→旧 对比，
+   每条差异可单独勾选；遵循 vowmon_anim_on = 'false' 关动画（.is-static）。
+   ========================================================================== */
+
+.vwdiff-root {
+    --vwdiff-c: #3182ce;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.vwdiff-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(23, 29, 41, 0.52);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+body:not(.no-anim) .vwdiff-mask {
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
+}
+
+.vwdiff-card {
+    position: relative;
+    width: 620px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 32px 70px -22px rgba(15, 23, 42, 0.42), 0 2px 10px rgba(15, 23, 42, 0.05);
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.vwdiff-root.is-show .vwdiff-mask { opacity: 1; }
+.vwdiff-root.is-show .vwdiff-card { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------ 头部 */
+.vwdiff-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px 14px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--vwdiff-c) 7%, #fff) 0%, #fff 100%);
+    border-bottom: 1px solid #edf1f7;
+    flex: none;
+}
+
+.vwdiff-head-icon {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--vwdiff-c);
+    background: color-mix(in srgb, var(--vwdiff-c) 12%, #fff);
+    box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--vwdiff-c) 55%, transparent);
+}
+
+.vwdiff-head-text { flex: 1 1 auto; min-width: 0; }
+
+.vwdiff-title {
+    font-size: 16px;
+    font-weight: 900;
+    color: #1a202c;
+    letter-spacing: 0.2px;
+    line-height: 1.4;
+}
+
+.vwdiff-subtitle {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #8a97ab;
+    font-weight: 600;
+}
+
+.vwdiff-close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #9aa7ba;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s;
+}
+.vwdiff-close:hover { background: #f1f4f9; color: #41505f; }
+
+/* ------------------------------------------------------------------ 统计条 */
+.vwdiff-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #f8fafd;
+    border-bottom: 1px solid #edf1f7;
+    flex: none;
+    flex-wrap: wrap;
+}
+
+.vwdiff-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.vwdiff-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+.vwdiff-chip i { font-size: 11px; }
+.vwdiff-chip-added    { color: #257a53; background: #e9f8f1; }
+.vwdiff-chip-modified { color: #2b6cb0; background: #ebf4ff; }
+.vwdiff-chip-removed  { color: #c53030; background: #fdeded; }
+
+.vwdiff-bar-right { display: flex; align-items: center; gap: 10px; }
+
+.vwdiff-linkbtn {
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    color: #5b6a7d;
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s;
+}
+.vwdiff-linkbtn:hover { background: #edf1f7; color: #2d3748; }
+
+.vwdiff-selcount { font-size: 12px; font-weight: 800; color: var(--vwdiff-c); white-space: nowrap; }
+
+/* ------------------------------------------------------------------ 列表 */
+.vwdiff-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.vwdiff-section-title {
+    padding: 8px 20px 4px;
+    font-size: 11.5px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: #9aa7ba;
+    text-transform: uppercase;
+}
+
+.vwdiff-item {
+    padding: 10px 20px;
+    border-bottom: 1px solid #f1f4f9;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.vwdiff-item:last-child { border-bottom: none; }
+.vwdiff-item:hover { background: #f8fafd; }
+.vwdiff-item.is-flash { background: color-mix(in srgb, var(--vwdiff-c) 7%, #fff); }
+
+.vwdiff-item-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* 勾选框 */
+.vwdiff-check {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    border-radius: 6px;
+    border: 1.6px solid #cbd5e1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.vwdiff-check i { opacity: 0; transform: scale(0.4); transition: opacity 0.15s, transform 0.15s; }
+.vwdiff-check.is-on {
+    background: var(--vwdiff-c);
+    border-color: var(--vwdiff-c);
+    box-shadow: 0 4px 10px -5px color-mix(in srgb, var(--vwdiff-c) 60%, transparent);
+}
+.vwdiff-check.is-on i { opacity: 1; transform: scale(1); }
+
+/* 类型徽章 */
+.vwdiff-badge {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 1px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.vwdiff-badge i { font-size: 10px; }
+.vwdiff-item[data-type="added"]    .vwdiff-badge { color: #257a53; background: #e9f8f1; }
+.vwdiff-item[data-type="modified"] .vwdiff-badge { color: #2b6cb0; background: #ebf4ff; }
+.vwdiff-item[data-type="removed"]  .vwdiff-badge { color: #c53030; background: #fdeded; }
+
+.vwdiff-name-wrap { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+
+.vwdiff-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2d3748;
+    word-break: break-all;
+    line-height: 1.5;
+}
+
+.vwdiff-removed-hint { font-size: 11.5px; font-weight: 700; color: #c53030; opacity: 0.75; }
+
+/* 新增 / 删除条目的简介行 */
+.vwdiff-brief {
+    margin: 6px 0 0 28px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8a97ab;
+    word-break: break-all;
+}
+
+/* 字段级 diff（默认只露前 2 条） */
+.vwdiff-preview {
+    margin: 6px 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vwdiff-change {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.7;
+    flex-wrap: wrap;
+}
+
+.vwdiff-field {
+    flex: none;
+    color: #8a97ab;
+    font-weight: 800;
+    min-width: 52px;
+}
+
+.vwdiff-vals { display: inline-flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.vwdiff-vals i { font-size: 10px; color: #b7c2d2; align-self: center; }
+
+.vwdiff-old, .vwdiff-new {
+    display: inline-block;
+    max-width: 240px;
+    padding: 1px 8px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 700;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+.vwdiff-old { color: #b0bcca; background: #f4f6f9; text-decoration: line-through; text-decoration-color: rgba(197, 48, 48, 0.45); }
+.vwdiff-new { color: #256045; background: #e9f8f1; }
+
+/* 展开全部改动 */
+.vwdiff-more {
+    margin: 5px 0 0 28px;
+    border: none;
+    background: transparent;
+    padding: 2px 6px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--vwdiff-c);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.vwdiff-more:hover { background: color-mix(in srgb, var(--vwdiff-c) 9%, #fff); }
+
+.vwdiff-detail {
+    display: none;
+    margin: 6px 0 0 28px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #f8fafd;
+    border: 1px solid #edf1f7;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+.vwdiff-item.is-expanded .vwdiff-detail { display: flex; }
+.vwdiff-item.is-expanded .vwdiff-preview { display: none; }
+
+/* ------------------------------------------------------------------ 空态 */
+.vwdiff-empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 44px 24px 36px;
+    text-align: center;
+}
+
+.vwdiff-empty-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #2f9e6e;
+    background: #e9f8f1;
+    box-shadow: 0 12px 26px -14px rgba(47, 158, 110, 0.5);
+    margin-bottom: 16px;
+}
+
+.vwdiff-empty-title { font-size: 16px; font-weight: 900; color: #1a202c; }
+.vwdiff-empty-sub { margin-top: 6px; font-size: 13px; color: #8a97ab; line-height: 1.7; }
+
+/* ------------------------------------------------------------------ 底部 */
+.vwdiff-foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 20px;
+    border-top: 1px solid #edf1f7;
+    background: #f8fafd;
+}
+
+.vwdiff-foot-actions {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.vwdiff-hint { font-size: 11.5px; color: #9aa7ba; line-height: 1.6; max-width: 300px; }
+
+.vwdiff-foot-center { justify-content: center; }
+
+.vwdiff-actions { display: flex; gap: 10px; flex: none; }
+
+.vwdiff-btn {
+    height: 40px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.18s, transform 0.18s, box-shadow 0.18s, color 0.18s, opacity 0.18s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.vwdiff-btn:active { transform: scale(0.975); }
+.vwdiff-btn:focus-visible { box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.28); }
+
+.vwdiff-btn-cancel { background: #eef2f8; color: #5b6a7d; }
+.vwdiff-btn-cancel:hover { background: #e4eaf3; color: #41505f; }
+
+.vwdiff-btn-ok {
+    color: #fff;
+    background: var(--vwdiff-c);
+    box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--vwdiff-c) 70%, transparent);
+}
+.vwdiff-btn-ok:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.vwdiff-btn-ok:active { transform: translateY(0) scale(0.975); }
+.vwdiff-btn-ok.is-disabled,
+.vwdiff-btn-ok[disabled] { opacity: 0.55; cursor: default; transform: none; filter: none; }
+
+/* ------------------------------------------------------------ 动画开关 */
+.vwdiff-root.is-static .vwdiff-mask,
+.vwdiff-root.is-static .vwdiff-card,
+.vwdiff-root.is-static .vwdiff-check,
+.vwdiff-root.is-static .vwdiff-check i {
+    transition: none !important;
+    animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vwdiff-mask, .vwdiff-card, .vwdiff-check, .vwdiff-check i {
+        transition-duration: 0.01ms !important;
+        animation: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------- 响应式 */
+@media (max-width: 640px) {
+    .vwdiff-root { padding: 12px; align-items: flex-end; }
+    .vwdiff-card { width: 100%; max-height: calc(100vh - 24px); border-radius: 18px; }
+    .vwdiff-head { padding: 14px 16px 12px; }
+    .vwdiff-head-icon { width: 36px; height: 36px; border-radius: 12px; font-size: 15px; }
+    .vwdiff-title { font-size: 15px; }
+    .vwdiff-subtitle { font-size: 11px; }
+    .vwdiff-bar, .vwdiff-foot { padding-left: 14px; padding-right: 14px; }
+    .vwdiff-item { padding: 10px 14px; }
+    .vwdiff-preview, .vwdiff-detail, .vwdiff-more, .vwdiff-brief { margin-left: 0; }
+    .vwdiff-old, .vwdiff-new { max-width: 46vw; }
+    .vwdiff-foot { flex-wrap: wrap; }
+    .vwdiff-foot-actions { flex-wrap: wrap; }
+    .vwdiff-hint { max-width: none; flex: 1 1 100%; }
+    .vwdiff-actions { flex: 1 1 100%; }
+    .vwdiff-btn { flex: 1 1 0; height: 44px; }
+}

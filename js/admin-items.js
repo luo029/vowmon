@@ -622,23 +622,42 @@ createApp({
             }
 
             isSyncing.value = true;
-            // 自定义列表跟着数据一起同步，否则前台读不到新加的类型 / 分组
-            const content = JSON.stringify({
-                kinds: kinds.value,
-                groups: groups.value,
-                categories: categories.value,
-                currencies: currencies.value,
-                items: items.value
-            }, null, 4) + '\n';
-
             try {
+                // 先取云端当前版本做差异预览（文件不存在 = 首次同步，视为空）
+                const remoteBag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repos[0], 'items-data.json');
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + repos[0] + '）',
+                    sections: [
+                        { label: '物品', local: items.value, remote: remoteBag && Array.isArray(remoteBag.items) ? remoteBag.items : [], key: x => x.id, name: x => x.name || x.id },
+                        { label: '类型', local: kinds.value, remote: remoteBag && Array.isArray(remoteBag.kinds) ? remoteBag.kinds : [], key: x => x, name: x => x },
+                        { label: '分组', local: groups.value, remote: remoteBag && Array.isArray(remoteBag.groups) ? remoteBag.groups : [], key: x => x, name: x => x },
+                        { label: '细分类', local: categories.value, remote: remoteBag && Array.isArray(remoteBag.categories) ? remoteBag.categories : [], key: x => x, name: x => x },
+                        { label: '货币', local: currencies.value, remote: remoteBag && Array.isArray(remoteBag.currencies) ? remoteBag.currencies : [], key: x => x, name: x => x }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                // 自定义列表跟着数据一起同步，否则前台读不到新加的类型 / 分组
+                const content = JSON.stringify({
+                    kinds: res.sections[1].merged,
+                    groups: res.sections[2].merged,
+                    categories: res.sections[3].merged,
+                    currencies: res.sections[4].merged,
+                    items: res.sections[0].merged
+                }, null, 4) + '\n';
+
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(
                         cfg.token, cfg.owner, repo, 'items-data.json',
                         content, 'update items data'
                     );
                 }
-                VowmonDialog.toast('物品数据同步成功，共 ' + repos.length + ' 个仓库', 'success');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改到 ' + repos.length + ' 个仓库', 'success');
             } catch (err) {
                 VowmonDialog.alert('物品数据同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',
@@ -694,25 +713,37 @@ createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return;
             }
-            const ok = await VowmonDialog.confirm(
-                '将从「' + repo + '」读取 items-data.json（含类型 / 分组 / 细分类），并覆盖本机未同步的改动。继续？',
-                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
-            );
-            if (!ok) return;
-
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'items-data.json');
                 if (!bag || !Array.isArray(bag.items)) throw new Error('仓库里没有 items-data.json，或字段不是 items 数组');
 
-                items.value = normalizeItems(bag.items);
+                // 弹出差异预览：每条修改可单独勾选是否覆盖本机
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [
+                        { label: '物品', local: items.value, remote: bag.items, key: x => x.id, name: x => x.name || x.id },
+                        { label: '类型', local: kinds.value, remote: bag.kinds || [], key: x => x, name: x => x },
+                        { label: '分组', local: groups.value, remote: bag.groups || [], key: x => x, name: x => x },
+                        { label: '细分类', local: categories.value, remote: bag.categories || [], key: x => x, name: x => x },
+                        { label: '货币', local: currencies.value, remote: bag.currencies || [], key: x => x, name: x => x }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                items.value = normalizeItems(res.sections[0].merged);
                 localStorage.setItem('vowmon_items_data', JSON.stringify(items.value));
-                localStorage.setItem(KINDS_KEY, JSON.stringify(bag.kinds || []));
-                localStorage.setItem(GROUPS_KEY, JSON.stringify(bag.groups || []));
-                localStorage.setItem(CATS_KEY, JSON.stringify(bag.categories || []));
-                localStorage.setItem(CURR_KEY, JSON.stringify(bag.currencies || []));
+                localStorage.setItem(KINDS_KEY, JSON.stringify(res.sections[1].merged));
+                localStorage.setItem(GROUPS_KEY, JSON.stringify(res.sections[2].merged));
+                localStorage.setItem(CATS_KEY, JSON.stringify(res.sections[3].merged));
+                localStorage.setItem(CURR_KEY, JSON.stringify(res.sections[4].merged));
                 initPickers();
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + items.value.length + ' 件物品', 'success', { duration: 3200 });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + items.value.length + ' 件物品）', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err)

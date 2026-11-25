@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Diff Modal Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/diff-modal.css?v=20261128">
+</head>
+<body style="background:#eef2f7; font-family: Inter, system-ui, sans-serif;">
+<div id="app">
+    <button id="open-push" onclick="openPush()">push</button>
+    <button id="open-pull" onclick="openPull()">pull</button>
+    <button id="open-empty" onclick="openEmpty()">empty</button>
+</div>
+<script src="../js/diff-modal.js?v=20261128"></script>
+<script>
+    const localVows = [
+        { id: 'v001', name: '火翎狐', types: ['火'], level: 12, region: ['九牧地区'], note: '本机改过说明' },
+        { id: 'v002', name: '水澜龟', types: ['水'], level: 20, region: [] },
+        { id: 'v004', name: '风吟隼', types: ['风'], level: 8, region: ['岚州'], taxonomy: {域: '灵域'} }
+    ];
+    const remoteVows = [
+        { id: 'v001', name: '火翎狐', types: ['火', '雷'], level: 12, region: ['九牧地区'], note: '云端说明' },
+        { id: 'v002', name: '水澜龟', types: ['水'], level: 30, region: ['沧澜湾'] },
+        { id: 'v003', name: '岩铠兽', types: ['岩'], level: 5, region: [] }
+    ];
+    window.__reviewResult = null;
+    async function openPush() {
+        const res = await VowmonDiff.review({
+            mode: 'push',
+            sourceLabel: '本机草稿',
+            targetLabel: '云端仓库（vowmon_data）',
+            sections: [
+                { label: '精灵', local: localVows, remote: remoteVows, key: v => v.id, name: v => v.name || v.id },
+                { label: '技能包', kind: 'map', local: { 火族: ['火花'], 风族: ['风刃'] }, remote: { 火族: ['火花', '烈焰冲撞'], 水族: ['水枪'] } }
+            ]
+        });
+        window.__reviewResult = res;
+        document.title = 'RESULT ok=' + res.ok + ' count=' + (res.count || 0) + ' all=' + !!res.all;
+    }
+    async function openPull() {
+        await VowmonDiff.review({
+            mode: 'pull',
+            sourceLabel: '云端仓库（vowmon_data）',
+            targetLabel: '本机草稿',
+            sections: [{ label: '精灵', local: localVows, remote: remoteVows, key: v => v.id, name: v => v.name || v.id }]
+        });
+    }
+    async function openEmpty() {
+        window.__reviewResult = await VowmonDiff.review({
+            mode: 'push',
+            sections: [{ label: '精灵', local: localVows, remote: JSON.parse(JSON.stringify(localVows)), key: v => v.id, name: v => v.name }]
+        });
+    }
+    // 自动打开 push 演示（供无头浏览器截图）
+    if (location.search.indexOf('auto=push') !== -1) setTimeout(openPush, 300);
+    if (location.search.indexOf('auto=empty') !== -1) setTimeout(openEmpty, 300);
+</script>
+</body>
+</html>

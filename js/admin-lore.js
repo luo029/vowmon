@@ -368,11 +368,15 @@ const app = createApp({
             const repos = targetRepos();
             isSyncing.value = true;
             try {
-                /* 取「上次同步成功的快照」和「仓库当前版本」 */
+                /* 取「上次同步成功的快照」和「仓库当前版本」（拉不到就中止，不做盲传） */
                 let lastPush = null;
                 try { lastPush = JSON.parse(localStorage.getItem('vowmon_lore_lastpush') || 'null'); } catch (err) { lastPush = null; }
                 let remoteNow = null;
-                try { remoteNow = await GitHubSync.downloadJson(cfg.token, cfg.owner, repos[0], 'lore-data.json'); } catch (err) { remoteNow = null; }
+                try {
+                    remoteNow = await GitHubSync.downloadJson(cfg.token, cfg.owner, repos[0], 'lore-data.json');
+                } catch (err) {
+                    throw err;   // Token / 网络错误直接中止
+                }
 
                 const merged = JSON.parse(JSON.stringify({ pages: data.value.pages, blocks: data.value.blocks }));
                 if (remoteNow && remoteNow.blocks && typeof remoteNow.blocks === 'object') {
@@ -398,15 +402,36 @@ const app = createApp({
                 }
 
                 applyData(merged);
-                const content = JSON.stringify({ pages: merged.pages, blocks: merged.blocks }, null, 1) + '\n';
+
+                // 弹出差异预览：合并结果 vs 云端当前版本，每条修改可单独勾选是否上传
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + repos[0] + '）',
+                    sections: [
+                        { label: '页面', local: merged.pages, remote: Array.isArray(remoteNow && remoteNow.pages) ? remoteNow.pages : [], key: p => p.id, name: p => (p && (p.title || p.id)) || '（未命名页）' },
+                        { label: '文本块', kind: 'map', local: merged.blocks, remote: (remoteNow && remoteNow.blocks && typeof remoteNow.blocks === 'object') ? remoteNow.blocks : {} }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                // 只上传勾选的修改；没勾的块保持云端原样（本机保留这些编辑，下次同步可再推）
+                const upload = { pages: res.sections[0].merged, blocks: res.sections[1].merged };
+                const content = JSON.stringify(upload, null, 1) + '\n';
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(cfg.token, cfg.owner, repo, 'lore-data.json', content, 'update page content');
                 }
-                try { localStorage.setItem('vowmon_lore_lastpush', JSON.stringify({ pages: merged.pages, blocks: merged.blocks })); } catch (err) { /* ignore */ }
-                if (window.VowmonStore) VowmonStore.markSynced('lore');
-                isDirty.value = false;
+                try { localStorage.setItem('vowmon_lore_lastpush', JSON.stringify(upload)); } catch (err) { /* ignore */ }
+                // 全选（完整同步）才清「未同步」标记
+                if (res.all) {
+                    if (window.VowmonStore) VowmonStore.markSynced('lore');
+                    isDirty.value = false;
+                }
                 if (viewMode.value === 'visual') reloadFrame();
-                VowmonDialog.toast('页面内容同步成功（已自动合并云端最新修改），前台一两分钟后更新', 'success');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改（已自动合并云端最新内容），前台一两分钟后更新', 'success');
             } catch (err) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '同步失败',
@@ -426,22 +451,37 @@ const app = createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return;
             }
-            const ok = await VowmonDialog.confirm(
-                '将从「' + repo + '」读取 lore-data.json，并覆盖本机未同步的改动。继续？',
-                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
-            );
-            if (!ok) return;
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'lore-data.json');
                 if (!bag || !bag.blocks || typeof bag.blocks !== 'object') {
                     throw new Error('仓库里没有 lore-data.json，或数据格式不对');
                 }
-                applyData(bag);
-                if (window.VowmonStore) VowmonStore.replace('lore', bag);
-                isDirty.value = false;
+
+                // 弹出差异预览：按页面 / 文本块粒度勾选要拉取的内容
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [
+                        { label: '页面', local: data.value.pages, remote: Array.isArray(bag.pages) ? bag.pages : [], key: p => p.id, name: p => (p && (p.title || p.id)) || '（未命名页）' },
+                        { label: '文本块', kind: 'map', local: data.value.blocks || {}, remote: bag.blocks }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                const mergedBag = { pages: res.sections[0].merged, blocks: res.sections[1].merged };
+                applyData(mergedBag);
+                // 全选拉取 = 本机与云端完全一致 → replace（清脏标记）；
+                // 部分拉取 = 本机还有未推送的改动 → save（保留脏标记）
+                if (res.all && window.VowmonStore) VowmonStore.replace('lore', mergedBag);
+                else if (window.VowmonStore) VowmonStore.save('lore', mergedBag);
+                isDirty.value = window.VowmonStore ? !!VowmonStore.isDirty('lore') : true;
                 if (viewMode.value === 'visual') reloadFrame();
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + Object.keys(bag.blocks).length + ' 个文本块', 'success', { duration: 3200 });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + Object.keys(mergedBag.blocks).length + ' 个文本块）', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '拉取失败',

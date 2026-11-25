@@ -153,12 +153,29 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ skills: skills.value, families: families.value }, null, 1) + '\n';
+                // 先取云端当前版本做差异预览（文件不存在 = 首次同步，视为空）
+                const remoteBag = await GitHubSync.downloadJson(config.value.token, config.value.owner, targetRepos()[0], 'bloodline-skills-data.json');
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + targetRepos()[0] + '）',
+                    sections: [
+                        { label: '血脉技能', local: skills.value, remote: remoteBag && Array.isArray(remoteBag.skills) ? remoteBag.skills : [], key: s => s.id, name: s => s.name || s.id },
+                        { label: '族尊技能包', kind: 'map', local: families.value || {}, remote: (remoteBag && remoteBag.families && typeof remoteBag.families === 'object') ? remoteBag.families : {} }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                const content = JSON.stringify({ skills: res.sections[0].merged, families: res.sections[1].merged }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'bloodline-skills-data.json', content, 'update bloodline skills data');
                 }
-                if (window.VowmonStore) VowmonStore.markSynced('bloodlineSkills');
-                VowmonDialog.toast('血脉技能已同步，前台一两分钟后更新', 'success');
+                // 全选（完整同步）才清「未同步」标记
+                if (res.all && window.VowmonStore) VowmonStore.markSynced('bloodlineSkills');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改，前台一两分钟后更新', 'success');
             } catch (err) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', { type: 'danger', title: '同步失败', detail: err && err.message ? err.message : String(err) });
             } finally { isSyncing.value = false; }
@@ -170,17 +187,32 @@ const app = createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return;
             }
-            const ok = await VowmonDialog.confirm('将从「' + repo + '」读取 bloodline-skills-data.json，并覆盖本机未同步的改动。继续？', { type: 'warning', title: '从数据仓库拉取', okText: '拉取' });
-            if (!ok) return;
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'bloodline-skills-data.json');
                 if (!bag || !Array.isArray(bag.skills)) throw new Error('仓库里没有 bloodline-skills-data.json 或字段不是 skills 数组');
-                skills.value = bag.skills.map(normalizeSkill);
-                families.value = (bag.families && typeof bag.families === 'object') ? bag.families : {};
+
+                // 弹出差异预览：每条修改可单独勾选是否覆盖本机
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [
+                        { label: '血脉技能', local: skills.value, remote: bag.skills, key: s => s.id, name: s => s.name || s.id },
+                        { label: '族尊技能包', kind: 'map', local: families.value || {}, remote: (bag.families && typeof bag.families === 'object') ? bag.families : {} }
+                    ]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                skills.value = res.sections[0].merged.map(normalizeSkill);
+                families.value = res.sections[1].merged;
                 loadFamily(Object.keys(families.value)[0] || '');
-                if (window.VowmonStore) VowmonStore.replace('bloodlineSkills', { skills: skills.value, families: families.value });
-                VowmonDialog.toast('已从仓库拉取 ' + skills.value.length + ' 个血脉技能', 'success');
+                if (res.all && window.VowmonStore) VowmonStore.replace('bloodlineSkills', { skills: skills.value, families: families.value });
+                else if (window.VowmonStore) VowmonStore.save('bloodlineSkills', { skills: skills.value, families: families.value });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + skills.value.length + ' 个血脉技能）', 'success');
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', { type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err) });
             } finally { isSyncing.value = false; }

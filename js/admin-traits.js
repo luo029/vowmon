@@ -335,16 +335,37 @@ const app = createApp({
             }
 
             isSyncing.value = true;
-            const content = JSON.stringify({ traits: traits.value }, null, 4) + '\n';
 
             try {
+                // 先取云端当前版本做差异预览（文件不存在 = 首次同步，视为空）
+                const remoteBag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repos[0], 'traits-data.json');
+                const res = await VowmonDiff.review({
+                    mode: 'push',
+                    sourceLabel: '本机草稿',
+                    targetLabel: '云端仓库（' + repos[0] + '）',
+                    sections: [{
+                        label: '特性',
+                        local: traits.value,
+                        remote: remoteBag && Array.isArray(remoteBag.traits) ? remoteBag.traits : [],
+                        key: t => t.id,
+                        name: t => t.name || t.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('本机与云端内容一致，无需同步', 'info', { duration: 2600 });
+                    return;
+                }
+
+                const content = JSON.stringify({ traits: res.sections[0].merged }, null, 4) + '\n';
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(
                         cfg.token, cfg.owner, repo, 'traits-data.json',
                         content, 'update traits data'
                     );
                 }
-                VowmonDialog.toast('特性数据同步成功，共 ' + repos.length + ' 个仓库', 'success');
+                // 全选（完整同步）才清「未同步」标记
+                if (res.all && window.VowmonStore) VowmonStore.markSynced('traits');
+                VowmonDialog.toast('已上传 ' + res.count + ' 处修改到 ' + repos.length + ' 个仓库', 'success');
             } catch (err) {
                 VowmonDialog.alert('特性数据同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',
@@ -414,21 +435,34 @@ const app = createApp({
                 VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和数据仓库名', { type: 'warning', title: '还没配置好' });
                 return;
             }
-            const ok = await VowmonDialog.confirm(
-                '将从「' + repo + '」读取 traits-data.json，并覆盖本机未同步的改动。继续？',
-                { type: 'warning', title: '从数据仓库拉取', okText: '拉取' }
-            );
-            if (!ok) return;
-
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'traits-data.json');
                 if (!bag || !Array.isArray(bag.traits)) throw new Error('仓库里没有 traits-data.json，或字段不是 traits 数组');
 
-                traits.value = normalizeTraitList(JSON.parse(JSON.stringify(bag.traits)));
+                // 弹出差异预览：每条修改可单独勾选是否覆盖本机
+                const res = await VowmonDiff.review({
+                    mode: 'pull',
+                    sourceLabel: '云端仓库（' + repo + '）',
+                    targetLabel: '本机草稿',
+                    sections: [{
+                        label: '特性',
+                        local: traits.value,
+                        remote: bag.traits,
+                        key: t => t.id,
+                        name: t => t.name || t.id
+                    }]
+                });
+                if (!res.ok) {
+                    if (res.empty) VowmonDialog.toast('云端与本机内容一致，无需拉取', 'info', { duration: 2600 });
+                    return;
+                }
+
+                traits.value = normalizeTraitList(JSON.parse(JSON.stringify(res.sections[0].merged)));
                 localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
-                if (window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + traits.value.length + ' 条特性', 'success', { duration: 3200 });
+                if (res.all && window.VowmonStore) VowmonStore.replace('traits', { traits: traits.value });
+                else if (window.VowmonStore) VowmonStore.save('traits', { traits: traits.value });
+                VowmonDialog.toast('已拉取 ' + res.count + ' 处修改（共 ' + traits.value.length + ' 条特性）', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '拉取失败', detail: err && err.message ? err.message : String(err)
