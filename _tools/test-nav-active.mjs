@@ -3,11 +3,11 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 const BASE = process.argv[2] || 'http://127.0.0.1:8765';
 const PORT = 9257, CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const PAGES = ['index.html', 'dex/vowdex.html', 'dex/realm-dex.html', 'dex/vow-detail.html?id=068', 'dex/list.html',
-  'reference/skills.html', 'reference/skill-detail.html?id=s008', 'reference/traits.html', 'reference/items.html',
-  'reference/natures.html', 'reference/calculator.html', 'reference/coverage.html',
-  'world/ranks.html', 'world/trainers.html', 'world/factions.html', 'reference/bloodlines.html', 'world/lore.html',
-  'records/individuals.html', 'records/characters.html'];
+const PAGES = ['/', 'dex/vowdex', 'dex/realm-dex', 'dex/vow-detail?id=068', 'dex/list',
+  'reference/skills', 'reference/skill-detail?id=s008', 'reference/traits', 'reference/items',
+  'reference/natures', 'reference/calculator', 'reference/coverage',
+  'world/ranks', 'world/trainers', 'world/factions', 'reference/bloodlines', 'world/lore',
+  'records/individuals', 'records/characters'];
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, '--disable-gpu',
   '--no-first-run', '--user-data-dir=' + fs.mkdtempSync('C:/Windows/Temp/cdpE-'), 'about:blank'], { stdio: 'ignore' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));

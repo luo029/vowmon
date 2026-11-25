@@ -157,6 +157,9 @@
         // /admin/ 或 /admin/index.html 一律按 admin.html 高亮「工具」菜单
         if (/\/admin\/(index\.html)?$/.test(path)) return 'admin.html';
         var file = parts[parts.length - 1] || parts[parts.length - 2] || 'index.html';
+        // Cloudflare Pages 会把 /dex/vowdex.html 308 到无扩展名的 /dex/vowdex，
+        // 这里补回 .html 再查高亮表，否则线上所有页面都没有高亮态
+        if (file && !/\.[a-z0-9]+$/.test(file)) file += '.html';
         return file;
     }
 
