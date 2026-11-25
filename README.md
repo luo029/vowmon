@@ -22,20 +22,20 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 ```text
 vowmon/
 ├── index.html              # 首页
-├── vowdex.html             # 精灵图鉴
-├── vow-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
-├── individuals.html        # 御兽精灵档案（书中精灵个体：性格/技能熟练度/血脉/主人/经历，?id=直达详情）
-├── characters.html         # 御兽人物档案（书中角色：势力/头衔/联盟币存款/物品栏/持有精灵，?id=直达详情）
-├── factions.html           # 势力版图（联盟制度 / 九牧地区·九牧联盟 / 权职体系 / 三大协会，已纳入页面内容 CMS）
-├── list.html               # 精灵列表
-├── skills.html             # 技能图鉴
-├── skill-detail.html       # 技能详情（?id=技能id，列出可学精灵：自学 / 技能石）
-├── lore.html               # 元域演化史（世界观史诗页面，纯静态文本 + 星空卷轴风）
-├── traits.html             # 特性大全
-├── natures.html            # 性格大全
-├── items.html              # 物品图鉴（列表 + 详情）
-├── calculator.html         # 属性克制计算器
-├── coverage.html           # 打击面计算器
+├── dex/vowdex.html             # 精灵图鉴
+├── dex/vow-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
+├── records/individuals.html        # 御兽精灵档案（书中精灵个体：性格/技能熟练度/血脉/主人/经历，?id=直达详情）
+├── records/characters.html         # 御兽人物档案（书中角色：势力/头衔/联盟币存款/物品栏/持有精灵，?id=直达详情）
+├── world/factions.html           # 势力版图（联盟制度 / 九牧地区·九牧联盟 / 权职体系 / 三大协会，已纳入页面内容 CMS）
+├── dex/list.html               # 精灵列表
+├── reference/skills.html             # 技能图鉴
+├── reference/skill-detail.html       # 技能详情（?id=技能id，列出可学精灵：自学 / 技能石）
+├── world/lore.html               # 元域演化史（世界观史诗页面，纯静态文本 + 星空卷轴风）
+├── reference/traits.html             # 特性大全
+├── reference/natures.html            # 性格大全
+├── reference/items.html              # 物品图鉴（列表 + 详情）
+├── reference/calculator.html         # 属性克制计算器
+├── reference/coverage.html           # 打击面计算器
 ├── README.md               # 本文件
 ├── .nojekyll               # 让 GitHub Pages 跳过 Jekyll 处理
 ├── _headers                # Cloudflare Pages 响应头（静态资源缓存策略）
@@ -46,12 +46,12 @@ vowmon/
 │
 ├── admin/                  # 后台（子目录，资源引用带 ../ 前缀）
 │   ├── index.html          # 后台 - 精灵管理（原 admin.html，网址 /admin/）
-│   ├── admin-skills.html   # 后台 - 技能管理
-│   ├── admin-traits.html   # 后台 - 特性管理
-│   ├── admin-items.html    # 后台 - 物品管理
-│   ├── admin-lore.html     # 后台 - 页面内容管理（可视化 + 列表双模式，世界观文本块）
-│   ├── admin-individuals.html # 后台 - 御兽精灵档案管理（书中个体）
-│   ├── admin-characters.html  # 后台 - 御兽人物档案管理（书中角色）
+│   ├── admin-reference/skills.html   # 后台 - 技能管理
+│   ├── admin-reference/traits.html   # 后台 - 特性管理
+│   ├── admin-reference/items.html    # 后台 - 物品管理
+│   ├── admin-world/lore.html     # 后台 - 页面内容管理（可视化 + 列表双模式，世界观文本块）
+│   ├── admin-records/individuals.html # 后台 - 御兽精灵档案管理（书中个体）
+│   ├── admin-records/characters.html  # 后台 - 御兽人物档案管理（书中角色）
 │   └── admin-images.html   # 后台 - 图片管理
 │
 ├── css/                    # 所有样式
@@ -121,79 +121,79 @@ vowmon/
 ### 1.05.1 前台页面（给访客看的）
 
 - **首页 index.html**：站点门面。一张 Hero 横幅介绍「Vowmon Wiki」，下面两张入口卡片分别导向「查阅图鉴」和「研究工具」。
-- **精灵图鉴 vowdex.html**：以卡片墙的形式展示所有精灵，每张卡片有立绘、编号、名字、属性图标和六维能力。**点击卡片跳 `vow-detail.html?id={精灵id}` 查看详情**。适合快速浏览、按形态翻页。支持：
+- **精灵图鉴 dex/vowdex.html**：以卡片墙的形式展示所有精灵，每张卡片有立绘、编号、名字、属性图标和六维能力。**点击卡片跳 `dex/vow-detail.html?id={精灵id}` 查看详情**。适合快速浏览、按形态翻页。支持：
   - 按名称 / 编号搜索；
   - 按「精灵阶数」「精灵形态」「属性」多选筛选（同组可多选，不同组同时满足）；
   - 分页浏览，顶部实时显示「共 X 种形态」。
   - **异色悬停**：没有异色图的卡片，鼠标悬停是原来的「上浮 + 图片放大」动效；有异色图的卡片，悬停时**不再放大**，而是淡入异色立绘。一只精灵有多张异色图时，持续悬停会按 #1 → #2 → … 顺序轮播（关掉动画开关后只固定显示第一张）。异色图加载失败会自动隐藏，不会盖成破图。
-- **精灵列表 list.html**：和图鉴同源数据，但换成**表格**呈现，适合查询和对比。支持自定义「显示哪些列」、按列排序、与图鉴类似的多条件筛选。精灵名称列居中显示；「属性」列用**胶囊**展示，胶囊里是「属性图标 + 属性名称」（颜色取自 `js/type-config.js`）。
-- **技能图鉴 skills.html**：表格展示全部技能，列依次为技能名称 / 技能属性 / 技能类型 / 能耗 / 威力 / 技能效果（**表格不显示标签列**，标签只用于筛选）。属性 / 分类用「图标 + 文字」的小胶囊呈现。顶部是筛选面板：
+- **精灵列表 dex/list.html**：和图鉴同源数据，但换成**表格**呈现，适合查询和对比。支持自定义「显示哪些列」、按列排序、与图鉴类似的多条件筛选。精灵名称列居中显示；「属性」列用**胶囊**展示，胶囊里是「属性图标 + 属性名称」（颜色取自 `js/type-config.js`）。
+- **技能图鉴 reference/skills.html**：表格展示全部技能，列依次为技能名称 / 技能属性 / 技能类型 / 能耗 / 威力 / 技能效果（**表格不显示标签列**，标签只用于筛选）。属性 / 分类用「图标 + 文字」的小胶囊呈现。顶部是筛选面板：
   - 搜索框：可搜技能名称、效果文案、标签名；聚焦有高亮描边，输入后出现一键清空按钮。
   - 四组筛选：**技能类型**（物理 / 特殊 / 变化）、**能耗**、**技能标签**、**技能系别**（属性）。每组选项都带数量角标；组内多选取并集（OR），组间同时满足（AND）。
   - 能耗与系别的可选项从现有数据自动派生——新增技能用了新能耗 / 新属性，筛选按钮会自动出现，无需改代码。**技能标签只显示数据中实际用到的**（按使用次数降序），后台给技能设置了几个标签就出现几个，不会列出 `tag-config.js` 里全部预定义标签。
   - 表头可点击排序：点击「技能名称 / 技能属性 / 技能类型 / 能耗 / 威力」按该列排列（能耗、威力按数值大小，属性按图鉴顺序，名称按拼音），再点切降序，第三次恢复原序，箭头指示当前方向。
   - 顶部实时显示「共 X 条」结果数，可一键「清空筛选」。
-  - **技能名可点击**：点技能名跳到 `skill-detail.html?id={技能id}`。
-- **技能详情 skill-detail.html**（布局参照洛克王国 wiki，`?id={技能id}`，兼容旧写法 `?name={技能名}`）：
+  - **技能名可点击**：点技能名跳到 `reference/skill-detail.html?id={技能id}`。
+- **技能详情 reference/skill-detail.html**（布局参照洛克王国 wiki，`?id={技能id}`，兼容旧写法 `?name={技能名}`）：
   - **左列**：技能图标块（类型色渐变 + 分类图标）、名称、属性 / 分类 / 标签胶囊、技能效果、威力 / 耗能，以及「学习方式统计」卡（自学 N 只 / 技能石 N 只）；
   - **右列**：可学精灵网格，带「全部 / 自学 / 技能石」筛选 Tab（含数量）、名称 / 编号搜索、每页 35 只分页；
-  - **卡片**：`NO.编号` + 学习方式角标（✦自学 / 💎技能石）+ 立绘 + 名字 + 形态 + 属性图标，点击跳 `vow-detail.html?id={精灵id}`；
+  - **卡片**：`NO.编号` + 学习方式角标（✦自学 / 💎技能石）+ 立绘 + 名字 + 形态 + 属性图标，点击跳 `dex/vow-detail.html?id={精灵id}`；
   - 技能不存在或链接失效有兜底提示，不会白屏。
-- **精灵详情 vow-detail.html**（布局参照洛克王国 wiki，`?id={精灵id}`）：
+- **精灵详情 dex/vow-detail.html**（布局参照洛克王国 wiki，`?id={精灵id}`）：
   - **左列**：展示台（背景渐变取主属性色，两层白色圆点纹样缓慢流动；精灵立绘上下浅浮动 + 地面影子同步缩放，只动 transform，GPU 合成保证流畅）+ 普通 / 异色切换（有异色图时显示）+ 图鉴记载卡；
   - **右列**：种族资质卡（六维彩色进度条 + 总和徽章）、资料卡（阶数 / 形态 / 身高 / 体重 / 蛋组 / 可骑乘；origin 显示为「原型参照（仅助记，非世界设定）」）、特性卡（普通 / 第二 / 隐藏特性分组）、进化链卡（点击节点跳转对应详情页）、系别克制卡（本系进攻 18 系倍率分组 + 承受攻击双系合成倍率，含 ×4 / ×0.25）；
   - **顶部**：左「图鉴总览」返回按钮 + 右侧上 / 下一只精灵芯片（按编号排序，带迷你头像）；
-  - **入口**：vowdex.html 图鉴卡片点击、skill-detail.html 可学精灵卡片点击；
+  - **入口**：dex/vowdex.html 图鉴卡片点击、reference/skill-detail.html 可学精灵卡片点击；
   - **动效开关**：浮动、流动背景全部跟随 `vowmon_anim_on`，关 = 完全静止（body 加 `.no-anim`）；其他标签页切换开关时本页实时响应（监听 `vowmon:anim-changed`）。
-- **书内档案（御兽精灵 individuals.html / 御兽人物 characters.html）**：存放小说里的精灵**个体**与**人物**，和精灵图鉴（种族百科）相互独立，通过编号/ID 互相引用：
+- **书内档案（御兽精灵 records/individuals.html / 御兽人物 records/characters.html）**：存放小说里的精灵**个体**与**人物**，和精灵图鉴（种族百科）相互独立，通过编号/ID 互相引用：
   - **御兽精灵**：昵称、性别、种族（引用图鉴编号，自动带出立绘/属性）、性格、特性（引用特性库）、技能+熟练度（入门/熟练/专精[皆传：迅疾/刚猛]/完美）、血脉（异变/黑暗/光明/属性+血脉技能）、等级与阶段（**阶段由等级自动推导**：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 / 灵相61-70 / 律冠71-89 / 元灵90-99 / 元100）、主人（引用人物 id）、携带道具、经历；
   - **御兽人物**：姓名、头衔/称号、所属势力、存款（联盟币）、物品栏、持有精灵（引用御兽精灵 id）、人物简介；
-  - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `vow-detail.html`；
-  - 后台对应 `admin-individuals.html` / `admin-characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
-- **势力版图 factions.html**：世界观设定页（联盟制度 / 九牧地区·九牧联盟 / 权职体系：盟主、戎枢、大冠、太宰、首座、大君与古今叫法对照 / 三大协会 / 荒野警示），已纳入页面内容 CMS（lore-data.json 中的 `factions.*` 文本块）。
-- **特性大全 traits.html**：表格展示全部特性（ abilities ）。支持搜索与按关联属性筛选，并列出每个特性「拥有该特性的精灵」。
-- **性格大全 natures.html**（布局参照洛克王国 wiki，数据采用宝可梦 25 性格，仅保留能力修正部分）：
+  - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `dex/vow-detail.html`；
+  - 后台对应 `admin-records/individuals.html` / `admin-records/characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
+- **势力版图 world/factions.html**：世界观设定页（联盟制度 / 九牧地区·九牧联盟 / 权职体系：盟主、戎枢、大冠、太宰、首座、大君与古今叫法对照 / 三大协会 / 荒野警示），已纳入页面内容 CMS（lore-data.json 中的 `factions.*` 文本块）。
+- **特性大全 reference/traits.html**：表格展示全部特性（ abilities ）。支持搜索与按关联属性筛选，并列出每个特性「拥有该特性的精灵」。
+- **性格大全 reference/natures.html**（布局参照洛克王国 wiki，数据采用宝可梦 25 性格，仅保留能力修正部分）：
   - 性格影响能力值：一项 **+10%**、另一项 **-10%**；另有 5 种中性性格（勤奋 / 坦率 / 害羞 / 浮躁 / 认真）无任何修正。
   - **性格速查表**：横轴「降低的能力」× 纵轴「提高的能力」的 5×5 矩阵，交叉格显示对应性格，点击可定位到卡片；下方列出 5 种中性性格。
   - **性格卡片**：每张显示中文 / 日文 / 英文名、能力修正（如「攻击 +10% / 特攻 -10%」）。
   - 筛选：按「提高的能力 / 降低的能力」多选，以及按名称（中 / 日 / 英）搜索。
   - 数据唯一来源是 `vowmon_data/natures-data.json`（`natures` → `allNaturesData`、`stats` → `natureStats` 能力配色），为只读数据，不由后台同步覆盖。
-- **物品图鉴 items.html**：物品的浏览与详情页，列表 / 详情是同一个页面（`items.html?id=i001` 直达某件物品，前进后退可用）：
+- **物品图鉴 reference/items.html**：物品的浏览与详情页，列表 / 详情是同一个页面（`reference/items.html?id=i001` 直达某件物品，前进后退可用）：
   - **列表**：顶部大标题 + 「已筛 / 当前大类总数」计数；搜索（名称、描述、获取方式、分组都会命中）；分组胶囊筛选（只显示数据里实际有物品的分组，带数量角标）；`默认 / 名称 / 分组` 三种排序。
   - **大类 Tab**：数据里出现两个及以上的「物品 / 精灵果实 / 精灵蛋」时才显示，只有一个大类时自动隐藏。
   - **卡片**：左侧是图标（有图片用图片，没有则用图标字体 + 主题色），右侧是名称与两行描述，整卡可点。
   - **详情**：面包屑（← 物品图鉴 / 分组）→ 大标题 → 详情卡（左大图标，右侧从上到下为「细分类 → 描述 → 分割线 → 获取方式（可多条，带定位点小图标）」）→ **继续看看**（同分组的其它物品优先，最多 4 条）。
-- **属性克制计算器 calculator.html**：查属性相克的工具。分「防守面」（某属性的精灵怕什么、抗什么）和「进攻面」（某属性的技能打谁翻倍、打谁减半），底部可展开 **18×18 完整克制表**。
-- **元域演化史 lore.html**（导航「图鉴 → 世界观 → 元域演化史」）：世界观史诗阅读页，**纯静态、不拉数据**。深色星空卷轴风格（CSS 渐变星点，无背景图、无循环动画），正文按「传世石板」分章呈现（创世录四章 + 终章）。约定：
+- **属性克制计算器 reference/calculator.html**：查属性相克的工具。分「防守面」（某属性的精灵怕什么、抗什么）和「进攻面」（某属性的技能打谁翻倍、打谁减半），底部可展开 **18×18 完整克制表**。
+- **元域演化史 world/lore.html**（导航「图鉴 → 世界观 → 元域演化史」）：世界观史诗阅读页，**纯静态、不拉数据**。深色星空卷轴风格（CSS 渐变星点，无背景图、无循环动画），正文按「传世石板」分章呈现（创世录四章 + 终章）。约定：
   - 正文里的 `【X】` 关键词由页面脚本自动渲染成胶囊：十八属性（含简称 `岩`→岩石、`地`→地面，颜色/图标取自 `js/type-config.js`）用属性色 pill；概念词（元 / 元域 / 力 / 位 / 权 / 蛇）用紫金「神秘」pill。**以后往正文里加新 `【属性】` 无需改代码**，加新概念词要在页面脚本 `metaWords` 里补。
   - 「隐藏石板」章节默认模糊锁定，点「触摸石板」解锁（纯 CSS blur 过渡）。
   - 章节卡片滚动进入视口时淡入（IntersectionObserver），受 `vowmon_anim_on` 控制：关闭时直接全部显示，不留 opacity:0。
   - 该页是全站唯一的深色底页面，是有意为之（史诗氛围），不算风格破坏；新增世界观类页面可沿用这套模板结构。
-- **打击面计算器 coverage.html**：组队/配招研究工具。最多选 5 个技能属性，统计这套组合能覆盖 18 单系 + 153 双系共 **171 种属性组合**中的多少种，并分档报告（4 倍克制 / 2 倍克制 / 免疫 / 双重抵抗 / 抵抗）。
+- **打击面计算器 reference/coverage.html**：组队/配招研究工具。最多选 5 个技能属性，统计这套组合能覆盖 18 单系 + 153 双系共 **171 种属性组合**中的多少种，并分档报告（4 倍克制 / 2 倍克制 / 免疫 / 双重抵抗 / 抵抗）。
 
 ### 1.05.2 后台页面（维护数据用的）
 
 > 四个数据编辑弹窗（精灵 / 技能 / 特性 / 物品）末尾都有一个 **「原型」** 输入框，用来写「取材自哪里」，自由文本、**默认留空**，不填不影响任何功能。
 
-- **admin/index.html（网址 `/admin/`）**：精灵管理 + 同步配置（同一页两个 Tab）。增删改精灵、配置「显示列」、一键同步数据到 GitHub。
+- **index.html（网址 `/admin/`）**：精灵管理 + 同步配置（同一页两个 Tab）。增删改精灵、配置「显示列」、一键同步数据到 GitHub。
   - **上传即压缩 + 自动命名**：本地选图后先经 `js/image-utils.js` 处理——等比缩放（最长边不超过「同步配置 → 上传压缩尺寸」，默认 512，可选 256 / 512 / 768 / 1024），统一转成 **PNG**（保留透明底），小图不放大、不裁切（非正方形补透明边）。文件名强制按编号生成：主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png`、`_s2`、`_s3`…；原文件名与后缀一概忽略。保存时若改过编号，会把本次上传的图按新编号重传并删掉旧文件（仅限本次会话上传过的图，手填路径/刷新过页面则保持原路径）。
   - **异色图片**：表单里「精灵图片」下方多一个「异色图片」区块，可**多张**维护。支持一次选多个文件上传（串行上传），也支持手填外链 / 路径后点「添加」；缩略图按 #1、#2… 排序，可单张移除。异色图存在精灵对象的 `shiny` 数组里，**不占编号、不生成独立条目**，后台列表也不额外显示。
   - **特性槽位**：一只精灵可填「特性 1 / 特性 2（多特性随机）/ 隐藏特性」，每个都有独立的效果说明框，不填即为空。
   - **进化链**：表单里有「进化自 / 进化为」两个多选（一阶 → 二阶 → 三阶）。保存时会**双向自动补链**——A 填了「进化为 B」，B 的「进化自」自动出现 A，反之亦然；存的是精灵 `id`（旧数据里的单个 id 字符串会自动转成数组）。
   - **编号规则**：新建时默认编号 = 现有编号里的**最大数字 + 1**，但允许任意跳号（比如 001–009 之后直接填 401，下一个默认就是 402，中间空号不会自动补）。只做唯一性校验，不要求连续。
-- **admin-skills.html**：技能管理。增删改技能（属性单选胶囊、分类下拉、标签选择器）、配置「显示列」（含「标签」列）、一键同步。
+- **admin-reference/skills.html**：技能管理。增删改技能（属性单选胶囊、分类下拉、标签选择器）、配置「显示列」（含「标签」列）、一键同步。
   - **可学精灵选择器**：编辑弹窗里可勾选「能学会这个技能的精灵」。工具栏是「搜索框（名称 / 编号）+ 全选 / 取消全选」，下面一排属性胶囊做筛选，再下面是可滚动的勾选网格（上千只精灵也不会卡）。已选数量实时显示。
   - **学习方式（自学 / 技能石）**：勾选后默认归**自学**（`learners[]`，自我觉醒领悟）；已勾选的行右侧有「自 / 石」小按钮可一键切换成**技能石**（`stoneLearners[]`，必须靠技能石学会）。全选只加入自学，取消全选两组一起清。表格「可学精灵」列显示总数 + 💎 石学数量徽标。
   - **标签选择器**：不再平铺全部标签，而是「已选胶囊 + 搜索框 + 候选下拉」。输入关键字搜索标签并点选；搜不到时可按回车 / 点「新建」直接创建自定义标签；每个候选标签右侧的垃圾桶图标可删除该标签（会同时从所有技能中移除）。标签库变动会即时持久化。
-- **admin-traits.html**：特性管理。增删改特性、配置「显示列」、一键同步。
+- **admin-reference/traits.html**：特性管理。增删改特性、配置「显示列」、一键同步。
   - **拥有精灵（芯片式）**：选精灵弹窗里勾选后，以芯片形式列在表单中，每片可切「普通 / 隐藏」（★）。普通存 `pokemons[]`、隐藏存 `hiddenPokemons[]`。
   - **与精灵库双向互通**：特性管理里选精灵 → 保存时反向写入该精灵的 `ability2` / `hiddenAbility`；精灵管理里改特性 → 保存时反向写入特性库的 `pokemons` / `hiddenPokemons`。两边读写同一份数据，不会各说各话。
-- **admin-items.html**：物品管理。表格展示图标 / 名称 / 类型 / 分组 / 获取方式 / 描述，支持「显示列」（状态存在 `localStorage['vowmon_items_visible_cols']`）、增删改、一键同步 `items-data.js`。
+- **admin-reference/items.html**：物品管理。表格展示图标 / 名称 / 类型 / 分组 / 获取方式 / 描述，支持「显示列」（状态存在 `localStorage['vowmon_items_visible_cols']`）、增删改、一键同步 `items-data.js`。
   - 表单字段：名称、类型（大类 Tab）、分组（筛选胶囊）、细分类、图标（图片 / 图标字体 + 主题色二选一）、描述、获取方式（**一行一条**，保存时拆成数组）。
   - 图标上传走和精灵图一致的压缩流程（`js/image-utils.js`），存为 `items/{id}.png`；不传图片就用图标字体，`颜色` 决定图标颜色。
   - 名称会做重复校验；新建时 id 自动生成为 `i001`、`i002`…，仅用于深链和图标命名，不在前台显示。
 - **admin-images.html**：图片管理。双标签设计——「仓库图片」扫描并管理所有图片仓库里的图（异色图会计入使用方，标注为「某某（异色）」，不会误报成未使用）；「精灵图片」核对每只精灵的图片是否真实存在，卡片标题上会带「异色 ×N」角标，支持上传 / 删除 / 绑定到精灵。
-- **admin-lore.html**：页面内容管理，**双模式**（右上角切换，默认可视化），世界观四页（ranks / bloodlines / trainers / lore）的正文文本块都在这里编辑：
+- **admin-world/lore.html**：页面内容管理，**双模式**（右上角切换，默认可视化），世界观四页（ranks / bloodlines / trainers / lore）的正文文本块都在这里编辑：
   - **可视化模式（所见即所得，默认）**：iframe 直接渲染真实前台页（四个页签切换），悬停任意文本块显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；
   - **列表模式**：左侧按页签列出文本块（带中文标签与键名），右侧 textarea 编辑 + 实时预览；支持按标题 / 内容 / 键名搜索；适合批量调整 / 查找替换；
   - 「一键同步」= 推 `lore-data.json` 到数据仓库（其他设备 / 协作者可见）；「从仓库拉取」覆盖本机草稿；两种模式共用同一份数据；
@@ -218,7 +218,7 @@ vowmon/
 - **技能学习方式（learners / stoneLearners）**：两个**精灵名字符串数组**，都为空表示「暂无精灵可学」，`learners` 里的键缺省时按 `[]` 处理。
   - `learners[]`：**自学领悟**——精灵自我觉醒 / 升级就能学会；
   - `stoneLearners[]`：**技能石学习**——必须靠技能石才能学会，不能自学；
-  - 同一个精灵名不要同时出现在两个数组里（后台切换「自 / 石」时会自动从另一组移除）。前台 `skill-detail.html` 的「全部 / 自学 / 技能石」就是按这两个数组拆的。
+  - 同一个精灵名不要同时出现在两个数组里（后台切换「自 / 石」时会自动从另一组移除）。前台 `reference/skill-detail.html` 的「全部 / 自学 / 技能石」就是按这两个数组拆的。
 - **原型（origin）**：精灵 / 技能 / 特性 / 物品都支持这个字段，**自由文本、默认空字符串 `''`**，用来记录「取材自哪里」（参考了哪部作品、哪个神话生物、哪个现实物品…）。只在后台录入与保存，不参与任何筛选和校验；旧数据没有这个字段时加载会补成 `''`。修改入口都在各编辑弹窗里，标签文字统一为「原型 · 取材自哪里，可留空」。
 - **特性（ability / trait）**：特性库用 `pokemons[]`（普通特性拥有者）+ `hiddenPokemons[]`（隐藏特性拥有者）反查「哪些精灵拥有它」。精灵侧对应 `ability` / `abilityEffect`（特性 1）、`ability2` / `ability2Effect`（特性 2，多特性随机）、`hiddenAbility` / `hiddenAbilityEffect`（隐藏特性）。**两边保存时会自动双向同步**；旧数据缺 `hiddenPokemons` 会在加载时统一补成 `[]`，手改数据也请保持这两个数组存在。
 - **六维能力（stats）**：`hp`（HP）、`atk`（攻击）、`def`（防御）、`spAtk`（特攻）、`spDef`（特防）、`spd`（速度）。
@@ -228,7 +228,7 @@ vowmon/
   - 上传的图统一压缩为 PNG，尺寸受「同步配置 → 上传压缩尺寸」控制；
   - 只有图鉴卡片用得到它——有异色的卡片悬停显示异色图，没有的保持原来的放大动效。
 - **物品（item）**：`vowmon_data/items-data.json` 里的 `items` 数组（同文件还有 `kinds` / `groups` / `categories` 三组自定义列表），字段如下：
-  - `id`：`i001` 这类内部编号，只用于深链（`items.html?id=i001`）与图标命名，**前台不展示**；
+  - `id`：`i001` 这类内部编号，只用于深链（`reference/items.html?id=i001`）与图标命名，**前台不展示**；
   - `name`：物品名（名称做重复校验，图鉴里不出现同名物品）；
   - `kind`：大类，取值只能是 `itemKinds`（物品 / 精灵果实 / 精灵蛋），空值归到「物品」；
   - `group`：分组，取值来自 `js/item-config.js` 的 `itemGroups`（咕噜球 / 精灵培养 / 种植与礼物 / 魔法与素材 / 货币与资源 / 其他道具），未知值兜底为「其他道具」；
@@ -269,11 +269,11 @@ vowmon/
 
 ## 1.2 公共依赖约定
 
-- **属性克制表**：只在 `js/type-chart.js` 维护一份（全局 `typeChart` + `getTypeMultiplier` / `getComboMultiplier` / `buildDefenderCombos`），`calculator.html` 与 `coverage.html` 直接引用，禁止再复制一份。
+- **属性克制表**：只在 `js/type-chart.js` 维护一份（全局 `typeChart` + `getTypeMultiplier` / `getComboMultiplier` / `buildDefenderCombos`），`reference/calculator.html` 与 `reference/coverage.html` 直接引用，禁止再复制一份。
 - **属性颜色/图标**：只在 `js/type-config.js` 维护，禁止在页面里写死色值。
-- **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `skills.html` 与后台 `admin-skills.html` 都引用它，禁止在页面里写死分类图标或色值。
+- **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `reference/skills.html` 与后台 `admin-reference/skills.html` 都引用它，禁止在页面里写死分类图标或色值。
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
-- **弹窗组件**：后台五个页面（`admin/index.html`、`admin-skills.html`、`admin-traits.html`、`admin-items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
+- **弹窗组件**：后台五个页面（`index.html`、`admin-reference/skills.html`、`admin-reference/traits.html`、`admin-reference/items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
 - **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。
 |  |  |
 | --- | --- |
@@ -284,9 +284,9 @@ vowmon/
   - 选项：`type`（`info` / `success` / `warning` / `danger`）、`title`、`okText`、`cancelText`、`detail`（长错误信息，等宽小字块）、`html`（消息里要用 `<strong>` 时必须开，变量用 `VowmonDialog.esc()` 转义）、`duration`（仅 toast）。
   - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
   - 它不复用 `.modal-overlay`，遮罩与键盘（Esc 取消 / Enter 确认）逻辑自管，因此 Esc 关弹窗时不会把后面的表单弹窗一起关掉；同时遵循 `vowmon_anim_on` 开关。
-- **表格列宽**：`admin-items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
+- **表格列宽**：`admin-reference/items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
 - **后台搜索框**：图片管理工具栏统一用 `.search-field`（放大镜图标 + 内嵌清空按钮，清空按钮 `v-if` 只在有内容时出现）与 `.filter-select`（`appearance: none` + SVG 箭头），两者都是 40px 高 / 11px 圆角。不要再退回 `input-with-btn` + 独立 `btn` 的写法，也不要用默认 `<select>`。
-- **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `items.html` 的 Tab 与筛选胶囊、后台 `admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
+- **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `reference/items.html` 的 Tab 与筛选胶囊、后台 `admin-reference/items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。
 - **主图 / 异色图要分清**：图片管理页的「设为精灵图」和「上传图片」弹窗里都有「存到哪个位置」开关——`主图（替换原图）` 写 `vow.image`，`异色图（追加）` 写 `vow.shiny[]`（数组，不占编号）。文件名带 `_s` / `_s2` 的图会**自动预选「异色图」**，避免一按就把主图覆盖掉。判断函数是 `js/admin-images.js` 的 `looksShiny(path)`。
@@ -306,7 +306,7 @@ vowmon/
   - 前台由 `js/navbar.js` 初始化时给 `body` 加 `.no-anim`，并由 `css/responsive.css` / 各页内联规则把所有 `transition` / `animation` 置为 `none !important`（含 `body` 自身）。
   - **后台页不加载 `navbar.js`**，改由 `js/common-ui.js` 读取并应用 `.no-anim`。
   - 切换开关时统一 `window.dispatchEvent(new CustomEvent('vowmon:anim-changed', { detail: { on } }))` 广播，页内开关（图鉴 / 列表页）与导航栏按钮互相监听；同时监听 `storage` 事件做跨标签页同步。**不要再各写一套私有状态**——曾经因为不广播，关掉动效后图鉴的异色轮播定时器还在跑。
-  - 关掉时还必须主动清掉 JS 定时器（`vowdex.html` 的异色轮播 `stopShiny()`），CSS 规则管不了 `setInterval`。
+  - 关掉时还必须主动清掉 JS 定时器（`dex/vowdex.html` 的异色轮播 `stopShiny()`），CSS 规则管不了 `setInterval`。
 - **后台加载策略**：后台页调 `VowmonData.ready([...])` **不要传 `fresh: true`**——本机有镜像就秒开（后台静默对账），要拉仓库最新数据点顶栏「从仓库拉取」。`data-loader.js` 在「非 fresh 且请求的所有 key 都有本机镜像」时会跳过「正在加载数据…」遮罩，避免闪屏。`localStorage` 草稿**优先于**远端，别改成远端优先（会丢未同步修改）。
 
 ---

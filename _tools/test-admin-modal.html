@@ -10,7 +10,7 @@
   var errs = [];
   (async function () {
     try {
-      var page = new URLSearchParams(location.search).get('page') || '../admin/admin-individuals.html';
+      var page = new URLSearchParams(location.search).get('page') || '../admin/admin-../records/individuals.html';
       var f = document.getElementById('f');
       // 轮询重挂错误捕获（iframe 导航会换 window）
       var pollErr = setInterval(function () {

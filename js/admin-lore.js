@@ -35,11 +35,11 @@ const FRAME_CSS = [
 ].join('\n');
 
 const FALLBACK_FILES = {
-    ranks: 'ranks.html',
-    bloodlines: 'bloodlines.html',
-    trainers: 'trainers.html',
-    factions: 'factions.html',
-    lore: 'lore.html'
+    ranks: 'world/ranks.html',
+    bloodlines: 'world/bloodlines.html',
+    trainers: 'world/trainers.html',
+    factions: 'world/factions.html',
+    lore: 'world/lore.html'
 };
 const PAGE_TITLES = {
     ranks: '等级体系',

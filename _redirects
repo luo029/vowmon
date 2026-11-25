@@ -1,0 +1,20 @@
+# Cloudflare Pages 旧链接跳转（2026-11-26 目录重组：前台页面移入 dex/reference/world/records）
+# 老地址（无扩展名形式）→ 新地址；带 .html 的请求会先被 CF 自动 308 去掉扩展名再命中这里。
+/vowdex /dex/vowdex 301
+/list /dex/list 301
+/vow-detail /dex/vow-detail 301
+/realm-dex /dex/realm-dex 301
+/skills /reference/skills 301
+/skill-detail /reference/skill-detail 301
+/traits /reference/traits 301
+/items /reference/items 301
+/natures /reference/natures 301
+/bloodlines /reference/bloodlines 301
+/calculator /reference/calculator 301
+/coverage /reference/coverage 301
+/ranks /world/ranks 301
+/trainers /world/trainers 301
+/factions /world/factions 301
+/lore /world/lore 301
+/individuals /records/individuals 301
+/characters /records/characters 301

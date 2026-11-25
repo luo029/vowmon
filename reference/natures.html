@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <title>Vowmon Wiki - 性格大全</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
@@ -88,9 +88,9 @@
 
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
-    <script src="js/navbar.js?v=20261126v" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261126s">
+    <script src="../js/navbar.js?v=20261127a" defer></script>
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -98,7 +98,7 @@
     <div id="site-navbar"></div>
 
     <div class="container">
-        <div class="breadcrumb"><a href="index.html">首页</a><span>/</span><a href="vowdex.html">图鉴</a><span>/</span>性格</div>
+        <div class="breadcrumb"><a href="../index.html">首页</a><span>/</span><a href="../dex/vowdex.html">图鉴</a><span>/</span>性格</div>
 
         <div class="page-title"><i class="fa-solid fa-brain"></i> 性格</div>
         <p class="intro">性格是精灵与生俱来的特质，<b>出生时随机确定，且无法通过升级改变</b>。不同性格会让精灵的能力值产生 <b>+10% / -10%</b> 的波动——提高一项能力的同时，往往会降低另一项。另外还有 5 种<b>中性性格</b>，不造成任何能力修正。</p>
@@ -187,7 +187,7 @@
     </div>
 </div>
 
-<script src="js/data-loader.js?v=20261126w"></script>
+<script src="../js/data-loader.js?v=20261126w"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['natures']).then(function () {

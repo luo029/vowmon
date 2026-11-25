@@ -22,11 +22,11 @@ OUT = os.path.join(ROOT, "_lore-data.json")
 FRESH = "--fresh" in sys.argv
 
 PAGES = [
-    {"id": "ranks",      "title": "等级体系",   "file": "ranks.html"},
-    {"id": "bloodlines", "title": "血脉图鉴",   "file": "bloodlines.html"},
-    {"id": "trainers",   "title": "御兽师图鉴", "file": "trainers.html"},
-    {"id": "factions",   "title": "势力版图",   "file": "factions.html"},
-    {"id": "lore",       "title": "元域演化史", "file": "lore.html"},
+    {"id": "ranks",      "title": "等级体系",   "file": "world/ranks.html"},
+    {"id": "bloodlines", "title": "血脉图鉴",   "file": "reference/bloodlines.html"},
+    {"id": "trainers",   "title": "御兽师图鉴", "file": "world/trainers.html"},
+    {"id": "factions",   "title": "势力版图",   "file": "world/factions.html"},
+    {"id": "lore",       "title": "元域演化史", "file": "world/lore.html"},
 ]
 
 BASE_TAGS = {"h1", "h2", "h3", "h4", "p", "li", "td", "th"}

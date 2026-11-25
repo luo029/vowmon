@@ -25,9 +25,8 @@
 
     var SITE_NAME = 'Vowmon Wiki';
 
-    // 站点根前缀：后台页面在 admin/ 子目录里，导航链接必须从站点根出发。
-    // 页面只在两层：根目录（前缀空）与 /admin/（前缀 ../）。
-    var ROOT = /\/admin\//.test(window.location.pathname) ? '../' : '';
+    // 站点根前缀：页面在 admin/ 或 dex/reference/world/records 子目录里时，链接从站点根出发需加 ../。
+    var ROOT = /\/(admin|dex|reference|world|records)\//.test(window.location.pathname) ? '../' : '';
     var HOME = ROOT + 'index.html';
 
     // 导航结构：改这里就能改全站（href 均相对站点根，渲染时统一加 ROOT 前缀）
