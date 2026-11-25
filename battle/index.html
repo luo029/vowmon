@@ -16,7 +16,7 @@
     <script src="../js/type-chart.js?v=20261126s"></script>
     <script src="../js/site-config.js?v=20261126s"></script>
     <script src="../js/data-loader.js?v=20261126w"></script>
-    <script src="../js/battle-engine.js?v=20261126a"></script>
+    <script src="../js/battle-engine.js?v=20261127b"></script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2d3748; margin: 0; }
@@ -61,32 +61,99 @@
         .btn-start:disabled { opacity: .45; cursor: not-allowed; }
         .btn-ghost { margin-left: 10px; padding: 12px 22px; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; font-weight: 700; color: #4a5568; cursor: pointer; }
 
-        /* ---- 对战区 ---- */
+        /* ---- 对战舞台（含天气特效层） ---- */
         .arena { display: none; margin-top: 18px; background: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 4px 18px rgba(45,55,72,.08); }
         .arena.show { display: block; }
-        .arena-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }
-        .fighter-panel { background: #f7fafc; border-radius: 14px; padding: 12px; position: relative; overflow: hidden; }
+        .scene { position: relative; border-radius: 16px; overflow: hidden;
+            background: linear-gradient(180deg, #bfdbfe 0%, #e0f2fe 46%, #d3f0d8 46%, #cdeac8 100%); }
+        .wx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+
+        /* 雨 */
+        .wx-rain { position: absolute; inset: -120% 0 0 0;
+            background-image: repeating-linear-gradient(100deg, transparent 0 16px, rgba(59,130,246,.28) 16px 17px);
+            animation: wx-rain-fall .5s linear infinite; }
+        .wx-rain.heavy { background-image: repeating-linear-gradient(96deg, transparent 0 8px, rgba(30,64,175,.4) 8px 9.5px, transparent 9.5px 14px, rgba(59,130,246,.3) 14px 15px);
+            animation-duration: .3s; }
+        @keyframes wx-rain-fall { from { transform: translateY(0); } to { transform: translateY(60%); } }
+        /* 雪 / 冰雹 */
+        .wx-snow { position: absolute; inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,.95) 2px, transparent 2.6px),
+                              radial-gradient(circle, rgba(255,255,255,.7) 1.6px, transparent 2.2px);
+            background-size: 36px 36px, 54px 54px;
+            animation: wx-snow-fall 3.2s linear infinite; }
+        @keyframes wx-snow-fall { to { background-position: 18px 36px, -27px 54px; } }
+        .wx-hail { position: absolute; inset: 0;
+            background-image: radial-gradient(circle, rgba(219,234,254,.95) 2.6px, transparent 3.2px),
+                              radial-gradient(circle, rgba(191,219,254,.8) 2px, transparent 2.6px);
+            background-size: 30px 30px, 46px 46px;
+            animation: wx-snow-fall 1s linear infinite; }
+        /* 沙暴 */
+        .wx-sand { position: absolute; inset: 0;
+            background-image: repeating-linear-gradient(2deg, transparent 0 10px, rgba(180,83,9,.22) 10px 11px, transparent 11px 24px),
+                              repeating-linear-gradient(88deg, transparent 0 18px, rgba(146,64,14,.16) 18px 19px, transparent 19px 40px);
+            animation: wx-sand-blow .7s linear infinite; }
+        @keyframes wx-sand-blow { to { background-position: 120px 0, -90px 6px; } }
+        /* 日光 */
+        .wx-sun { position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 8%, rgba(253,224,71,.5), rgba(253,224,71,0) 58%); }
+        .wx-sun::before { content: ''; position: absolute; inset: -50% -20%;
+            background: repeating-conic-gradient(rgba(253,224,71,.10) 0 6deg, transparent 6deg 20deg);
+            animation: wx-spin 26s linear infinite; }
+        .wx-sun.strong { background: radial-gradient(circle at 50% 8%, rgba(249,115,22,.65), rgba(234,88,12,.15) 60%); }
+        .wx-sun.strong::before { background: repeating-conic-gradient(rgba(251,146,60,.14) 0 8deg, transparent 8deg 22deg); }
+        @keyframes wx-spin { to { transform: rotate(360deg); } }
+        /* 雾 */
+        .wx-fog { position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.8));
+            animation: wx-fog-pulse 5s ease-in-out infinite alternate; }
+        @keyframes wx-fog-pulse { from { opacity: .45; } to { opacity: .85; } }
+        /* 天气底色 */
+        .wx-tint { position: absolute; inset: 0; pointer-events: none; z-index: 1; transition: background 1s; }
+        .wx-tint.t-desolate { background: rgba(194,65,12,.18); }
+        .wx-tint.t-deluge { background: rgba(29,78,216,.22); }
+        .wx-tint.t-sand { background: rgba(180,83,9,.14); }
+        .wx-tint.t-snow { background: rgba(147,197,253,.16); }
+        .wx-tint.t-hail { background: rgba(59,130,246,.14); }
+        .wx-tint.t-fog { background: rgba(255,255,255,.25); }
+        .wx-tint.t-sun { background: rgba(217,119,6,.10); }
+        .wx-tint.t-rain { background: rgba(37,99,235,.10); }
+
+        .arena-row { position: relative; z-index: 3; display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }
+
+        /* ---- 精灵面板与立绘动画 ---- */
+        .fighter-panel { background: rgba(247,250,252,.85); border-radius: 14px; padding: 12px; position: relative; overflow: hidden; }
         .fighter-panel.side-b { text-align: right; }
         .fp-name { font-weight: 900; font-size: 16px; }
         .fp-types { margin: 4px 0; }
-        .hp-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 14px; overflow: hidden; margin: 8px 0 4px; }
-        .hp-bar { height: 100%; border-radius: 999px; transition: width .5s ease, background .3s; }
+        .hp-bar-wrap { background: rgba(226,232,240,.9); border-radius: 999px; height: 14px; overflow: hidden; margin: 8px 0 4px; }
+        .hp-bar { height: 100%; border-radius: 999px; transition: width .45s ease, background .3s; }
         .hp-num { font-size: 12px; color: #718096; font-weight: 700; }
-        .fp-img { width: 120px; height: 120px; object-fit: contain; transition: transform .2s; }
+        .fp-img { width: 120px; height: 120px; object-fit: contain; animation: idle-bob 2.4s ease-in-out infinite; filter: drop-shadow(0 8px 8px rgba(0,0,0,.12)); }
+        @keyframes idle-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .fighter-panel.side-a.attacking .fp-img { animation: lunge-a .5s ease-in-out; }
+        .fighter-panel.side-b.attacking .fp-img { animation: lunge-b .5s ease-in-out; }
+        @keyframes lunge-a { 0%,100% { transform: translate(0,0); } 45% { transform: translate(52px,-8px) scale(1.06); } }
+        @keyframes lunge-b { 0%,100% { transform: translate(0,0); } 45% { transform: translate(-52px,-8px) scale(1.06); } }
         .fighter-panel.hit .fp-img { animation: hit-shake .4s; }
         @keyframes hit-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+        .fighter-panel.fainted .fp-img { animation: none; filter: grayscale(1); opacity: .4; transform: translateY(18px) rotate(14deg); transition: all .6s ease; }
+        .fighter-panel.fainted::after { content: '💤'; position: absolute; top: 14px; right: 16px; font-size: 20px; }
+        .fighter-panel.side-a.fainted::after { right: auto; left: 16px; }
         .dmg-float { position: absolute; top: 30%; font-size: 26px; font-weight: 900; color: #e53e3e; text-shadow: 0 2px 6px rgba(0,0,0,.15); animation: float-up 1s ease-out forwards; pointer-events: none; }
         .dmg-float.heal { color: #38a169; }
         .fighter-panel.side-a .dmg-float { left: 40%; }
         .fighter-panel.side-b .dmg-float { right: 40%; }
         @keyframes float-up { 0%{opacity:0; transform:translateY(10px)} 25%{opacity:1} 100%{opacity:0; transform:translateY(-40px)} }
-        body.no-anim .dmg-float, body.no-anim .fighter-panel.hit .fp-img { animation: none; }
+        body.no-anim .fp-img, body.no-anim .dmg-float, body.no-anim .fighter-panel.hit .fp-img,
+        body.no-anim .fighter-panel.attacking .fp-img { animation: none; }
         body.no-anim .hp-bar { transition: none; }
+        body.no-anim .wx-rain, body.no-anim .wx-hail, body.no-anim .wx-snow,
+        body.no-anim .wx-sand, body.no-anim .wx-fog, body.no-anim .wx-sun::before { animation: none; }
 
         /* 天气 / 场地 */
         .field-panel { text-align: center; min-width: 150px; }
         .field-chip { display: inline-block; padding: 8px 14px; border-radius: 12px; font-weight: 900; font-size: 14px; color: #fff; margin-bottom: 6px; }
-        .field-desc { font-size: 11px; color: #718096; max-width: 160px; margin: 0 auto; line-height: 1.5; }
+        .field-desc { font-size: 11px; color: #718096; max-width: 170px; margin: 0 auto; line-height: 1.5; }
         .field-btns { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
         .field-btn { border: 1.2px solid #e2e8f0; background: #fff; border-radius: 8px; font-size: 11px; padding: 4px 7px; cursor: pointer; color: #4a5568; }
         .field-btn:hover { border-color: #4299e1; color: #4299e1; }
@@ -134,7 +201,7 @@
 
     <main class="battle-page">
         <div class="page-title">⚔️ 精灵对战模拟</div>
-        <div class="page-sub">选好双方精灵，逐回合出招。伤害按公式精确结算：属性克制、本系加成、天气、场地、随机波动全部生效——写文时可以直接照抄战报。</div>
+        <div class="page-sub">选好双方精灵，逐回合出招。天气规则照抄宝可梦（大晴天 / 下雨 / 沙暴 / 冰雹 / 下雪 / 大雾 / 大日照 / 大雨，持续 5 回合），伤害逐项结算——写文时可以直接照抄战报。</div>
 
         <!-- 编队 -->
         <div class="setup-grid">
@@ -195,43 +262,57 @@
 
         <!-- 对战区 -->
         <div class="arena" :class="{show: started}">
-            <div class="arena-row">
-                <div class="fighter-panel side-a" :class="{hit: hitFlash.a}">
-                    <div class="fp-name">{{ fA ? fA.name : '' }}</div>
-                    <div class="fp-types">
-                        <span class="type-chip" v-for="t in (fA ? fA.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
-                    </div>
-                    <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct(fA) + '%', background: hpColor(fA)}"></div></div>
-                    <div class="hp-num">{{ fA ? fA.hp : 0 }} / {{ fA ? fA.maxHp : 0 }}　速度 {{ fA ? fA.stats.spe : 0 }}</div>
-                    <img class="fp-img" :src="fA ? fA.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
-                    <div class="dmg-float" v-if="float.a" :class="{heal: float.a.heal}">{{ float.a.text }}</div>
+            <div class="scene">
+                <div class="wx-tint" v-if="field.weather" :class="'t-' + field.weather"></div>
+                <div class="wx-layer">
+                    <div v-if="field.weather === 'rain'" class="wx-rain"></div>
+                    <div v-if="field.weather === 'deluge'" class="wx-rain heavy"></div>
+                    <div v-if="field.weather === 'sun'" class="wx-sun"></div>
+                    <div v-if="field.weather === 'desolate'" class="wx-sun strong"></div>
+                    <div v-if="field.weather === 'sand'" class="wx-sand"></div>
+                    <div v-if="field.weather === 'hail'" class="wx-hail"></div>
+                    <div v-if="field.weather === 'snow'" class="wx-snow"></div>
+                    <div v-if="field.weather === 'fog'" class="wx-fog"></div>
                 </div>
 
-                <div class="field-panel">
-                    <div class="field-chip" v-if="curWeather" :style="{background: curWeather.color}">{{ curWeather.icon }} {{ curWeather.name }}</div>
-                    <div class="field-chip" v-else style="background:#cbd5e0;">🌤️ 无天气</div>
-                    <div class="field-desc" v-if="curWeather">{{ curWeather.desc }}</div>
-                    <div class="field-chip" v-if="curTerrain" :style="{background: curTerrain.color}">{{ curTerrain.icon }} {{ curTerrain.name }}</div>
-                    <div class="field-desc" v-if="curTerrain">{{ curTerrain.desc }}</div>
-                    <div class="field-btns">
-                        <button class="field-btn" @click="setWeather(null)">无天气</button>
-                        <button class="field-btn" v-for="(w, k) in BattleEngine.WEATHERS" :key="k" @click="setWeather(k)">{{ w.icon }}{{ w.name }}</button>
+                <div class="arena-row">
+                    <div class="fighter-panel side-a" :class="{hit: hitFlash.a, attacking: anim.a, fainted: fA && dispHp.a <= 0}">
+                        <div class="fp-name">{{ fA ? fA.name : '' }}</div>
+                        <div class="fp-types">
+                            <span class="type-chip" v-for="t in (fA ? fA.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                        </div>
+                        <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct('a') + '%', background: hpColor('a')}"></div></div>
+                        <div class="hp-num">{{ dispHp.a }} / {{ fA ? fA.maxHp : 0 }}　速度 {{ fA ? fA.stats.spe : 0 }}</div>
+                        <img class="fp-img" :src="fA ? fA.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
+                        <div class="dmg-float" v-if="float.a" :class="{heal: float.a.heal}">{{ float.a.text }}</div>
                     </div>
-                    <div class="field-btns">
-                        <button class="field-btn" @click="setTerrain(null)">无场地</button>
-                        <button class="field-btn" v-for="(t, k) in BattleEngine.TERRAINS" :key="k" @click="setTerrain(k)">{{ t.name }}</button>
-                    </div>
-                </div>
 
-                <div class="fighter-panel side-b" :class="{hit: hitFlash.b}">
-                    <div class="fp-name">{{ fB ? fB.name : '' }}</div>
-                    <div class="fp-types">
-                        <span class="type-chip" v-for="t in (fB ? fB.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                    <div class="field-panel">
+                        <div class="field-chip" v-if="curWeather" :style="{background: curWeather.color}">{{ curWeather.icon }} {{ curWeather.name }}<span v-if="weatherTurnsText">　{{ weatherTurnsText }}</span></div>
+                        <div class="field-chip" v-else style="background:#cbd5e0;">🌤️ 无天气</div>
+                        <div class="field-desc" v-if="curWeather">{{ curWeather.desc }}</div>
+                        <div class="field-chip" v-if="curTerrain" :style="{background: curTerrain.color}">{{ curTerrain.icon }} {{ curTerrain.name }}<span v-if="terrainTurnsText">　{{ terrainTurnsText }}</span></div>
+                        <div class="field-desc" v-if="curTerrain">{{ curTerrain.desc }}</div>
+                        <div class="field-btns">
+                            <button class="field-btn" @click="setWeather(null)">无天气</button>
+                            <button class="field-btn" v-for="(w, k) in BattleEngine.WEATHERS" :key="k" @click="setWeather(k)">{{ w.icon }}{{ w.name }}</button>
+                        </div>
+                        <div class="field-btns">
+                            <button class="field-btn" @click="setTerrain(null)">无场地</button>
+                            <button class="field-btn" v-for="(t, k) in BattleEngine.TERRAINS" :key="k" @click="setTerrain(k)">{{ t.name }}</button>
+                        </div>
                     </div>
-                    <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct(fB) + '%', background: hpColor(fB)}"></div></div>
-                    <div class="hp-num">{{ fB ? fB.hp : 0 }} / {{ fB ? fB.maxHp : 0 }}　速度 {{ fB ? fB.stats.spe : 0 }}</div>
-                    <img class="fp-img" :src="fB ? fB.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
-                    <div class="dmg-float" v-if="float.b" :class="{heal: float.b.heal}">{{ float.b.text }}</div>
+
+                    <div class="fighter-panel side-b" :class="{hit: hitFlash.b, attacking: anim.b, fainted: fB && dispHp.b <= 0}">
+                        <div class="fp-name">{{ fB ? fB.name : '' }}</div>
+                        <div class="fp-types">
+                            <span class="type-chip" v-for="t in (fB ? fB.types : [])" :key="t" :style="{background: typeColor(t)}">{{ t }}</span>
+                        </div>
+                        <div class="hp-bar-wrap"><div class="hp-bar" :style="{width: hpPct('b') + '%', background: hpColor('b')}"></div></div>
+                        <div class="hp-num">{{ dispHp.b }} / {{ fB ? fB.maxHp : 0 }}　速度 {{ fB ? fB.stats.spe : 0 }}</div>
+                        <img class="fp-img" :src="fB ? fB.imgUrl : ''" @error="$event.target.style.visibility='hidden'" alt="">
+                        <div class="dmg-float" v-if="float.b" :class="{heal: float.b.heal}">{{ float.b.text }}</div>
+                    </div>
                 </div>
             </div>
 
@@ -264,7 +345,7 @@
             </div>
 
             <div class="exec-row">
-                <button class="btn-exec" :disabled="!canExecute" @click="executeTurn">{{ over ? '对战已结束' : '▶ 执行回合' }}</button>
+                <button class="btn-exec" :disabled="!canExecute" @click="executeTurn">{{ over ? '对战已结束' : (busy ? '演出中…' : '▶ 执行回合') }}</button>
             </div>
 
             <div class="battle-log" ref="logEl">
@@ -415,12 +496,25 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
             const turnNo = ref(0);
             const hitFlash = reactive({ a: false, b: false });
             const float = reactive({ a: null, b: null });
-            const field = reactive({ weather: null, terrain: null });
+            const anim = reactive({ a: '', b: '' });
+            const dispHp = reactive({ a: 0, b: 0 });      // 演出用：血条随事件逐条变化
+            const field = reactive({ weather: null, terrain: null, weatherTurns: Infinity, terrainTurns: Infinity });
             const curWeather = computed(() => field.weather ? BE.WEATHERS[field.weather] : null);
             const curTerrain = computed(() => field.terrain ? BE.TERRAINS[field.terrain] : null);
+            const turnsText = (n) => isFinite(n) ? '还剩 ' + n + ' 回合' : '';
+            const weatherTurnsText = computed(() => turnsText(field.weatherTurns));
+            const terrainTurnsText = computed(() => turnsText(field.terrainTurns));
 
-            const setWeather = (k) => { field.weather = k; pushLog('<span class="em-field">手动设置天气：' + (k ? BE.WEATHERS[k].name : '无') + '</span>'); };
-            const setTerrain = (k) => { field.terrain = k; pushLog('<span class="em-field">手动设置场地：' + (k ? BE.TERRAINS[k].name : '无') + '</span>'); };
+            const setWeather = (k) => {
+                field.weather = k;
+                field.weatherTurns = Infinity;  // 手动设置不消退
+                pushLog('<span class="em-field">手动设置天气：' + (k ? BE.WEATHERS[k].name : '无') + '</span>');
+            };
+            const setTerrain = (k) => {
+                field.terrain = k;
+                field.terrainTurns = Infinity;
+                pushLog('<span class="em-field">手动设置场地：' + (k ? BE.TERRAINS[k].name : '无') + '</span>');
+            };
 
             const pushLog = (html, turn) => {
                 log.value.push({ html: html, turn: turn || '' });
@@ -443,12 +537,15 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
                 BE.initHp(fa); BE.initHp(fb);
                 fA.value = fa; fB.value = fb;
                 fa.imgUrl = cfg.a.picked.imgUrl; fb.imgUrl = cfg.b.picked.imgUrl;
+                dispHp.a = fa.maxHp; dispHp.b = fb.maxHp;
                 started.value = true;
                 over.value = false; winner.value = null;
                 log.value = [];
                 turnNo.value = 0;
                 chosen.a = null; chosen.b = null;
                 field.weather = null; field.terrain = null;
+                field.weatherTurns = Infinity; field.terrainTurns = Infinity;
+                anim.a = ''; anim.b = '';
                 pushLog('⚔️ 对战开始：<b>' + esc(fa.name) + '</b>（Lv.' + fa.level + '） vs <b>' + esc(fb.name) + '</b>（Lv.' + fb.level + '）');
             };
 
@@ -460,36 +557,14 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
                 log.value = []; over.value = false; winner.value = null;
             };
 
-            const hpPct = (f) => !f || !f.maxHp ? 0 : Math.round(f.hp / f.maxHp * 100);
-            const hpColor = (f) => {
-                const pct = hpPct(f);
-                return pct > 50 ? '#48bb78' : (pct > 20 ? '#d69e2e' : '#e53e3e');
+            const hpPct = (side) => {
+                const f = side === 'a' ? fA.value : fB.value;
+                if (!f || !f.maxHp) return 0;
+                return Math.round(dispHp[side] / f.maxHp * 100);
             };
-
-            // 把引擎事件渲染成战报 + 伤害飘字
-            const renderEvents = (result) => {
-                for (const ev of result.events) {
-                    if (ev.kind === 'attack') {
-                        if (ev.missed) { pushLog('<span class="em-bad">' + esc(ev.text) + '</span>'); continue; }
-                        const cls = ev.effectiveness > 1 ? 'em-good' : (ev.effectiveness < 1 ? 'em-bad' : '');
-                        const detail = ev.breakdown.length ? '<br><span class="em-bad" style="font-size:11.5px;">　' + esc(ev.breakdown.join('，')) + '</span>' : '';
-                        pushLog('<span class="' + cls + '">' + esc(ev.text) + '</span> 对 <b>' + esc(ev.defender) + '</b> 造成 <span class="em-dmg">' + ev.damage + '</span> 点伤害！' + detail, '');
-                        const side = (ev.defender === (fA.value && fA.value.name)) ? 'a' : 'b';
-                        showFloat(side, '-' + ev.damage, false);
-                    } else if (ev.kind === 'faint') {
-                        pushLog('<b style="color:#fc8181;">💀 ' + esc(ev.text) + '</b>');
-                    } else if (ev.kind === 'weather' || ev.kind === 'terrain') {
-                        pushLog('<span class="em-field">🌤 ' + esc(ev.text) + '</span>');
-                    } else if (ev.kind === 'chip') {
-                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
-                        showFloat(ev.side, '伤害', false);
-                    } else if (ev.kind === 'heal') {
-                        pushLog('<span class="em-good">' + esc(ev.text) + '</span>');
-                        showFloat(ev.side, '+' + (ev.hpAfter ? '' : '') + '回复', true);
-                    } else if (ev.kind === 'note') {
-                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
-                    }
-                }
+            const hpColor = (side) => {
+                const pct = hpPct(side);
+                return pct > 50 ? '#48bb78' : (pct > 20 ? '#d69e2e' : '#e53e3e');
             };
 
             const showFloat = (side, text, heal) => {
@@ -499,19 +574,81 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
                 setTimeout(() => { float[side] = null; hitFlash[side] = false; }, 1100);
             };
 
+            const sideOf = (name) => (fA.value && fA.value.name === name) ? 'a' : 'b';
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            // 单条事件 → 战报 + 血量/飘字
+            const applyEvent = (ev) => {
+                if (ev.kind === 'attack') {
+                    if (ev.failed) {
+                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                        return;
+                    }
+                    if (ev.missed) {
+                        pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                        return;
+                    }
+                    const cls = ev.effectiveness > 1 ? 'em-good' : (ev.effectiveness < 1 ? 'em-bad' : '');
+                    const detail = ev.breakdown.length ? '<br><span class="em-bad" style="font-size:11.5px;">　' + esc(ev.breakdown.join('，')) + '</span>' : '';
+                    pushLog('<span class="' + cls + '">' + esc(ev.text) + '</span> 对 <b>' + esc(ev.defender) + '</b> 造成 <span class="em-dmg">' + ev.damage + '</span> 点伤害！' + detail);
+                    const side = sideOf(ev.defender);
+                    if (ev.defenderHpAfter !== undefined) dispHp[side] = ev.defenderHpAfter;
+                    showFloat(side, '-' + ev.damage, false);
+                } else if (ev.kind === 'faint') {
+                    pushLog('<b style="color:#fc8181;">💀 ' + esc(ev.text) + '</b>');
+                } else if (ev.kind === 'weather' || ev.kind === 'terrain') {
+                    pushLog('<span class="em-field">🌤 ' + esc(ev.text) + '</span>');
+                } else if (ev.kind === 'weather-end' || ev.kind === 'terrain-end') {
+                    pushLog('<span class="em-field">⏳ ' + esc(ev.text) + '</span>');
+                } else if (ev.kind === 'chip') {
+                    pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                    if (ev.hpAfter !== undefined) dispHp[ev.side.toLowerCase()] = ev.hpAfter;
+                    showFloat(ev.side.toLowerCase(), '-' + Math.abs(parseInt(ev.text.match(/(\d+) 点伤害/) ? ev.text.match(/(\d+) 点伤害/)[1] : 0)), false);
+                } else if (ev.kind === 'heal') {
+                    pushLog('<span class="em-good">' + esc(ev.text) + '</span>');
+                    if (ev.hpAfter !== undefined) dispHp[ev.side.toLowerCase()] = ev.hpAfter;
+                    showFloat(ev.side.toLowerCase(), '回复', true);
+                } else if (ev.kind === 'note') {
+                    pushLog('<span class="em-bad">' + esc(ev.text) + '</span>');
+                }
+            };
+
+            // 事件逐条播放：突进 → 命中飘字 → 短暂停顿，像看一场真正的对战
+            const playEvents = async (result) => {
+                for (const ev of result.events) {
+                    if (ev.kind === 'attack') {
+                        const atkSide = sideOf(ev.attacker);
+                        anim[atkSide] = 'attacking';
+                        await sleep(500);
+                        anim[atkSide] = '';
+                        applyEvent(ev);
+                        await sleep(550);
+                    } else if (ev.kind === 'chip' || ev.kind === 'heal') {
+                        applyEvent(ev);
+                        await sleep(550);
+                    } else if (ev.kind === 'faint') {
+                        applyEvent(ev);
+                        await sleep(700);
+                    } else {
+                        applyEvent(ev);
+                        await sleep(300);
+                    }
+                }
+            };
+
             const canExecute = computed(() => {
                 if (over.value || busy.value || !fA.value || !fB.value) return false;
                 return !!chosen.a || !!chosen.b;
             });
 
-            const executeTurn = () => {
+            const executeTurn = async () => {
                 if (!canExecute.value) return;
                 // 蓝方 AI：随机挑一个技能
                 if (aiB.value && !chosen.b) {
                     const pool = fB.value.skills;
                     chosen.b = pool[Math.floor(Math.random() * pool.length)];
                 }
-                if (!chosen.a) { VowmonDialog ? null : null; pushLog('<span class="em-bad">红方还没选技能。</span>'); return; }
+                if (!chosen.a) { pushLog('<span class="em-bad">红方还没选技能。</span>'); return; }
                 if (!chosen.b) { pushLog('<span class="em-bad">蓝方还没选技能（可勾选 AI 代打）。</span>'); return; }
 
                 busy.value = true;
@@ -520,7 +657,7 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
                 pushLog('<b>—— ' + tag + ' ——</b>', tag);
 
                 const result = BE.executeTurn(fA.value, fB.value, chosen.a, chosen.b, field);
-                renderEvents(result);
+                await playEvents(result);
                 chosen.a = null; chosen.b = null;
 
                 if (result.over) {
@@ -545,9 +682,10 @@ VowmonData.ready(['vows', 'skills', 'individuals', 'natures']).then(function () 
                 BattleEngine: BE,
                 cfg, pickerResults, pick, setMode, previewStats, readyToStart,
                 started, fA, fB, chosen, aiB, busy, over, winner, log, logEl,
-                curWeather, curTerrain, setWeather, setTerrain,
-                hpPct, hpColor, typeColor, startBattle, resetAll, executeTurn, canExecute,
-                hitFlash, float
+                field, curWeather, curTerrain, weatherTurnsText, terrainTurnsText,
+                setWeather, setTerrain,
+                dispHp, hpPct, hpColor, typeColor, startBattle, resetAll, executeTurn, canExecute,
+                hitFlash, float, anim
             };
         }
     }).mount('#app');
