@@ -83,7 +83,10 @@
 
         /* 图鉴记载 */
         .dex-note { background: #fff; border: 1px solid #e8edf2; border-radius: 18px; padding: 18px 20px; margin-top: 14px; }
-        .dex-note h3 { font-size: 13px; font-weight: 900; color: #c08a2a; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dex-note h3 { font-size: 13px; font-weight: 900; color: #c08a2a; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+        .dex-note h3 span { display: inline-flex; align-items: center; gap: 6px; }
+        .card-share-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border: 1px solid #e6cf9a; border-radius: 999px; background: #fffdf5; color: #9c6b0e; font-size: 12.5px; font-weight: 900; font-family: inherit; cursor: pointer; letter-spacing: 0; transition: all .15s; }
+        .card-share-btn:hover { background: #fff7e2; border-color: #d9b463; transform: translateY(-1px); }
         .dex-note p { font-size: 14px; line-height: 1.9; color: #4a5568; }
 
         /* ---------------- 右列：资料卡 ---------------- */
@@ -256,7 +259,9 @@
                 </div>
 
                 <div class="dex-note">
-                    <h3><i class="fa-solid fa-book-open"></i> 图鉴记载</h3>
+                    <h3><span><i class="fa-solid fa-book-open"></i> 图鉴记载</span>
+                        <button class="card-share-btn" @click="exportCard"><i class="fa-solid fa-id-card"></i> 生成卡片</button>
+                    </h3>
                     <p>{{ pet.description || '这只精灵还没有留下任何图鉴记载……' }}</p>
                 </div>
             </div>
@@ -369,6 +374,7 @@
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/vowmon-utils.js?v=20261125a"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/card-export.js?v=20261126n"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
 VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
@@ -601,6 +607,33 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 return out;
             });
 
+            /* 导出收藏卡（TCG 卡牌风格：大图 + 特性 + 图鉴） */
+            const exportCard = () => {
+                const p = pet.value;
+                if (!p || !window.VowmonCard) return;
+                const a = abilityRows.value[0];
+                const ability = a ? { tag: a.tag || '特性', name: a.name, text: a.effect || '' } : null;
+                window.VowmonCard.open({
+                    label: '',
+                    name: p.name,
+                    badgeLabel: 'Hp',
+                    badgeValue: String((p.stats && p.stats.hp) || '—'),
+                    types: (p.types || []).map(t => ({ name: t, color: getTypeColor(t) })),
+                    image: displayImg.value,
+                    ability,
+                    sections: ['ability', 'desc'],
+                    secLabels: { ability: '特性', desc: '图鉴说明' },
+                    desc: p.description || '',
+                    descLabel: '图鉴说明',
+                    accent: (p.types && p.types.length) ? getTypeColor(p.types[0]) : '#4299e1',
+                    variant: 'pet',
+                    shiny: !!isShiny.value,
+                    dexNo: 'No.' + (p.id || '—'),
+                    footLeft: '',
+                    footRight: 'VOWMON WIKI'
+                });
+            };
+
             onMounted(() => {
                 updateBodyClass();
                 if (!urlId) notFound.value = true;
@@ -614,7 +647,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 statLines, hasStats, statsTotal,
                 heightText, weightText,
                 abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows,
-                attackGroups, defendGroups
+                attackGroups, defendGroups, exportCard
             };
         }
     }).mount('#app');

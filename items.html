@@ -63,6 +63,8 @@
         /* ---------------- 详情页 ---------------- */
         .crumb-row { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
         .crumb { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #a8895a; }
+        .card-share-btn { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 15px; border: 1px solid #e6cf9a; border-radius: 999px; background: #fffdf5; color: #9c6b0e; font-size: 12.5px; font-weight: 900; font-family: inherit; cursor: pointer; transition: all .15s; }
+        .card-share-btn:hover { background: #fff7e2; border-color: #d9b463; transform: translateY(-1px); }
         .crumb:hover { color: #dd6b20; }
         .crumb-sep { color: #d9cbb4; margin: 0 2px; }
         .crumb-current { font-size: 13px; font-weight: 800; color: #b9a582; }
@@ -193,6 +195,7 @@
                 </a>
                 <span class="crumb-sep">/</span>
                 <span class="crumb-current">{{ currentItem.group }}</span>
+                <button class="card-share-btn" @click="exportCard"><i class="fa-solid fa-id-card"></i> 生成卡片</button>
             </div>
 
             <h1 class="detail-title">{{ currentItem.name }}</h1>
@@ -241,6 +244,7 @@
 <!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
 <script src="js/data-loader.js?v=20261126c"></script>
 <script src="js/item-config.js?v=20261125a"></script>
+<script src="js/card-export.js?v=20261126n"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['items']).then(function () {
@@ -374,6 +378,34 @@ VowmonData.ready(['items']).then(function () {
                 return sameGroup.concat(sameKind).slice(0, 4);
             });
 
+            /* 导出道具卡（TCG 卡牌风格：大图 + 分类/售价 + 说明） */
+            const exportCard = () => {
+                const it = currentItem.value;
+                if (!it || !window.VowmonCard) return;
+                const ability = {
+                    tag: '分类',
+                    name: it.category || it.group || '道具',
+                    text: [it.kind ? '大类：' + it.kind : '', it.price ? '售价：' + it.price + ' ' + (it.currency || '联盟币') : ''].filter(Boolean).join('　')
+                };
+                window.VowmonCard.open({
+                    label: '道具',
+                    name: it.name,
+                    badgeLabel: it.price ? 'PRICE' : 'ITEM',
+                    badgeValue: it.price ? String(it.price) : '—',
+                    types: [{ name: it.group || '道具', color: '#b7791f', icon: 'fa-solid fa-flask' }],
+                    image: it.icon ? iconUrl(it.icon) : '',
+                    ability: (ability.name || ability.text) ? ability : null,
+                    sections: ['ability', 'desc'],
+                    secLabels: { ability: '分类与售价', desc: '物品说明' },
+                    desc: it.desc || '',
+                    descLabel: '物品说明',
+                    accent: '#b7791f',
+                    variant: 'item',
+                    footLeft: '',
+                    footRight: 'VOWMON WIKI'
+                });
+            };
+
             onMounted(() => {
                 if (localStorage.getItem('vowmon_anim_on') === 'false') {
                     document.body.classList.add('no-anim');
@@ -390,7 +422,8 @@ VowmonData.ready(['items']).then(function () {
                 items, currentItem, relatedItems, iconUrl,
                 openItem, backToList,
                 keyword, currentGroup, currentKind, kindTabs, kindItems, usedGroups, selectKind,
-                filteredItems, getGroupCount, toggleGroup, sortMode
+                filteredItems, getGroupCount, toggleGroup, sortMode,
+                exportCard
             };
         }
     }).mount('#app');

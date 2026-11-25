@@ -48,9 +48,13 @@
         .crumb-bar { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
         .crumb-left a { display: inline-flex; align-items: center; gap: 6px; color: #718096; text-decoration: none; font-size: 13px; font-weight: 800; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #e2e8f0; transition: color .15s, border-color .15s; }
         .crumb-left a:hover { color: #185FA5; border-color: #185FA5; }
+        .card-share-btn { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border: 1px solid #bcd4ea; border-radius: 999px; background: #f5faff; color: #185FA5; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer; transition: all .15s; }
+        .card-share-btn:hover { background: #e8f3fd; border-color: #8fbde3; transform: translateY(-1px); }
         .detail-wrap { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 20px; align-items: start; }
 
         .profile-card { background: #fff; border: 1px solid #e8edf2; border-radius: 22px; overflow: hidden; box-shadow: 0 12px 32px rgba(45,55,72,.12); }
+        .pf-portrait { background: linear-gradient(180deg, #eef4fb, #f8fbff); border-bottom: 1px solid #e8edf2; }
+        .pf-portrait img { display: block; width: 100%; max-height: 420px; object-fit: cover; object-position: center top; }
         .profile-top { background: linear-gradient(135deg, #14538f 0%, #378ADD 100%); color: #fff; padding: 30px 26px 24px; position: relative; overflow: hidden; }
         .profile-top::after { content: ''; position: absolute; right: -50px; top: -60px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255,255,255,.12); }
         .profile-top .pf-id { font-size: 11px; font-weight: 800; letter-spacing: .2em; opacity: .75; }
@@ -170,11 +174,15 @@
             <div class="crumb-left">
                 <a href="characters.html"><i class="fa-solid fa-arrow-left"></i> 御兽人物档案</a>
             </div>
+            <button class="card-share-btn" @click="exportCard"><i class="fa-solid fa-id-card"></i> 生成卡片</button>
         </div>
 
         <div class="detail-wrap">
             <div>
                 <div class="profile-card">
+                    <div class="pf-portrait" v-if="cha.avatar">
+                        <img :src="getImgUrl(cha.avatar)" :alt="cha.name">
+                    </div>
                     <div class="profile-top">
                         <div class="pf-id font-num">CHARACTER · {{ cha.id }}</div>
                         <h1>{{ cha.name }}</h1>
@@ -366,6 +374,7 @@
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/card-export.js?v=20261126n"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
@@ -417,7 +426,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     : [];
                 p.position = String(p.position == null ? '' : p.position);
                 p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
-                ['background', 'personality', 'relations', 'appearance', 'strength'].forEach(k => { p[k] = String(p[k] == null ? '' : p[k]); });
+                ['background', 'personality', 'relations', 'appearance', 'strength', 'avatar'].forEach(k => { p[k] = String(p[k] == null ? '' : p[k]); });
                 p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 return p;
             };
@@ -597,6 +606,39 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 });
             });
 
+            /* 导出训练家卡（TCG 卡牌风格：立绘/精灵大图 + 身份 + 简介） */
+            const exportCard = () => {
+                const c = cha.value;
+                if (!c || !window.VowmonCard) return;
+                const petNames = chaPets.value.slice(0, 6).map(p => indName(p)).join(' · ');
+                const ability = {
+                    tag: '身份',
+                    name: c.title || c.faction || '御兽训练家',
+                    text: (c.faction ? '所属势力：' + c.faction + '　' : '') + (petNames ? '持有精灵：' + petNames : '')
+                };
+                window.VowmonCard.open({
+                    label: '训练家',
+                    name: c.name,
+                    badgeLabel: 'SAVINGS',
+                    badgeValue: fmtMoney(c.money),
+                    types: [
+                        c.faction ? { name: c.faction, color: avatarColor(c.faction), icon: 'fa-solid fa-shield-halved' } : null,
+                        c.birthplace ? { name: c.birthplace, color: '#8fa8bf', icon: 'fa-solid fa-location-dot' } : null
+                    ].filter(Boolean),
+                    image: (c.avatar ? getImgUrl(c.avatar) : '') || (chaPets.value[0] ? speciesImageOf(chaPets.value[0]) : ''),
+                    ability: (ability.name || ability.text) ? ability : null,
+                    sections: ['ability', 'desc'],
+                    secLabels: { ability: '身份条', desc: '人物简介' },
+                    desc: c.bio || '',
+                    descLabel: '人物简介',
+                    accent: c.faction ? avatarColor(c.faction) : '#185FA5',
+                    variant: 'trainer',
+                    dexNo: c.id ? 'ID ' + c.id : '',
+                    footLeft: '',
+                    footRight: 'VOWMON WIKI'
+                });
+            };
+
             onMounted(() => {
                 loaded.value = true;
                 if (!graphCenterId.value && characters.value.length) graphCenterId.value = characters.value[0].id;
@@ -609,10 +651,11 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 searchName, filterFaction,
                 chaPets, inventory, petsPreview,
                 speciesImageOf, stageName, stageColor, indName,
-                fmtMoney, gotoIndividual, gotoCharacter,
+                fmtMoney, gotoIndividual, gotoCharacter, getImgUrl,
                 /* 关系 / 关系谱 */
                 linkRows, avatarColor, gotoCharacterById,
-                viewMode, graphCenterId, graph, setGraphCenter
+                viewMode, graphCenterId, graphCenter, graph, setGraphCenter,
+                exportCard
             };
         }
     }).mount('#app');

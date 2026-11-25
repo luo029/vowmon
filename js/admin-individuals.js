@@ -96,12 +96,15 @@ function normalizeIndividual(v) {
     p.bloodlineSkill = String(p.bloodlineSkill == null ? '' : p.bloodlineSkill);
     p.bloodlineAttr = String(p.bloodlineAttr == null ? '' : p.bloodlineAttr);
     p.level = Number(p.level) || 0;
+    p.shiny = !!p.shiny;
     const rf = (p.rankFlags && typeof p.rankFlags === 'object') ? p.rankFlags : {};
     p.rankFlags = {
         quan: rf.quan === undefined ? DEFAULT_FLAGS.quan : !!rf.quan,
         wei:  rf.wei  === undefined ? DEFAULT_FLAGS.wei  : !!rf.wei,
         li:   rf.li   === undefined ? DEFAULT_FLAGS.li   : !!rf.li
     };
+    /* 权柄自定义：法则 / 规则 / 抽象概念 / 外在表现 等，非阶元也能写 */
+    p.scopeNote = String(p.scopeNote == null ? '' : p.scopeNote);
     const TAX_KEYS = ['domain', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'];
     const tax = (p.taxonomy && typeof p.taxonomy === 'object') ? p.taxonomy : {};
     p.taxonomy = {};
@@ -150,8 +153,9 @@ const app = createApp({
             id: '', nickname: '', speciesId: '', gender: '',
             nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
-            level: 1, ownerId: '', items: [],
+            level: 1, ownerId: '', items: [], shiny: false,
             rankFlags: { quan: true, wei: false, li: true },
+            scopeNote: '',
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
             contractDate: '', contractChapter: '', milestones: [],
             experience: '', notes: ''
@@ -211,7 +215,10 @@ const app = createApp({
         };
         const speciesImageOf = (item) => {
             const s = speciesOf(item && item.speciesId);
-            return s && s.image ? getImgUrl(s.image) : '';
+            if (!s) return '';
+            /* 标记为异色（闪光）时，直接显示该种族的异色图 */
+            if (item && item.shiny && Array.isArray(s.shiny) && s.shiny.length) return getImgUrl(s.shiny[0]);
+            return s.image ? getImgUrl(s.image) : '';
         };
         /* 昵称选填：没起昵称就直呼种族名 */
         const displayName = (item) => {
@@ -535,9 +542,12 @@ const app = createApp({
             const t = form.value.taxonomy || {};
             return String(t[formScope.value.key] || '') || speciesTaxOf(formScope.value.key);
         });
-        const scopeOfItem = (item) => RANK_SCOPE[stageNameOf(item && item.level)] || RANK_SCOPE['元'];
+        const scopeOfItem = (item) => RANK_SCOPE[stageNameOf(item && item.level)] || null;
         const scopeTextOf = (item) => {
+            const custom = String((item && item.scopeNote) || '').trim();
+            if (custom) return custom;
             const sc = scopeOfItem(item);
+            if (!sc) return '掌权';
             const t = (item && item.taxonomy) || {};
             const s = speciesOf(item && item.speciesId);
             const v = String(t[sc.key] || '') || String((s && s.taxonomy && s.taxonomy[sc.key]) || '');

@@ -34,7 +34,16 @@
         .cha-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 16px 14px; position: relative; transition: transform .18s, box-shadow .18s, border-color .18s; }
         .cha-card:hover { box-shadow: 0 10px 22px rgba(45,55,72,.12); border-color: var(--accent, #d69e2e); }
         .cha-card .head { display: flex; align-items: center; gap: 12px; }
-        .cha-card .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); }
+        .cha-card .avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); flex-shrink: 0; box-shadow: 0 4px 10px rgba(45,55,72,.2); overflow: hidden; }
+        .cha-card .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        /* 立绘上传 */
+        .avatar-up { display: flex; gap: 14px; align-items: center; padding: 12px; margin-bottom: 14px; background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 14px; }
+        .au-preview { flex: none; width: 96px; height: 96px; border-radius: 12px; background: #fff; border: 1px dashed #cfdae6; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #c3d0dc; font-size: 30px; }
+        .au-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .au-body { flex: 1; min-width: 0; }
+        .au-title { font-size: 13px; font-weight: 900; color: #2d3748; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .au-desc { font-size: 11.5px; color: #a0aec0; font-weight: 700; line-height: 1.6; margin-bottom: 8px; }
+        .au-ops { display: flex; gap: 8px; flex-wrap: wrap; }
         .cha-card .cha-name { font-size: 16.5px; font-weight: 900; color: #2d3748; line-height: 1.3; }
         .cha-card .cha-title { font-size: 12px; color: #a0aec0; font-weight: 700; margin-top: 1px; }
         .cha-card .faction-tag { margin-left: auto; max-width: 48%; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: 900; color: #fff; background: var(--accent, #d69e2e); padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
@@ -90,9 +99,10 @@
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
         /* ============ 成就经历 ============ */
-        .ms-cols { display: grid; grid-template-columns: 30px 96px minmax(150px, 1.6fr) 122px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-cols { display: grid; grid-template-columns: 28px 96px minmax(110px, 1fr) 156px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
         .ms-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
-        .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
+        /* 与 .ms-cols 列宽完全一致；事件列不再抢占空间，日期列固定 156px 保证完整显示 */
+        .ms-head-row { display: grid; grid-template-columns: 28px 96px minmax(110px, 1fr) 156px 38px; gap: 8px; align-items: center; }
         .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; transition: border-color .15s, box-shadow .15s; }
         .ms-item input::placeholder { color: #b6bfc9; font-weight: 600; }
@@ -208,7 +218,10 @@
                 <div class="cha-card" v-for="item in filteredList" :key="item.id"
                      :style="{ '--accent': factionColor(item.faction) }">
                     <div class="head">
-                        <div class="avatar">{{ avatarChar(item.name) }}</div>
+                        <div class="avatar">
+                            <img v-if="item.avatar" :src="getImgUrl(item.avatar)" :alt="item.name">
+                            <template v-else>{{ avatarChar(item.name) }}</template>
+                        </div>
                         <div>
                             <div class="cha-name">{{ item.name }}</div>
                             <div class="cha-title">{{ item.title || '暂无头衔' }}</div>
@@ -258,6 +271,23 @@
                 <!-- 基本信息 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
+                    <div class="avatar-up">
+                        <div class="au-preview">
+                            <img v-if="form.avatar" :src="getImgUrl(form.avatar)" alt="人物立绘">
+                            <i v-else class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="au-body">
+                            <div class="au-title">人物立绘 <i class="tip" data-tip="人物全身/半身立绘，建议竖图。上传后存到图片仓库的 characters/ 目录，前台人物页与分享卡片都会优先使用这张图。">?</i></div>
+                            <div class="au-desc">可选择上传；不传则前台显示姓名首字头像，卡片会自动改用第一只精灵的图。</div>
+                            <div class="au-ops">
+                                <button type="button" class="btn btn-outline btn-sm" @click="triggerAvatarUpload" :disabled="avatarUploading">
+                                    <i class="fa-solid fa-upload"></i> {{ avatarUploading ? '上传中…' : (form.avatar ? '重新上传' : '上传立绘') }}
+                                </button>
+                                <button type="button" class="btn btn-outline btn-sm" v-if="form.avatar" @click="clearAvatar"><i class="fa-solid fa-xmark"></i> 移除</button>
+                                <input ref="avatarInput" type="file" accept="image/*" style="display: none;" @change="handleAvatarUpload">
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-grid basic-grid">
                         <div class="form-group"><label>姓名 <i class="tip" data-tip="必填；书中的称呼">?</i></label><input v-model="form.name" placeholder="必填，书中的称呼"></div>
                         <div class="form-group"><label>头衔 / 称号 <i class="tip" data-tip="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder="如：大冠 / 首座"></div>
@@ -436,6 +466,7 @@
 <script src="../js/vow-tip.js?v=20261125b"></script>
 <script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261126a"></script>
+<script src="../js/image-utils.js?v=20261124a"></script>
+<script src="../js/admin-characters.js?v=20261126b"></script>
 </body>
 </html>

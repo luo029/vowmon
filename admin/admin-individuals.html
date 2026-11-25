@@ -44,6 +44,7 @@
         .ind-card .species { margin-top: 2px; font-size: 12px; color: #a0aec0; font-weight: 700; }
         .ind-card .chips { margin-top: 9px; display: flex; gap: 5px; flex-wrap: wrap; }
         .mini-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; color: #fff; display: inline-flex; align-items: center; gap: 4px; }
+        .mini-chip.star-only { padding: 3px 7px; background: linear-gradient(135deg, #f8d24a, #dfa000); }
         .mini-chip.plain { background: #edf2f7; color: #718096; }
         .ind-card .owner-line { margin-top: 8px; font-size: 12px; font-weight: 800; color: #4a5568; display: flex; align-items: center; gap: 6px; }
         .ind-card .owner-line i { color: #a0aec0; font-size: 11px; }
@@ -94,6 +95,10 @@
         .species-pick .sp-id { font-size: 11px; color: #a0aec0; font-weight: 700; }
         .species-pick .sp-btn { flex: none; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #dbe4ec; background: #fff; border-radius: 11px; cursor: pointer; font-size: 14px; color: #4a5568; transition: all .15s; }
         .species-pick .sp-btn:hover { border-color: #4299e1; color: #2b6cb0; background: #f0f7ff; }
+        /* 异色（闪光）开关：一颗星星，和种族按钮同尺寸对齐 */
+        .species-pick .shiny-btn { color: #d7c8a8; }
+        .species-pick .shiny-btn:hover { border-color: #e0a300; color: #a8761d; background: #fffaf0; }
+        .species-pick .shiny-btn.on { background: linear-gradient(135deg, #fff4cc, #f6c93f); border-color: #e0a300; color: #7a4a00; box-shadow: 0 2px 8px rgba(224,163,0,.28); }
 
         /* ---- 等级：数字框 + 阶位胶囊，与左右列同高 ---- */
         .level-row { display: flex; align-items: center; gap: 8px; }
@@ -154,6 +159,15 @@
         .rank-item .ri-val { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 900; color: #bcc8d4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .rank-item.on .ri-val { color: #2d3748; }
         .rank-item .ri-tick { flex: none; font-size: 10px; color: var(--rf-c); }
+        /* 【权】自定义权柄：法则 / 规则 / 抽象概念 / 外在表现 都能直接写 */
+        .scope-note { position: relative; display: flex; align-items: center; gap: 8px; margin-top: 8px; height: 42px; padding: 0 40px 0 12px; background: #fffaf5; border: 1px dashed #f0c9a8; border-radius: 11px; transition: background .15s, border-color .15s, box-shadow .15s; }
+        .scope-note:focus-within { background: #fff; border-color: #c2410c; border-style: solid; box-shadow: 0 0 0 3px rgba(194,65,12,.1); }
+        .scope-note .sn-icon { flex: none; font-size: 12px; color: #c2410c; opacity: .72; }
+        .form-group .scope-note input { flex: 1; min-width: 0; width: auto; height: 100%; padding: 0; border: none; background: transparent; outline: none; box-shadow: none; font-family: inherit; font-size: 13px; font-weight: 700; color: #2d3748; }
+        .form-group .scope-note input::placeholder { color: #c9a58a; font-weight: 600; }
+        .form-group .scope-note input:focus { border: none; box-shadow: none; }
+        .scope-note .sn-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 7px; background: #fdece0; color: #c2410c; cursor: pointer; font-size: 11px; }
+        .scope-note .sn-clear:hover { background: #fbdcc8; }
 
         /* ============ 契约信息 + 成就经历 ============ */
         .contract-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; background: #fffdf7; border: 1px solid #f0e5cd; border-radius: 12px; padding: 13px 14px; margin-bottom: 14px; }
@@ -161,9 +175,10 @@
         .contract-panel input { width: 100%; height: 40px; padding: 0 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; font-family: inherit; color: #2d3748; outline: none; background: #fff; transition: border-color .15s, box-shadow .15s; }
         .contract-panel input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
         .contract-panel input::placeholder { color: #cfc0a4; font-weight: 600; }
-        .ms-cols { display: grid; grid-template-columns: 30px 96px minmax(150px, 1.6fr) 122px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-cols { display: grid; grid-template-columns: 28px 96px minmax(110px, 1fr) 156px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
         .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
-        .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
+        /* 与 .ms-cols 列宽完全一致；事件列不再抢占空间，日期列固定 156px 保证完整显示 */
+        .ms-head-row { display: grid; grid-template-columns: 28px 96px minmax(110px, 1fr) 156px 38px; gap: 8px; align-items: center; }
         .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; }
         .ms-item input::placeholder { color: #b3c2d1; font-weight: 600; }
@@ -275,6 +290,7 @@
                         <div class="name">{{ displayName(item) }}<span class="gender" v-if="item.gender">{{ item.gender }}</span></div>
                         <div class="species">{{ speciesLabel(item.speciesId) }}</div>
                         <div class="chips">
+                            <span class="mini-chip star-only" v-if="item.shiny" title="异色（闪光）"><i class="fa-solid fa-star"></i></span>
                             <span class="mini-chip" v-if="item.rankFlags && item.rankFlags.quan" style="background: #c2410c;"><i class="fa-solid fa-sitemap"></i>{{ scopeTextOf(item) }}</span>
                             <span class="mini-chip" v-if="item.rankFlags && item.rankFlags.wei" style="background: #7048e8;"><i class="fa-solid fa-layer-group"></i>{{ stageName(item.level) }}</span>
                             <span class="mini-chip" v-if="item.bloodline && item.bloodline !== '无'" :style="{ background: bloodColorOf(item.bloodline) }"><i class="fa-solid fa-dna"></i>{{ item.bloodline }}血脉</span>
@@ -329,6 +345,11 @@
                                     </div>
                                 </div>
                                 <button type="button" class="sp-btn" @click.stop="openSpeciesModal" title="选择种族"><i class="fa-solid fa-paw"></i></button>
+                                <button type="button" class="sp-btn shiny-btn" :class="{ on: form.shiny }"
+                                        @click="form.shiny = !form.shiny"
+                                        :title="form.shiny ? '异色（闪光）个体 · 点击取消' : '标记为异色（闪光）个体'">
+                                    <i class="fa-solid fa-star"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="form-group"><label>等级 <i class="tip" data-tip="填 1-100；阶段自动推导">?</i></label>
@@ -359,7 +380,7 @@
                             </div>
                         </div>
                         <div class="form-group rank-group">
-                            <label>三律标记 <i class="tip" data-tip="默认勾【位】【力】，【权】需明确是某层阶元的掌权者才勾。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与数值面板。">?</i></label>
+                            <label>三律标记 <i class="tip" data-tip="默认勾【位】【力】，【权】需明确是掌权者才勾。【权】权柄——可自行填写：阶元掌辖（初灵掌种…元掌域）、法则、规则、抽象概念、外在表现等，界门纲目科属种只是方便理解的参照，并非唯一定义；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与数值面板。">?</i></label>
                             <div class="rank-bar">
                                 <button type="button" class="rank-item" v-for="f in RANK_FLAGS" :key="f.key"
                                         :class="{ on: form.rankFlags[f.key] }"
@@ -368,11 +389,17 @@
                                         @click="toggleFlag(f.key)">
                                     <span class="ri-dot">{{ f.label }}</span>
                                     <span class="ri-name">{{ f.name }}</span>
-                                    <span class="ri-val" v-if="f.key === 'quan'">{{ formScope.label }} · {{ formScopeValue || '未填' }}</span>
+                                    <span class="ri-val" v-if="f.key === 'quan'">{{ form.scopeNote || (formScope.label + ' · ' + (formScopeValue || '未填')) }}</span>
                                     <span class="ri-val" v-else-if="f.key === 'wei'">{{ stageName(form.level) }}</span>
                                     <span class="ri-val" v-else>Lv.{{ form.level }}</span>
                                     <i class="fa-solid fa-check ri-tick" v-if="form.rankFlags[f.key]"></i>
                                 </button>
+                            </div>
+                            <div class="scope-note" v-if="form.rankFlags.quan">
+                                <i class="fa-solid fa-pen-nib sn-icon"></i>
+                                <input v-model="form.scopeNote" maxlength="40"
+                                       :placeholder="'自定义权柄：法则 / 规则 / 抽象概念 / 外在表现…（留空则自动用 ' + formScope.label + ' · ' + (formScopeValue || '未填') + '）'">
+                                <button type="button" class="sn-clear" v-if="form.scopeNote" @click="form.scopeNote = ''" title="清空自定义"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                     </div>
@@ -523,6 +550,6 @@
 <script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126g"></script>
+<script src="../js/admin-individuals.js?v=20261126j"></script>
 </body>
 </html>

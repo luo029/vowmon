@@ -49,6 +49,8 @@
         .crumb-bar { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
         .crumb-left a { display: inline-flex; align-items: center; gap: 6px; color: #718096; text-decoration: none; font-size: 13px; font-weight: 800; padding: 8px 16px; border-radius: 999px; background: #fff; border: 1px solid #e2e8f0; transition: color .15s, border-color .15s; }
         .crumb-left a:hover { color: #ff6b6b; border-color: #ff6b6b; }
+        .card-share-btn { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border: 1px solid #f0c9a8; border-radius: 999px; background: #fffaf5; color: #c2410c; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer; transition: all .15s; }
+        .card-share-btn:hover { background: #fff1e6; border-color: #e0a171; transform: translateY(-1px); }
         .detail-wrap { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
 
         .pet-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -171,6 +173,7 @@
             <div class="crumb-left">
                 <a href="individuals.html"><i class="fa-solid fa-arrow-left"></i> 御兽精灵档案</a>
             </div>
+            <button class="card-share-btn" @click="exportCard"><i class="fa-solid fa-id-card"></i> 生成卡片</button>
         </div>
 
         <div class="detail-wrap">
@@ -382,6 +385,7 @@
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/card-export.js?v=20261126n"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function () {
@@ -431,12 +435,19 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 p.speciesId = String(p.speciesId == null ? '' : p.speciesId);
                 p.level = Number(p.level) || 0;
+                p.shiny = !!p.shiny;
                 p.traits = Array.isArray(p.traits) ? p.traits : [];
                 p.skills = Array.isArray(p.skills) ? p.skills : [];
                 p.items = Array.isArray(p.items) ? p.items : [];
                 p.bloodline = p.bloodline || '无';
                 const rf = (p.rankFlags && typeof p.rankFlags === 'object') ? p.rankFlags : {};
-                p.rankFlags = { quan: rf.quan !== false, wei: !!rf.wei, li: rf.li !== false };
+                /* 权/位/力默认值与后台一致：权默认关（没掌权就不显示权柄），位/力默认开 */
+                p.rankFlags = {
+                    quan: rf.quan === undefined ? false : !!rf.quan,
+                    wei: rf.wei === undefined ? true : !!rf.wei,
+                    li: rf.li === undefined ? true : !!rf.li
+                };
+                p.scopeNote = String(p.scopeNote == null ? '' : p.scopeNote);
                 return p;
             };
             individuals.value = (allIndividualsData || []).map(normalize);
@@ -464,7 +475,13 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
             /* ---------------- 种族引用 ---------------- */
             const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
             const speciesNameOf = (p) => { const s = speciesOf(p); return s ? (s.name + ' №' + s.id) : ''; };
-            const speciesImageOf = (p) => { const s = speciesOf(p); return s && s.image ? getImgUrl(s.image) : ''; };
+            /* 异色个体优先用该种族的异色图 */
+            const speciesImageOf = (p) => {
+                const s = speciesOf(p);
+                if (!s) return '';
+                if (p && p.shiny && Array.isArray(s.shiny) && s.shiny.length) return getImgUrl(s.shiny[0]);
+                return s.image ? getImgUrl(s.image) : '';
+            };
             /* 昵称选填：没起昵称就直接叫种族名 */
             const indName = (p) => {
                 const nick = p && p.nickname && String(p.nickname).trim();
@@ -482,7 +499,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
             const species = computed(() => ind.value ? speciesOf(ind.value) : null);
             const speciesTypes = computed(() => (species.value && species.value.types) || []);
             const speciesName = computed(() => species.value ? species.value.name : '');
-            const speciesImage = computed(() => species.value && species.value.image ? getImgUrl(species.value.image) : '');
+            const speciesImage = computed(() => (ind.value ? speciesImageOf(ind.value) : ''));
 
             /* ---------------- 阶段推导 ---------------- */
             const stageName = (p) => {
@@ -501,7 +518,11 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
             };
             const flagOn = (p, k) => !!(p && p.rankFlags && p.rankFlags[k]);
             const scopeText = (p) => {
-                const sc = RANK_SCOPE[stageName(p)] || RANK_SCOPE['元'];
+                /* 自定义权柄优先：法则 / 规则 / 抽象概念 / 外在表现 都可直接写 */
+                const custom = String((p && p.scopeNote) || '').trim();
+                if (custom) return custom;
+                const sc = RANK_SCOPE[stageName(p)] || null;
+                if (!sc) return '掌权';
                 const t = (p && p.taxonomy) || {};
                 const s = speciesOf(p);
                 const v = String(t[sc.key] || '') || String((s && s.taxonomy && s.taxonomy[sc.key]) || '');
@@ -558,6 +579,64 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 });
             });
 
+            /* 导出收藏卡（TCG 卡牌风格：大图 + 资料条 + 特性 + 契约记录） */
+            const exportCard = () => {
+                const p = ind.value;
+                if (!p || !window.VowmonCard) return;
+                let ability = null;
+                if ((p.traits || []).length) {
+                    ability = { tag: '特性', name: p.traits[0], text: '' };
+                }
+                let skill = null;
+                if (p.bloodlineSkill) {
+                    skill = { tag: '血脉技能', name: p.bloodlineSkill, text: (p.bloodline && p.bloodline !== '无') ? p.bloodline + '血脉 · ' + stageName(p) : stageName(p) };
+                }
+                /* 资料条：主人 / 性格（图鉴性格，影响能力值）/ 身高 / 体重（未填默认取种族图鉴） */
+                const stats = [];
+                if (ownerNameOf(p)) stats.push({ icon: 'fa-user-shield', label: '主人', value: ownerNameOf(p) });
+                if (p.nature) {
+                    const hint = natureHint(p.nature);
+                    stats.push({ icon: 'fa-face-smile', label: '性格', value: p.nature + (hint ? '（' + hint + '）' : '') });
+                }
+                const sp = species.value;
+                if (sp && sp.height != null && sp.height !== '') stats.push({ icon: 'fa-ruler-vertical', label: '身高', value: sp.height + 'm' });
+                if (sp && sp.weight != null && sp.weight !== '') stats.push({ icon: 'fa-weight-scale', label: '体重', value: sp.weight + 'kg' });
+                /* 当前实力：按位阶配色（初灵绿 / 升灵青…） */
+                const rank = stageName(p) !== '未记录' ? { value: stageName(p), color: stageColor(p) } : null;
+                /* 权柄：只有掌【权】的个体才出现 */
+                const quan = flagOn(p, 'quan') ? { value: String(p.scopeNote || '').trim() || '掌权', color: '#c2410c' } : null;
+                window.VowmonCard.open({
+                    label: '',
+                    name: indName(p),
+                    badgeLabel: 'Lv',
+                    badgeValue: 'Lv.' + (p.level || '—'),
+                    types: (speciesTypes.value || []).map(t => ({ name: t, color: getTypeColor(t) })),
+                    image: speciesImage.value,
+                    ability,
+                    ability2: skill,
+                    stats,
+                    rank,
+                    quan,
+                    sections: ['stats', 'rank', 'quan', 'ability', 'ability2', 'desc'],
+                    secLabels: {
+                        stats: '资料条（主人 · 性格 · 身高 · 体重）',
+                        rank: '当前实力（位阶）',
+                        quan: '权柄（掌权者）',
+                        ability: '特性',
+                        ability2: '血脉技能',
+                        desc: '契约记录'
+                    },
+                    desc: p.experience || p.notes || '',
+                    descLabel: '契约记录',
+                    accent: (speciesTypes.value && speciesTypes.value.length) ? getTypeColor(speciesTypes.value[0]) : '#c2410c',
+                    variant: 'pet',
+                    shiny: !!p.shiny,
+                    dexNo: (species.value && species.value.id) ? 'No.' + species.value.id : '',
+                    footLeft: '',
+                    footRight: ''
+                });
+            };
+
             onMounted(() => {
                 loaded.value = true;
                 if (!isAnimOn.value) document.body.classList.add('no-anim');
@@ -579,7 +658,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 levelPercent, segWidth, segStart,
                 owner, ownerNameOf, gotoCharacter, gotoIndividual,
                 lvColor, lvDesc, bloodColor, indName, natureHint,
-                RANK_SCOPE, flagOn, scopeText
+                RANK_SCOPE, flagOn, scopeText, exportCard
             };
         }
     }).mount('#app');

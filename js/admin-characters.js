@@ -63,6 +63,7 @@ function normalizeCharacter(c) {
         })).filter(l => l.id)
         : [];
     p.appearance = String(p.appearance == null ? '' : p.appearance);
+    p.avatar = String(p.avatar == null ? '' : p.avatar);
     p.strength = String(p.strength == null ? '' : p.strength);
     p.notes = String(p.notes == null ? '' : p.notes);
     p.milestones = Array.isArray(p.milestones)
@@ -97,7 +98,7 @@ const app = createApp({
             id: '', name: '', title: '', faction: '', birthplace: '', position: '', money: 0,
             inventory: [], petIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
-            notes: '', milestones: []
+            avatar: '', notes: '', milestones: []
         });
         const form = ref(defaultForm());
 
@@ -113,6 +114,47 @@ const app = createApp({
             if (/^(https?:)?\/\//i.test(path) || String(path).indexOf('data:') === 0) return path;
             return imgBase + String(path).replace(/^\/+/, '');
         };
+
+        /* ------------------------------------------------- 人物立绘上传 */
+        const avatarUploading = ref(false);
+        const avatarInput = ref(null);
+        const triggerAvatarUpload = () => {
+            if (!config.value.token || !config.value.owner || !config.value.imgRepos) {
+                VowmonDialog.alert('请先在「精灵管理 → 同步配置」里填写 Token、用户名和图片仓库名。', {
+                    type: 'warning', title: '还没配置好'
+                });
+                return;
+            }
+            if (avatarInput.value) avatarInput.value.click();
+        };
+        const handleAvatarUpload = async (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            avatarUploading.value = true;
+            try {
+                if (!window.ImageUtils) throw new Error('图片处理模块未加载，请强制刷新页面（Ctrl + F5）后重试');
+                const img = await ImageUtils.compressToPng(file, 1024);
+                const repo = String(config.value.imgRepos || '').split(',')[0].trim();
+                if (!repo) throw new Error('请先在【同步配置】中填写图片仓库名');
+                const id = String(form.value.id || '').trim() || ('char-' + Date.now());
+                const path = 'characters/' + id + '.png';
+                await GitHubSync.uploadFile(
+                    config.value.token, config.value.owner, repo,
+                    path, img.base64, 'Upload character portrait: ' + path, true
+                );
+                form.value.avatar = path;
+                VowmonDialog.toast('立绘已上传：' + path + '\n已压缩为 ' + img.canvasSize + '×' + img.canvasSize + '（' + ImageUtils.formatBytes(img.bytes) + '）', 'success', { duration: 3600 });
+            } catch (err) {
+                VowmonDialog.alert('立绘上传失败，请检查 Token 权限 / 图片仓库名。', {
+                    type: 'danger', title: '上传失败',
+                    detail: err && err.message ? err.message : String(err)
+                });
+            } finally {
+                avatarUploading.value = false;
+                event.target.value = '';
+            }
+        };
+        const clearAvatar = () => { form.value.avatar = ''; };
 
         /* ------------------------------------------------------------- 工具 */
         const indById = computed(() => {
@@ -438,6 +480,8 @@ const app = createApp({
             speciesLabel, speciesImageOf,
             factionColor, avatarChar, avatarColor,
             openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
+            /* 立绘 */
+            avatarUploading, avatarInput, triggerAvatarUpload, handleAvatarUpload, clearAvatar, getImgUrl,
             showPetModal, petSearchInput, filteredPets, togglePet, removePet, openPetModal,
             /* 人物关系 */
             showLinkModal, linkSearch, linkCandidates, linkChar, linkName, linkTitle,
