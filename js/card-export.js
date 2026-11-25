@@ -699,12 +699,12 @@
             ctx.fillStyle = hexA(accent, 0.92);
             ctx.fillText(o.dexNo, nx, nameBase);
             nx += ctx.measureText(o.dexNo).width + 14;
-            if (o.dexNo2) {
-                setNumFont(ctx, 20, 700);
-                ctx.fillStyle = 'rgba(23,29,36,0.45)';
-                ctx.fillText(o.dexNo2, nx, nameBase);
-                nx += ctx.measureText(o.dexNo2).width + 14;
-            }
+        }
+        if (o.dexNo2) {
+            setNumFont(ctx, 20, 700);
+            ctx.fillStyle = 'rgba(23,29,36,0.45)';
+            ctx.fillText(o.dexNo2, nx, nameBase);
+            nx += ctx.measureText(o.dexNo2).width + 14;
         }
 
         /* 右上角信息组：异色星章 + 属性胶囊，对称并列、右对齐；
@@ -718,8 +718,18 @@
             return ctx.measureText(t.name).width + 72;
         });
         const starD = 34;
+        /* 售价 / 徽章胶囊（PRICE 等）：排在属性胶囊最右侧；badgeValue 为空则不画 */
+        let badgeW = 0;
+        if (o.badgeValue) {
+            setFont(ctx, 13, 900);
+            const blw = o.badgeLabel ? ctx.measureText(o.badgeLabel.toUpperCase()).width : 0;
+            setNumFont(ctx, 24, 700);
+            const bvw = ctx.measureText(o.badgeValue).width;
+            badgeW = 22 + (blw ? blw + 7 : 0) + bvw + 22;
+        }
         let grpW = capWs.reduce((a, b) => a + b, 0) + Math.max(0, capWs.length - 1) * 10;
         if (o.shinyBadge) grpW += starD + 12;
+        if (badgeW) grpW += badgeW + 10;
 
         /* 卡名让出右上角信息组的宽度 */
         setDisplayFont(ctx, 52, 900);
@@ -773,6 +783,32 @@
             drawCap(ctx, gx, capY, CAP_H, t);
             gx += capWs[i] + 10;
         });
+        if (badgeW) {
+            const bh = 38;
+            const by = capCy - bh / 2;
+            roundRect(ctx, gx, by, badgeW, bh, bh / 2);
+            const pg = ctx.createLinearGradient(gx, by, gx, by + bh);
+            pg.addColorStop(0, hexA(accent, 0.95));
+            pg.addColorStop(1, shade(accent, 0.72));
+            ctx.fillStyle = pg;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            let bx = gx + 22;
+            if (o.badgeLabel) {
+                setFont(ctx, 13, 900);
+                ctx.fillStyle = 'rgba(255,255,255,0.82)';
+                ctx.fillText(o.badgeLabel.toUpperCase(), bx, capCy + 1);
+                bx += ctx.measureText(o.badgeLabel.toUpperCase()).width + 7;
+            }
+            setNumFont(ctx, 24, 700);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(o.badgeValue, bx, capCy + 1);
+            ctx.textBaseline = 'alphabetic';
+        }
 
         /* 大图 */
         const ax = left + 4;
@@ -1204,6 +1240,7 @@
             { key: 'types', label: '属性', on: !!o.types.length },
             { key: 'dexNo', label: '编号', on: !!o.dexNo },
             ...(o.dexNo2 ? [{ key: 'dexNo2', label: '副编号（国际编号）', on: true }] : []),
+            ...(o.badgeValue ? [{ key: 'badge', label: '右上角徽章（售价等）', on: true }] : []),
             { key: 'name', label: '名字', on: !!o.name },
             { key: 'footRight', label: '右下角 VOWMON WIKI', on: !!o.footRight, footText: String(o.footRight || 'VOWMON WIKI') }
         ];
@@ -1238,6 +1275,7 @@
                 else if (e.key === 'types' && !e.on) cur.types = [];
                 else if (e.key === 'dexNo' && !e.on) cur.dexNo = '';
                 else if (e.key === 'dexNo2' && !e.on) cur.dexNo2 = '';
+                else if (e.key === 'badge' && !e.on) { cur.badgeValue = ''; cur.badgeLabel = ''; }
                 else if (e.key === 'name' && !e.on) cur.name = '';
                 else if (e.key === 'footRight') cur.footRight = e.on ? (e.footText || 'VOWMON WIKI') : '';
             });

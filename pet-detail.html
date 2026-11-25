@@ -374,7 +374,7 @@
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/vowmon-utils.js?v=20261125a"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126q"></script>
+<script src="js/card-export.js?v=20261126r"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
 VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
@@ -616,8 +616,6 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 window.VowmonCard.open({
                     label: '',
                     name: p.name,
-                    badgeLabel: 'Hp',
-                    badgeValue: String((p.stats && p.stats.hp) || '—'),
                     types: (p.types || []).map(t => ({ name: t, color: getTypeColor(t) })),
                     image: displayImg.value,
                     ability,

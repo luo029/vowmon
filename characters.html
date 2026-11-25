@@ -390,7 +390,7 @@
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126q"></script>
+<script src="js/card-export.js?v=20261126r"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
@@ -653,9 +653,9 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     descLabel: '人物简介',
                     accent: c.faction ? leagueColor(c.faction) : '#185FA5',
                     variant: 'trainer',
-                    /* 编号：默认联盟编号（随联盟配色），有国际编号时作为副编号一并显示 */
+                    /* 编号：默认联盟编号（随联盟配色），国际编号作为灰色副编号一并显示 */
                     dexNo: c.leagueNo ? 'No.' + c.leagueNo : '',
-                    dexNo2: (c.leagueNo && c.intlNo) ? 'Intl.' + c.intlNo : (c.intlNo ? 'Intl.' + c.intlNo : ''),
+                    dexNo2: c.intlNo ? 'Intl.' + c.intlNo : '',
                     footLeft: '',
                     footRight: 'VOWMON WIKI'
                 });
