@@ -118,7 +118,7 @@
                     </div>
                     <div class="card-img">
                         <img class="base" :src="getImgUrl(vow.image)" :alt="vow.name" loading="lazy" decoding="async" fetchpriority="high">
-                        <img v-if="hasShiny(vow)" class="shiny" :src="shinySrc(vow)" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
+                        <img v-if="hasShiny(vow)" class="shiny" :src="shinyVowId === vow.id ? shinySrc(vow) : BLANK_SRC" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
                     </div>
                     <div class="card-bottom">
                         <span class="type-icon" v-for="t in vow.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
@@ -223,6 +223,8 @@ VowmonData.ready(['vows']).then(function () {
 
             /* 异色悬停轮播（与精灵图鉴同款逻辑） */
             const hasShiny = (vow) => Array.isArray(vow && vow.shiny) && vow.shiny.length > 0;
+            // 异色图「悬停才下载」：未悬停时用 1px 透明占位，避免首屏把主图+异色图双倍拉一遍
+            const BLANK_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             const shinyVowId = ref('');
             const shinyIdx = ref(0);
             let shinyTimer = null;
@@ -262,7 +264,7 @@ VowmonData.ready(['vows']).then(function () {
                 realms, groupOf,
                 isAnimOn,
                 getImgUrl, getTypeColor, getTypeIcon,
-                hasShiny, shinySrc, startShiny, stopShiny, gotoDetail
+                hasShiny, shinySrc, shinyVowId, BLANK_SRC, startShiny, stopShiny, gotoDetail
             };
         }
     }).mount('#app');

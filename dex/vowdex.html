@@ -230,7 +230,7 @@
                 </div>
                 <div class="card-img">
                     <img class="base" :src="getImgUrl(vow.image)" :alt="vow.name" loading="lazy" decoding="async" fetchpriority="high">
-                    <img v-if="hasShiny(vow)" class="shiny" :src="shinySrc(vow)" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
+                    <img v-if="hasShiny(vow)" class="shiny" :src="shinyVowId === vow.id ? shinySrc(vow) : BLANK_SRC" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
                 </div>
                 <div class="card-bottom">
                     <span class="type-icon" v-for="t in vow.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
@@ -328,6 +328,8 @@ VowmonData.ready(['vows']).then(function () {
             // 说明：这里故意不给异色图挂 @error——轮播会切换 src，切图瞬间浏览器可能
             // 抛出一次 abort 型 error，一旦据此判定"图坏了"就会把整只精灵的异色永久关掉。
             const hasShiny = (vow) => Array.isArray(vow && vow.shiny) && vow.shiny.length > 0;
+            // 异色图「悬停才下载」：未悬停时用 1px 透明占位，避免首屏把主图+异色图双倍拉一遍
+            const BLANK_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
             const shinyVowId = ref('');   // 当前悬停中的精灵 id
             const shinyIdx = ref(0);      // 当前显示第几张异色
@@ -444,7 +446,7 @@ VowmonData.ready(['vows']).then(function () {
                 stageCounts, formCounts, typeCounts,
                 toggleType, toggleFilter, clearFilters,
                 getImgUrl, getTypeColor, getTypeIcon,
-                hasShiny, shinySrc, startShiny, stopShiny, gotoDetail
+                hasShiny, shinySrc, shinyVowId, BLANK_SRC, startShiny, stopShiny, gotoDetail
             };
         }
     }).mount('#app');
