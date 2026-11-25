@@ -14,13 +14,16 @@ createApp({
             currentTab.value = tab;
             try {
                 const url = new URL(window.location.href);
-                if (tab === 'settings') url.searchParams.set('tab', 'settings');
+                if (tab === 'settings' || tab === 'realm') url.searchParams.set('tab', tab);
                 else url.searchParams.delete('tab');
                 history.replaceState(null, '', url.pathname + url.search);
             } catch (e) {
                 // file:// 等受限环境下无法改写历史，忽略即可，标签切换本身不受影响
             }
+            if (window.AdminSidebar) window.AdminSidebar.setActive(tab);
         };
+        /* 侧边栏（admin/sidebar.js）Tab 点击：无刷新切换 */
+        window.addEventListener('admin:tab', (e) => { if (e && e.detail) switchTab(e.detail); });
         const vows = ref([]);
         // 特性库（traits-data.json），用于：① 特性候选池 ② 保存精灵时双向同步特性 ↔ 精灵关联
         const traits = ref([]);
