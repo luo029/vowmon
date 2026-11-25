@@ -26,7 +26,7 @@
     var SITE_NAME = 'Vowmon Wiki';
 
     // 站点根前缀：页面在 admin/ 或 dex/reference/world/records 子目录里时，链接从站点根出发需加 ../。
-    var ROOT = /\/(admin|dex|reference|world|records)\//.test(window.location.pathname) ? '../' : '';
+    var ROOT = /\/(admin|dex|reference|world|records|battle)\//.test(window.location.pathname) ? '../' : '';
     var HOME = ROOT + 'index.html';
 
     // 导航结构：改这里就能改全站（href 均为「站点根目录下的真实路径」，渲染时统一加 ROOT 前缀）
@@ -158,6 +158,8 @@
         var parts = path.split('/');
         // /admin/ 或 /admin/index.html 一律按 admin.html 高亮「工具」菜单
         if (/\/admin\/(index\.html)?$/.test(path)) return 'admin.html';
+        // /battle/ 与 /battle/rules.html 一律按 battle.html 高亮「工具」菜单
+        if (/\/battle\//.test(path)) return 'battle.html';
         var file = parts[parts.length - 1] || parts[parts.length - 2] || 'index.html';
         // Cloudflare Pages 会把 /dex/vowdex.html 308 到无扩展名的 /dex/vowdex，
         // 这里补回 .html 再查高亮表，否则线上所有页面都没有高亮态
