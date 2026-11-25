@@ -240,7 +240,7 @@
     </div>
 </div>
 
-<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
 <!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
 <script src="../js/data-loader.js?v=20261127b"></script>
 <script src="../js/item-config.js?v=20261126s"></script>
@@ -263,11 +263,12 @@ VowmonData.ready(['items']).then(function () {
                 return base ? base + '/' : '';
             })();
 
+            const IMG_VER = (window.VOWMON_SITE_CONFIG || {}).imgVer ? '?v=' + window.VOWMON_SITE_CONFIG.imgVer : '';
             const iconUrl = (path) => {
                 const p = String(path || '').trim();
                 if (!p) return '';
                 if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
-                return IMG_BASE + p.replace(/^\/+/, '');
+                return IMG_BASE + p.replace(/^\/+/, '') + IMG_VER;
             };
 
             // 数据规整：补默认值，保证 icon/obtain 等字段一定存在

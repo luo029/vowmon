@@ -25,6 +25,10 @@ window.VOWMON_SITE_CONFIG = (function () {
         //   https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main
         //   https://raw.githubusercontent.com/luo029/vowmon_imgs/main
         imgCdnBase: 'https://vowmon.pages.dev/img',
+        // 图片版本号：后台替换了同名图片后，把这里改成新值（如 'v20261126b'），
+        // 全站图片 URL 会带上 ?v=新值，CF 边缘和浏览器缓存立刻失效、马上看到新图。
+        // 不改则继续吃长缓存（图片反代现在给 7 天，重复访问秒开）。
+        imgVer: 'v20261126a',
         // 数据走本站 /data/* 反向代理，源站是 vowmon_data 仓库。
         // 也可直接填数据仓库的公开地址，例如：
         //   https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main
@@ -32,7 +36,7 @@ window.VOWMON_SITE_CONFIG = (function () {
         dataCdnBase: 'https://vowmon.pages.dev/data'
     };
 
-    var out = { imgCdnBase: defaults.imgCdnBase, dataCdnBase: defaults.dataCdnBase };
+    var out = { imgCdnBase: defaults.imgCdnBase, dataCdnBase: defaults.dataCdnBase, imgVer: defaults.imgVer };
     try {
         var local = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {};
         if (local.imgCdnBase && String(local.imgCdnBase).trim()) {
@@ -40,6 +44,9 @@ window.VOWMON_SITE_CONFIG = (function () {
         }
         if (local.dataCdnBase && String(local.dataCdnBase).trim()) {
             out.dataCdnBase = String(local.dataCdnBase).trim();
+        }
+        if (local.imgVer && String(local.imgVer).trim()) {
+            out.imgVer = String(local.imgVer).trim();
         }
     } catch (e) {
         // localStorage 不可用（隐私模式等）：直接用默认值

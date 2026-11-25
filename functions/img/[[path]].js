@@ -22,9 +22,10 @@ const UPSTREAMS = [
 // 只代理图片，避免被当成通用代理滥用
 const ALLOWED_EXT = /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)$/i;
 
-// 1 小时：既能让绝大多数访问命中边缘缓存，后台换了同名图片（覆盖上传）也能在一小时内生效。
-// 想立刻看到新图：图片地址加一个 ?v=任意值，缓存键带 query，会直接回源。
-const CACHE_TTL = 3600;
+// 7 天：图片访问绝大多数命中边缘缓存，访客浏览器也会长缓存（重复访问零请求，前台秒开）。
+// 后台替换了同名图片想立刻生效：改 js/site-config.js 里的 imgVer 版本号，
+// 全站图片 URL 带 ?v=新值，缓存键带 query，自动回源拿新图。
+const CACHE_TTL = 604800;
 
 function notFound(msg, status = 404, maxAge = 60) {
     return new Response(msg, {

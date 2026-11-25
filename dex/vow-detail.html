@@ -373,7 +373,7 @@
 
 <script src="../js/type-config.js?v=20261126s"></script>
 <script src="../js/type-chart.js?v=20261126s"></script>
-<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
 <script src="../js/vowmon-utils.js?v=20261126s"></script>
 <script src="../js/data-loader.js?v=20261127b"></script>
 <script src="../js/card-export.js?v=20261126s"></script>
@@ -409,10 +409,11 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
             try { siteConfig = JSON.parse(localStorage.getItem('vowmon_sync_config') || '{}') || {}; } catch (e) { siteConfig = {}; }
             const IMG_RAW = String(siteConfig.imgCdnBase || (window.VOWMON_SITE_CONFIG || {}).imgCdnBase || '').trim().replace(/\/+$/, '');
             const IMG_BASE = IMG_RAW ? IMG_RAW + '/' : '';
+            const IMG_VER = (window.VOWMON_SITE_CONFIG || {}).imgVer ? '?v=' + window.VOWMON_SITE_CONFIG.imgVer : '';
             const getImgUrl = (path) => {
                 if (!path) return '';
                 if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) return path;
-                return IMG_BASE + String(path).replace(/^\/+/, '');
+                return IMG_BASE + String(path).replace(/^\/+/, '') + IMG_VER;
             };
 
             /* ---------------- 属性 ---------------- */
