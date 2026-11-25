@@ -5,8 +5,9 @@
      编辑 -> VowmonStore.save('individuals', { individuals }) 写本机镜像（前台立即生效）
           -> 点「一键同步」把 individuals-data.json 推到 GitHub 数据仓库
      前台 individuals.html 读取生效。
-   等级八阶：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 /
-             灵相61-70 / 律冠71-89 / 元灵90-99 / 元100
+   等级八阶默认：初灵1-15 / 升灵16-35 / 族尊36-50 / 基座51-60 /
+             灵相61-70 / 律冠71-89 / 元灵90-99 / 元100起（不封顶）
+   —— 阶段表已可在后台「阶段境界管理」自定义，见 js/stage-config.js
    字段说明：
      nickname  昵称（选填！很多精灵直接拿种族名当称呼）
      nature    性格（图鉴性格，影响种族值成长倾向，数据来自 natures-data.json）
@@ -19,20 +20,8 @@
 
 const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-const RANK_BANDS = [
-    { name: '初灵', min: 1,   max: 15 },
-    { name: '升灵', min: 16,  max: 36 },
-    { name: '族尊', min: 37,  max: 50 },
-    { name: '基座', min: 51,  max: 60 },
-    { name: '灵相', min: 61,  max: 70 },
-    { name: '律冠', min: 71,  max: 89 },
-    { name: '元灵', min: 90,  max: 99 },
-    { name: '元',   min: 100, max: 9999 }
-];
-const STAGE_COLORS = {
-    '初灵': '#8bc34a', '升灵': '#26a69a', '族尊': '#5c6bc0', '基座': '#ba7517',
-    '灵相': '#1971c2', '律冠': '#7048e8', '元灵': '#d4a017', '元': '#e24b4a'
-};
+/* 阶段境界（等级 → 境界名/颜色）统一走 js/stage-config.js：
+   后台「阶段境界管理」可自定义，这里不再硬编码 */
 const BLOODLINES = ['无', '异变', '黑暗', '光明', '属性'];
 const BLOOD_COLORS = { '异变': '#7F77DD', '黑暗': '#37474F', '光明': '#d4a017', '属性': '#0F6E56' };
 const SKILL_LEVELS = ['入门', '熟练', '专精', '完美'];
@@ -70,12 +59,7 @@ const RANK_FLAGS = [
 /* 新建个体默认勾【位】【力】；【权】要明确是某层阶元的掌权者才勾 */
 const DEFAULT_FLAGS = { quan: false, wei: true, li: true };
 
-function stageNameOf(level) {
-    const lv = Number(level) || 0;
-    if (lv <= 0) return '未记录';
-    const band = RANK_BANDS.find(b => lv >= b.min && lv <= b.max);
-    return band ? band.name : '未记录';
-}
+const stageNameOf = (level) => StageConfig.stageName(level);
 
 function normalizeIndividual(v) {
     const p = Object.assign({}, v || {});
@@ -135,7 +119,7 @@ function normalizeIndividual(v) {
     return p;
 }
 
-VowmonData.ready(['individuals', 'vows', 'characters', 'traits', 'natures', 'skills', 'bloodlineSkills'], { fresh: true }).then(function () {
+VowmonData.ready(['individuals', 'vows', 'characters', 'traits', 'natures', 'skills', 'bloodlineSkills', 'stages'], { fresh: true }).then(function () {
 
 const app = createApp({
     setup() {
@@ -290,8 +274,8 @@ const app = createApp({
             const t = s && s.types && s.types[0] ? typeColor(s.types[0]) : '#cbd5e0';
             return t + '4d';
         };
-        const stageColorOf = (item) => STAGE_COLORS[stageNameOf(item && item.level)] || '#718096';
-        const stageColorOfName = (name) => STAGE_COLORS[name] || '#718096';
+        const stageColorOf = (item) => StageConfig.stageColor(stageNameOf(item && item.level));
+        const stageColorOfName = (name) => StageConfig.stageColor(name);
         const bloodColorOf = (b) => BLOOD_COLORS[b] || '#90a4ae';
         const lvColorOf = (lv) => (LV_META[lv] || {}).color || '#90a4ae';
         const lvDescOf = (lv) => (LV_META[lv] || {}).desc || '';
@@ -710,7 +694,7 @@ const app = createApp({
             speciesLabel, speciesImageOf, ownerLabel, displayName,
             cardColor, stageColorOf, stageColorOfName, bloodColorOf,
             lvColorOf, lvDescOf,
-            stageName: stageNameOf, RANK_BANDS,
+            stageName: stageNameOf, RANK_BANDS: StageConfig.bands(),
             GENDERS, BLOODLINES, SKILL_LEVELS, TAX_FIELDS, traitInputEl,
             natureOptions, natureHintOf, ownerOptions,
             attrOptions, bloodlineSkillOptions, bloodlineAttrModel, speciesFamily, effectiveFamily,

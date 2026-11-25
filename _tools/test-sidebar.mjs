@@ -5,7 +5,7 @@ const BASE = process.argv[2] || 'http://127.0.0.1:8765';
 const PORT = 9251, CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PAGES = ['admin/index.html', 'admin/admin-skills.html', 'admin/admin-traits.html', 'admin/admin-items.html',
   'admin/admin-images.html', 'admin/admin-lore.html', 'admin/admin-individuals.html', 'admin/admin-characters.html',
-  'admin/admin-bloodline-skills.html'];
+  'admin/admin-bloodline-skills.html', 'admin/admin-stages.html'];
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, '--disable-gpu',
   '--no-first-run', '--user-data-dir=' + fs.mkdtempSync('C:/Windows/Temp/cdpB-'), 'about:blank'], { stdio: 'ignore' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));

@@ -9,6 +9,7 @@
  *   traits-data.json   特性
  *   items-data.json    物品
  *   natures-data.json  性格
+ *   stages-data.json   阶段境界（等级 → 境界名/颜色）
  *
  * 用法（页面里）：
  *   VowmonData.ready(['vows']).then(function () { ... 数据到位后再挂载 Vue ... });
@@ -66,6 +67,11 @@
         individuals: {
             file: 'individuals-data.json', label: '御兽精灵',
             keys: { individuals: 'allIndividualsData' }
+        },
+        // 阶段境界（等级 → 境界名/颜色），后台 admin-stages 可自定义；读取走 js/stage-config.js
+        stages: {
+            file: 'stages-data.json', label: '阶段境界',
+            keys: { stages: 'allStagesData' }
         },
         // 书内档案：御兽人物（书中角色，持有精灵 / 物品栏 / 存款）
         characters: {

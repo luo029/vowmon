@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Vowmon Wiki - 阶段境界管理</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
+    <style>
+        .intro-tip { background: #f0f7ff; border: 1px solid #cfe4fb; border-radius: 14px; padding: 13px 16px; font-size: 13px; color: #4a6a8a; line-height: 1.9; margin-bottom: 16px; }
+        .intro-tip b { color: #2b6cb0; }
+
+        .stage-row { display: flex; align-items: center; gap: 10px; background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .stage-row .sr-idx { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #edf2f7; color: #718096; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .stage-row .sr-name { flex: none; width: 130px; height: 36px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13.5px; font-weight: 900; font-family: inherit; color: #2d3748; background: #fff; outline: none; }
+        .stage-row .sr-name:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.14); }
+        .stage-row .sr-range { display: flex; align-items: center; gap: 6px; flex: none; }
+        .stage-row .sr-num { width: 76px; height: 36px; padding: 0 8px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; font-weight: 800; font-family: inherit; color: #2d3748; background: #fff; outline: none; text-align: center; }
+        .stage-row .sr-num:disabled { background: #f1f5f9; color: #a0aec0; }
+        .stage-row .sr-num:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.14); }
+        .stage-row .sr-dash { color: #a0aec0; font-weight: 800; font-size: 13px; }
+        .stage-row .sr-inf { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: #4a5568; cursor: pointer; user-select: none; white-space: nowrap; }
+        .stage-row .sr-inf input { accent-color: #4299e1; width: 14px; height: 14px; cursor: pointer; }
+        .stage-row .sr-color-wrap { display: flex; align-items: center; gap: 6px; flex: none; }
+        .stage-row .sr-color { width: 36px; height: 36px; padding: 2px; border: 1px solid #e2e6ec; border-radius: 9px; background: #fff; cursor: pointer; }
+        .stage-row .sr-color-hex { width: 82px; height: 36px; padding: 0 8px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 12px; font-weight: 700; font-family: monospace; color: #4a5568; background: #fff; outline: none; text-transform: uppercase; }
+        .stage-row .sr-chip { flex: none; min-width: 96px; text-align: center; font-size: 12px; font-weight: 900; color: #fff; padding: 7px 13px; border-radius: 999px; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+        .stage-row .sr-btns { display: flex; gap: 5px; margin-left: auto; flex: none; }
+        .stage-row .sr-btn { width: 32px; height: 32px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; transition: all .12s; }
+        .stage-row .sr-up, .stage-row .sr-down { background: #f1f5f9; color: #4a5568; }
+        .stage-row .sr-up:hover, .stage-row .sr-down:hover { background: #e2e8f0; }
+        .stage-row .sr-x { background: #fff5f5; color: #e53e3e; }
+        .stage-row .sr-x:hover { background: #fee; }
+
+        .issues-box { background: #fff5f5; border: 1px solid #fbd5d5; border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; }
+        .issues-box .is-title { font-size: 13px; font-weight: 900; color: #c53030; margin-bottom: 5px; }
+        .issues-box .is-item { font-size: 12.5px; color: #9b2c2c; line-height: 1.9; }
+
+        .preview-band { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 14px; padding: 13px 16px; margin-bottom: 16px; }
+        .preview-band .pv-label { font-size: 11.5px; color: #a0aec0; font-weight: 800; flex-basis: 100%; }
+        .preview-band .pv-chip { font-size: 12.5px; font-weight: 900; color: #fff; padding: 6px 15px; border-radius: 999px; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+        .preview-band .pv-lv { font-size: 12px; font-weight: 800; color: #4a5568; background: #fff; border: 1px solid #e2e8f0; padding: 5px 11px; border-radius: 999px; }
+        .preview-band .pv-lv b { color: #fff; background: var(--pv-c, #718096); padding: 2px 9px; border-radius: 999px; margin-left: 5px; font-weight: 900; }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <header class="topbar">
+        <h1><i class="fa-solid fa-layer-group"></i> 阶段境界管理</h1>
+        <div class="topbar-actions">
+            <button class="btn btn-outline" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> 返回精灵后台</button>
+            <button class="btn btn-success" @click="syncToGitHub" :disabled="isSyncing">
+                <i class="fa-brands fa-github" v-if="!isSyncing"></i>
+                <i class="fa-solid fa-spinner fa-spin" v-if="isSyncing"></i>
+                {{ isSyncing ? '正在同步...' : '一键同步阶段境界' }}
+            </button>
+            <button class="btn btn-outline" @click="pullFromRepo" :disabled="isSyncing" title="从数据仓库读取最新 JSON，覆盖本机草稿"><i class="fa-solid fa-cloud-arrow-down"></i> 从仓库拉取</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-nav"></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="intro-tip">
+                <b>这里自定义精灵的等级境界表</b>：多少级到多少级是什么境界、一共几个境界、每个境界叫什么名字、用什么颜色，全部可改。<br>
+                保存后：<b>御兽精灵 / 御兽人物</b> 的阶段显示、前台筛选与八阶进度条都会自动按新表推导。
+                ⚠️ 改境界名后，「权柄」的阶元对应（初灵掌种 / 升灵掌属 / 族尊掌科…）与 RANK_SCOPE 里写死的名字可能对不上，掌权个体建议在档案里用「自定义权柄」直接填写。
+            </div>
+
+            <div class="preview-band">
+                <span class="pv-label">当前境界表预览（按起始等级排序）</span>
+                <span class="pv-chip" v-for="c in previewChips" :key="c.name + c.text" :style="{ background: c.color }">{{ c.name }} · {{ c.text }}</span>
+            </div>
+
+            <div class="preview-band">
+                <span class="pv-label">示例等级推导</span>
+                <span class="pv-lv" v-for="p in previewLv" :key="p.lv" :style="{ '--pv-c': p.color }">Lv.{{ p.lv }}<b>{{ p.name }}</b></span>
+            </div>
+
+            <div class="issues-box" v-if="issues.length">
+                <div class="is-title"><i class="fa-solid fa-triangle-exclamation"></i> 存在 {{ issues.length }} 个问题（解决后才能保存）：</div>
+                <div class="is-item" v-for="(msg, i) in issues" :key="i">· {{ msg }}</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h2 style="font-size: 18px;">境界列表 <span style="font-size: 13px; color: #a0aec0; font-weight: normal;">共 {{ stages.length }} 个境界</span></h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline" @click="restoreDefault"><i class="fa-solid fa-rotate-left"></i> 恢复默认八阶</button>
+                    <button class="btn btn-outline" @click="addStage"><i class="fa-solid fa-plus"></i> 添加境界</button>
+                </div>
+            </div>
+
+            <div class="stage-row" v-for="(s, i) in stages" :key="i">
+                <span class="sr-idx font-num">{{ i + 1 }}</span>
+                <input class="sr-name" v-model="s.name" placeholder="境界名（如：初灵）">
+                <div class="sr-range">
+                    <input class="sr-num" type="number" min="0" v-model.number="s.min" @change="s.min = Math.max(0, Math.floor(Number(s.min) || 0))">
+                    <span class="sr-dash">—</span>
+                    <input class="sr-num" type="number" min="0" v-model.number="s.max" :disabled="s.max === null" placeholder="∞">
+                    <label class="sr-inf" title="勾选后该境界不设上限，必须是最后一个境界">
+                        <input type="checkbox" :checked="s.max === null" @change="toggleInf(i)"> 不封顶
+                    </label>
+                </div>
+                <div class="sr-color-wrap">
+                    <input class="sr-color" type="color" v-model="s.color">
+                    <input class="sr-color-hex" v-model="s.color" spellcheck="false">
+                </div>
+                <span class="sr-chip" :style="{ background: s.color }">{{ s.name || '（未命名）' }} · Lv.{{ s.min }}</span>
+                <div class="sr-btns">
+                    <button type="button" class="sr-btn sr-up" title="上移" @click="moveStage(i, -1)"><i class="fa-solid fa-arrow-up"></i></button>
+                    <button type="button" class="sr-btn sr-down" title="下移" @click="moveStage(i, 1)"><i class="fa-solid fa-arrow-down"></i></button>
+                    <button type="button" class="sr-btn sr-x" title="删除该境界" @click="removeStage(i)"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div style="margin-top: 18px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" @click="saveItem"><i class="fa-solid fa-floppy-disk"></i> 保存到本机（前台立即生效）</button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/stage-config.js?v=20261127a"></script>
+<script src="../js/data-loader.js?v=20261127b"></script>
+<script src="../js/github-api.js?v=20261127b"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/admin-stages.js?v=20261127a"></script>
+<script src="sidebar.js?v=20261127a"></script>
+</body>
+</html>

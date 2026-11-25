@@ -351,7 +351,7 @@
                 </select>
                 <select class="filter-select" v-model="filterStage">
                     <option value="">全部阶段</option>
-                    <option v-for="b in RANK_BANDS" :key="b.name" :value="b.name">{{ b.name }}（{{ b.min }}-{{ b.max === 9999 ? '' : b.max }}）</option>
+                    <option v-for="b in RANK_BANDS" :key="b.name" :value="b.name">{{ b.name }}（{{ b.min }}-{{ b.max == null ? '' : b.max }}）</option>
                 </select>
                 <select class="filter-select" v-model="filterBlood">
                     <option value="">全部血脉</option>
@@ -398,27 +398,15 @@
 
 <script src="../js/type-config.js?v=20261126s"></script>
 <script src="../js/site-config.js?v=20261126s"></script>
-<script src="../js/data-loader.js?v=20261127a"></script>
+<script src="../js/stage-config.js?v=20261127a"></script>
+<script src="../js/data-loader.js?v=20261127b"></script>
 <script src="../js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-VowmonData.ready(['individuals', 'vows', 'characters', 'natures']).then(function () {
+VowmonData.ready(['individuals', 'vows', 'characters', 'natures', 'stages']).then(function () {
 
-    /* 精灵等级八阶：由等级自动推导阶段 */
-    const RANK_BANDS = [
-        { name: '初灵', min: 1,   max: 15 },
-        { name: '升灵', min: 16,  max: 36 },
-        { name: '族尊', min: 37,  max: 50 },
-        { name: '基座', min: 51,  max: 60 },
-        { name: '灵相', min: 61,  max: 70 },
-        { name: '律冠', min: 71,  max: 89 },
-        { name: '元灵', min: 90,  max: 99 },
-        { name: '元',   min: 100, max: 9999 }
-    ];
-    const STAGE_COLORS = {
-        '初灵': '#8bc34a', '升灵': '#26a69a', '族尊': '#5c6bc0', '基座': '#ba7517',
-        '灵相': '#1971c2', '律冠': '#7048e8', '元灵': '#d4a017', '元': '#e24b4a'
-    };
+    /* 阶段境界统一走 js/stage-config.js（后台「阶段境界管理」可自定义） */
+    const RANK_BANDS = StageConfig.bands();
 
     createApp({
         setup() {
@@ -515,14 +503,9 @@ VowmonData.ready(['individuals', 'vows', 'characters', 'natures']).then(function
             const speciesName = computed(() => species.value ? species.value.name : '');
             const speciesImage = computed(() => (ind.value ? speciesImageOf(ind.value) : ''));
 
-            /* ---------------- 阶段推导 ---------------- */
-            const stageName = (p) => {
-                const lv = Number(p.level) || 0;
-                if (lv <= 0) return '未记录';
-                const band = RANK_BANDS.find(b => lv >= b.min && lv <= b.max);
-                return band ? band.name : '未记录';
-            };
-            const stageColor = (p) => STAGE_COLORS[stageName(p)] || '#718096';
+            /* ---------------- 阶段推导（StageConfig 统一来源） ---------------- */
+            const stageName = (p) => StageConfig.stageName(p && p.level);
+            const stageColor = (p) => StageConfig.stageColor(stageName(p));
             /* 阶位 → 可掌阶元（初灵掌种…元掌域）；权/位/力 三标记 */
             const RANK_SCOPE = {
                 '初灵': { key: 'species', label: '种' }, '升灵': { key: 'genus', label: '属' },
@@ -543,7 +526,7 @@ VowmonData.ready(['individuals', 'vows', 'characters', 'natures']).then(function
                 return '掌' + sc.label + (v ? '·' + v : '');
             };
             const levelPercent = (p) => Math.min(100, Math.max(0, Number(p.level) || 0));
-            const segWidth = (b) => (b.max === 9999 ? 1 : b.max - b.min + 1);
+            const segWidth = (b) => (b.max == null ? 1 : b.max - b.min + 1);
             const segStart = (b) => b.min;
             const cardColor = (p) => {
                 const s = speciesOf(p);

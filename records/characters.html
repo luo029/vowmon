@@ -394,27 +394,15 @@
 
 <script src="../js/type-config.js?v=20261126s"></script>
 <script src="../js/site-config.js?v=20261126s"></script>
-<script src="../js/data-loader.js?v=20261127a"></script>
+<script src="../js/stage-config.js?v=20261127a"></script>
+<script src="../js/data-loader.js?v=20261127b"></script>
 <script src="../js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-VowmonData.ready(['characters', 'individuals', 'vows']).then(function () {
+VowmonData.ready(['characters', 'individuals', 'vows', 'stages']).then(function () {
 
-    /* 精灵等级八阶（与 individuals.html 保持一致） */
-    const RANK_BANDS = [
-        { name: '初灵', min: 1,   max: 15 },
-        { name: '升灵', min: 16,  max: 36 },
-        { name: '族尊', min: 37,  max: 50 },
-        { name: '基座', min: 51,  max: 60 },
-        { name: '灵相', min: 61,  max: 70 },
-        { name: '律冠', min: 71,  max: 89 },
-        { name: '元灵', min: 90,  max: 99 },
-        { name: '元',   min: 100, max: 9999 }
-    ];
-    const STAGE_COLORS = {
-        '初灵': '#8bc34a', '升灵': '#26a69a', '族尊': '#5c6bc0', '基座': '#ba7517',
-        '灵相': '#1971c2', '律冠': '#7048e8', '元灵': '#d4a017', '元': '#e24b4a'
-    };
+    /* 阶段境界统一走 js/stage-config.js（后台「阶段境界管理」可自定义） */
+    const RANK_BANDS = StageConfig.bands();
 
     createApp({
         setup() {
@@ -480,13 +468,8 @@ VowmonData.ready(['characters', 'individuals', 'vows']).then(function () {
                 return s ? s.name : '未命名精灵';
             };
 
-            const stageName = (p) => {
-                const lv = Number(p.level) || 0;
-                if (lv <= 0) return '未记录';
-                const band = RANK_BANDS.find(b => lv >= b.min && lv <= b.max);
-                return band ? band.name : '未记录';
-            };
-            const stageColor = (p) => STAGE_COLORS[stageName(p)] || '#718096';
+            const stageName = (p) => StageConfig.stageName(p && p.level);
+            const stageColor = (p) => StageConfig.stageColor(stageName(p));
 
             /* ---------------- 关联 ---------------- */
             const indById = computed(() => {

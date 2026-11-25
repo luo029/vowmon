@@ -20,6 +20,7 @@
         { href: 'admin-lore.html', icon: 'fa-solid fa-file-pen', label: '页面内容' },
         { href: 'admin-individuals.html', icon: 'fa-solid fa-paw', label: '御兽精灵' },
         { href: 'admin-characters.html', icon: 'fa-solid fa-users', label: '御兽人物' },
+        { href: 'admin-stages.html', icon: 'fa-solid fa-layer-group', label: '阶段境界' },
         { href: 'index.html?tab=settings', icon: 'fa-solid fa-gear', label: '同步配置', tab: 'settings' }
     ];
 
