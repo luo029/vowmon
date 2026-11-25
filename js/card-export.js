@@ -266,13 +266,18 @@
         opt.footLeft = String(opt.footLeft || '');
         /* 页脚右侧默认为空：没有内容时连虚线一起隐藏，不会兜底显示 VOWMON */
         opt.footRight = String(opt.footRight == null ? '' : opt.footRight);
-        /* 资料条（主人 / 性格 / 身高 / 体重等）：大图下方的一条长胶囊，内含彩色小胶囊 */
+        /* 资料条（主人 / 性格 / 身高 / 体重等）：大图下方的一行长胶囊，内含彩色小胶囊。
+           bare=true 表示胶囊里只画值不放标签文字和图标（如身高体重只显示 0.98m / 22.3kg）；
+           filled=true 表示实底彩色胶囊（白字，用于当前实力位阶） */
         opt.stats = Array.isArray(opt.stats) ? opt.stats.filter(Boolean).map(x => ({
+            key: String(x.key || x.label || ''),
             icon: String(x.icon || ''),
             label: String(x.label || ''),
             value: String(x.value == null ? '' : x.value).trim(),
-            color: String(x.color || opt.accent || '#4299e1')
-        })).filter(x => x.label && x.value) : [];
+            color: String(x.color || opt.accent || '#4299e1'),
+            bare: !!x.bare,
+            filled: !!x.filled
+        })).filter(x => x.value) : [];
         /* 当前实力（位阶）与权柄：独立彩色胶囊，随资料条一起显示 */
         opt.rank = (opt.rank && opt.rank.value != null && String(opt.rank.value).trim())
             ? { value: String(opt.rank.value).trim(), color: String(opt.rank.color || '#d4a017') } : null;
@@ -441,42 +446,48 @@
         });
         const infoBlock = o.info.length ? o.info.length * 46 + 6 : 0;
 
-        /* 资料条：长胶囊里排彩色小胶囊（主人 / 性格 / 身高 / 体重 / 当前实力 / 权柄），
-           放在大图与特性之间；放不下的胶囊自动换行，值过长时单颗截断 */
+        /* 资料条：一行长胶囊里排彩色小胶囊（主人 / 性格 / 0.98m / 22.3kg / 位阶 / 权柄），
+           只排一行不换行；超宽时从值最长的胶囊开始逐字截断，保证塞进一行 */
         const chips = [];
-        const addChip = (label, value, color, icon) => {
-            const v = String(value == null ? '' : value).trim();
-            if (!label || !v) return;
-            chips.push({ label: String(label), value: v, color: color || o.accent, icon: String(icon || '') });
-        };
-        (o.stats || []).forEach(r => addChip(r.label, r.value, r.color, r.icon));
-        if (o.rank) addChip('当前实力', o.rank.value, o.rank.color);
-        if (o.quan) addChip('权柄', o.quan.value, o.quan.color);
+        (o.stats || []).forEach(r => {
+            const v = String(r.value == null ? '' : r.value).trim();
+            if (!v) return;
+            chips.push({ label: String(r.label || ''), value: v, color: r.color || o.accent,
+                icon: String(r.icon || ''), bare: !!r.bare, filled: !!r.filled, _orig: v });
+        });
+        if (o.rank) chips.push({ label: '', value: String(o.rank.value).trim(), color: o.rank.color || o.accent,
+            icon: '', bare: true, filled: true, _orig: String(o.rank.value).trim() });
+        if (o.quan) chips.push({ label: '权柄', value: String(o.quan.value).trim(), color: o.quan.color || o.accent,
+            icon: '', bare: false, filled: false, _orig: String(o.quan.value).trim() });
 
-        const chipH = 42, chipGap = 10, rowGap = 10, bandPad = 16;
+        const chipH = 42, chipGap = 10, bandPad = 16;
         const availRow = innerW - bandPad * 2;
+        const chipW = (c) => {
+            setFont(ctx, 20, 700);
+            return 20 + c.iconW + c.labW + 8 + ctx.measureText(c.value).width + 20;
+        };
         chips.forEach(c => {
-            const g = c.icon ? faGlyph(c.icon.indexOf(' ') < 0 ? 'fa-solid ' + c.icon : c.icon) : '';
+            const g = (!c.bare && c.icon) ? faGlyph(c.icon.indexOf(' ') < 0 ? 'fa-solid ' + c.icon : c.icon) : '';
             c.iconW = g ? 30 : 0;
             setFont(ctx, 18, 900);
-            c.labW = ctx.measureText(c.label).width;
-            setFont(ctx, 20, 700);
-            const maxVw = Math.max(60, availRow - 24 - c.iconW - c.labW - 8 - 24);
-            let v = c.value;
-            while (v.length > 1 && ctx.measureText(v).width > maxVw) v = v.slice(0, -1);
-            if (v !== c.value) v += '…';
-            c.value = v;
-            c.w = 24 + c.iconW + c.labW + 8 + ctx.measureText(v).width + 24;
+            c.labW = c.bare ? 0 : ctx.measureText(c.label).width;
+            c.w = chipW(c);
         });
-        const chipRows = [];
-        let curRow = [], curW = 0;
+        const rowW = () => chips.reduce((a, c) => a + c.w, 0) + Math.max(0, chips.length - 1) * chipGap;
+        let guard = 0;
+        while (rowW() > availRow && guard++ < 400) {
+            let t = null;
+            chips.forEach(c => {
+                if (c.value.length > 1 && (!t || c.value.length > t.value.length || (c.value.length === t.value.length && c.bare))) t = c;
+            });
+            if (!t) break;
+            t.value = t.value.slice(0, -1);
+            t.w = chipW(t);
+        }
         chips.forEach(c => {
-            const add = curRow.length ? chipGap : 0;
-            if (curRow.length && curW + add + c.w > availRow) { chipRows.push(curRow); curRow = [c]; curW = c.w; }
-            else { curRow.push(c); curW += add + c.w; }
+            if (c.value !== c._orig) { c.value += '…'; c.w = chipW(c); }
         });
-        if (curRow.length) chipRows.push(curRow);
-        const statsBandH = chips.length ? chipRows.length * chipH + (chipRows.length - 1) * rowGap + 24 : 0;
+        const statsBandH = chips.length ? chipH + 24 : 0;
         const statsBlock = chips.length ? statsBandH + 14 : 0;
         const descBlock = descLines.length ? 96 + descLines.length * 45 : 0;
         const gap = ((abBlock || ab2Block || infoBlock) && descBlock) ? 30 : 0;
@@ -498,7 +509,7 @@
         const H = base + artH;
 
         return { abLines, ab2Lines, descLines, infoLines, abBlock, ab2Block, descBlock, infoBlock, gap, bodyH, artTop, artH, H, footZone, hasFoot,
-            chips, chipRows, chipH, chipGap, rowGap, bandPad, statsBandH, statsBlock };
+            chips, chipH, chipGap, bandPad, statsBandH, statsBlock };
     }
 
     /* 属性胶囊：浅色渐变底 + 属性色描边 + 渐变圆章，图标与图鉴一致 */
@@ -556,7 +567,7 @@
         return pw;
     }
 
-    /* 资料条小胶囊：浅色渐变底 + 主题色描边，图标圆章 + 标签 + 值 */
+    /* 资料条小胶囊：浅色渐变底 + 主题色描边；bare=只画值（无图标无标签），filled=实底彩色白字 */
     function drawChip(ctx, x, y, h, c) {
         const col = c.color || '#4299e1';
         ctx.save();
@@ -565,18 +576,23 @@
         ctx.shadowOffsetY = 3;
         roundRect(ctx, x, y, c.w, h, h / 2);
         const g = ctx.createLinearGradient(x, y, x, y + h);
-        g.addColorStop(0, tint(col, 0.88));
-        g.addColorStop(1, tint(col, 0.6));
+        if (c.filled) {
+            g.addColorStop(0, shade(col, 1.05));
+            g.addColorStop(1, shade(col, 0.72));
+        } else {
+            g.addColorStop(0, tint(col, 0.88));
+            g.addColorStop(1, tint(col, 0.6));
+        }
         ctx.fillStyle = g;
         ctx.fill();
         ctx.restore();
-        ctx.strokeStyle = hexA(col, 0.8);
+        ctx.strokeStyle = c.filled ? 'rgba(255,255,255,0.55)' : hexA(col, 0.8);
         ctx.lineWidth = 2;
         ctx.stroke();
 
         const mid = y + h / 2;
         let ix = x + 20;
-        const glyph = c.icon ? faGlyph(c.icon.indexOf(' ') < 0 ? 'fa-solid ' + c.icon : c.icon) : '';
+        const glyph = (!c.bare && c.icon) ? faGlyph(c.icon.indexOf(' ') < 0 ? 'fa-solid ' + c.icon : c.icon) : '';
         if (glyph) {
             ctx.beginPath();
             ctx.arc(ix + 11, mid, 12, 0, Math.PI * 2);
@@ -597,12 +613,14 @@
             ctx.textBaseline = 'alphabetic';
             ix += 30;
         }
-        setFont(ctx, 18, 900);
-        ctx.fillStyle = shade(col, 0.48);
-        ctx.fillText(c.label, ix, mid + 7);
-        ix += c.labW + 8;
-        setFont(ctx, 20, 700);
-        ctx.fillStyle = '#2f3945';
+        if (!c.bare) {
+            setFont(ctx, 18, 900);
+            ctx.fillStyle = shade(col, 0.48);
+            ctx.fillText(c.label, ix, mid + 7);
+            ix += c.labW + 8;
+        }
+        setFont(ctx, 20, c.filled ? 900 : 700);
+        ctx.fillStyle = c.filled ? '#fff' : '#2f3945';
         ctx.fillText(c.value, ix, mid + 7);
     }
 
@@ -801,7 +819,7 @@
         }
 
         /* 资料条（主人 / 性格 / 身高 / 体重 / 当前实力 / 权柄）：
-           一条长胶囊横在精灵大图与特性之间，里面的彩色小胶囊居中排布、自动换行 */
+           一行长胶囊横在精灵大图与特性之间，小胶囊整行居中、不换行 */
         let py = ay + ah + 16;
         if (L.chips.length) {
             const bandH = L.statsBandH;
@@ -815,13 +833,9 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            let ry = py + 12;
-            L.chipRows.forEach(row => {
-                const rowW = row.reduce((a, c) => a + c.w, 0) + (row.length - 1) * L.chipGap;
-                let cx = left + (innerW - rowW) / 2;
-                row.forEach(c => { drawChip(ctx, cx, ry, L.chipH, c); cx += c.w + L.chipGap; });
-                ry += L.chipH + L.rowGap;
-            });
+            const rowW = L.chips.reduce((a, c) => a + c.w, 0) + Math.max(0, L.chips.length - 1) * L.chipGap;
+            let cx = Math.max(left + 6, left + (innerW - rowW) / 2);
+            L.chips.forEach(c => { drawChip(ctx, cx, py + 12, L.chipH, c); cx += c.w + L.chipGap; });
             py += bandH + 14;
         }
 
@@ -1073,7 +1087,9 @@
         '.vwc-title{font-size:17px;font-weight:900;color:#2d3748;display:flex;align-items:center;gap:8px;flex:none;}',
         '.vwc-title i{color:#d69e2e;}',
         '.vwc-sec{display:flex;flex-direction:column;gap:8px;}',
-        '.vwc-sec-t{font-size:12px;font-weight:900;color:#a0aec0;letter-spacing:.06em;}',
+        /* 外层主区块撑满侧栏剩余高度，选项区才能跟着撑开（否则塌成最小高、按钮挤一团） */
+        '.vwc-main{flex:1 1 0;min-height:0;}',
+        '.vwc-sec-t{font-size:12px;font-weight:900;color:#a0aec0;letter-spacing:.06em;flex:none;}',
         '.vwc-sec-body{display:flex;flex-direction:column;gap:14px;}',
         /* 选项区自适应占满剩余高度，下载/取消按钮始终钉在右侧底部，矮屏也不用滚动才能看到 */
         '.vwc-scroll{flex:1 1 0;min-height:110px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;}',
@@ -1119,7 +1135,7 @@
             '<div class="vwc-preview"><div class="vwc-loading"><i class="fa-solid fa-spinner fa-spin"></i> 正在生成预览…</div></div>' +
             '<div class="vwc-side">' +
             '<div class="vwc-title"><i class="fa-solid fa-id-card"></i> 生成卡片</div>' +
-            '<div class="vwc-sec"><div class="vwc-sec-t">卡面内容</div><div class="vwc-sec-body"></div></div>' +
+            '<div class="vwc-sec vwc-main"><div class="vwc-sec-t">卡面内容</div><div class="vwc-sec-body"></div></div>' +
             '<div class="vwc-btns">' +
             '<button class="vwc-btn primary"><i class="fa-solid fa-download"></i> 下载卡片 PNG</button>' +
             '<button class="vwc-btn ghost"><i class="fa-solid fa-xmark"></i> 取消</button>' +
@@ -1145,10 +1161,9 @@
         if (modalEl && modalEl._close) modalEl._close();
         const o = normalize(opts);
 
-        /* 内容区块：ability / ability2(技能) / stats(资料条) / rank(当前实力) / quan(权柄) / info / desc，页面可用 secLabels 自定文案 */
+        /* 内容区块：ability / ability2(技能) / stats(资料条，逐项单独开关) / rank(当前实力) / quan(权柄) / info / desc */
         const DEFT_LABEL = {
             ability: '特性', ability2: '技能',
-            stats: '资料条（主人 · 性格 · 身高 · 体重）',
             rank: '当前实力（位阶）', quan: '权柄（掌权者）',
             info: '资料行（主人 · 性格等）', desc: o.descLabel || '图鉴说明'
         };
@@ -1160,11 +1175,17 @@
             key === 'rank' ? !o.rank :
             key === 'quan' ? !o.quan :
             key === 'info' ? !o.info.length : !o.desc;
-        /* 特性/技能默认不勾选；资料条 / 当前实力 / 权柄 / 资料行 / 说明默认勾选 */
+        /* 特性/技能默认不勾选；资料条各项 / 当前实力 / 权柄 / 资料行 / 说明默认勾选 */
         const isOn = (key) => !isEmpty(key) && (key === 'desc' || key === 'info' || key === 'stats' || key === 'rank' || key === 'quan');
         const secs = (opts.sections || ['ability', 'info', 'desc']).map(key => ({
             key, label: labels[key] || DEFT_LABEL[key] || key, empty: isEmpty(key), on: isOn(key)
         }));
+        /* 资料条逐项开关：主人 / 性格 / 身高 / 体重 各自独立 */
+        const statItems = o.stats.map(r => ({
+            statKey: String(r.key || r.label || ''),
+            label: r.label || r.key || '资料',
+            on: true
+        })).filter(x => x.statKey);
 
         /* 卡面元素开关（footRight 关掉后页脚整体消失；再打开恢复默认文案） */
         const els = [
@@ -1192,12 +1213,14 @@
                 if (s.on) return;
                 if (s.key === 'ability') cur.ability = null;
                 else if (s.key === 'ability2') cur.ability2 = null;
-                else if (s.key === 'stats') cur.stats = [];
                 else if (s.key === 'rank') cur.rank = null;
                 else if (s.key === 'quan') cur.quan = null;
                 else if (s.key === 'info') cur.info = [];
                 else if (s.key === 'desc') cur.desc = '';
             });
+            /* 资料条：关掉的项单独移除 */
+            const offStats = statItems.filter(x => !x.on).map(x => x.statKey);
+            if (offStats.length) cur.stats = cur.stats.filter(r => offStats.indexOf(String(r.key || r.label || '')) < 0);
             els.forEach(e => {
                 if (e.key === 'image' && !e.on) { cur.image = ''; cur.noPlaceholder = true; }
                 else if (e.key === 'types' && !e.on) cur.types = [];
@@ -1263,9 +1286,13 @@
             return row;
         };
 
-        /* —— 内容区块 —— */
+        /* —— 内容区块 ——（资料条拆成逐项开关：主人 / 性格 / 身高 / 体重） */
         const g1 = makeGroup('内容区块');
         secs.forEach(s => {
+            if (s.key === 'stats') {
+                if (!s.empty) statItems.forEach(it => makeToggle(g1, it));
+                return;
+            }
             const row = makeToggle(g1, s);
             if (s.empty) { row.style.opacity = '.55'; row.style.cursor = 'default'; }
         });

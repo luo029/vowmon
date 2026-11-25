@@ -385,7 +385,7 @@
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126o"></script>
+<script src="js/card-export.js?v=20261126p"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function () {
@@ -591,17 +591,18 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 if (p.bloodlineSkill) {
                     skill = { tag: '血脉技能', name: p.bloodlineSkill, text: (p.bloodline && p.bloodline !== '无') ? p.bloodline + '血脉 · ' + stageName(p) : stageName(p) };
                 }
-                /* 资料条：主人 / 性格（图鉴性格，影响能力值）/ 身高 / 体重（未填默认取种族图鉴） */
+                /* 资料条（一行）：主人 / 性格（图鉴性格，影响能力值）/ 身高 / 体重（未填默认取种族图鉴）。
+                   身高体重只显示数值胶囊（不带"身高""体重"文字和图标），主人性格保留标签 */
                 const stats = [];
-                if (ownerNameOf(p)) stats.push({ icon: 'fa-user-shield', label: '主人', value: ownerNameOf(p) });
+                if (ownerNameOf(p)) stats.push({ key: 'owner', icon: 'fa-user-shield', label: '主人', value: ownerNameOf(p) });
                 if (p.nature) {
                     const hint = natureHint(p.nature);
-                    stats.push({ icon: 'fa-face-smile', label: '性格', value: p.nature + (hint ? '（' + hint + '）' : '') });
+                    stats.push({ key: 'nature', icon: 'fa-face-smile', label: '性格', value: p.nature + (hint ? '（' + hint + '）' : '') });
                 }
                 const sp = species.value;
-                if (sp && sp.height != null && sp.height !== '') stats.push({ icon: 'fa-ruler-vertical', label: '身高', value: sp.height + 'm' });
-                if (sp && sp.weight != null && sp.weight !== '') stats.push({ icon: 'fa-weight-scale', label: '体重', value: sp.weight + 'kg' });
-                /* 当前实力：按位阶配色（初灵绿 / 升灵青…） */
+                if (sp && sp.height != null && sp.height !== '') stats.push({ key: 'height', label: '身高', value: sp.height + 'm', bare: true });
+                if (sp && sp.weight != null && sp.weight !== '') stats.push({ key: 'weight', label: '体重', value: sp.weight + 'kg', bare: true });
+                /* 当前实力：只显示位阶名（无"当前实力"文字），实底彩色胶囊按位阶配色 */
                 const rank = stageName(p) !== '未记录' ? { value: stageName(p), color: stageColor(p) } : null;
                 /* 权柄：只有掌【权】的个体才出现 */
                 const quan = flagOn(p, 'quan') ? { value: String(p.scopeNote || '').trim() || '掌权', color: '#c2410c' } : null;
@@ -619,7 +620,6 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                     quan,
                     sections: ['stats', 'rank', 'quan', 'ability', 'ability2', 'desc'],
                     secLabels: {
-                        stats: '资料条（主人 · 性格 · 身高 · 体重）',
                         rank: '当前实力（位阶）',
                         quan: '权柄（掌权者）',
                         ability: '特性',
