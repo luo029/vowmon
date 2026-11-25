@@ -203,6 +203,8 @@ createApp({
         // 本次会话上传过的「仓库路径 → 压缩后的 base64」。
         // 两个用途：① 预览优先用它，刚上传就能显示，不必等 CDN 就绪；② 改编号保存时按新编号重传，不用重新选图。
         const uploadedImageCache = new Map();
+        // 会话级缓存戳：每次打开后台都变，确保浏览器不拿旧缩略图（配合 getThumbUrl 的 raw 源）
+        const thumbBust = Date.now().toString(36);
 
         // 图片仓库列表（同步配置支持逗号分隔多仓；上传只写第一个）
         const imgRepos = computed(() => String(config.value.imgRepos || '').split(',').map(s => s.trim()).filter(Boolean));
@@ -235,9 +237,13 @@ createApp({
             if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
             const cached = uploadedImageCache.get(p);
             if (cached) return `data:image/png;base64,${cached}`;
-            const base = buildCdnBase();
-            // 实在没有前缀就退回原路径（相对当前页面），至少不会拼出 `//` 这种死链
-            return base ? base + '/' + p.replace(/^\/+/, '') : p;
+            // jsDelivr 忽略查询参数且分支内容缓存 12 小时：同名替换上传后缩略图会长期是旧图。
+            // 后台看图改走 raw.githubusercontent（边缘缓存仅 5 分钟），再加会话级缓存戳。
+            let base = buildCdnBase();
+            const gh = base.match(/https:\/\/cdn\.jsdelivr\.net\/gh\/([^/]+)\/([^@/]+)@main/);
+            if (gh) base = `https://raw.githubusercontent.com/${gh[1]}/${gh[2]}/main`;
+            if (!base) return p;
+            return base + '/' + p.replace(/^\/+/, '') + '?v=' + thumbBust;
         };
 
         // 选择器逻辑

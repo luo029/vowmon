@@ -121,7 +121,15 @@ createApp({
             return `https://cdn.jsdelivr.net/gh/${config.value.owner}/${repo}@main`;
         };
 
-        const fileUrl = (repo, path) => buildCdnBase(repo) + '/' + String(path).replace(/^\/+/, '');
+        const fileUrl = (repo, path) => {
+            // 后台看图要「新」：jsDelivr 忽略查询参数且分支内容缓存 12 小时，
+            // 同名替换上传后会长期显示旧图。这里统一改走 raw.githubusercontent
+            // （边缘缓存仅 5 分钟），配合调用处的 ?v=sha 缓存戳，替换后刷新立即可见。
+            let base = buildCdnBase(repo);
+            const gh = base.match(/https:\/\/cdn\.jsdelivr\.net\/gh\/([^/]+)\/([^@/]+)@main/);
+            if (gh) base = `https://raw.githubusercontent.com/${gh[1]}/${gh[2]}/main`;
+            return base + '/' + String(path).replace(/^\/+/, '');
+        };
 
         /* ------------------------------ 扫描仓库 ------------------------------ */
         // 精灵图片实际存放在 sprites/ 目录（见 admin.js 的上传逻辑），同时兼容仓库根目录。
