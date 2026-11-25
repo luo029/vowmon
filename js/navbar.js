@@ -15,7 +15,7 @@
      1. 渲染整条导航；
      2. 根据当前文件名高亮对应菜单；
      3. 绑定动效开关（localStorage: vowmon_anim_on）；
-     4. 绑定搜索框（回车跳到 list.html?q=关键字）；
+     4. 绑定搜索框（回车跳到 dex/list.html?q=关键字）；
      5. 绑定移动端汉堡菜单与下拉展开。
    ========================================================================== */
 (function () {
@@ -29,63 +29,65 @@
     var ROOT = /\/(admin|dex|reference|world|records)\//.test(window.location.pathname) ? '../' : '';
     var HOME = ROOT + 'index.html';
 
-    // 导航结构：改这里就能改全站（href 均相对站点根，渲染时统一加 ROOT 前缀）
+    // 导航结构：改这里就能改全站（href 均为「站点根目录下的真实路径」，渲染时统一加 ROOT 前缀）
+    // 注意：href 必须写完整子目录路径（如 dex/vowdex.html），不要写根目录时代的裸文件名，
+    // 否则子目录页会拼出 ../xxx.html 指向站点根，依赖跳转规则兜底才能打开。
     var NAV = [
         { key: 'home', label: '首页', href: 'index.html' },
         {
-            key: 'records', label: '书内档案', href: 'individuals.html',
+            key: 'records', label: '书内档案', href: 'records/individuals.html',
             columns: [
                 {
                     title: '书中个体',
                     links: [
-                        { label: '御兽精灵', href: 'individuals.html' },
-                        { label: '御兽人物', href: 'characters.html' }
+                        { label: '御兽精灵', href: 'records/individuals.html' },
+                        { label: '御兽人物', href: 'records/characters.html' }
                     ]
                 }
             ]
         },
         {
-            key: 'dex', label: '图鉴', href: 'vowdex.html',
+            key: 'dex', label: '图鉴', href: 'dex/vowdex.html',
             columns: [
                 {
                     title: '精灵资料',
                     links: [
-                        { label: '精灵图鉴', href: 'vowdex.html' },
-                        { label: '天地图鉴', href: 'realm-dex.html' },
-                        { label: '精灵列表', href: 'list.html' },
-                        { label: '技能图鉴', href: 'skills.html' },
-                        { label: '特性大全', href: 'traits.html' },
-                        { label: '性格大全', href: 'natures.html' }
+                        { label: '精灵图鉴', href: 'dex/vowdex.html' },
+                        { label: '天地图鉴', href: 'dex/realm-dex.html' },
+                        { label: '精灵列表', href: 'dex/list.html' },
+                        { label: '技能图鉴', href: 'reference/skills.html' },
+                        { label: '特性大全', href: 'reference/traits.html' },
+                        { label: '性格大全', href: 'reference/natures.html' }
                     ]
                 },
                 {
                     title: '生态与物品',
                     links: [
-                        { label: '物品图鉴', href: 'items.html' },
+                        { label: '物品图鉴', href: 'reference/items.html' },
                         { label: '精灵果实', soon: true }
                     ]
                 },
                 {
                     title: '世界观',
                     links: [
-                        { label: '等级体系', href: 'ranks.html' },
-                        { label: '血脉图鉴', href: 'bloodlines.html' },
-                        { label: '御兽师图鉴', href: 'trainers.html' },
-                        { label: '势力版图', href: 'factions.html' },
+                        { label: '等级体系', href: 'world/ranks.html' },
+                        { label: '血脉图鉴', href: 'reference/bloodlines.html' },
+                        { label: '御兽师图鉴', href: 'world/trainers.html' },
+                        { label: '势力版图', href: 'world/factions.html' },
                         { label: '十八生态界', soon: true },
-                        { label: '元域演化史', href: 'lore.html' }
+                        { label: '元域演化史', href: 'world/lore.html' }
                     ]
                 }
             ]
         },
         {
-            key: 'tools', label: '工具', href: 'calculator.html',
+            key: 'tools', label: '工具', href: 'reference/calculator.html',
             columns: [
                 {
                     title: '查询与计算',
                     links: [
-                        { label: '⚖️ 属性克制计算器', href: 'calculator.html' },
-                        { label: '🎯 技能打击面计算器', href: 'coverage.html' }
+                        { label: '⚖️ 属性克制计算器', href: 'reference/calculator.html' },
+                        { label: '🎯 技能打击面计算器', href: 'reference/coverage.html' }
                     ]
                 },
                 {
@@ -105,8 +107,11 @@
         'individuals.html': 'records',
         'characters.html': 'records',
         'vowdex.html': 'dex',
+        'realm-dex.html': 'dex',
+        'vow-detail.html': 'dex',
         'list.html': 'dex',
         'skills.html': 'dex',
+        'skill-detail.html': 'dex',
         'traits.html': 'dex',
         'natures.html': 'dex',
         'lore.html': 'dex',
@@ -123,7 +128,7 @@
     };
 
     var LOGO_SVG =
-        '<img class="logo-svg" src="favicon.ico" alt="" aria-hidden="true">';
+        '<img class="logo-svg" src="' + ROOT + 'favicon.ico" alt="" aria-hidden="true">';
 
     var SEARCH_SVG =
         '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
@@ -252,7 +257,7 @@
             input.focus();
             return;
         }
-        window.location.href = ROOT + 'list.html?q=' + encodeURIComponent(keyword);
+        window.location.href = ROOT + 'dex/list.html?q=' + encodeURIComponent(keyword);
     }
 
     function bind() {

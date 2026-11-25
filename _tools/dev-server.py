@@ -96,13 +96,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_file(cand)
                 return
 
-        # 4) 目录默认页：/admin → admin/index.html
-        cand = safe_join(posixpath.join(path, 'index.html'))
-        if cand:
-            self._redirect(path.rstrip('/') + '/' + query)
-            return
+        # 4) 根路径直接给 index.html（不能重定向，否则 301 到自身形成死循环）
+        if path in ('', '/'):
+            idx = safe_join('/index.html')
+            if idx:
+                self._send_file(idx)
+                return
 
-        # 5) 兜底 → 404.html（内含旧名映射 JS，会自动跳转已知旧地址）
+        # 5) 目录：无尾斜杠 → 301 补斜杠；有尾斜杠 → 直接返回该目录 index.html
+        if not path.endswith('/'):
+            cand = safe_join(posixpath.join(path, 'index.html'))
+            if cand:
+                self._redirect(path + '/' + query)
+                return
+        else:
+            idx = safe_join(posixpath.join(path, 'index.html'))
+            if idx:
+                self._send_file(idx)
+                return
+
+        # 6) 兜底 → 404.html（内含旧名映射 JS，会自动跳转已知旧地址）
         self._not_found()
 
     def log_message(self, fmt, *args):
