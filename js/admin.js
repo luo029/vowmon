@@ -41,7 +41,7 @@ createApp({
         // 列显隐状态
         const showColSettings = ref(false);
         const allColumns = {
-            image: '头像', id: '编号', name: '名称', types: '属性', typeIcon: '属性图标', stage: '阶数', form: '形态', ability: '特性',
+            image: '头像', id: '编号', name: '名称', types: '属性', typeIcon: '属性图标', stage: '阶数', form: '形态', region: '出现地区', ability: '特性',
             hp: 'HP', atk: '攻击', def: '防御', spAtk: '特攻', spDef: '特防', spd: '速度'
         };
         // 显示列状态持久化：localStorage['vowmon_vows_visible_cols']
@@ -118,8 +118,9 @@ createApp({
             evoFrom: [], evoTo: [],                     // 进化链：进化自 / 进化为（存精灵 id，可多选）
             realmTags: [],                              // 天地图鉴类别：legendary/mythical/starter/late（天地图鉴页按此分组展示）
             eggGroup: '', rideable: '', height: '', weight: '',
-            // 分类学：域界门纲目科属种（科决定族尊下发的十八系血脉技能）
+            // 分类学：域界门纲目科属种（科决定族尊下发的十八系血脉技能；同一条进化链共用同一套，保存时自动同步）
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
+            region: '',                                 // 出现地区（如：九牧地区；留空 = 不限地区 / 全域）
             origin: '',                                 // 原型 / 取材自（自由填写，默认空）
             image: '', shiny: [], description: '',
             stats: { hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 0 }
@@ -745,6 +746,43 @@ createApp({
             const vowData = JSON.parse(JSON.stringify(form));
             if (!Array.isArray(vowData.shiny)) vowData.shiny = [];
             vowData.origin = String(vowData.origin || '').trim();   // 原型 / 取材自，默认留空
+            vowData.region = String(vowData.region || '').trim();   // 出现地区，默认留空（= 不限地区）
+
+            /* 分类学进化链同步：同一条进化链上的精灵共用同一套域界门纲目科属种。
+               只要本次保存的 taxonomy 有内容，就沿 evoFrom/evoTo 双向遍历整条链，
+               把这套分类写入链上所有成员（改一条 → 全链同步更新）。 */
+            const tax = vowData.taxonomy || {};
+            const hasTax = Object.keys(tax).some(k => String(tax[k] || '').trim());
+            if (hasTax) {
+                const byId = new Map(vows.value.map(p => [String((p && p.id) || '').trim(), p]));
+                byId.set(id, vowData);   // 新增/编辑中的这条也要参与遍历
+                const seen = new Set([id]);
+                const queue = [id];
+                while (queue.length) {
+                    const cur = byId.get(queue.shift());
+                    if (!cur) continue;
+                    [...(Array.isArray(cur.evoFrom) ? cur.evoFrom : []), ...(Array.isArray(cur.evoTo) ? cur.evoTo : [])]
+                        .forEach(nid => {
+                            const k = String(nid || '').trim();
+                            if (k && !seen.has(k)) { seen.add(k); queue.push(k); }
+                        });
+                }
+                let taxSynced = 0;
+                seen.forEach(cid => {
+                    if (cid === id) return;
+                    const member = byId.get(cid);
+                    if (!member) return;
+                    const next = JSON.parse(JSON.stringify(tax));
+                    if (JSON.stringify(member.taxonomy || {}) !== JSON.stringify(next)) {
+                        member.taxonomy = next;
+                        taxSynced++;
+                    }
+                });
+                if (taxSynced > 0) {
+                    // 落盘交给下方统一的 saveToLocal / VowmonStore.save，这里只提示
+                    VowmonDialog.toast(`分类学已同步到进化链上另外 ${taxSynced} 只精灵`, 'success');
+                }
+            }
 
             if (isEdit.value) vows.value[editIndex.value] = vowData;
             else vows.value.unshift(vowData);

@@ -285,6 +285,7 @@
                     <div class="info-grid">
                         <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }} <span class="rank-line" :style="{ background: stageRank.color }">{{ stageRank.name }}线</span></div></div>
                         <div class="info-box" v-if="vow.form"><div class="lbl">形态</div><div class="val">{{ vow.form }}</div></div>
+                        <div class="info-box" v-if="vow.region"><div class="lbl">出现地区</div><div class="val">{{ vow.region }}</div></div>
                         <div class="info-box" v-if="realmLabels"><div class="lbl">天地类别</div><div class="val">{{ realmLabels }}</div></div>
                         <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
                         <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
