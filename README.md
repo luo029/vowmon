@@ -459,9 +459,9 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 | 平台 | 地址 | 发布方式 |
 |---|---|---|
-| Cloudflare Pages（**主站**） | https://vowmon.keeptrue.ren/ | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy`；`vowmon.keeptrue.ren` 是新网 DNS 上的 CNAME → `vowmon.pages.dev` |
+| Cloudflare Pages（**主站**） | https://vowmon.pages.dev/（主地址，分享/收藏用这个）<br>别名：https://vowmon.keeptrue.ren/（自定义域名，到期不影响主站） | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy`；`vowmon.keeptrue.ren` 是新网 DNS 上的 CNAME → `vowmon.pages.dev` |
 | Cloudflare Pages（裸地址） | https://vowmon.pages.dev/ | 同上，和上面是同一个项目 |
-| GitHub Pages | https://keeptrue.ren/vowmon/（裸地址 `luo029.github.io/vowmon/` 会 301 过来） | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
+| GitHub Pages（**备用镜像**，保留） | 裸地址 `luo029.github.io/vowmon/`；当前经自定义域名 301，keeptrue.ren 到期后需在 Settings → Pages 删除域名即可直连。图片/数据基址均指向 pages.dev，镜像完整可用 | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
 
 前两个是同一个 Pages 项目、同一份构建产物，只是域名不同。
 
