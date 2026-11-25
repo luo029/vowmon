@@ -1,20 +1,39 @@
 # Cloudflare Pages 旧链接跳转（2026-11-26 目录重组：前台页面移入 dex/reference/world/records）
-# 老地址（无扩展名形式）→ 新地址；带 .html 的请求会先被 CF 自动 308 去掉扩展名再命中这里。
+# 注意：必须同时写 .html 形式——CF 的自动去扩展名 308 只对「存在的文件」生效，
+# 文件已移走后 /xxx.html 会掉进 SPA 兜底返回首页（点导航永远回首页的陷阱），带 .html 规则优先于兜底。
 /vowdex /dex/vowdex 301
+/vowdex.html /dex/vowdex 301
 /list /dex/list 301
+/list.html /dex/list 301
 /vow-detail /dex/vow-detail 301
+/vow-detail.html /dex/vow-detail 301
 /realm-dex /dex/realm-dex 301
+/realm-dex.html /dex/realm-dex 301
 /skills /reference/skills 301
+/skills.html /reference/skills 301
 /skill-detail /reference/skill-detail 301
+/skill-detail.html /reference/skill-detail 301
 /traits /reference/traits 301
+/traits.html /reference/traits 301
 /items /reference/items 301
+/items.html /reference/items 301
 /natures /reference/natures 301
+/natures.html /reference/natures 301
 /bloodlines /reference/bloodlines 301
+/bloodlines.html /reference/bloodlines 301
 /calculator /reference/calculator 301
+/calculator.html /reference/calculator 301
 /coverage /reference/coverage 301
+/coverage.html /reference/coverage 301
 /ranks /world/ranks 301
+/ranks.html /world/ranks 301
 /trainers /world/trainers 301
+/trainers.html /world/trainers 301
 /factions /world/factions 301
+/factions.html /world/factions 301
 /lore /world/lore 301
+/lore.html /world/lore 301
 /individuals /records/individuals 301
+/individuals.html /records/individuals 301
 /characters /records/characters 301
+/characters.html /records/characters 301
