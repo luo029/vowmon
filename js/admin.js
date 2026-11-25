@@ -6,7 +6,7 @@ createApp({
         // 支持通过 URL 参数直接定位到指定标签页（如从技能/特性管理页跳转过来）
         // 例如 admin.html?tab=settings 会直接打开「同步配置」
         const urlParams = new URLSearchParams(window.location.search);
-        const initialTab = urlParams.get('tab') === 'settings' ? 'settings' : 'sprites';
+        const initialTab = (urlParams.get('tab') === 'settings' || urlParams.get('tab') === 'realm') ? urlParams.get('tab') : 'sprites';
         const currentTab = ref(initialTab);
 
         // 切换标签页时同步更新地址栏，保证刷新/深链都能停留在当前页
