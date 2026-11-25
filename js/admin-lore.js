@@ -354,6 +354,13 @@ const app = createApp({
 
         // 一键同步：把 lore-data.json 推到数据仓库
         // 正在编辑时先自动保存当前块，而不是静默撤销（否则改了等于白改，还误以为同步了）
+        //
+        // 【三方合并防回滚】一键同步推的是整个本机镜像。若镜像里某些块落后于仓库
+        //（云端被另一台设备改过 / 仓库侧修过数据，而本机对账没拉到），整包上传会
+        // 把云端的修改悄悄回滚掉。因此上传前先取仓库当前版本做合并：
+        //   · 镜像没动过（与上次同步快照一致）而云端变了 → 采用云端版本；
+        //   · 镜像动过 → 采用镜像（用户的编辑优先）；
+        //   · 云端新增的块 → 并入；镜像没动而云端已删除的块 → 跟随删除。
         const syncToGitHub = async () => {
             if (editing) saveEdit();
             if (!ensureConfig()) return;
@@ -361,13 +368,45 @@ const app = createApp({
             const repos = targetRepos();
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ pages: data.value.pages, blocks: data.value.blocks }, null, 1) + '\n';
+                /* 取「上次同步成功的快照」和「仓库当前版本」 */
+                let lastPush = null;
+                try { lastPush = JSON.parse(localStorage.getItem('vowmon_lore_lastpush') || 'null'); } catch (err) { lastPush = null; }
+                let remoteNow = null;
+                try { remoteNow = await GitHubSync.downloadJson(cfg.token, cfg.owner, repos[0], 'lore-data.json'); } catch (err) { remoteNow = null; }
+
+                const merged = JSON.parse(JSON.stringify({ pages: data.value.pages, blocks: data.value.blocks }));
+                if (remoteNow && remoteNow.blocks && typeof remoteNow.blocks === 'object') {
+                    const snap = (lastPush && lastPush.blocks) || null;
+                    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+                    Object.keys(remoteNow.blocks).forEach(k => {
+                        const inMirror = Object.prototype.hasOwnProperty.call(merged.blocks, k);
+                        if (!inMirror) { merged.blocks[k] = JSON.parse(JSON.stringify(remoteNow.blocks[k])); return; }   // 云端新增 → 并入
+                        if (snap && same(merged.blocks[k], snap[k]) && !same(remoteNow.blocks[k], snap[k])) {
+                            merged.blocks[k] = JSON.parse(JSON.stringify(remoteNow.blocks[k]));   // 镜像没动、云端被外部改过 → 采云端
+                        }
+                    });
+                    Object.keys(merged.blocks).forEach(k => {
+                        if (!Object.prototype.hasOwnProperty.call(remoteNow.blocks, k)
+                            && snap && snap[k] !== undefined && same(merged.blocks[k], snap[k])) {
+                            delete merged.blocks[k];   // 镜像没动、云端已删除 → 跟随删除
+                        }
+                    });
+                    const ids = new Set(merged.pages.map(p => p.id));
+                    (Array.isArray(remoteNow.pages) ? remoteNow.pages : []).forEach(p => {
+                        if (!ids.has(p.id)) merged.pages.push(JSON.parse(JSON.stringify(p)));
+                    });
+                }
+
+                applyData(merged);
+                const content = JSON.stringify({ pages: merged.pages, blocks: merged.blocks }, null, 1) + '\n';
                 for (const repo of repos) {
                     await GitHubSync.uploadFile(cfg.token, cfg.owner, repo, 'lore-data.json', content, 'update page content');
                 }
+                try { localStorage.setItem('vowmon_lore_lastpush', JSON.stringify({ pages: merged.pages, blocks: merged.blocks })); } catch (err) { /* ignore */ }
                 if (window.VowmonStore) VowmonStore.markSynced('lore');
                 isDirty.value = false;
-                VowmonDialog.toast('页面内容同步成功，前台一两分钟后更新', 'success');
+                if (viewMode.value === 'visual') reloadFrame();
+                VowmonDialog.toast('页面内容同步成功（已自动合并云端最新修改），前台一两分钟后更新', 'success');
             } catch (err) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
                     type: 'danger', title: '同步失败',
