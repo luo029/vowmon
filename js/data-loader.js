@@ -49,6 +49,7 @@
                 kinds: 'itemKindsData',
                 groups: 'itemGroupsData',
                 categories: 'itemCategoriesData',
+                currencies: 'itemCurrenciesData',
                 items: 'allItemsData'
             }
         },
@@ -231,6 +232,9 @@
             if (groups.length && typeof setItemGroups === 'function') setItemGroups(groups);
             if (Array.isArray(data.categories) && data.categories.length && typeof setItemCategories === 'function') {
                 setItemCategories(data.categories.map(c => String(c).trim()).filter(Boolean));
+            }
+            if (Array.isArray(data.currencies) && data.currencies.length && typeof setItemCurrencies === 'function') {
+                setItemCurrencies(data.currencies.map(c => String(c).trim()).filter(Boolean));
             }
         } catch (e) {
             // 没引入 item-config.js 的页面不需要这一步

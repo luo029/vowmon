@@ -20,6 +20,10 @@
 /* ------------------------------------------------------------ 内置默认 */
 const ITEM_BUILTIN_KINDS = ['物品', '精灵果实', '精灵蛋'];
 
+/* 货币：物品价格、人物存款用。默认只有联盟币，后台可自行增删 */
+const ITEM_DEFAULT_CURRENCY = '联盟币';
+const ITEM_BUILTIN_CURRENCIES = [ITEM_DEFAULT_CURRENCY];
+
 // 分组缺失 / 填错时的兜底分组
 const ITEM_FALLBACK_GROUP = {
     name: '其他道具',
@@ -112,6 +116,19 @@ const itemCategories = (() => {
     return extra.map(s => String(s == null ? '' : s).trim()).filter(Boolean);
 })();
 
+const itemCurrencies = (() => {
+    const extra = pickOverride('itemCurrenciesData');
+    const list = (extra || ITEM_BUILTIN_CURRENCIES)
+        .map(c => String(c == null ? '' : c).trim())
+        .filter(Boolean);
+    const out = Array.from(new Set(list));
+    // 联盟币是基准货币，永远排在第一个
+    const idx = out.indexOf(ITEM_DEFAULT_CURRENCY);
+    if (idx > -1) out.splice(idx, 1);
+    out.unshift(ITEM_DEFAULT_CURRENCY);
+    return out.length ? out : [ITEM_DEFAULT_CURRENCY];
+})();
+
 /* ------------------------------------------------------------ 运行时替换 */
 // 后台增删改后调用，保持下面的 getItemGroupIcon / normalizeItemKind 拿到最新列表
 const setItemKinds = (list) => {
@@ -130,6 +147,15 @@ const setItemCategories = (list) => {
     itemCategories.length = 0;
     (list || []).forEach(c => itemCategories.push(String(c)));
 };
+const setItemCurrencies = (list) => {
+    const merged = (list || []).map(c => String(c == null ? '' : c).trim()).filter(Boolean);
+    const out = Array.from(new Set(merged));
+    const idx = out.indexOf(ITEM_DEFAULT_CURRENCY);
+    if (idx > -1) out.splice(idx, 1);
+    out.unshift(ITEM_DEFAULT_CURRENCY);
+    itemCurrencies.length = 0;
+    out.forEach(c => itemCurrencies.push(c));
+};
 
 /* ---------------------------------------------------------------- 查询 */
 const getItemGroupInfo = (name) => itemGroups.find(g => g.name === name) || ITEM_FALLBACK_GROUP;
@@ -141,6 +167,9 @@ const ITEM_ALL_ICON = 'fa-solid fa-layer-group';
 
 // 物品大类归一：空值 / 未知值落到第一个大类
 const normalizeItemKind = (kind) => (itemKinds.includes(kind) ? kind : (itemKinds[0] || ITEM_BUILTIN_KINDS[0]));
+
+// 货币归一：空值 / 已删除的货币都落到第一个（正常是联盟币）
+const normalizeItemCurrency = (name) => (itemCurrencies.includes(name) ? name : (itemCurrencies[0] || ITEM_DEFAULT_CURRENCY));
 
 // 图标兜底：没配图标字体时用分组图标
 const getItemFallbackIcon = (item) => getItemGroupIcon(item && item.group);

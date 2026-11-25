@@ -161,12 +161,14 @@
         .contract-panel input { width: 100%; height: 40px; padding: 0 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; font-family: inherit; color: #2d3748; outline: none; background: #fff; transition: border-color .15s, box-shadow .15s; }
         .contract-panel input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
         .contract-panel input::placeholder { color: #cfc0a4; font-weight: 600; }
-        .ms-cols { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-cols { display: grid; grid-template-columns: 30px 96px minmax(150px, 1.6fr) 122px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
         .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
         .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
         .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; }
         .ms-item input::placeholder { color: #b3c2d1; font-weight: 600; }
+        /* 日期列窄一点、字号略小，和时间信息的轻量感一致 */
+        .ms-head-row input.ms-date { font-size: 12.5px; color: #718096; }
         .ms-item input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .ms-note { margin-top: 8px; }
         .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
@@ -192,6 +194,7 @@
             .ms-cols { display: none; }
             .ms-head-row { display: flex; flex-wrap: wrap; }
             .ms-head-row input { flex: 1 1 40%; }
+            .ms-head-row input.ms-date { flex: 1 1 30%; }
             .ms-head-row .ms-del { margin-left: auto; }
             .level-row .lv-tag { min-width: 68px; padding: 0 10px; }
         }
@@ -448,12 +451,13 @@
                         <div><label>契约日 <i class="tip" data-tip="书内时间或现实日期均可">?</i></label><input v-model="form.contractDate" placeholder="如：第三纪元 · 春"></div>
                         <div><label>契约章节 <i class="tip" data-tip="记录在书的第几章">?</i></label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
                     </div>
-                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span></span></div>
+                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span>日期</span><span></span></div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
                             <input v-model="m.chapter" placeholder="第几章">
                             <input v-model="m.title" placeholder="发生了什么">
+                            <input class="ms-date" v-model="m.date" placeholder="日期">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                         <input class="ms-note" v-model="m.note" placeholder="补充说明：这一章它突破到了什么程度…">
@@ -512,7 +516,7 @@
 
 <script src="../js/site-config.js?v=20261124e"></script>
 <script src="../js/type-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261126b"></script>
+<script src="../js/data-loader.js?v=20261126c"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/vow-tip.js?v=20261125b"></script>

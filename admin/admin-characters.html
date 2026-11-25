@@ -90,17 +90,49 @@
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
         /* ============ 成就经历 ============ */
-        .ms-cols { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-cols { display: grid; grid-template-columns: 30px 96px minmax(150px, 1.6fr) 122px 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
         .ms-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
         .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
         .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; transition: border-color .15s, box-shadow .15s; }
         .ms-item input::placeholder { color: #b6bfc9; font-weight: 600; }
+        /* 日期列窄一点、字号略小，和时间信息的轻量感一致 */
+        .ms-head-row input.ms-date { font-size: 12.5px; color: #718096; }
         .ms-item input:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
         .ms-note { margin-top: 8px; }
         .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
         .ms-del:hover { background: #fee; }
         .ms-add { margin-top: 2px; }
+
+        /* ============ 人物关系（点选人物 + 预设关系） ============ */
+        .rel-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .rel-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 8px 10px; }
+        .rel-main { display: flex; align-items: center; gap: 8px; }
+        .rel-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 900; }
+        .rel-who { flex: 0 1 auto; min-width: 0; max-width: 150px; }
+        .rel-name { font-size: 13.5px; font-weight: 900; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rel-sub { font-size: 10.5px; color: #a0aec0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rel-pick { flex: none; height: 32px; padding: 0 12px; display: flex; align-items: center; gap: 6px; border: 1px solid #dbe4ec; border-radius: 999px; background: #fff; color: #a0aec0; font-size: 12.5px; font-weight: 900; font-family: inherit; cursor: pointer; transition: all .15s; white-space: nowrap; }
+        .rel-pick.on, .rel-pick:hover { border-color: #e6cf9a; color: #9c6b0e; background: #fffdf5; }
+        .rel-pick.filled { color: #9c6b0e; border-color: #ecd9b0; background: #fffdf5; }
+        .rel-note { flex: 1 1 80px; min-width: 0; height: 32px; padding: 0 10px; border: 1px solid #e2e6ec; border-radius: 8px; font-size: 12.5px; font-family: inherit; color: #2d3748; background: #fff; outline: none; }
+        .rel-note::placeholder { color: #b6bfc9; font-weight: 600; }
+        .rel-x { flex: none; width: 32px; height: 32px; border: none; border-radius: 8px; background: #fff5f5; color: #e53e3e; cursor: pointer; font-size: 12px; }
+        .rel-x:hover { background: #fee; }
+        .rel-presets { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e8edf2; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .rel-preset { height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid #e2e6ec; background: #fff; font-size: 12px; font-weight: 800; color: #4a5568; cursor: pointer; font-family: inherit; transition: all .12s; }
+        .rel-preset:hover, .rel-preset.on { background: #fffdf5; border-color: #e6cf9a; color: #9c6b0e; }
+        .rel-custom { display: flex; align-items: center; flex: 1 1 150px; min-width: 130px; }
+        .rel-custom input { flex: 1; min-width: 0; height: 28px; padding: 0 9px; border: 1px solid #dbe4ec; border-right: 0; border-radius: 8px 0 0 8px; font-size: 12px; font-family: inherit; color: #2d3748; background: #fff; outline: none; }
+        .rel-custom input::placeholder { color: #b6bfc9; font-weight: 600; }
+        .rel-custom button { flex: none; width: 30px; height: 28px; border: 1px solid #dbe4ec; border-left: 0; border-radius: 0 8px 8px 0; background: #f8fafc; color: #38a169; cursor: pointer; }
+        .rel-empty { font-size: 12.5px; color: #b6bfc9; font-weight: 700; padding: 4px 2px 10px; }
+        .rel-summary { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #f0e9dc; }
+        .rel-summary label { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; }
+        @media (max-width: 640px) {
+            .rel-main { flex-wrap: wrap; }
+            .rel-note { flex: 1 1 100%; order: 3; }
+        }
 
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
         @media (max-width: 900px) { .basic-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -109,6 +141,7 @@
             .ms-cols { display: none; }
             .ms-head-row { display: flex; flex-wrap: wrap; }
             .ms-head-row input { flex: 1 1 40%; }
+            .ms-head-row input.ms-date { flex: 1 1 30%; }
             .ms-head-row .ms-del { margin-left: auto; }
         }
     </style>
@@ -240,17 +273,54 @@
                 <!-- 御兽师个人成就 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-medal"></i> 御兽师个人成就 <i class="tip" data-tip="契约与突破经历请写在精灵档案里">?</i> </div>
-                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span></span></div>
+                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span>日期</span><span></span></div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
                             <input v-model="m.chapter" placeholder="第几章">
                             <input v-model="m.title" placeholder="发生了什么">
+                            <input class="ms-date" v-model="m.date" placeholder="日期">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                         <input class="ms-note" v-model="m.note" placeholder="补充说明：成就的细节、影响…">
                     </div>
                     <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
+                </div>
+
+                <!-- 人物关系 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-diagram-project"></i> 人物关系 <i class="tip" data-tip="点「添加关系」选择另一位御兽人物，再点关系胶囊选彼此的关系（也可自己输入）。选中带反向的关系（师父↔徒弟、父亲↔子女等）保存时会在对方档案里自动补上反向记录。">?</i></div>
+                    <div class="rel-list" v-if="form.links.length">
+                        <div class="rel-item" v-for="(l, i) in form.links" :key="l.id">
+                            <div class="rel-main">
+                                <span class="rel-avatar" :style="{ background: avatarColor(linkName(l.id)) }">{{ linkName(l.id).charAt(0) }}</span>
+                                <span class="rel-who">
+                                    <span class="rel-name">{{ linkName(l.id) }}</span>
+                                    <span class="rel-sub" v-if="linkTitle(l.id)">{{ linkTitle(l.id) }}</span>
+                                </span>
+                                <button type="button" class="rel-pick" :class="{ on: activeRelIndex === i, filled: !!l.rel }" @click="toggleRelPicker(i)">
+                                    <i class="fa-solid fa-link"></i>{{ l.rel || '选择关系' }}
+                                    <i class="fa-solid fa-chevron-down" style="font-size: 9px; opacity: .6;"></i>
+                                </button>
+                                <input class="rel-note" v-model="l.note" placeholder="备注（第几章、缘由…）">
+                                <button type="button" class="rel-x" title="移除这条关系" @click="removeLink(i)"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="rel-presets" v-if="activeRelIndex === i">
+                                <button type="button" class="rel-preset" v-for="p in REL_PRESETS" :key="p.name"
+                                        :class="{ on: l.rel === p.name }" @click="setRel(i, p.name)">{{ p.name }}</button>
+                                <div class="rel-custom">
+                                    <input v-model="relInput" placeholder="自定义关系…" @keydown.enter.prevent="applyCustomRel(i)">
+                                    <button type="button" title="确定" @click="applyCustomRel(i)"><i class="fa-solid fa-check"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rel-empty" v-else>还没有设置关系。点下面按钮选另一位人物，再选彼此的关系。</div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="openLinkModal"><i class="fa-solid fa-plus"></i> 添加关系</button>
+                    <div class="rel-summary">
+                        <label>关系概述 <span class="opt">选填</span> <i class="tip" data-tip="上面选不完、或者只想用一段话交代的关系写在这里">?</i></label>
+                        <vow-textarea v-model="form.relations" :rows="2" placeholder="如：与九牧联盟多位首座交好，和荒野的旧部仍有联系…"></vow-textarea>
+                    </div>
                 </div>
 
                 <!-- 人物档案详情 -->
@@ -260,7 +330,6 @@
                         <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <i class="tip" data-tip="出身、来历、成长环境">?</i></label><vow-textarea v-model="form.background" :rows="3" placeholder="出身、来历、成长环境…"></vow-textarea></div>
                         <div class="form-group"><label>性格 <i class="tip" data-tip="脾气秉性">?</i></label><vow-textarea v-model="form.personality" :rows="2" placeholder="脾气秉性、行事风格…"></vow-textarea></div>
                         <div class="form-group"><label>外貌 <i class="tip" data-tip="外形特征">?</i></label><vow-textarea v-model="form.appearance" :rows="2" placeholder="外形特征、常穿的衣饰…"></vow-textarea></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <i class="tip" data-tip="师徒、亲友、宿敌等">?</i></label><vow-textarea v-model="form.relations" :rows="2" placeholder="师徒、亲友、宿敌…"></vow-textarea></div>
                         <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <i class="tip" data-tip="能力、战绩、短板">?</i></label><vow-textarea v-model="form.strength" :rows="3" placeholder="能力、战绩、短板…"></vow-textarea></div>
                     </div>
                 </div>
@@ -304,6 +373,30 @@
         </div>
     </div>
 
+    <!-- 选择关联人物 -->
+    <div class="modal-overlay" v-if="showLinkModal" @vowmon:modal-close="closeModal('link')" style="z-index: 1100;">
+        <div class="selection-modal" style="width: 520px;" @click.stop>
+            <div class="modal-header">
+                <h3>选择关联人物</h3>
+                <button class="btn-close" @click="showLinkModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="selection-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input v-model="linkSearch" placeholder="搜索人物姓名 / 势力 / 头衔…">
+            </div>
+            <div class="selection-list">
+                <div class="selection-item" v-for="c in linkCandidates" :key="c.id" @click="addLink(c)">
+                    <div class="item-name">
+                        <span class="rel-avatar" :style="{ background: avatarColor(c.name), width: '22px', height: '22px', fontSize: '11px', marginRight: '8px' }">{{ (c.name || '？').charAt(0) }}</span>
+                        {{ c.name }}
+                    </div>
+                    <div class="item-desc">{{ [c.faction, c.title].filter(Boolean).join(' · ') || '暂无势力与头衔' }}</div>
+                </div>
+                <div v-if="!linkCandidates.length" class="empty-state">没有可选人物（已关联过的不再重复列出）</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 精灵关联弹窗（多选） -->
     <div class="modal-overlay" v-if="showPetModal" @vowmon:modal-close="closeModal('pet')" style="z-index: 1100;">
         <div class="selection-modal" style="width: 520px;" @click.stop>
@@ -337,12 +430,12 @@
 </div>
 
 <script src="../js/site-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261126b"></script>
+<script src="../js/data-loader.js?v=20261126c"></script>
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/vow-tip.js?v=20261125b"></script>
 <script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-characters.js?v=20261125h"></script>
+<script src="../js/admin-characters.js?v=20261126a"></script>
 </body>
 </html>

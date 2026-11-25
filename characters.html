@@ -90,6 +90,43 @@
         .ms-note { font-size: 12px; color: #718096; line-height: 1.8; margin-top: 2px; }
         .ms-empty { font-size: 12.5px; color: #a0aec0; font-weight: 700; margin-top: 8px; }
 
+        /* 关系视图切换 */
+        .view-switch { display: flex; gap: 4px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 4px; }
+        .view-switch button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 16px; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 13px; font-weight: 900; color: #718096; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap; }
+        .view-switch button:hover { color: #185FA5; }
+        .view-switch button.on { background: #185FA5; color: #fff; }
+
+        /* 详情 · 人物关系 */
+        .rel-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e8edf2; border-radius: 12px; background: #fbfcfe; margin-bottom: 8px; cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+        .rel-head:last-child { margin-bottom: 0; }
+        .rel-head:hover { border-color: #185FA5; background: #f5faff; transform: translateX(2px); }
+        .rel-av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 900; }
+        .rel-main { flex: 1; min-width: 0; }
+        .rel-main b { font-size: 13.5px; font-weight: 900; color: #2d3748; }
+        .rel-main span { display: block; font-size: 11.5px; color: #a0aec0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rel-tag { flex: none; font-size: 11.5px; font-weight: 900; color: #9c6b0e; background: #fffdf5; border: 1px solid #f0e5cd; padding: 4px 11px; border-radius: 999px; }
+        .rel-head > i { color: #cbd5e0; font-size: 11px; }
+
+        /* 关系谱 */
+        .graph-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fffdf8; border: 1px solid #fcecd7; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; }
+        .graph-bar .gb-lbl { font-size: 12px; font-weight: 900; color: #b7791f; letter-spacing: .04em; }
+        .graph-bar select { padding: 9px 13px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-family: inherit; font-size: 13.5px; font-weight: 800; color: #2d3748; outline: none; cursor: pointer; }
+        .graph-bar .gb-hint { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #a0aec0; }
+        .graph-card { background: #fff; border: 1px solid #e8edf2; border-radius: 18px; padding: 8px 10px 4px; box-shadow: 0 10px 26px rgba(45,55,72,.07); }
+        .graph-svg { width: 100%; height: auto; display: block; }
+        .graph-svg .g-edge { stroke: #cbd9e8; stroke-width: 2; }
+        .graph-svg .g-edge.strong { stroke: #7fb0e0; stroke-width: 2.6; }
+        .graph-svg .g-label { fill: #718096; font-size: 11.5px; font-weight: 800; }
+        .graph-svg .g-node { cursor: pointer; }
+        .graph-svg .g-node:hover .g-circle { stroke: #185FA5; stroke-width: 4; }
+        .graph-svg .g-circle { transition: stroke .15s; }
+        .graph-svg .g-name { fill: #2d3748; font-size: 13px; font-weight: 900; }
+        .graph-svg .g-init { fill: #fff; font-size: 17px; font-weight: 900; }
+        .graph-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 10px 10px; }
+        .graph-foot .gf-note { font-size: 11.5px; color: #a0aec0; font-weight: 700; }
+        .graph-empty { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; }
+        @media (max-width: 640px) { .graph-bar .gb-hint { margin-left: 0; } .view-switch { width: 100%; justify-content: center; } }
+
         /* 物品栏 */
         .inv-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; background: #fffdf6; border: 1px solid #f2e6cf; margin-bottom: 8px; }
         .inv-row:last-child { margin-bottom: 0; }
@@ -183,12 +220,25 @@
                     <div class="inv-empty" v-else>暂未契约精灵，或档案尚未录入。</div>
                 </div>
 
+                <div class="info-card" v-if="linkRows.length">
+                    <h2><i class="fa-solid fa-diagram-project"></i> 人物关系 <span class="total-badge font-num">{{ linkRows.length }} 条</span></h2>
+                    <div class="rel-head" v-for="l in linkRows" :key="l.id" :title="'查看 ' + l.name + ' 的档案'" @click="gotoCharacterById(l.id)">
+                        <span class="rel-av" :style="{ background: avatarColor(l.name) }">{{ l.name.charAt(0) }}</span>
+                        <span class="rel-main">
+                            <b>{{ l.name }}</b>
+                            <span v-if="l.note || l.faction">{{ l.note || l.faction }}</span>
+                        </span>
+                        <span class="rel-tag">{{ l.rel || '关系' }}</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+
                 <div class="info-card" v-if="cha.background || cha.personality || cha.appearance || cha.relations || cha.strength">
                     <h2><i class="fa-solid fa-address-book"></i> 人物档案</h2>
                     <div class="pf-detail" v-if="cha.background"><span class="pd-lbl">背景</span><p>{{ cha.background }}</p></div>
                     <div class="pf-detail" v-if="cha.personality"><span class="pd-lbl">性格</span><p>{{ cha.personality }}</p></div>
                     <div class="pf-detail" v-if="cha.appearance"><span class="pd-lbl">外貌</span><p>{{ cha.appearance }}</p></div>
-                    <div class="pf-detail" v-if="cha.relations"><span class="pd-lbl">关系</span><p>{{ cha.relations }}</p></div>
+                    <div class="pf-detail" v-if="cha.relations"><span class="pd-lbl">概述</span><p>{{ cha.relations }}</p></div>
                     <div class="pf-detail" v-if="cha.strength"><span class="pd-lbl">实力</span><p>{{ cha.strength }}</p></div>
                 </div>
 
@@ -228,17 +278,58 @@
             </div>
 
             <div class="filter-bar">
-                <div class="search-box">
+                <div class="search-box" v-if="viewMode === 'list'">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" v-model="searchName" placeholder="搜索姓名、势力、简介关键词...">
                 </div>
-                <select class="filter-select" v-model="filterFaction">
+                <div class="graph-bar" style="flex: 1; margin: 0; padding: 0; border: 0; background: transparent;" v-else>
+                    <span class="gb-lbl">关系谱中心</span>
+                    <select v-model="graphCenterId">
+                        <option v-for="c in characters" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    </select>
+                    <span class="gb-hint">点图上的节点可切换中心</span>
+                </div>
+                <select class="filter-select" v-if="viewMode === 'list'" v-model="filterFaction">
                     <option value="">全部势力</option>
                     <option v-for="f in factions" :key="f" :value="f">{{ f }}</option>
                 </select>
+                <div class="view-switch">
+                    <button :class="{ on: viewMode === 'list' }" @click="viewMode = 'list'"><i class="fa-solid fa-id-card"></i> 人物档案</button>
+                    <button :class="{ on: viewMode === 'graph' }" @click="viewMode = 'graph'"><i class="fa-solid fa-diagram-project"></i> 关系谱</button>
+                </div>
             </div>
 
-            <div class="cha-grid" v-if="filteredCharacters.length">
+            <div class="graph-card" v-if="viewMode === 'graph'">
+                <template v-if="graph.edges.length">
+                    <svg class="graph-svg" :viewBox="'0 0 ' + graph.w + ' ' + graph.h" role="img" :aria-label="'以 ' + (graphCenter ? graphCenter.name : '') + ' 为中心的人物关系谱'">
+                        <line v-for="(e, i) in graph.edges" :key="'e' + i" class="g-edge" :class="{ strong: e.strong }"
+                              :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2"></line>
+                        <g v-for="(e, i) in graph.edges" :key="'el' + i">
+                            <rect :x="e.lx - e.lw / 2" :y="e.ly - 11" :width="e.lw" height="22" rx="11" fill="#ffffff" stroke="#e8edf2"></rect>
+                            <text class="g-label" :x="e.lx" :y="e.ly + 4" text-anchor="middle">{{ e.label }}</text>
+                        </g>
+                        <g class="g-node" v-for="n in graph.nodes" :key="n.id" @click="setGraphCenter(n.id)">
+                            <circle class="g-circle" :cx="n.x" :cy="n.y" :r="n.r" :fill="n.color" stroke="#ffffff" stroke-width="3"></circle>
+                            <text class="g-init" :x="n.x" :y="n.y + 6" text-anchor="middle">{{ n.init }}</text>
+                            <text class="g-name" :x="n.x" :y="n.y + n.r + 20" text-anchor="middle">{{ n.label }}</text>
+                        </g>
+                    </svg>
+                    <div class="graph-foot">
+                        <button class="btn btn-outline" v-if="graphCenter" @click="gotoCharacter(graphCenter)">
+                            <i class="fa-solid fa-user-pen"></i> 打开「{{ graphCenter.name }}」的档案
+                        </button>
+                        <span class="gf-note" v-if="graph.hidden">还有 {{ graph.hidden }} 位关系人物未画出（关系过多时只显示前 14 位）</span>
+                        <span class="gf-note" v-else>记录 {{ graph.nodes.length - 1 }} 条直接关系</span>
+                    </div>
+                </template>
+                <div class="graph-empty" v-else>
+                    <i class="fa-solid fa-diagram-project" style="font-size: 30px; display: block; margin-bottom: 12px;"></i>
+                    这位人物还没有录入关系<br>
+                    <small style="font-weight: 600;">后台「御兽人物 → 编辑 → 人物关系」可以为角色点选彼此关系</small>
+                </div>
+            </div>
+
+            <div class="cha-grid" v-if="viewMode === 'list' && filteredCharacters.length">
                 <div class="cha-card" v-for="c in filteredCharacters" :key="c.id"
                      :title="'点击查看 ' + c.name + ' 的详细档案'"
                      @click="gotoCharacter(c)">
@@ -259,7 +350,7 @@
                     </div>
                 </div>
             </div>
-            <div class="empty-state" v-else>
+            <div class="empty-state" v-if="viewMode === 'list' && !filteredCharacters.length">
                 <i class="fa-solid fa-users"></i>
                 暂无符合条件的御兽人物档案<br>
                 <small style="font-weight:600;">可在管理者后台「御兽人物」中录入书中角色</small>
@@ -274,7 +365,7 @@
 
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
-<script src="js/data-loader.js?v=20261126b"></script>
+<script src="js/data-loader.js?v=20261126c"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
@@ -317,6 +408,13 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : it)).filter(it => it && it.name)
                     : [];
                 p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String) : [];
+                p.links = Array.isArray(p.links)
+                    ? p.links.map(l => ({
+                        id: String((l && (l.id || l.targetId)) || '').trim(),
+                        rel: String((l && l.rel) || '').trim(),
+                        note: String((l && l.note) || '').trim()
+                    })).filter(l => l.id)
+                    : [];
                 p.position = String(p.position == null ? '' : p.position);
                 p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
                 ['background', 'personality', 'relations', 'appearance', 'strength'].forEach(k => { p[k] = String(p[k] == null ? '' : p[k]); });
@@ -371,6 +469,113 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
             const petsPreview = (c) => (c.petIds || []).slice(0, 4).map(id => indById.value.get(String(id))).filter(Boolean);
 
             const fmtMoney = (n) => Number(n || 0).toLocaleString('zh-CN');
+
+            /* ---------------- 人物关系 / 关系谱 ---------------- */
+            const AVATAR_PALETTE = ['#d69e2e', '#2b6cb0', '#38a169', '#7F77DD', '#d4537e', '#0F6E56', '#e24b4a', '#5c6bc0'];
+            const avatarColor = (name) => {
+                let h = 0;
+                const str = String(name || '');
+                for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+                return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+            };
+            const charById = (id) => characters.value.find(c => String(c.id) === String(id)) || null;
+            const linksOf = (c) => (c && Array.isArray(c.links) ? c.links : []);
+            const trunc = (s, n) => {
+                const str = String(s || '');
+                return str.length > n ? str.slice(0, n) + '…' : str;
+            };
+
+            const gotoCharacterById = (id) => { if (id) window.location.href = 'characters.html?id=' + encodeURIComponent(id); };
+
+            const linkRows = computed(() => {
+                if (!cha.value) return [];
+                return linksOf(cha.value).map(l => {
+                    const c = charById(l.id);
+                    return {
+                        id: l.id,
+                        name: c ? c.name : '（已删除的人物）',
+                        faction: c ? c.faction : '',
+                        rel: l.rel,
+                        note: l.note
+                    };
+                });
+            });
+
+            const viewMode = ref('list');
+            const graphCenterId = ref(urlId || '');
+            const graphCenter = computed(() =>
+                characters.value.find(c => String(c.id) === String(graphCenterId.value)) || characters.value[0] || null
+            );
+            const setGraphCenter = (id) => { graphCenterId.value = String(id); };
+
+            /* 环形关系谱：中心人物 + 一层直接关系（双向合并去重） */
+            const graph = computed(() => {
+                const center = graphCenter.value;
+                const W = 900;
+                if (!center) return { w: W, h: 420, nodes: [], edges: [], hidden: 0 };
+
+                const seen = new Set([String(center.id)]);
+                const partners = [];
+                linksOf(center).forEach(l => {
+                    const c = charById(l.id);
+                    if (!c || seen.has(String(c.id))) return;
+                    seen.add(String(c.id));
+                    partners.push({ c, rel: l.rel });
+                });
+                characters.value.forEach(c => {
+                    if (seen.has(String(c.id))) return;
+                    const back = linksOf(c).find(l => String(l.id) === String(center.id));
+                    if (!back) return;
+                    seen.add(String(c.id));
+                    partners.push({ c, rel: back.rel });
+                });
+
+                const MAX = 14;
+                const hidden = Math.max(0, partners.length - MAX);
+                const list = partners.slice(0, MAX);
+                const n = list.length;
+                const H = n <= 6 ? 520 : 620;
+                const cx = W / 2;
+                const cy = H / 2;
+                const rx = n <= 4 ? 250 : 318;
+                const ry = n <= 4 ? 148 : (n <= 8 ? 186 : 228);
+
+                const nodes = [{
+                    id: String(center.id), x: cx, y: cy, r: 44,
+                    color: '#14538f', init: String(center.name || '？').charAt(0),
+                    label: trunc(center.name, 8)
+                }];
+                const edges = [];
+                list.forEach((p, i) => {
+                    const a = (i * Math.PI * 2 / Math.max(n, 1)) - Math.PI / 2;
+                    const x = cx + Math.cos(a) * rx;
+                    const y = cy + Math.sin(a) * ry;
+                    nodes.push({
+                        id: String(p.c.id), x, y, r: 32,
+                        color: avatarColor(p.c.name), init: String(p.c.name || '？').charAt(0),
+                        label: trunc(p.c.name, 8)
+                    });
+                    const dx = x - cx;
+                    const dy = y - cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const ux = dx / dist;
+                    const uy = dy / dist;
+                    const x1 = cx + ux * 46;
+                    const y1 = cy + uy * 46;
+                    const x2 = x - ux * 34;
+                    const y2 = y - uy * 34;
+                    const label = p.rel || '关系';
+                    edges.push({
+                        x1, y1, x2, y2,
+                        strong: !!p.rel,
+                        label,
+                        lx: (x1 + x2) / 2,
+                        ly: (y1 + y2) / 2,
+                        lw: Math.max(48, label.length * 13 + 18)
+                    });
+                });
+                return { w: W, h: H, nodes, edges, hidden };
+            });
             const gotoIndividual = (id) => { if (id) window.location.href = 'individuals.html?id=' + encodeURIComponent(id); };
             const gotoCharacter = (c) => { if (c && c.id) window.location.href = 'characters.html?id=' + encodeURIComponent(c.id); };
 
@@ -394,6 +599,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
 
             onMounted(() => {
                 loaded.value = true;
+                if (!graphCenterId.value && characters.value.length) graphCenterId.value = characters.value[0].id;
                 setTimeout(() => { if (urlId && !cha.value) notFound.value = true; }, 0);
             });
 
@@ -403,7 +609,10 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 searchName, filterFaction,
                 chaPets, inventory, petsPreview,
                 speciesImageOf, stageName, stageColor, indName,
-                fmtMoney, gotoIndividual, gotoCharacter
+                fmtMoney, gotoIndividual, gotoCharacter,
+                /* 关系 / 关系谱 */
+                linkRows, avatarColor, gotoCharacterById,
+                viewMode, graphCenterId, graph, setGraphCenter
             };
         }
     }).mount('#app');

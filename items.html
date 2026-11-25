@@ -204,7 +204,7 @@
                 </div>
                 <div class="detail-info">
                     <div class="detail-cat">{{ currentItem.category || currentItem.group }}</div>
-                    <div class="detail-price" v-if="currentItem.price"><i class="fa-solid fa-coins"></i> {{ currentItem.price }} <span>联盟币</span></div>
+                    <div class="detail-price" v-if="currentItem.price"><i class="fa-solid fa-coins"></i> {{ currentItem.price }} <span>{{ currentItem.currency || '联盟币' }}</span></div>
                     <p class="detail-desc">{{ currentItem.desc || '暂无描述。' }}</p>
                     <div class="detail-divider"></div>
                     <h3 class="obtain-title">获取方式</h3>
@@ -239,8 +239,8 @@
 
 <script src="js/site-config.js?v=20261124"></script>
 <!-- 数据先于配置引入：item-config 要读 items-data.js 里的自定义类型 / 分组 -->
-<script src="js/data-loader.js?v=20261126b"></script>
-<script src="js/item-config.js?v=20261124"></script>
+<script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/item-config.js?v=20261125a"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['items']).then(function () {
@@ -279,6 +279,7 @@ VowmonData.ready(['items']).then(function () {
                 item.iconClass = item.iconClass || getItemFallbackIcon(item);
                 item.desc = String(item.desc || '').trim();
                 item.price = item.price == null ? '' : String(item.price).trim();
+                item.currency = String(item.currency || '').trim() || '联盟币';
                 item.obtain = Array.isArray(item.obtain)
                     ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                     : (item.obtain ? [String(item.obtain)] : []);

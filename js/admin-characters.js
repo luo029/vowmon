@@ -18,6 +18,25 @@ const FACTION_COLORS = {
 };
 const AVATAR_COLORS = ['#d69e2e', '#2b6cb0', '#38a169', '#7F77DD', '#d4537e', '#0F6E56', '#e24b4a', '#5c6bc0'];
 
+/* 关系预设：rev = 在对方档案里自动补的反向关系（没有 rev 的关系不做反向同步） */
+const REL_PRESETS = [
+    { name: '师父', rev: '徒弟' },
+    { name: '徒弟', rev: '师父' },
+    { name: '父亲', rev: '子女' },
+    { name: '母亲', rev: '子女' },
+    { name: '子女', rev: '父母' },
+    { name: '兄弟', rev: '兄弟' },
+    { name: '姐妹', rev: '姐妹' },
+    { name: '兄妹', rev: '兄妹' },
+    { name: '夫妻', rev: '夫妻' },
+    { name: '挚友', rev: '挚友' },
+    { name: '同门', rev: '同门' },
+    { name: '上下级', rev: '上下级' },
+    { name: '宿敌', rev: '宿敌' },
+    { name: '仇敌', rev: '仇敌' },
+    { name: '契约搭档', rev: '契约搭档' }
+];
+
 function normalizeCharacter(c) {
     const p = Object.assign({}, c || {});
     p.id = String(p.id == null ? '' : p.id);
@@ -36,6 +55,13 @@ function normalizeCharacter(c) {
     p.background = String(p.background == null ? '' : p.background);
     p.personality = String(p.personality == null ? '' : p.personality);
     p.relations = String(p.relations == null ? '' : p.relations);
+    p.links = Array.isArray(p.links)
+        ? p.links.map(l => ({
+            id: String((l && (l.id || l.targetId)) || '').trim(),
+            rel: String((l && l.rel) || '').trim(),
+            note: String((l && l.note) || '').trim()
+        })).filter(l => l.id)
+        : [];
     p.appearance = String(p.appearance == null ? '' : p.appearance);
     p.strength = String(p.strength == null ? '' : p.strength);
     p.notes = String(p.notes == null ? '' : p.notes);
@@ -69,7 +95,7 @@ const app = createApp({
 
         const defaultForm = () => ({
             id: '', name: '', title: '', faction: '', birthplace: '', position: '', money: 0,
-            inventory: [], petIds: [],
+            inventory: [], petIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
             notes: '', milestones: []
         });
@@ -192,6 +218,7 @@ const app = createApp({
             } else {
                 characters.value.push(item);
             }
+            syncReverseLinks(item);
             saveLocal();
             showModal.value = false;
             VowmonDialog.toast('已保存到本机，前台已生效。改完记得点「一键同步」推到仓库', 'success', { duration: 3600 });
@@ -209,6 +236,91 @@ const app = createApp({
                     VowmonDialog.toast('已删除', 'success');
                 }
                 deleteTargetIndex.value = -1;
+            });
+        };
+
+        /* --------------------------------------------------------- 人物关系 */
+        const showLinkModal = ref(false);
+        const linkSearch = ref('');
+        const activeRelIndex = ref(-1);
+        const relInput = ref('');
+
+        const linkChar = (id) => characters.value.find(c => String(c.id) === String(id)) || null;
+        const linkName = (id) => {
+            const c = linkChar(id);
+            return c ? (c.name || '未命名') : '（已删除的人物）';
+        };
+        const linkTitle = (id) => {
+            const c = linkChar(id);
+            if (!c) return '';
+            return [c.faction, c.title].filter(Boolean).join(' · ');
+        };
+        /* 可关联的人：排除自己，也排除已经连过的人 */
+        const linkCandidates = computed(() => {
+            const kw = linkSearch.value.trim().toLowerCase();
+            const used = new Set((form.value.links || []).map(l => String(l.id)));
+            return characters.value.filter(c => {
+                if (String(c.id) === String(form.value.id)) return false;
+                if (used.has(String(c.id))) return false;
+                if (!kw) return true;
+                return [c.name, c.faction, c.title, c.position].join(' ').toLowerCase().includes(kw);
+            });
+        });
+        const openLinkModal = () => {
+            linkSearch.value = '';
+            showLinkModal.value = true;
+        };
+        const addLink = (c) => {
+            if (!c) return;
+            if ((form.value.links || []).some(l => String(l.id) === String(c.id))) {
+                showLinkModal.value = false;
+                return;
+            }
+            form.value.links.push({ id: String(c.id), rel: '', note: '' });
+            activeRelIndex.value = form.value.links.length - 1;
+            showLinkModal.value = false;
+        };
+        const removeLink = (i) => {
+            form.value.links.splice(i, 1);
+            if (activeRelIndex.value === i) activeRelIndex.value = -1;
+            else if (activeRelIndex.value > i) activeRelIndex.value -= 1;
+        };
+        const toggleRelPicker = (i) => {
+            activeRelIndex.value = activeRelIndex.value === i ? -1 : i;
+            relInput.value = '';
+        };
+        const setRel = (i, name) => {
+            if (!form.value.links[i]) return;
+            form.value.links[i].rel = String(name || '').trim();
+            activeRelIndex.value = -1;
+            relInput.value = '';
+        };
+        const applyCustomRel = (i) => {
+            const name = relInput.value.trim();
+            if (!name) return;
+            setRel(i, name);
+        };
+        const revOf = (rel) => {
+            const hit = REL_PRESETS.find(p => p.name === rel);
+            return hit ? (hit.rev || '') : '';
+        };
+        /* 保存时给对方补反向关系：A 写「师父·B」→ B 的档案里补「徒弟·A」 */
+        const syncReverseLinks = (saved) => {
+            (saved.links || []).forEach(link => {
+                const target = linkChar(link.id);
+                if (!target) return;
+                const rev = revOf(link.rel);
+                if (!rev) return;
+                const links = Array.isArray(target.links) ? target.links.slice() : [];
+                const exist = links.find(l => String(l.id) === String(saved.id));
+                if (exist) {
+                    if (!exist.rel) exist.rel = rev;
+                } else {
+                    links.push({ id: String(saved.id), rel: rev, note: '' });
+                }
+                const idx = characters.value.indexOf(target);
+                const next = normalizeCharacter(Object.assign({}, target, { links }));
+                if (idx > -1) characters.value.splice(idx, 1, next);
             });
         };
 
@@ -238,6 +350,7 @@ const app = createApp({
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
             if (target === 'pet') showPetModal.value = false;
+            if (target === 'link') showLinkModal.value = false;
         };
 
         /* ------------------------------------------------------------- 同步 */
@@ -326,6 +439,10 @@ const app = createApp({
             factionColor, avatarChar, avatarColor,
             openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
             showPetModal, petSearchInput, filteredPets, togglePet, removePet, openPetModal,
+            /* 人物关系 */
+            showLinkModal, linkSearch, linkCandidates, linkChar, linkName, linkTitle,
+            openLinkModal, addLink, removeLink,
+            activeRelIndex, relInput, toggleRelPicker, setRel, applyCustomRel, REL_PRESETS,
             syncToGitHub, pullFromRepo
         };
     }

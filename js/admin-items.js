@@ -51,7 +51,8 @@ createApp({
             color: '',
             desc: '',
             obtain: [],
-            price: '',      // 联盟币价格，可留空
+            price: '',      // 价格数字，可留空
+            currency: ITEM_DEFAULT_CURRENCY,   // 价格货币，默认联盟币，可自定义
             origin: ''      // 原型 / 取材自（自由填写，默认空）
         });
 
@@ -63,21 +64,24 @@ createApp({
         const KINDS_KEY = 'vowmon_item_kinds';
         const GROUPS_KEY = 'vowmon_item_groups';
         const CATS_KEY = 'vowmon_item_categories';
+        const CURR_KEY = 'vowmon_item_currencies';
 
         const kinds = ref([]);
         const groups = ref([]);
         const categories = ref([]);
-        // 物品数据 + 自定义类型/分组/细分类 一起写进本机镜像，前台立刻可见
+        const currencies = ref([]);
+        // 物品数据 + 自定义类型/分组/细分类/货币 一起写进本机镜像，前台立刻可见
         const saveMirror = () => {
             if (!window.VowmonStore) return;
             VowmonStore.save('items', {
                 kinds: kinds.value,
                 groups: groups.value,
                 categories: categories.value,
+                currencies: currencies.value,
                 items: items.value
             });
         };
-        const pickQuery = ref({ kind: '', group: '', category: '' });
+        const pickQuery = ref({ kind: '', group: '', category: '', currency: '' });
         // 分组图标：选中的图标（新建分组时用它，已有分组时点一下直接改）
         const iconDraft = ref(ITEM_DEFAULT_GROUP_ICON);
         const groupIconPresets = ITEM_GROUP_ICONS;
@@ -99,9 +103,11 @@ createApp({
             localStorage.setItem(KINDS_KEY, JSON.stringify(kinds.value));
             localStorage.setItem(GROUPS_KEY, JSON.stringify(groups.value));
             localStorage.setItem(CATS_KEY, JSON.stringify(categories.value));
+            localStorage.setItem(CURR_KEY, JSON.stringify(currencies.value));
             setItemKinds(kinds.value);
             setItemGroups(groups.value);
             setItemCategories(categories.value);
+            setItemCurrencies(currencies.value);
             saveMirror();
         };
 
@@ -129,8 +135,21 @@ createApp({
                 ? storedCats.map(c => String(c).trim()).filter(Boolean)
                 : Array.from(new Set(items.value.map(it => it.category).filter(Boolean)));
 
+            // 货币：首次以 item-config 的内置表为准（默认联盟币）
+            const storedCurr = readStoredList(CURR_KEY);
+            const currSrc = storedCurr && storedCurr.length ? storedCurr : itemCurrencies;
+            const currList = Array.from(new Set(currSrc.map(c => String(c == null ? '' : c).trim()).filter(Boolean)));
+            // 物品里用过但列表里没有的货币（例如从仓库拉下来的新货币）先补回来，别把数据洗掉
+            items.value.forEach(it => {
+                const c = String(it.currency || '').trim() || ITEM_DEFAULT_CURRENCY;
+                if (!currList.includes(c)) currList.push(c);
+            });
+            if (!currList.includes(ITEM_DEFAULT_CURRENCY)) currList.unshift(ITEM_DEFAULT_CURRENCY);
+            currencies.value = currList.length ? currList : [ITEM_DEFAULT_CURRENCY];
+
             if (!kinds.value.length) kinds.value = ITEM_BUILTIN_KINDS.slice();
             if (!groups.value.length) groups.value = ITEM_BUILTIN_GROUPS.map(g => Object.assign({}, g));
+            if (!currencies.value.length) currencies.value = [ITEM_DEFAULT_CURRENCY];
 
             persistPickers();
         };
@@ -138,13 +157,13 @@ createApp({
         /* ------------------------------- 选择器交互 */
         const closePick = () => {
             activeDropdown.value = '';
-            pickQuery.value = { kind: '', group: '', category: '' };
+            pickQuery.value = { kind: '', group: '', category: '', currency: '' };
         };
 
         const togglePick = (name) => {
             if (activeDropdown.value === name) { closePick(); return; }
             activeDropdown.value = name;
-            pickQuery.value = { kind: '', group: '', category: '' };
+            pickQuery.value = { kind: '', group: '', category: '', currency: '' };
             if (name === 'group') iconDraft.value = getItemGroupIcon(form.value.group);
         };
 
@@ -162,6 +181,10 @@ createApp({
             const q = pickQuery.value.category.trim().toLowerCase();
             return categories.value.filter(c => matchQuery(c, q));
         });
+        const filteredCurrencies = computed(() => {
+            const q = pickQuery.value.currency.trim().toLowerCase();
+            return currencies.value.filter(c => matchQuery(c, q));
+        });
 
         const canCreateKind = computed(() => {
             const name = pickQuery.value.kind.trim();
@@ -175,9 +198,14 @@ createApp({
             const name = pickQuery.value.category.trim();
             return !!name && !categories.value.includes(name);
         });
+        const canCreateCurrency = computed(() => {
+            const name = pickQuery.value.currency.trim();
+            return !!name && !currencies.value.includes(name);
+        });
 
         const kindUsage = (name) => items.value.filter(it => it.kind === name).length;
         const groupUsage = (name) => items.value.filter(it => it.group === name).length;
+        const currencyUsage = (name) => items.value.filter(it => (it.currency || ITEM_DEFAULT_CURRENCY) === name).length;
 
         /* ------------------------------------- 类型 */
         const addKind = () => {
@@ -306,6 +334,49 @@ createApp({
             VowmonDialog.toast('细分类已移除', 'success');
         };
 
+        /* ------------------------------------- 货币 */
+        const addCurrency = () => {
+            const name = pickQuery.value.currency.trim();
+            if (!name) return;
+            if (!currencies.value.includes(name)) {
+                currencies.value = currencies.value.concat(name);
+                persistPickers();
+            }
+            form.value.currency = name;
+            closePick();
+        };
+
+        // 删除货币：用到它的物品回落到联盟币（基准货币不允许删除）
+        const removeCurrency = async (name) => {
+            if (name === ITEM_DEFAULT_CURRENCY) {
+                VowmonDialog.toast('联盟币是基准货币，不能删除', 'warning');
+                return;
+            }
+            if (currencies.value.length <= 1) {
+                VowmonDialog.toast('至少要保留一种货币', 'warning');
+                return;
+            }
+            const used = currencyUsage(name);
+            const label = VowmonDialog.esc(name);
+            const ok = await VowmonDialog.confirm(
+                used
+                    ? `「${label}」还被 <strong>${used}</strong> 个物品使用，删除后这些物品的价格会改回联盟币。`
+                    : `确定删除货币「${label}」？`,
+                { type: 'danger', title: '删除货币', okText: '删除', html: true }
+            );
+            if (!ok) return;
+            if (used) {
+                items.value.forEach(it => {
+                    if ((it.currency || ITEM_DEFAULT_CURRENCY) === name) it.currency = ITEM_DEFAULT_CURRENCY;
+                });
+                saveLocal();
+            }
+            currencies.value = currencies.value.filter(c => c !== name);
+            if (form.value.currency === name) form.value.currency = ITEM_DEFAULT_CURRENCY;
+            persistPickers();
+            VowmonDialog.toast('货币已删除', 'success');
+        };
+
         /* -------------------------------------------------------------- 规整 */
         const normalizeItems = (list) => (list || []).map(raw => {
             const item = Object.assign({}, raw);
@@ -320,6 +391,7 @@ createApp({
             item.desc = String(item.desc || '').trim();
             item.origin = String(item.origin || '').trim();
             item.price = item.price == null ? '' : String(item.price).trim();
+            item.currency = String(item.currency || '').trim() || ITEM_DEFAULT_CURRENCY;
             item.obtain = Array.isArray(item.obtain)
                 ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                 : (item.obtain ? [String(item.obtain)] : []);
@@ -469,7 +541,8 @@ createApp({
             item.color = String(item.color || '').trim() || getItemFallbackColor(item);
             item.desc = String(item.desc || '').trim();
             item.origin = String(item.origin || '').trim();   // 原型 / 取材自，默认留空
-            item.price = String(item.price == null ? '' : item.price).trim();   // 联盟币价格，可留空
+            item.price = String(item.price == null ? '' : item.price).trim();   // 价格，可留空
+            item.currency = String(item.currency || '').trim() || ITEM_DEFAULT_CURRENCY;   // 价格货币
             item.obtain = String(obtainText.value || '')
                 .split('\n')
                 .map(line => line.trim())
@@ -554,6 +627,7 @@ createApp({
                 kinds: kinds.value,
                 groups: groups.value,
                 categories: categories.value,
+                currencies: currencies.value,
                 items: items.value
             }, null, 4) + '\n';
 
@@ -636,6 +710,7 @@ createApp({
                 localStorage.setItem(KINDS_KEY, JSON.stringify(bag.kinds || []));
                 localStorage.setItem(GROUPS_KEY, JSON.stringify(bag.groups || []));
                 localStorage.setItem(CATS_KEY, JSON.stringify(bag.categories || []));
+                localStorage.setItem(CURR_KEY, JSON.stringify(bag.currencies || []));
                 initPickers();
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + items.value.length + ' 件物品', 'success', { duration: 3200 });
             } catch (err) {
@@ -658,10 +733,11 @@ createApp({
             openEditor, saveItem, openDeleteConfirm, confirmDelete, closeModal,
             triggerIconUpload, handleIconUpload, resetIconFont,
             // 可自定义的类型 / 分组 / 细分类
-            kinds, groups, categories, pickQuery,
-            filteredKinds, filteredGroups, filteredCategories,
-            canCreateKind, canCreateGroup, canCreateCategory,
-            kindUsage, groupUsage,
+            kinds, groups, categories, currencies, pickQuery,
+            filteredKinds, filteredGroups, filteredCategories, filteredCurrencies,
+            canCreateKind, canCreateGroup, canCreateCategory, canCreateCurrency,
+            kindUsage, groupUsage, currencyUsage,
+            addCurrency, removeCurrency, ITEM_DEFAULT_CURRENCY,
             togglePick, closePick,
             addKind, removeKind, addGroup, removeGroup, addCategory, removeCategory,
             // 分组图标
