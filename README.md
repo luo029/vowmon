@@ -3,6 +3,9 @@
 Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。  
 纯静态站点，Vue 3 CDN 版驱动，GitHub Pages / Cloudflare Pages 托管。
 
+> **AI 速读入口**：给 AI 看的总纲文档是 [AI-GUIDE.md](AI-GUIDE.md)（项目速览 + 逐页手册 +
+> 御兽世界设定观 + 踩坑史 + 参考资料），新会话/新模型请先读它再读本文。
+
 ---
 
 ## ⚠️ 核心开发规范 (给 AI 的备忘录)
