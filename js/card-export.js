@@ -236,6 +236,9 @@
         opt.name = opt.name === '' ? '' : String(opt.name || '未命名');
         opt.badgeLabel = String(opt.badgeLabel || '');
         opt.badgeValue = String(opt.badgeValue == null ? '' : opt.badgeValue);
+        /* 编号：dexNo 主编号（训练家卡默认联盟编号），dexNo2 副编号（国际编号） */
+        opt.dexNo = String(opt.dexNo == null ? '' : opt.dexNo);
+        opt.dexNo2 = String(opt.dexNo2 == null ? '' : opt.dexNo2);
         opt.variant = opt.variant || 'pet';
         opt.fit = opt.fit === 'cover' ? 'cover' : 'contain';
         opt.types = Array.isArray(opt.types) ? opt.types.filter(Boolean).map(t => ({
@@ -682,18 +685,26 @@
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
 
-        /* 左上角：有标签就画小标签；没标签但有编号，则编号与卡名同行 */
+        /* 左上角：标签（训练家等）与编号可同排显示；编号默认联盟编号，dexNo2 为国际编号（灰色小一号） */
         let nx = left + 16;
         const nameBase = o.label ? 122 : 110;
         if (o.label) {
             setFont(ctx, 16, 900);
             ctx.fillStyle = hexA(accent, 0.95);
             ctx.fillText(o.label.toUpperCase(), left + 18, 70);
-        } else if (o.dexNo) {
+            nx = left + 18 + ctx.measureText(o.label.toUpperCase()).width + 14;
+        }
+        if (o.dexNo) {
             setNumFont(ctx, 30, 700);
             ctx.fillStyle = hexA(accent, 0.92);
             ctx.fillText(o.dexNo, nx, nameBase);
-            nx += ctx.measureText(o.dexNo).width + 16;
+            nx += ctx.measureText(o.dexNo).width + 14;
+            if (o.dexNo2) {
+                setNumFont(ctx, 20, 700);
+                ctx.fillStyle = 'rgba(23,29,36,0.45)';
+                ctx.fillText(o.dexNo2, nx, nameBase);
+                nx += ctx.measureText(o.dexNo2).width + 14;
+            }
         }
 
         /* 右上角信息组：异色星章 + 属性胶囊，对称并列、右对齐；
@@ -1046,7 +1057,7 @@
     async function render(opts) {
         const o = normalize(opts);
         const sample = [o.name, o.label, o.badgeValue, o.badgeLabel, o.desc, o.descLabel,
-            o.footLeft, o.footRight, o.dexNo,
+            o.footLeft, o.footRight, o.dexNo, o.dexNo2,
             o.ability ? (o.ability.tag + o.ability.name + o.ability.text) : '',
             o.info.map(r => r.label + r.value).join(' '),
             (o.stats || []).map(r => r.label + r.value).join(' '),
@@ -1192,6 +1203,7 @@
             { key: 'image', label: '图像', on: !!o.image },
             { key: 'types', label: '属性', on: !!o.types.length },
             { key: 'dexNo', label: '编号', on: !!o.dexNo },
+            ...(o.dexNo2 ? [{ key: 'dexNo2', label: '副编号（国际编号）', on: true }] : []),
             { key: 'name', label: '名字', on: !!o.name },
             { key: 'footRight', label: '右下角 VOWMON WIKI', on: !!o.footRight, footText: String(o.footRight || 'VOWMON WIKI') }
         ];
@@ -1225,6 +1237,7 @@
                 if (e.key === 'image' && !e.on) { cur.image = ''; cur.noPlaceholder = true; }
                 else if (e.key === 'types' && !e.on) cur.types = [];
                 else if (e.key === 'dexNo' && !e.on) cur.dexNo = '';
+                else if (e.key === 'dexNo2' && !e.on) cur.dexNo2 = '';
                 else if (e.key === 'name' && !e.on) cur.name = '';
                 else if (e.key === 'footRight') cur.footRight = e.on ? (e.footText || 'VOWMON WIKI') : '';
             });

@@ -45,6 +45,9 @@ function normalizeCharacter(c) {
     p.faction = String(p.faction == null ? '' : p.faction);
     p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
     p.position = String(p.position == null ? '' : p.position);
+    /* 联盟编号（默认展示，随联盟实力晋升变化）与国际编号（跨联盟通用，选填） */
+    p.leagueNo = String(p.leagueNo == null ? '' : p.leagueNo).trim();
+    p.intlNo = String(p.intlNo == null ? '' : p.intlNo).trim();
     p.money = Number(p.money) || 0;
     p.inventory = Array.isArray(p.inventory)
         ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : { name: String((it && it.name) || '').trim(), note: String((it && it.note) || '') }))
@@ -95,7 +98,7 @@ const app = createApp({
         const petSearchInput = ref('');
 
         const defaultForm = () => ({
-            id: '', name: '', title: '', faction: '', birthplace: '', position: '', money: 0,
+            id: '', name: '', title: '', faction: '', birthplace: '', position: '', leagueNo: '', intlNo: '', money: 0,
             inventory: [], petIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
             avatar: '', notes: '', milestones: []

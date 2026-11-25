@@ -34,6 +34,7 @@
         .cha-card .cc-top { background: linear-gradient(135deg, #185FA5 0%, #378ADD 100%); color: #fff; padding: 16px 18px 14px; position: relative; overflow: hidden; }
         .cha-card .cc-top::after { content: ''; position: absolute; right: -36px; top: -40px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,.12); }
         .cha-card .cc-name { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+        .cha-card .cc-no { position: absolute; right: 14px; top: 14px; z-index: 2; font-size: 11px; font-weight: 900; color: #fff; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.4); padding: 3px 10px; border-radius: 999px; }
         .cha-card .cc-title { margin-top: 5px; font-size: 11.5px; font-weight: 800; opacity: .85; }
         .cha-card .cc-body { padding: 13px 16px 15px; }
         .cha-card .cc-faction { font-size: 12.5px; font-weight: 800; color: #14538f; display: flex; align-items: center; gap: 6px; }
@@ -60,6 +61,11 @@
         .profile-top .pf-id { font-size: 11px; font-weight: 800; letter-spacing: .2em; opacity: .75; }
         .profile-top h1 { margin-top: 8px; font-size: 30px; font-weight: 900; letter-spacing: .04em; }
         .profile-top .pf-title { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); padding: 5px 14px; border-radius: 999px; }
+        /* 联盟 / 国际编号：随联盟配色，白字胶囊；编号反映人物在联盟里的实力晋升 */
+        .pf-no { margin-top: 8px; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; color: #fff; background: #8093a8; border: 1px solid rgba(255,255,255,.4); padding: 5px 14px; border-radius: 999px; }
+        .pf-no b { font-size: 14px; font-weight: 900; letter-spacing: .02em; }
+        .pf-no small { font-size: 10.5px; font-weight: 800; opacity: .8; }
+        .pf-no.gray { background: rgba(255,255,255,.14); border-style: dashed; }
         .profile-body { padding: 20px 24px 24px; }
         .profile-body .pf-money { display: flex; align-items: center; justify-content: space-between; background: #fffdf6; border: 1px solid #f2e6cf; border-radius: 14px; padding: 14px 18px; }
         .profile-body .pf-money .lbl { font-size: 11.5px; font-weight: 800; color: #a0aec0; letter-spacing: .08em; }
@@ -188,6 +194,15 @@
                         <h1>{{ cha.name }}</h1>
                         <span class="pf-title" v-if="cha.title"><i class="fa-solid fa-medal"></i> {{ cha.title }}</span>
                         <span class="pf-position" v-if="cha.position"><i class="fa-solid fa-id-badge"></i> {{ cha.position }}</span>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                            <span class="pf-no" v-if="cha.leagueNo" :style="{ background: leagueColor(cha.faction) }">
+                                <i class="fa-solid fa-flag"></i> 联盟编号 <b class="font-num">No.{{ cha.leagueNo }}</b>
+                                <small v-if="cha.faction">{{ cha.faction }}</small>
+                            </span>
+                            <span class="pf-no gray" v-if="cha.intlNo">
+                                <i class="fa-solid fa-globe"></i> 国际编号 <b class="font-num">No.{{ cha.intlNo }}</b>
+                            </span>
+                        </div>
                     </div>
                     <div class="profile-body">
                         <div class="pf-money">
@@ -342,6 +357,7 @@
                      :title="'点击查看 ' + c.name + ' 的详细档案'"
                      @click="gotoCharacter(c)">
                     <div class="cc-top">
+                        <span class="cc-no font-num" v-if="c.leagueNo" :style="{ background: leagueColor(c.faction) }" :title="c.faction ? c.faction + ' 联盟编号' : '联盟编号'">No.{{ c.leagueNo }}</span>
                         <div class="cc-name">{{ c.name }}</div>
                         <div class="cc-title" v-if="c.title"><i class="fa-solid fa-medal" style="margin-right:4px;"></i>{{ c.title }}</div>
                     </div>
@@ -374,7 +390,7 @@
 <script src="js/type-config.js?v=20261124"></script>
 <script src="js/site-config.js?v=20261124"></script>
 <script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126p"></script>
+<script src="js/card-export.js?v=20261126q"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
@@ -426,6 +442,9 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     : [];
                 p.position = String(p.position == null ? '' : p.position);
                 p.birthplace = String(p.birthplace == null ? '' : p.birthplace);
+                /* 联盟编号（默认展示）与国际编号（选填） */
+                p.leagueNo = String(p.leagueNo == null ? '' : p.leagueNo).trim();
+                p.intlNo = String(p.intlNo == null ? '' : p.intlNo).trim();
                 ['background', 'personality', 'relations', 'appearance', 'strength', 'avatar'].forEach(k => { p[k] = String(p[k] == null ? '' : p[k]); });
                 p.milestones = Array.isArray(p.milestones) ? p.milestones : [];
                 return p;
@@ -487,6 +506,9 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
                 return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
             };
+            /* 联盟配色：已知联盟用固定色，其他联盟按名字取稳定色——不同联盟编号颜色不同 */
+            const FACTION_COLORS = { '九牧联盟': '#2b6cb0', '荒野': '#2f855a' };
+            const leagueColor = (f) => FACTION_COLORS[f] || avatarColor(f);
             const charById = (id) => characters.value.find(c => String(c.id) === String(id)) || null;
             const linksOf = (c) => (c && Array.isArray(c.links) ? c.links : []);
             const trunc = (s, n) => {
@@ -606,7 +628,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 });
             });
 
-            /* 导出训练家卡（TCG 卡牌风格：立绘/精灵大图 + 身份 + 简介） */
+            /* 导出训练家卡（TCG 卡牌风格：立绘/精灵大图 + 编号 + 身份 + 简介） */
             const exportCard = () => {
                 const c = cha.value;
                 if (!c || !window.VowmonCard) return;
@@ -619,10 +641,8 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 window.VowmonCard.open({
                     label: '训练家',
                     name: c.name,
-                    badgeLabel: 'SAVINGS',
-                    badgeValue: fmtMoney(c.money),
                     types: [
-                        c.faction ? { name: c.faction, color: avatarColor(c.faction), icon: 'fa-solid fa-shield-halved' } : null,
+                        c.faction ? { name: c.faction, color: leagueColor(c.faction), icon: 'fa-solid fa-shield-halved' } : null,
                         c.birthplace ? { name: c.birthplace, color: '#8fa8bf', icon: 'fa-solid fa-location-dot' } : null
                     ].filter(Boolean),
                     image: (c.avatar ? getImgUrl(c.avatar) : '') || (chaPets.value[0] ? speciesImageOf(chaPets.value[0]) : ''),
@@ -631,9 +651,11 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     secLabels: { ability: '身份条', desc: '人物简介' },
                     desc: c.bio || '',
                     descLabel: '人物简介',
-                    accent: c.faction ? avatarColor(c.faction) : '#185FA5',
+                    accent: c.faction ? leagueColor(c.faction) : '#185FA5',
                     variant: 'trainer',
-                    dexNo: c.id ? 'ID ' + c.id : '',
+                    /* 编号：默认联盟编号（随联盟配色），有国际编号时作为副编号一并显示 */
+                    dexNo: c.leagueNo ? 'No.' + c.leagueNo : '',
+                    dexNo2: (c.leagueNo && c.intlNo) ? 'Intl.' + c.intlNo : (c.intlNo ? 'Intl.' + c.intlNo : ''),
                     footLeft: '',
                     footRight: 'VOWMON WIKI'
                 });
@@ -654,6 +676,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 fmtMoney, gotoIndividual, gotoCharacter, getImgUrl,
                 /* 关系 / 关系谱 */
                 linkRows, avatarColor, gotoCharacterById,
+                leagueColor,
                 viewMode, graphCenterId, graphCenter, graph, setGraphCenter,
                 exportCard
             };

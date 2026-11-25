@@ -234,6 +234,8 @@
                         <span class="m-unit">联盟币存款</span>
                     </div>
                     <div class="cha-chips">
+                        <span class="mini-chip" v-if="item.leagueNo" :style="{ background: factionColor(item.faction) }"><i class="fa-solid fa-id-badge"></i>联盟编号 No.{{ item.leagueNo }}</span>
+                        <span class="mini-chip" v-if="item.intlNo" style="background: #8093a8;"><i class="fa-solid fa-globe"></i>国际编号 No.{{ item.intlNo }}</span>
                         <span class="mini-chip" v-if="(item.petIds || []).length" style="background: #38a169;"><i class="fa-solid fa-paw"></i>{{ (item.petIds || []).length }} 只精灵</span>
                         <span class="mini-chip" v-if="(item.inventory || []).length" style="background: #4299e1;"><i class="fa-solid fa-suitcase"></i>{{ (item.inventory || []).length }} 件物品</span>
                         <span class="mini-chip plain" v-if="!(item.petIds || []).length && !(item.inventory || []).length">暂无精灵与物品</span>
@@ -296,6 +298,8 @@
                         </div>
                         <div class="form-group"><label>出生地区 <i class="tip" data-tip="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder="如：落霞城"></div>
                         <div class="form-group"><label>联盟职位 <i class="tip" data-tip="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder="盟主 / 戎枢 / 首座…"></div>
+                        <div class="form-group"><label>联盟编号 <i class="tip" data-tip="人物在所属联盟的注册编号，随实力晋升而变化；留空则不显示编号">?</i></label><input v-model="form.leagueNo" placeholder="如：007"></div>
+                        <div class="form-group"><label>国际编号 <i class="tip" data-tip="跨联盟通用的全球注册编号，选填；卡片编号默认显示联盟编号">?</i></label><input v-model="form.intlNo" placeholder="如：1024"></div>
                         <div class="form-group"><label>存款 <i class="tip" data-tip="联盟币">?</i></label><input type="text" inputmode="numeric" v-model.number="form.money" placeholder="0"></div>
                     </div>
                 </div>
@@ -467,6 +471,6 @@
 <script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/image-utils.js?v=20261124a"></script>
-<script src="../js/admin-characters.js?v=20261126b"></script>
+<script src="../js/admin-characters.js?v=20261126c"></script>
 </body>
 </html>
