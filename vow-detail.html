@@ -375,7 +375,7 @@
 <script src="js/type-chart.js?v=20261126s"></script>
 <script src="js/site-config.js?v=20261126s"></script>
 <script src="js/vowmon-utils.js?v=20261126s"></script>
-<script src="js/data-loader.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126w"></script>
 <script src="js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
@@ -494,11 +494,21 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
             const STAGE_RANK = { '一阶': { name: '初灵', color: '#8bc34a' }, '二阶': { name: '升灵', color: '#26a69a' }, '三阶': { name: '族尊', color: '#5c6bc0' } };
             const stageRank = computed(() => (vow.value && STAGE_RANK[vow.value.stage]) || { name: '', color: 'transparent' });
 
-            /* 天地图鉴类别（与 realm-dex.html 的 realms 定义对应） */
-            const REALM_LABELS = { legendary: '传说精灵', mythical: '梦幻精灵', starter: '初始精灵', late: '晚成精灵' };
+            /* 天地图鉴类别（与 realm-dex.html 的 realms 定义对应；中文名存 realm-data.json，后台可自定义） */
+            const DEFT_REALM_LABELS = { legendary: '权柄精灵', mythical: '遥世精灵', starter: '伙伴精灵', late: '晚熟精灵' };
+            const realmNameData = ref(Object.assign({}, DEFT_REALM_LABELS));
+            const applyRealmNames = (data) => {
+                if (data && data.labels && typeof data.labels === 'object') {
+                    for (const k in DEFT_REALM_LABELS) {
+                        realmNameData.value[k] = (data.labels[k] && String(data.labels[k]).trim()) || DEFT_REALM_LABELS[k];
+                    }
+                }
+            };
+            VowmonData.softReady(['realm']).then(applyRealmNames).catch(function () { /* ignore */ });
+            VowmonData.onChange('realm', applyRealmNames);
             const realmLabels = computed(() => {
                 const tags = vow.value && Array.isArray(vow.value.realmTags) ? vow.value.realmTags : [];
-                return tags.map(t => REALM_LABELS[t] || '').filter(Boolean).join(' · ');
+                return tags.map(t => realmNameData.value[t] || '').filter(Boolean).join(' · ');
             });
 
             /* ---------------- 特性 ---------------- */

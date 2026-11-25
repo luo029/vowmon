@@ -77,6 +77,11 @@
         lore: {
             file: 'lore-data.json', label: '页面内容',
             keys: { pages: 'allLorePages', blocks: 'allLoreBlocks' }
+        },
+        // 天地图鉴：四个类别（legendary/mythical/starter/late）的中文名与说明，后台可自定义
+        realm: {
+            file: 'realm-data.json', label: '天地图鉴',
+            keys: { labels: 'allRealmLabels', descs: 'allRealmDescs' }
         }
     };
 

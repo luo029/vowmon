@@ -835,6 +835,74 @@ createApp({
         };
 
         // 同步到多个仓库
+        /* ———— 天地图鉴 Tab：四个类别的中文名与说明可自定义（存数据仓库 realm-data.json） ———— */
+        const REALM_KEYS = [
+            { key: 'legendary', icon: 'fa-solid fa-crown', color: '#d4a017', tip: '族尊之上执掌权柄的精灵' },
+            { key: 'mythical', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0', tip: '幻兽' },
+            { key: 'starter', icon: 'fa-solid fa-seedling', color: '#48bb78', tip: '最初的搭档' },
+            { key: 'late', icon: 'fa-solid fa-hourglass-half', color: '#ed8936', tip: '准传说（最终种族值合计 600）' }
+        ];
+        const DEFT_REALM_LABELS = { legendary: '权柄精灵', mythical: '遥世精灵', starter: '伙伴精灵', late: '晚熟精灵' };
+        const DEFT_REALM_DESCS = {
+            legendary: '立于【族尊】之上（不含族尊）、执掌了权柄的精灵。它们统辖一方阶元，同族借其伟力，也背负整层的托举。',
+            mythical: '幻兽——如梦幻般稀有难寻的存在，传说之外的真实幻影，见之者寥寥。',
+            starter: '最初的搭档——御兽师旅途起点的那只精灵，陪伴契约的起点，也见证成长的每一步。',
+            late: '准传说——培养费劲、前期平平，但最终种族值合计 600 的大器晚成者。'
+        };
+        const realmLabels = ref(Object.assign({}, DEFT_REALM_LABELS));
+        const realmDescs = ref(Object.assign({}, DEFT_REALM_DESCS));
+        const isRealmSyncing = ref(false);
+        const applyRealmData = (data) => {
+            if (data && data.labels && typeof data.labels === 'object') {
+                for (const k in DEFT_REALM_LABELS) {
+                    realmLabels.value[k] = (data.labels[k] && String(data.labels[k]).trim()) || DEFT_REALM_LABELS[k];
+                }
+            }
+            if (data && data.descs && typeof data.descs === 'object') {
+                for (const k in DEFT_REALM_DESCS) {
+                    realmDescs.value[k] = (data.descs[k] && String(data.descs[k]).trim()) || DEFT_REALM_DESCS[k];
+                }
+            }
+        };
+        // 天地图鉴配置是可选增强数据：用 softReady 静默加载，失败就保持内置默认
+        VowmonData.softReady(['realm']).then(applyRealmData).catch(function () { /* ignore */ });
+        VowmonData.onChange('realm', applyRealmData);
+
+        // 保存天地图鉴配置（写本机镜像，前台立刻生效；「一键同步」后进仓库）
+        const saveRealm = () => {
+            for (const k in realmLabels.value) realmLabels.value[k] = String(realmLabels.value[k] || '').trim() || DEFT_REALM_LABELS[k];
+            if (window.VowmonStore) VowmonStore.save('realm', { labels: realmLabels.value, descs: realmDescs.value });
+            VowmonDialog.toast('天地图鉴配置已保存，前台即刻生效；记得一键同步进仓库', 'success');
+        };
+        // 天地图鉴配置同步到数据仓库
+        const syncRealm = async () => {
+            if (!config.value.token || !config.value.owner || !config.value.dataRepos) {
+                VowmonDialog.alert('请先在【同步配置】中填写信息。', { type: 'warning', title: '还没配置好', okText: '去配置' }).then(() => switchTab('settings'));
+                return;
+            }
+            isRealmSyncing.value = true;
+            try {
+                const jsonString = JSON.stringify({ labels: realmLabels.value, descs: realmDescs.value }, null, 4) + '\n';
+                const repos = config.value.dataRepos.split(',').map(s => s.trim()).filter(s => s);
+                for (const repo of repos) {
+                    await GitHubSync.uploadFile(
+                        config.value.token, config.value.owner, repo,
+                        'realm-data.json', jsonString, 'Admin Panel: Update realm data', false
+                    );
+                }
+                if (window.VowmonStore) VowmonStore.markSynced('realm');
+                VowmonDialog.toast('天地图鉴配置已同步到所有配置的仓库', 'success', { duration: 3200 });
+            } catch (error) {
+                VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
+                    type: 'danger',
+                    title: '同步失败',
+                    detail: error && error.message ? error.message : String(error)
+                });
+            } finally {
+                isRealmSyncing.value = false;
+            }
+        };
+
         const syncToGitHub = async () => {
             if (!config.value.token || !config.value.owner || !config.value.dataRepos) {
                 VowmonDialog.alert('请先在【同步配置】中填写信息。', {
@@ -923,6 +991,7 @@ createApp({
         return {
             currentTab, switchTab, vows, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
             imgSizeOptions, REALM_META, toggleRealm,
+            REALM_KEYS, realmLabels, realmDescs, isRealmSyncing, saveRealm, syncRealm,
             showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
             shinyFileInput, shinyInput, isShinyUploading, shinyProgress,

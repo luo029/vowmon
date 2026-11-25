@@ -141,7 +141,7 @@
 <script src="js/site-config.js?v=20261126s"></script>
 <script src="js/type-config.js?v=20261126s"></script>
 <script src="js/vowmon-utils.js?v=20261126s"></script>
-<script src="js/data-loader.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126w"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
 VowmonData.ready(['vows']).then(function () {
@@ -153,17 +153,42 @@ VowmonData.ready(['vows']).then(function () {
                 vows.value = VowmonUtils.normalizeAll((data && data.vows) || allVowsData);
             });
 
-            /* 四大分组定义（后台 REALM_META 与此对应，改文案要两处同步） */
-            const realms = [
-                { key: 'legendary', label: '传说精灵', en: 'Legendary Vowmon', icon: 'fa-solid fa-crown', color: '#d4a017',
-                  desc: '立于【族尊】之上（不含族尊）、执掌了权柄的精灵。它们统辖一方阶元，同族借其伟力，也背负整层的托举。' },
-                { key: 'mythical', label: '梦幻精灵', en: 'Mythical Vowmon', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0',
-                  desc: '幻兽——如梦幻般稀有难寻的存在，传说之外的真实幻影，见之者寥寥。' },
-                { key: 'starter', label: '初始精灵', en: 'Starter Vowmon', icon: 'fa-solid fa-seedling', color: '#48bb78',
-                  desc: '最初的搭档——御兽师旅途起点的那只精灵，陪伴契约的起点，也见证成长的每一步。' },
-                { key: 'late', label: '晚成精灵', en: 'Late-Bloomer', icon: 'fa-solid fa-hourglass-half', color: '#ed8936',
-                  desc: '准传说——培养费劲、前期平平，但最终种族值合计 600 的大器晚成者。' }
+            /* 四大分组（键名固定；中文名与说明存 realm-data.json，后台「天地图鉴」Tab 可自定义，改文案不用动代码） */
+            const DEFT_LABELS = { legendary: '权柄精灵', mythical: '遥世精灵', starter: '伙伴精灵', late: '晚熟精灵' };
+            const DEFT_DESCS = {
+                legendary: '立于【族尊】之上（不含族尊）、执掌了权柄的精灵。它们统辖一方阶元，同族借其伟力，也背负整层的托举。',
+                mythical: '幻兽——如梦幻般稀有难寻的存在，传说之外的真实幻影，见之者寥寥。',
+                starter: '最初的搭档——御兽师旅途起点的那只精灵，陪伴契约的起点，也见证成长的每一步。',
+                late: '准传说——培养费劲、前期平平，但最终种族值合计 600 的大器晚成者。'
+            };
+            const REALM_META = [
+                { key: 'legendary', en: 'Authority', icon: 'fa-solid fa-crown', color: '#d4a017' },
+                { key: 'mythical', en: 'Farrealm', icon: 'fa-solid fa-wand-magic-sparkles', color: '#b678e0' },
+                { key: 'starter', en: 'Partner', icon: 'fa-solid fa-seedling', color: '#48bb78' },
+                { key: 'late', en: 'Late-Bloomer', icon: 'fa-solid fa-hourglass-half', color: '#ed8936' }
             ];
+            const realmLabels = ref(Object.assign({}, DEFT_LABELS));
+            const realmDescs = ref(Object.assign({}, DEFT_DESCS));
+            const applyRealm = (data) => {
+                if (data && data.labels && typeof data.labels === 'object') {
+                    for (const k in DEFT_LABELS) {
+                        if (data.labels[k] && String(data.labels[k]).trim()) realmLabels.value[k] = String(data.labels[k]).trim();
+                        else realmLabels.value[k] = DEFT_LABELS[k];
+                    }
+                }
+                if (data && data.descs && typeof data.descs === 'object') {
+                    for (const k in DEFT_DESCS) {
+                        realmDescs.value[k] = (data.descs[k] && String(data.descs[k]).trim()) || DEFT_DESCS[k];
+                    }
+                }
+            };
+            VowmonData.softReady(['realm']).then(applyRealm).catch(function () { /* 没有配置文件就用内置默认 */ });
+            VowmonData.onChange('realm', applyRealm);
+
+            const realms = computed(() => REALM_META.map(m => Object.assign({}, m, {
+                label: realmLabels.value[m.key] || DEFT_LABELS[m.key],
+                desc: realmDescs.value[m.key] || DEFT_DESCS[m.key]
+            })));
 
             /* 按类别取精灵：realmTags 含该 key 的种族（一个精灵可同时属于多个分组） */
             const groupOf = (key) => vows.value.filter(v => Array.isArray(v.realmTags) && v.realmTags.includes(key));
