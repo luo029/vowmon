@@ -88,6 +88,11 @@
 
     // 两份数据的字段级差异（from → to 方向由调用方决定谁先传）
     function fieldChanges(a, b) {
+        // 数组值（如技能包里的技能列表）不做键拆分，整包一行显示
+        if (Array.isArray(a) || Array.isArray(b)) {
+            if (same(a, b)) return [];
+            return [{ field: '内容', from: fmt(a), to: fmt(b) }];
+        }
         var keys = {};
         var i;
         var ak = Object.keys(a || {}), bk = Object.keys(b || {});
@@ -505,6 +510,7 @@
     function describeValue(v) {
         if (v == null) return '';
         if (typeof v === 'string' || typeof v === 'number') return trunc(v, 80);
+        if (Array.isArray(v)) return fmt(v);
         if (typeof v !== 'object') return String(v);
         var parts = [];
         if (v.name) parts.push(String(v.name));
