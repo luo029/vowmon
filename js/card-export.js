@@ -1068,14 +1068,15 @@
         '.vwc-mask{position:fixed;inset:0;z-index:9999;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}',
         '.vwc-panel{background:#fff;border-radius:20px;box-shadow:0 24px 64px rgba(15,23,32,.35);display:flex;gap:20px;padding:22px;max-width:920px;width:100%;max-height:92vh;overflow:auto;}',
         '.vwc-preview{flex:1.2;min-width:0;display:flex;align-items:flex-start;justify-content:center;background:#f2f0ea;border-radius:14px;padding:14px;}',
-        '.vwc-preview canvas{max-width:100%;max-height:78vh;width:auto;height:auto;border-radius:14px;box-shadow:0 10px 28px rgba(15,23,32,.25);}',
-        '.vwc-side{flex:1;min-width:190px;display:flex;flex-direction:column;gap:12px;}',
-        '.vwc-title{font-size:17px;font-weight:900;color:#2d3748;display:flex;align-items:center;gap:8px;}',
+        '.vwc-preview canvas{max-width:100%;max-height:72vh;width:auto;height:auto;border-radius:14px;box-shadow:0 10px 28px rgba(15,23,32,.25);}',
+        '.vwc-side{flex:1;min-width:190px;min-height:0;display:flex;flex-direction:column;gap:12px;}',
+        '.vwc-title{font-size:17px;font-weight:900;color:#2d3748;display:flex;align-items:center;gap:8px;flex:none;}',
         '.vwc-title i{color:#d69e2e;}',
         '.vwc-sec{display:flex;flex-direction:column;gap:8px;}',
         '.vwc-sec-t{font-size:12px;font-weight:900;color:#a0aec0;letter-spacing:.06em;}',
         '.vwc-sec-body{display:flex;flex-direction:column;gap:14px;}',
-        '.vwc-scroll{max-height:56vh;overflow-y:auto;padding-right:4px;scrollbar-width:thin;}',
+        /* 选项区自适应占满剩余高度，下载/取消按钮始终钉在右侧底部，矮屏也不用滚动才能看到 */
+        '.vwc-scroll{flex:1 1 0;min-height:110px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;}',
         '.vwc-stylerow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1.5px solid #e3eaf2;border-radius:12px;font-size:14px;font-weight:700;color:#2d3748;}',
         '.vwc-color{width:46px;height:30px;border:none;border-radius:8px;background:none;cursor:pointer;padding:0;}',
         '.vwc-select{height:32px;border:1.5px solid #e3eaf2;border-radius:9px;background:#fff;font-size:13px;font-weight:700;color:#2d3748;padding:0 8px;outline:none;cursor:pointer;}',
@@ -1092,13 +1093,14 @@
         '.vwc-opt.on{border-color:#d69e2e;background:#fffaf0;}',
         '.vwc-opt i{width:16px;text-align:center;color:#d69e2e;font-size:13px;}',
         '.vwc-opt.off i{color:#cbd5e0;}',
-        '.vwc-btns{margin-top:auto;display:flex;flex-direction:column;gap:9px;}',
+        '.vwc-btns{flex:none;display:flex;flex-direction:column;gap:9px;}',
         '.vwc-btn{height:44px;border:none;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:filter .15s;}',
         '.vwc-btn.primary{background:linear-gradient(135deg,#f0b429,#d69e2e);color:#fff;box-shadow:0 6px 16px rgba(214,158,46,.4);}',
         '.vwc-btn.primary:hover{filter:brightness(1.06);}',
         '.vwc-btn.ghost{background:#f1f5f9;color:#4a5568;}',
         '.vwc-loading{color:#a0aec0;font-size:13px;font-weight:700;padding:30px 0;text-align:center;width:100%;}',
-        '@media (max-width:640px){.vwc-panel{flex-direction:column;padding:16px;}.vwc-side{min-width:0;}}'
+        /* 窄屏纵向排布：预览收矮、选项区限高，保证按钮尽量一屏可见 */
+        '@media (max-width:640px){.vwc-panel{flex-direction:column;padding:16px;overflow:auto;}.vwc-side{min-width:0;}.vwc-preview canvas{max-height:42vh;}.vwc-scroll{flex:none;max-height:38vh;}}'
     ].join('');
 
     function buildModal(onDownload) {
@@ -1315,6 +1317,10 @@
         ddBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             ddMenu.classList.toggle('open');
+            /* 打开下拉时若菜单底部被滚动区裁住，自动滚到刚好露出的位置 */
+            if (ddMenu.classList.contains('open')) {
+                requestAnimationFrame(() => ddMenu.scrollIntoView({ block: 'nearest' }));
+            }
         });
         document.addEventListener('click', closeDD);
         mask._cleanupDD = () => document.removeEventListener('click', closeDD);
