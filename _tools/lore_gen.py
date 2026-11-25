@@ -38,7 +38,7 @@ CLASS_ALLOW = {
     "bloodlines": {"blood-alias", "blood-stone", "blood-desc", "blood-tag",
                    "proto-chip", "motto-txt", "motto-sub", "origin-foot",
                    "rule-txt", "blood-row"},
-    "trainers": {"tr-lv", "pet-tag", "rule-txt", "table-note",
+    "trainers": {"tr-lv", "vow-tag", "rule-txt", "table-note",
                  "talent-txt", "method-name", "num", "method-tier"},
     "lore": {"hero-tag", "hero-sub", "hero-desc", "quote", "finale-sign", "hidden-hint",
              "seeds"},

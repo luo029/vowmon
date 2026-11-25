@@ -31,11 +31,11 @@
         .container { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
 
         /* ---------------- 左列：精灵展示台 ---------------- */
-        .pet-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .pet-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 15px; padding: 6px 14px; border-radius: 10px; letter-spacing: .04em; }
-        .pet-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; letter-spacing: .02em; }
-        .pet-name-bar .form-tag { font-size: 12px; font-weight: 800; color: #718096; background: #edf2f7; border-radius: 999px; padding: 4px 12px; }
-        .pet-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
+        .vow-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .vow-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 15px; padding: 6px 14px; border-radius: 10px; letter-spacing: .04em; }
+        .vow-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; letter-spacing: .02em; }
+        .vow-name-bar .form-tag { font-size: 12px; font-weight: 800; color: #718096; background: #edf2f7; border-radius: 999px; padding: 4px 12px; }
+        .vow-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
         .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
         .type-pill i { font-size: 10px; }
 
@@ -69,11 +69,11 @@
         @keyframes driftA { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-74px, 74px, 0); } }
         @keyframes driftB { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(76px, -38px, 0); } }
 
-        .pet-figure { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-        .pet-figure img { width: 310px; max-width: 76vw; height: 310px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.22)); animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
-        @keyframes petFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
+        .vow-figure { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+        .vow-figure img { width: 310px; max-width: 76vw; height: 310px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.22)); animation: vowFloat 3.2s ease-in-out infinite; will-change: transform; }
+        @keyframes vowFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
         /* 地面影子随浮动同步缩放，更像真的悬浮 */
-        .pet-shadow { width: 130px; height: 16px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.26) 0%, transparent 68%); animation: shadowPulse 3.2s ease-in-out infinite; }
+        .vow-shadow { width: 130px; height: 16px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.26) 0%, transparent 68%); animation: shadowPulse 3.2s ease-in-out infinite; }
         @keyframes shadowPulse { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.72); opacity: .55; } }
 
         .showcase .stage-actions { position: relative; z-index: 3; display: flex; justify-content: center; gap: 8px; padding: 0 0 16px; }
@@ -185,16 +185,16 @@
             .crumb-bar { flex-wrap: wrap; padding: 0 12px; }
             .neighbor-chip { max-width: 140px; }
             .showcase .stage { height: 330px; }
-            .pet-figure img { width: 255px; height: 255px; }
-            .pet-name-bar h1 { font-size: 21px; }
+            .vow-figure img { width: 255px; height: 255px; }
+            .vow-name-bar h1 { font-size: 21px; }
             .page-bg .blob.b1 { width: 380px; height: 380px; }
             .page-bg .blob.b2 { width: 420px; height: 420px; }
             .page-bg .blob.b3 { width: 360px; height: 360px; }
         }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125c" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126s" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -209,21 +209,21 @@
         <div class="dots"></div>
     </div>
 
-    <template v-if="pet">
+    <template v-if="vow">
         <!-- 顶部：返回 + 上/下一只 -->
         <div class="crumb-bar">
             <div class="crumb-left">
                 <a href="vowdex.html"><i class="fa-solid fa-table-cells-large"></i> 图鉴总览</a>
             </div>
             <div class="neighbor-nav">
-                <button class="neighbor-chip" :disabled="!prevPet" @click="gotoId(prevPet && prevPet.id)" title="上一只">
+                <button class="neighbor-chip" :disabled="!prevVow" @click="gotoId(prevVow && prevVow.id)" title="上一只">
                     <i class="fa-solid fa-chevron-left"></i>
-                    <img v-if="prevPet && prevPet.image" :src="getImgUrl(prevPet.image)" alt="">
-                    <span class="nc-txt"><span class="nc-id font-num">{{ prevPet ? prevPet.id : '' }}</span><span class="nc-name">{{ prevPet ? prevPet.name : '没有上一只' }}</span></span>
+                    <img v-if="prevVow && prevVow.image" :src="getImgUrl(prevVow.image)" alt="">
+                    <span class="nc-txt"><span class="nc-id font-num">{{ prevVow ? prevVow.id : '' }}</span><span class="nc-name">{{ prevVow ? prevVow.name : '没有上一只' }}</span></span>
                 </button>
-                <button class="neighbor-chip" :disabled="!nextPet" @click="gotoId(nextPet && nextPet.id)" title="下一只">
-                    <span class="nc-txt" style="align-items: flex-end;"><span class="nc-id font-num">{{ nextPet ? nextPet.id : '' }}</span><span class="nc-name">{{ nextPet ? nextPet.name : '没有下一只' }}</span></span>
-                    <img v-if="nextPet && nextPet.image" :src="getImgUrl(nextPet.image)" alt="">
+                <button class="neighbor-chip" :disabled="!nextVow" @click="gotoId(nextVow && nextVow.id)" title="下一只">
+                    <span class="nc-txt" style="align-items: flex-end;"><span class="nc-id font-num">{{ nextVow ? nextVow.id : '' }}</span><span class="nc-name">{{ nextVow ? nextVow.name : '没有下一只' }}</span></span>
+                    <img v-if="nextVow && nextVow.image" :src="getImgUrl(nextVow.image)" alt="">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
@@ -232,12 +232,12 @@
         <div class="container">
             <!-- 左列：展示台 -->
             <div>
-                <div class="pet-name-bar">
-                    <span class="id-badge font-num">{{ pet.id }}</span>
-                    <h1>{{ pet.name }}</h1>
-                    <span class="form-tag" v-if="pet.form">{{ pet.form }}</span>
+                <div class="vow-name-bar">
+                    <span class="id-badge font-num">{{ vow.id }}</span>
+                    <h1>{{ vow.name }}</h1>
+                    <span class="form-tag" v-if="vow.form">{{ vow.form }}</span>
                     <div class="type-icons">
-                        <span class="type-pill" v-for="t in pet.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
+                        <span class="type-pill" v-for="t in vow.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }"><i :class="getTypeIcon(t)"></i>{{ t }}</span>
                     </div>
                 </div>
 
@@ -247,12 +247,12 @@
                     <div class="shine"></div>
                     <span class="bubble" v-for="n in 7" :key="n" :style="bubbleStyle(n)"></span>
                     <div class="stage">
-                        <div class="pet-figure">
-                            <img :src="displayImg" :alt="pet.name" decoding="async">
-                            <div class="pet-shadow"></div>
+                        <div class="vow-figure">
+                            <img :src="displayImg" :alt="vow.name" decoding="async">
+                            <div class="vow-shadow"></div>
                         </div>
                     </div>
-                    <div class="stage-actions" v-if="pet.shiny && pet.shiny.length">
+                    <div class="stage-actions" v-if="vow.shiny && vow.shiny.length">
                         <button class="stage-btn" :class="{ active: !isShiny }" @click="isShiny = false"><i class="fa-solid fa-paw"></i> 普通</button>
                         <button class="stage-btn" :class="{ active: isShiny }" @click="isShiny = true"><i class="fa-solid fa-star"></i> 异色</button>
                     </div>
@@ -262,7 +262,7 @@
                     <h3><span><i class="fa-solid fa-book-open"></i> 图鉴记载</span>
                         <button class="card-share-btn" @click="exportCard"><i class="fa-solid fa-id-card"></i> 生成卡片</button>
                     </h3>
-                    <p>{{ pet.description || '这只精灵还没有留下任何图鉴记载……' }}</p>
+                    <p>{{ vow.description || '这只精灵还没有留下任何图鉴记载……' }}</p>
                 </div>
             </div>
 
@@ -282,14 +282,14 @@
                 <div class="info-card">
                     <h2><i class="fa-solid fa-circle-info"></i> 资料</h2>
                     <div class="info-grid">
-                        <div class="info-box" v-if="pet.stage"><div class="lbl">阶数</div><div class="val">{{ pet.stage }}</div></div>
-                        <div class="info-box" v-if="pet.form"><div class="lbl">形态</div><div class="val">{{ pet.form }}</div></div>
+                        <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }}</div></div>
+                        <div class="info-box" v-if="vow.form"><div class="lbl">形态</div><div class="val">{{ vow.form }}</div></div>
                         <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
                         <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
-                        <div class="info-box" v-if="pet.eggGroup"><div class="lbl">蛋组</div><div class="val">{{ pet.eggGroup }}</div></div>
-                        <div class="info-box" v-if="pet.rideable"><div class="lbl">可骑乘</div><div class="val">{{ pet.rideable }}</div></div>
+                        <div class="info-box" v-if="vow.eggGroup"><div class="lbl">蛋组</div><div class="val">{{ vow.eggGroup }}</div></div>
+                        <div class="info-box" v-if="vow.rideable"><div class="lbl">可骑乘</div><div class="val">{{ vow.rideable }}</div></div>
                     </div>
-                    <div class="origin-note" v-if="pet.origin"><b>原型参照（仅助记，非世界设定）</b>：{{ pet.origin }}</div>
+                    <div class="origin-note" v-if="vow.origin"><b>原型参照（仅助记，非世界设定）</b>：{{ vow.origin }}</div>
                 </div>
 
                 <!-- 特性 -->
@@ -327,7 +327,7 @@
                     <div class="evo-chain">
                         <template v-for="(n, i) in evoNodes" :key="n.id + i">
                             <span class="evo-arrow" v-if="i > 0"><i class="fa-solid fa-angle-right"></i></span>
-                            <div class="evo-node" :class="{ cur: n.id === pet.id }" @click="gotoId(n.id)">
+                            <div class="evo-node" :class="{ cur: n.id === vow.id }" @click="gotoId(n.id)">
                                 <img v-if="n.image" :src="getImgUrl(n.image)" :alt="n.name">
                                 <div class="e-name">{{ n.name }}</div>
                                 <div class="e-id font-num">{{ n.id }}</div>
@@ -337,7 +337,7 @@
                 </div>
 
                 <!-- 系别克制 -->
-                <div class="info-card" v-if="pet.types.length">
+                <div class="info-card" v-if="vow.types.length">
                     <h2><i class="fa-solid fa-scale-balanced"></i> 系别克制</h2>
                     <div class="chart-sub"><i class="fa-solid fa-bolt"></i> 本系进攻</div>
                     <template v-for="grp in attackGroups">
@@ -369,15 +369,15 @@
     </div>
 </div>
 
-<script src="js/type-config.js?v=20261124"></script>
-<script src="js/type-chart.js?v=20261124"></script>
-<script src="js/site-config.js?v=20261124"></script>
-<script src="js/vowmon-utils.js?v=20261125a"></script>
-<script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126r"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/type-chart.js?v=20261126s"></script>
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/vowmon-utils.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
+<script src="js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
-VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
+VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
 
     createApp({
         setup() {
@@ -387,19 +387,19 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
             const notFound = ref(false);
 
             // 精灵数据（本地镜像秒开；后台改动实时刷新；统一按编号升序）
-            const pets = ref(VowmonUtils.normalizeAll(allPetsData));
-            VowmonData.onChange('pets', (data) => {
-                pets.value = VowmonUtils.normalizeAll((data && data.pets) || allPetsData);
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', (data) => {
+                vows.value = VowmonUtils.normalizeAll((data && data.vows) || allVowsData);
             });
 
-            const pet = computed(() => pets.value.find(p => p.id === urlId) || null);
-            const petIndex = computed(() => pet.value ? pets.value.indexOf(pet.value) : -1);
-            const prevPet = computed(() => petIndex.value > 0 ? pets.value[petIndex.value - 1] : null);
-            const nextPet = computed(() => (petIndex.value > -1 && petIndex.value < pets.value.length - 1) ? pets.value[petIndex.value + 1] : null);
+            const vow = computed(() => vows.value.find(p => p.id === urlId) || null);
+            const vowIndex = computed(() => vow.value ? vows.value.indexOf(vow.value) : -1);
+            const prevVow = computed(() => vowIndex.value > 0 ? vows.value[vowIndex.value - 1] : null);
+            const nextVow = computed(() => (vowIndex.value > -1 && vowIndex.value < vows.value.length - 1) ? vows.value[vowIndex.value + 1] : null);
 
             const gotoId = (id) => {
                 if (!id) return;
-                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(id);
+                window.location.href = 'vow-detail.html?id=' + encodeURIComponent(id);
             };
 
             /* ---------------- 图片 ---------------- */
@@ -420,18 +420,18 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
 
             /* ---------------- 展示台：属性色背景 + 异色切换 ---------------- */
             const isShiny = ref(false);
-            watch(pet, () => { isShiny.value = false; });   // 切换精灵时回到普通形态
+            watch(vow, () => { isShiny.value = false; });   // 切换精灵时回到普通形态
             const displayImg = computed(() => {
-                if (!pet.value) return '';
-                if (isShiny.value && pet.value.shiny && pet.value.shiny.length) {
-                    return getImgUrl(pet.value.shiny[0]);
+                if (!vow.value) return '';
+                if (isShiny.value && vow.value.shiny && vow.value.shiny.length) {
+                    return getImgUrl(vow.value.shiny[0]);
                 }
-                return getImgUrl(pet.value.image);
+                return getImgUrl(vow.value.image);
             });
             // 背景渐变取第一个属性的颜色（浅色端由 CSS 固定）
             const showcaseStyle = computed(() => {
-                if (!pet.value || !pet.value.types.length) return {};
-                const c = getTypeColor(pet.value.types[0]);
+                if (!vow.value || !vow.value.types.length) return {};
+                const c = getTypeColor(vow.value.types[0]);
                 return { '--sc-c1': c + 'cc', '--sc-c2': c + '33' };
             });
 
@@ -465,19 +465,19 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 { key: 'spd', label: '速度', icon: 'fa-solid fa-wind', color: '#38a169' }
             ];
             const statLines = computed(() => {
-                if (!pet.value) return [];
-                const s = pet.value.stats || {};
+                if (!vow.value) return [];
+                const s = vow.value.stats || {};
                 return STAT_META.map(m => {
                     const value = Number(s[m.key]) || 0;
                     return { ...m, value, pct: Math.min(100, Math.round(value / 220 * 100)) };
                 });
             });
             const hasStats = computed(() => {
-                if (!pet.value) return false;
-                const s = pet.value.stats || {};
+                if (!vow.value) return false;
+                const s = vow.value.stats || {};
                 return STAT_META.some(m => (Number(s[m.key]) || 0) > 0);
             });
-            const statsTotal = computed(() => pet.value ? VowmonUtils.total(pet.value.stats) : 0);
+            const statsTotal = computed(() => vow.value ? VowmonUtils.total(vow.value.stats) : 0);
 
             /* ---------------- 基本信息 ---------------- */
             const fmtNum = (v, unit) => {
@@ -485,14 +485,14 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 const n = Number(v);
                 return isNaN(n) ? String(v) + ' ' + unit : n + ' ' + unit;
             };
-            const heightText = computed(() => pet.value ? fmtNum(pet.value.height, 'm') : '');
-            const weightText = computed(() => pet.value ? fmtNum(pet.value.weight, 'kg') : '');
+            const heightText = computed(() => vow.value ? fmtNum(vow.value.height, 'm') : '');
+            const weightText = computed(() => vow.value ? fmtNum(vow.value.weight, 'kg') : '');
 
             /* ---------------- 特性 ---------------- */
             const abilityRows = computed(() => {
-                if (!pet.value) return [];
+                if (!vow.value) return [];
                 const rows = [];
-                const p = pet.value;
+                const p = vow.value;
                 if (p.ability) rows.push({ name: p.ability, effect: p.abilityEffect, cls: 'normal', icon: 'fa-solid fa-crown', tag: '特性', tagColor: '#2b6cb0' });
                 if (p.ability2) rows.push({ name: p.ability2, effect: p.ability2Effect, cls: 'alt', icon: 'fa-solid fa-crown', tag: '特性', tagColor: '#38a169' });
                 if (p.hiddenAbility) rows.push({ name: p.hiddenAbility, effect: p.hiddenAbilityEffect, cls: 'hidden', icon: 'fa-solid fa-gem', tag: '隐藏特性', tagColor: '#b7791f' });
@@ -501,8 +501,8 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
 
             /* ---------------- 血脉技能（按种族属性匹配） ---------------- */
             const bloodlineSkillRows = computed(() => {
-                if (!pet.value) return [];
-                const fam = String((pet.value.taxonomy && pet.value.taxonomy.family) || '');
+                if (!vow.value) return [];
+                const fam = String((vow.value.taxonomy && vow.value.taxonomy.family) || '');
                 const families = (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData && typeof allBloodlineFamiliesData === 'object') ? allBloodlineFamiliesData : {};
                 if (fam && families[fam] && Array.isArray(families[fam].skills)) {
                     return families[fam].skills.map((s, i) => ({
@@ -511,29 +511,29 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                         note: String(families[fam].zun || '族尊授予')
                     }));
                 }
-                const types = (pet.value.types || []).map(t => String(t));
+                const types = (vow.value.types || []).map(t => String(t));
                 const all = (typeof allBloodlineSkillsData !== 'undefined' && Array.isArray(allBloodlineSkillsData)) ? allBloodlineSkillsData : [];
                 return all.filter(s => types.includes(String(s.type || ''))).map(s => ({
                     id: String(s.id || s.name), name: String(s.name || ''), type: String(s.type || ''), note: String(s.note || '')
                 }));
             });
             const taxonomyRows = computed(() => {
-                if (!pet.value || !pet.value.taxonomy) return [];
+                if (!vow.value || !vow.value.taxonomy) return [];
                 return [
                     ['域', 'domain'], ['界', 'kingdom'], ['门', 'phylum'], ['纲', 'class'],
                     ['目', 'order'], ['科', 'family'], ['属', 'genus'], ['种', 'species']
-                ].filter(([label, key]) => pet.value.taxonomy[key]).map(([label, key]) => ({ label, value: String(pet.value.taxonomy[key]) }));
+                ].filter(([label, key]) => vow.value.taxonomy[key]).map(([label, key]) => ({ label, value: String(vow.value.taxonomy[key]) }));
             });
 
             /* ---------------- 进化链 ---------------- */
-            const petById = computed(() => {
+            const vowById = computed(() => {
                 const m = new Map();
-                pets.value.forEach(p => m.set(p.id, p));
+                vows.value.forEach(p => m.set(p.id, p));
                 return m;
             });
             const evoNodes = computed(() => {
-                if (!pet.value) return [];
-                const p = pet.value;
+                if (!vow.value) return [];
+                const p = vow.value;
                 const seen = new Set();
                 const nodes = [];
                 const pushUnique = (q) => {
@@ -546,7 +546,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 const collectUp = (node) => {
                     const fromIds = Array.isArray(node.evoFrom) ? node.evoFrom : [];
                     fromIds.forEach(id => {
-                        const q = petById.value.get(String(id));
+                        const q = vowById.value.get(String(id));
                         if (!q) return;
                         collectUp(q);
                         pushUnique(q);
@@ -558,7 +558,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                 const collectDown = (node) => {
                     const toIds = Array.isArray(node.evoTo) ? node.evoTo : [];
                     toIds.forEach(id => {
-                        const q = petById.value.get(String(id));
+                        const q = vowById.value.get(String(id));
                         if (!q) return;
                         pushUnique(q);
                         collectDown(q);
@@ -572,9 +572,9 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
             const fmtMul = (m) => m === 0 ? '×0' : ('×' + m);
             // 进攻：本系攻击 18 系的倍率（每种属性单独一组）
             const attackGroups = computed(() => {
-                if (!pet.value) return [];
+                if (!vow.value) return [];
                 const out = [];
-                pet.value.types.forEach(myType => {
+                vow.value.types.forEach(myType => {
                     const strong = [], weak = [], zero = [];
                     typeData.forEach(t => {
                         const m = getTypeMultiplier(myType, t.name);
@@ -590,10 +590,10 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
             });
             // 防守：18 系打过来的双系合成倍率
             const defendGroups = computed(() => {
-                if (!pet.value || !pet.value.types.length) return [];
+                if (!vow.value || !vow.value.types.length) return [];
                 const byMul = new Map();   // 倍率 -> [攻方属性]
                 typeData.forEach(t => {
-                    const m = getComboMultiplier(t.name, pet.value.types);
+                    const m = getComboMultiplier(t.name, vow.value.types);
                     if (m === 1) return;
                     if (!byMul.has(m)) byMul.set(m, []);
                     byMul.get(m).push(t.name);
@@ -609,7 +609,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
 
             /* 导出收藏卡（TCG 卡牌风格：大图 + 特性 + 图鉴） */
             const exportCard = () => {
-                const p = pet.value;
+                const p = vow.value;
                 if (!p || !window.VowmonCard) return;
                 const a = abilityRows.value[0];
                 const ability = a ? { tag: a.tag || '特性', name: a.name, text: a.effect || '' } : null;
@@ -624,7 +624,7 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
                     desc: p.description || '',
                     descLabel: '图鉴说明',
                     accent: (p.types && p.types.length) ? getTypeColor(p.types[0]) : '#4299e1',
-                    variant: 'pet',
+                    variant: 'vow',
                     shiny: !!isShiny.value,
                     dexNo: 'No.' + (p.id || '—'),
                     footLeft: '',
@@ -635,11 +635,11 @@ VowmonData.ready(['pets', 'bloodlineSkills']).then(function () {
             onMounted(() => {
                 updateBodyClass();
                 if (!urlId) notFound.value = true;
-                setTimeout(() => { if (urlId && !pet.value) notFound.value = true; }, 0);
+                setTimeout(() => { if (urlId && !vow.value) notFound.value = true; }, 0);
             });
 
             return {
-                pet, notFound, prevPet, nextPet, gotoId,
+                vow, notFound, prevVow, nextVow, gotoId,
                 getImgUrl, getTypeColor, getTypeIcon,
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,

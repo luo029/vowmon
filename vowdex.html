@@ -78,8 +78,8 @@
 
         /* 图鉴卡片网格 */
         .vowdex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .pet-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .pet-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #ff6b6b; z-index: 2; position: relative; }
+        .vow-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .vow-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #ff6b6b; z-index: 2; position: relative; }
 
         .card-top { position: relative; display: flex; justify-content: center; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #f0f4f8; background: #fdfdfd; }
         .card-top .id { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #a0aec0; }
@@ -87,7 +87,7 @@
 
         .card-img { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background: #fafbfc; min-height: 130px; }
         .card-img img { width: 100%; max-height: 110px; object-fit: contain; transition: transform 0.2s, opacity 0.25s; }
-        .pet-card:hover .card-img img { transform: scale(1.1); }
+        .vow-card:hover .card-img img { transform: scale(1.1); }
 
         /* 异色：有异色图的卡片，悬停不再放大，而是淡出普通图、淡入异色图 */
         .card-img .shiny {
@@ -97,10 +97,10 @@
             max-height: none; display: block;
             object-fit: contain; opacity: 0; z-index: 1;
         }
-        .pet-card.has-shiny:hover .card-img img { transform: none; }
+        .vow-card.has-shiny:hover .card-img img { transform: none; }
         /* 普通图淡出，避免异色图（可能是透明底）下面还透着原图 */
-        .pet-card.has-shiny:hover .card-img .base { opacity: 0; }
-        .pet-card.has-shiny:hover .card-img .shiny { opacity: 1; }
+        .vow-card.has-shiny:hover .card-img .base { opacity: 0; }
+        .vow-card.has-shiny:hover .card-img .shiny { opacity: 1; }
 
         .card-bottom { padding: 10px; display: flex; justify-content: center; gap: 6px; border-top: 1px dashed #f0f4f8; }
         .card-bottom .type-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 12px; }
@@ -118,8 +118,8 @@
 
         /* 动画全局开关类 */
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
-        .no-anim .pet-card:hover { transform: none; box-shadow: none; border-color: #e2e8f0; }
-        .no-anim .pet-card:hover .card-img img { transform: none; }
+        .no-anim .vow-card:hover { transform: none; box-shadow: none; border-color: #e2e8f0; }
+        .no-anim .vow-card:hover .card-img img { transform: none; }
 
         @media (max-width: 900px) {
             .nav-links { position: static; transform: none; margin: 0 10px; }
@@ -131,9 +131,9 @@
             .vowdex-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125c" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126s" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -143,7 +143,7 @@
     <div class="container">
         <div class="header">
             <div>
-                <h2>精灵图鉴 <span class="count font-num">{{ filteredPets.length }} 种形态</span></h2>
+                <h2>精灵图鉴 <span class="count font-num">{{ filteredVows.length }} 种形态</span></h2>
             </div>
             <div class="view-toggle">
                 <a href="#" class="active">图鉴</a>
@@ -219,31 +219,31 @@
         </div>
 
         <!-- 卡片网格 -->
-        <div class="vowdex-grid" v-if="paginatedPets.length > 0">
-            <div class="pet-card" :class="{ 'has-shiny': hasShiny(pet) }" v-for="pet in paginatedPets" :key="pet.id"
-                 :title="'点击查看 ' + pet.name + ' 的图鉴详情'"
-                 @click="gotoDetail(pet)"
-                 @mouseenter="startShiny(pet)" @mouseleave="stopShiny(pet)">
+        <div class="vowdex-grid" v-if="paginatedVows.length > 0">
+            <div class="vow-card" :class="{ 'has-shiny': hasShiny(vow) }" v-for="vow in paginatedVows" :key="vow.id"
+                 :title="'点击查看 ' + vow.name + ' 的图鉴详情'"
+                 @click="gotoDetail(vow)"
+                 @mouseenter="startShiny(vow)" @mouseleave="stopShiny(vow)">
                 <div class="card-top">
-                    <span class="id font-num">{{ pet.id }}</span>
-                    <span class="name">{{ pet.name }}</span>
+                    <span class="id font-num">{{ vow.id }}</span>
+                    <span class="name">{{ vow.name }}</span>
                 </div>
                 <div class="card-img">
-                    <img class="base" :src="getImgUrl(pet.image)" :alt="pet.name" loading="lazy" decoding="async" fetchpriority="high">
-                    <img v-if="hasShiny(pet)" class="shiny" :src="shinySrc(pet)" :alt="pet.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
+                    <img class="base" :src="getImgUrl(vow.image)" :alt="vow.name" loading="lazy" decoding="async" fetchpriority="high">
+                    <img v-if="hasShiny(vow)" class="shiny" :src="shinySrc(vow)" :alt="vow.name + '（异色）'" loading="lazy" decoding="async" fetchpriority="low">
                 </div>
                 <div class="card-bottom">
-                    <span class="type-icon" v-for="t in pet.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
+                    <span class="type-icon" v-for="t in vow.types" :key="t" :style="{backgroundColor: getTypeColor(t)}" :title="t">
                         <i :class="getTypeIcon(t)"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div v-if="filteredPets.length === 0" class="empty-state">没有找到符合条件的精灵哦...</div>
+        <div v-if="filteredVows.length === 0" class="empty-state">没有找到符合条件的精灵哦...</div>
 
         <!-- 分页 -->
-        <div class="pagination" v-if="filteredPets.length > 0">
-            <div class="page-info">显示 <span class="font-num">{{ filteredPets.length ? startIndex + 1 : 0 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredPets.length }}</span> 条</div>
+        <div class="pagination" v-if="filteredVows.length > 0">
+            <div class="page-info">显示 <span class="font-num">{{ filteredVows.length ? startIndex + 1 : 0 }} - {{ endIndex }}</span> 条，共 <span class="font-num">{{ filteredVows.length }}</span> 条</div>
             <div class="page-buttons">
                 <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">上一页</button>
                 <button class="page-btn font-num" v-for="p in totalPages" :key="p" :class="{active: currentPage === p}" @click="currentPage = p">{{ p }}</button>
@@ -253,21 +253,21 @@
     </div>
 </div>
 
-<script src="js/site-config.js?v=20261124"></script>
-<script src="js/type-config.js?v=20261124"></script>
-<script src="js/vowmon-utils.js?v=20261125a"></script>
-<script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/vowmon-utils.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
-VowmonData.ready(['pets']).then(function () {
+VowmonData.ready(['vows']).then(function () {
 
     createApp({
         setup() {
             // 统一规整（补齐缺失字段），后台草稿里的半成品精灵也不会让整页崩掉
-            const pets = ref(VowmonUtils.normalizeAll(allPetsData));
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
             // 后台改了精灵数据 → 这里立刻刷新，不用刷新页面
-            VowmonData.onChange('pets', (data) => {
-                pets.value = VowmonUtils.normalizeAll((data && data.pets) || allPetsData);
+            VowmonData.onChange('vows', (data) => {
+                vows.value = VowmonUtils.normalizeAll((data && data.vows) || allVowsData);
             });
             const searchName = ref('');
             const filters = ref({ stage: [], form: [] });
@@ -299,7 +299,7 @@ VowmonData.ready(['pets']).then(function () {
 
             onMounted(() => {
                 updateBodyClass();
-                if (typeof allPetsData !== 'undefined') pets.value = VowmonUtils.normalizeAll(allPetsData);
+                if (typeof allVowsData !== 'undefined') vows.value = VowmonUtils.normalizeAll(allVowsData);
             });
 
             // 配置获取
@@ -326,67 +326,67 @@ VowmonData.ready(['pets']).then(function () {
             // 多张异色时，一直悬停会按顺序轮播。
             // 说明：这里故意不给异色图挂 @error——轮播会切换 src，切图瞬间浏览器可能
             // 抛出一次 abort 型 error，一旦据此判定"图坏了"就会把整只精灵的异色永久关掉。
-            const hasShiny = (pet) => Array.isArray(pet && pet.shiny) && pet.shiny.length > 0;
+            const hasShiny = (vow) => Array.isArray(vow && vow.shiny) && vow.shiny.length > 0;
 
-            const shinyPetId = ref('');   // 当前悬停中的精灵 id
+            const shinyVowId = ref('');   // 当前悬停中的精灵 id
             const shinyIdx = ref(0);      // 当前显示第几张异色
             let shinyTimer = null;
-            let shinyTimerPetId = '';
+            let shinyTimerVowId = '';
 
-            const shinySrc = (pet) => {
-                if (!hasShiny(pet)) return '';
-                const list = pet.shiny;
-                const i = shinyPetId.value === pet.id ? (shinyIdx.value % list.length) : 0;
+            const shinySrc = (vow) => {
+                if (!hasShiny(vow)) return '';
+                const list = vow.shiny;
+                const i = shinyVowId.value === vow.id ? (shinyIdx.value % list.length) : 0;
                 return getImgUrl(list[i]);
             };
 
-            // 传 pet 进来是为了区分「离开旧卡片」和「移到新卡片」：
+            // 传 vow 进来是为了区分「离开旧卡片」和「移到新卡片」：
             // 如果定时器已经被新卡片接管，就不要再被旧的 mouseleave 清掉。
-            const stopShiny = (pet) => {
-                if (pet && shinyTimerPetId && shinyTimerPetId !== pet.id) return;
+            const stopShiny = (vow) => {
+                if (vow && shinyTimerVowId && shinyTimerVowId !== vow.id) return;
                 if (shinyTimer) { clearInterval(shinyTimer); shinyTimer = null; }
-                shinyTimerPetId = '';
-                shinyPetId.value = '';
+                shinyTimerVowId = '';
+                shinyVowId.value = '';
                 shinyIdx.value = 0;
             };
 
-            const startShiny = (pet) => {
+            const startShiny = (vow) => {
                 stopShiny();
-                if (!hasShiny(pet)) return;
-                shinyPetId.value = pet.id;
+                if (!hasShiny(vow)) return;
+                shinyVowId.value = vow.id;
                 shinyIdx.value = 0;
                 // 关闭动画时不轮播，只固定显示第一张异色图
-                if (pet.shiny.length > 1 && isAnimOn.value) {
-                    shinyTimerPetId = pet.id;
+                if (vow.shiny.length > 1 && isAnimOn.value) {
+                    shinyTimerVowId = vow.id;
                     shinyTimer = setInterval(() => {
-                        shinyIdx.value = (shinyIdx.value + 1) % pet.shiny.length;
+                        shinyIdx.value = (shinyIdx.value + 1) % vow.shiny.length;
                     }, 1100);
                 }
             };
 
 
-            const gotoDetail = (pet) => {
-                if (!pet || !pet.id) return;
-                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(pet.id);
+            const gotoDetail = (vow) => {
+                if (!vow || !vow.id) return;
+                window.location.href = 'vow-detail.html?id=' + encodeURIComponent(vow.id);
             };
 
             // 计数逻辑
             const stageCounts = computed(() => {
                 const counts = { '一阶': 0, '二阶': 0, '三阶': 0 };
-                pets.value.forEach(p => { if(counts[p.stage] !== undefined) counts[p.stage]++; });
+                vows.value.forEach(p => { if(counts[p.stage] !== undefined) counts[p.stage]++; });
                 return counts;
             });
 
             const formCounts = computed(() => {
                 const counts = { '主形态': 0, '地区形态': 0, '首领形态': 0 };
-                pets.value.forEach(p => { if(counts[p.form] !== undefined) counts[p.form]++; });
+                vows.value.forEach(p => { if(counts[p.form] !== undefined) counts[p.form]++; });
                 return counts;
             });
 
             const typeCounts = computed(() => {
                 const counts = {};
                 typeData.forEach(t => counts[t.name] = 0);
-                pets.value.forEach(p => {
+                vows.value.forEach(p => {
                     p.types.forEach(t => { if(counts[t] !== undefined) counts[t]++; });
                 });
                 return counts;
@@ -411,15 +411,15 @@ VowmonData.ready(['pets']).then(function () {
             };
 
             // 核心过滤逻辑
-            const filteredPets = computed(() => {
-                return pets.value.filter(pet => {
-                    const matchName = pet.name.includes(searchName.value) || pet.id.includes(searchName.value);
-                    const matchStage = filters.value.stage.length === 0 || filters.value.stage.includes(pet.stage);
-                    const matchForm = filters.value.form.length === 0 || filters.value.form.includes(pet.form);
+            const filteredVows = computed(() => {
+                return vows.value.filter(vow => {
+                    const matchName = vow.name.includes(searchName.value) || vow.id.includes(searchName.value);
+                    const matchStage = filters.value.stage.length === 0 || filters.value.stage.includes(vow.stage);
+                    const matchForm = filters.value.form.length === 0 || filters.value.form.includes(vow.form);
                     
                     let matchType = true;
                     if (selectedTypes.value.length > 0) {
-                        matchType = selectedTypes.value.some(t => pet.types.includes(t));
+                        matchType = selectedTypes.value.some(t => vow.types.includes(t));
                     }
                     return matchName && matchStage && matchForm && matchType;
                 });
@@ -431,15 +431,15 @@ VowmonData.ready(['pets']).then(function () {
 
             watch([searchName, filters, selectedTypes], () => { currentPage.value = 1; }, { deep: true });
 
-            const totalPages = computed(() => Math.ceil(filteredPets.value.length / pageSize) || 1);
+            const totalPages = computed(() => Math.ceil(filteredVows.value.length / pageSize) || 1);
             const startIndex = computed(() => (currentPage.value - 1) * pageSize);
-            const endIndex = computed(() => Math.min(startIndex.value + pageSize, filteredPets.value.length));
-            const paginatedPets = computed(() => filteredPets.value.slice(startIndex.value, endIndex.value));
+            const endIndex = computed(() => Math.min(startIndex.value + pageSize, filteredVows.value.length));
+            const paginatedVows = computed(() => filteredVows.value.slice(startIndex.value, endIndex.value));
 
             return {
                 isAnimOn, toggleAnim,
                 searchName, filters, selectedTypes, typeData,
-                filteredPets, paginatedPets, currentPage, totalPages, startIndex, endIndex,
+                filteredVows, paginatedVows, currentPage, totalPages, startIndex, endIndex,
                 stageCounts, formCounts, typeCounts,
                 toggleType, toggleFilter, clearFilters,
                 getImgUrl, getTypeColor, getTypeIcon,

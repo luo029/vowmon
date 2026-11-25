@@ -128,7 +128,7 @@ function normalizeIndividual(v) {
     return p;
 }
 
-VowmonData.ready(['individuals', 'pets', 'characters', 'traits', 'natures', 'skills', 'bloodlineSkills'], { fresh: true }).then(function () {
+VowmonData.ready(['individuals', 'vows', 'characters', 'traits', 'natures', 'skills', 'bloodlineSkills'], { fresh: true }).then(function () {
 
 const app = createApp({
     setup() {
@@ -138,7 +138,7 @@ const app = createApp({
         /* ---------------------------------------------------------------- 数据 */
         const individuals = ref([]);
         const characters = ref([]);
-        const pets = ref([]);
+        const vows = ref([]);
         const isSyncing = ref(false);
 
         /* ---------------------------------------------------------------- 弹窗 */
@@ -191,16 +191,16 @@ const app = createApp({
             rules.forEach(([key, targets]) => {
                 const val = String(t[key] || '').trim();
                 if (!val) return;
-                const hit = pets.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
+                const hit = vows.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
                 if (!hit) return;
                 targets.forEach(k => { if (!String(t[k] || '').trim() && hit.taxonomy[k]) t[k] = hit.taxonomy[k]; });
             });
         });
 
         /* ------------------------------------------------------------- 工具 */
-        const petById = computed(() => {
+        const vowById = computed(() => {
             const m = new Map();
-            (pets.value || []).forEach(p => m.set(String(p.id), p));
+            (vows.value || []).forEach(p => m.set(String(p.id), p));
             return m;
         });
         const chaById = computed(() => {
@@ -208,7 +208,7 @@ const app = createApp({
             (characters.value || []).forEach(c => m.set(c.id, c));
             return m;
         });
-        const speciesOf = (id) => petById.value.get(String(id)) || null;
+        const speciesOf = (id) => vowById.value.get(String(id)) || null;
         const speciesLabel = (id) => {
             const s = speciesOf(id);
             return s ? (s.name + ' #' + s.id) : (id ? '#' + id : '未关联种族');
@@ -497,7 +497,7 @@ const app = createApp({
         /* --------------------------------------------------- 种族选择（单选） */
         const filteredSpecies = computed(() => {
             const kw = speciesSearchInput.value.trim().toLowerCase();
-            let pool = (pets.value || []).filter(p => p.name)
+            let pool = (vows.value || []).filter(p => p.name)
                 .map(p => ({ id: String(p.id), name: String(p.name), img: p.image ? getImgUrl(p.image) : '' }));
             if (kw) {
                 pool = pool.filter(p => p.name.toLowerCase().includes(kw) || p.id.includes(kw));
@@ -505,18 +505,18 @@ const app = createApp({
             return pool.slice(0, 120);
         });
         /* 种族自带唯一特性时（ability 字段 / 图鉴特性绑定），选完种族直接自动填上 */
-        const traitsForSpecies = (pet) => {
-            if (!pet) return [];
-            const found = [pet.ability, pet.ability2, pet.hiddenAbility].filter(Boolean).map(String);
+        const traitsForSpecies = (vow) => {
+            if (!vow) return [];
+            const found = [vow.ability, vow.ability2, vow.hiddenAbility].filter(Boolean).map(String);
             allTraits.forEach(t => {
                 const binds = (Array.isArray(t.pokemons) ? t.pokemons : []).concat(Array.isArray(t.hiddenPokemons) ? t.hiddenPokemons : []);
-                if (binds.includes(pet.name) && t.name) found.push(String(t.name));
+                if (binds.includes(vow.name) && t.name) found.push(String(t.name));
             });
             return Array.from(new Set(found.map(n => n.trim()).filter(Boolean)));
         };
-        const pickSpecies = (pet) => {
-            form.value.speciesId = pet.id;
-            const auto = traitsForSpecies(pet);
+        const pickSpecies = (vow) => {
+            form.value.speciesId = vow.id;
+            const auto = traitsForSpecies(vow);
             if (auto.length === 1 && !form.value.traits.includes(auto[0])) {
                 form.value.traits.push(auto[0]);
                 VowmonDialog.toast('已自动填入该种族的特性：' + auto[0], 'success', { duration: 2200 });
@@ -638,7 +638,7 @@ const app = createApp({
                     individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(normalizeIndividual);
                 }
                 characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(c => Object.assign({}, c));
-                pets.value = (typeof allPetsData !== 'undefined' && allPetsData) || [];
+                vows.value = (typeof allVowsData !== 'undefined' && allVowsData) || [];
             } catch (err) {
                 console.error('御兽精灵档案初始化失败', err);
             }

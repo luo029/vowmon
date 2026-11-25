@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
         <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
 </head>
 <body>
 <div id="app" v-cloak>
@@ -150,16 +150,16 @@
             <div class="selection-list">
                 <div
                     class="selection-item"
-                    v-for="pet in paginatedPokemons"
-                    :key="pet.id"
-                    :style="isPokemonPicked(pet) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
-                    @click="togglePokemonSelect(pet)"
+                    v-for="vow in paginatedPokemons"
+                    :key="vow.id"
+                    :style="isPokemonPicked(vow) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
+                    @click="togglePokemonSelect(vow)"
                 >
                     <div class="item-name">
-                        <i class="fa-solid" :class="isPokemonPicked(pet) ? 'fa-square-check' : 'fa-square'" :style="isPokemonPicked(pet) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
-                        {{ pet.name }}
+                        <i class="fa-solid" :class="isPokemonPicked(vow) ? 'fa-square-check' : 'fa-square'" :style="isPokemonPicked(vow) ? 'color:#4299e1;' : 'color:#cbd5e0;'"></i>
+                        {{ vow.name }}
                     </div>
-                    <div class="item-desc">#{{ pet.id }}</div>
+                    <div class="item-desc">#{{ vow.id }}</div>
                 </div>
                 <div v-if="paginatedPokemons.length === 0" class="empty-state">没有找到相关精灵</div>
             </div>
@@ -178,12 +178,12 @@
 
 </div>
 
-<script src="../js/site-config.js?v=20261124e"></script>
-<script src="../js/type-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261126c"></script>
-<script src="../js/github-api.js?v=20261124e"></script>
-<script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/admin-traits.js?v=20261124i"></script>
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261126s"></script>
+<script src="../js/github-api.js?v=20261126s"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/admin-traits.js?v=20261126s"></script>
 </body>
 </html>

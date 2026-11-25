@@ -1,5 +1,5 @@
 const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
-VowmonData.ready(['pets', 'traits'], { fresh: true }).then(function () {
+VowmonData.ready(['vows', 'traits'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -21,7 +21,7 @@ createApp({
                 // file:// 等受限环境下无法改写历史，忽略即可，标签切换本身不受影响
             }
         };
-        const pets = ref([]);
+        const vows = ref([]);
         // 特性库（traits-data.json），用于：① 特性候选池 ② 保存精灵时双向同步特性 ↔ 精灵关联
         const traits = ref([]);
         const showModal = ref(false);
@@ -41,12 +41,12 @@ createApp({
             image: '头像', id: '编号', name: '名称', types: '属性', typeIcon: '属性图标', stage: '阶数', form: '形态', ability: '特性',
             hp: 'HP', atk: '攻击', def: '防御', spAtk: '特攻', spDef: '特防', spd: '速度'
         };
-        // 显示列状态持久化：localStorage['vowmon_pets_visible_cols']
+        // 显示列状态持久化：localStorage['vowmon_vows_visible_cols']
         // 未存过 -> null（用下面这份默认列）；存过 -> 数组（可能是空数组，代表用户全取消）
-        const COLS_KEY = 'vowmon_pets_visible_cols';
+        const COLS_KEY = 'vowmon_vows_visible_cols';
         const loadVisibleCols = () => {
             try {
-                const raw = localStorage.getItem(COLS_KEY);
+                const raw = localStorage.getItem(COLS_KEY) || localStorage.getItem('vowmon_pets_visible_cols');
                 if (raw === null) return null;
                 const saved = JSON.parse(raw);
                 if (!Array.isArray(saved)) return null;
@@ -134,7 +134,7 @@ createApp({
             rules.forEach(([key, targets]) => {
                 const val = String(t[key] || '').trim();
                 if (!val) return;
-                const hit = pets.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
+                const hit = vows.value.find(p => p && p.taxonomy && String(p.taxonomy[key] || '').trim() === val);
                 if (!hit) return;
                 targets.forEach(k => {
                     if (!String(t[k] || '').trim() && hit.taxonomy[k]) t[k] = hit.taxonomy[k];
@@ -143,11 +143,11 @@ createApp({
         });
 
         onMounted(() => {
-            const storedData = localStorage.getItem('vowmon_pets_data');
+            const storedData = localStorage.getItem('vowmon_vows_data') || localStorage.getItem('vowmon_pets_data');
             if (storedData) {
-                pets.value = JSON.parse(storedData);
-            } else if (typeof allPetsData !== 'undefined') {
-                pets.value = JSON.parse(JSON.stringify(allPetsData));
+                vows.value = JSON.parse(storedData);
+            } else if (typeof allVowsData !== 'undefined') {
+                vows.value = JSON.parse(JSON.stringify(allVowsData));
             }
             const storedTraits = localStorage.getItem('vowmon_traits_data');
             if (storedTraits) {
@@ -177,14 +177,14 @@ createApp({
         });
 
         // 编号数字（取编号开头的数字，无数字的排最后）
-        const petIdNum = (p) => {
+        const vowIdNum = (p) => {
             const m = String((p && p.id) || '').trim().match(/^\d+/);
             return m ? parseInt(m[0], 10) : -1;
         };
 
-        // 分页数据：按编号从大到小排序后再切页（不改动 pets.value 本身的存储顺序）
-        const paginatedPets = computed(() => {
-            const sorted = pets.value.slice().sort((a, b) => petIdNum(b) - petIdNum(a));
+        // 分页数据：按编号从大到小排序后再切页（不改动 vows.value 本身的存储顺序）
+        const paginatedVows = computed(() => {
+            const sorted = vows.value.slice().sort((a, b) => vowIdNum(b) - vowIdNum(a));
             const start = (listPage.value - 1) * listPageSize;
             return sorted.slice(start, start + listPageSize);
         });
@@ -253,7 +253,7 @@ createApp({
                 traits.value.forEach(t => {
                     if (t && t.name && !map.has(t.name)) map.set(t.name, t.effect || '无说明');
                 });
-                pets.value.forEach(p => {
+                vows.value.forEach(p => {
                     if (p.ability && !map.has(p.ability)) map.set(p.ability, p.abilityEffect || '无说明');
                     if (p.ability2 && !map.has(p.ability2)) map.set(p.ability2, p.ability2Effect || '无说明');
                     if (p.hiddenAbility && !map.has(p.hiddenAbility)) map.set(p.hiddenAbility, p.hiddenAbilityEffect || '无说明');
@@ -261,7 +261,7 @@ createApp({
                 return Array.from(map.entries()).map(([key, desc]) => ({ key, desc }));
             } else {
                 const set = new Set();
-                pets.value.forEach(p => { if (p.eggGroup) set.add(p.eggGroup); });
+                vows.value.forEach(p => { if (p.eggGroup) set.add(p.eggGroup); });
                 return Array.from(set).map(key => ({ key, desc: '' }));
             }
         });
@@ -301,14 +301,14 @@ createApp({
         const evoSearchQuery = ref('');
         const evoSelection = ref([]);            // 弹窗内的临时多选
 
-        const petNameById = (id) => {
-            const p = pets.value.find(x => String(x.id) === String(id));
+        const vowNameById = (id) => {
+            const p = vows.value.find(x => String(x.id) === String(id));
             return p ? p.name : id;
         };
 
-        const filteredEvoPets = computed(() => {
+        const filteredEvoVows = computed(() => {
             const q = evoSearchQuery.value.trim();
-            const list = pets.value.filter(p => String(p.id || '') !== String(form.id || ''));
+            const list = vows.value.filter(p => String(p.id || '') !== String(form.id || ''));
             const matched = q ? list.filter(p => (p.name || '').includes(q) || String(p.id || '').includes(q)) : list;
             return matched.slice(0, 60);
         });
@@ -335,7 +335,7 @@ createApp({
             if (myId) {
                 const removed = oldIds.filter(id => !newIds.some(x => String(x) === String(id)));
                 const added = newIds.filter(id => !oldIds.some(x => String(x) === String(id)));
-                pets.value.forEach(p => {
+                vows.value.forEach(p => {
                     const pid = String(p.id || '');
                     if (!pid) return;
                     if (p[other] && !Array.isArray(p[other])) p[other] = [p[other]];
@@ -369,9 +369,9 @@ createApp({
         };
 
         const generateNextId = () => {
-            if (pets.value.length === 0) return '001';
+            if (vows.value.length === 0) return '001';
             let maxId = 0;
-            pets.value.forEach(p => {
+            vows.value.forEach(p => {
                 const match = String(p.id == null ? '' : p.id).trim().match(/^(\d+)/);
                 if (match) {
                     const num = parseInt(match[1], 10);
@@ -382,7 +382,7 @@ createApp({
         };
 
         const saveToLocal = () => {
-            localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+            localStorage.setItem('vowmon_vows_data', JSON.stringify(vows.value));
             localStorage.setItem('vowmon_site_config', JSON.stringify({ imgRepo: config.value.imgCdnBase }));
         };
 
@@ -401,15 +401,15 @@ createApp({
             VowmonDialog.toast('同步配置已保存', 'success');
         };
 
-        const openEditor = (pet = null) => {
+        const openEditor = (vow = null) => {
             // 列表是按编号排序展示的，索引一律按对象引用反查，避免换算错位
-            const index = pet ? pets.value.indexOf(pet) : -1;
-            isEdit.value = !!pet;
+            const index = vow ? vows.value.indexOf(vow) : -1;
+            isEdit.value = !!vow;
             editIndex.value = index;
             activeDropdown.value = '';
             
-            if (pet) {
-                Object.assign(form, defaultForm(), JSON.parse(JSON.stringify(pet)));
+            if (vow) {
+                Object.assign(form, defaultForm(), JSON.parse(JSON.stringify(vow)));
             } else {
                 Object.assign(form, defaultForm(), { id: generateNextId() });
             }
@@ -678,7 +678,7 @@ createApp({
             else if (target === 'selection') showSelectionModal.value = false;
         };
 
-        const savePet = async () => {
+        const saveVow = async () => {
             const id = String(form.id || '').trim();
             const name = String(form.name || '').trim();
             if (!id || !name) {
@@ -687,7 +687,7 @@ createApp({
             }
 
             // 编号唯一性校验（编辑时排除自己）
-            const dup = pets.value.find((p, i) => String(p.id || '').trim() === id && !(isEdit.value && i === editIndex.value));
+            const dup = vows.value.find((p, i) => String(p.id || '').trim() === id && !(isEdit.value && i === editIndex.value));
             if (dup) {
                 VowmonDialog.alert(`编号 <strong>${VowmonDialog.esc(id)}</strong> 已被「${VowmonDialog.esc(dup.name)}」占用，请换一个编号。`, {
                     type: 'warning',
@@ -710,20 +710,20 @@ createApp({
                 isSaving.value = false;
             }
 
-            const petData = JSON.parse(JSON.stringify(form));
-            if (!Array.isArray(petData.shiny)) petData.shiny = [];
-            petData.origin = String(petData.origin || '').trim();   // 原型 / 取材自，默认留空
+            const vowData = JSON.parse(JSON.stringify(form));
+            if (!Array.isArray(vowData.shiny)) vowData.shiny = [];
+            vowData.origin = String(vowData.origin || '').trim();   // 原型 / 取材自，默认留空
 
-            if (isEdit.value) pets.value[editIndex.value] = petData;
-            else pets.value.unshift(petData);
+            if (isEdit.value) vows.value[editIndex.value] = vowData;
+            else vows.value.unshift(vowData);
 
             saveToLocal();
             // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
-            if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
+            if (window.VowmonStore) VowmonStore.save('vows', { vows: vows.value });
             // 双向互通：把精灵的特性写回特性库（traits-data）——
             //   特性1/特性2 → 该特性的 pokemons；隐藏特性 → hiddenPokemons；
             //   精灵上已删掉的特性会从对应特性条目里移除；特性库里没有的自动创建
-            syncPetTraitsToTraitList(petData);
+            syncVowTraitsToTraitList(vowData);
             showModal.value = false;
         };
 
@@ -737,11 +737,11 @@ createApp({
             return 't' + String(max + 1).padStart(3, '0');
         };
 
-        const syncPetTraitsToTraitList = (petData) => {
-            const petName = petData.name;
-            if (!petName) return;
-            const normal = [petData.ability, petData.ability2].filter(n => n && String(n).trim());
-            const hidden = (petData.hiddenAbility && String(petData.hiddenAbility).trim()) ? [petData.hiddenAbility] : [];
+        const syncVowTraitsToTraitList = (vowData) => {
+            const vowName = vowData.name;
+            if (!vowName) return;
+            const normal = [vowData.ability, vowData.ability2].filter(n => n && String(n).trim());
+            const hidden = (vowData.hiddenAbility && String(vowData.hiddenAbility).trim()) ? [vowData.hiddenAbility] : [];
             const normalSet = new Set(normal);
             const hiddenSet = new Set(hidden);
             let changed = false;
@@ -754,15 +754,15 @@ createApp({
                 const shouldHidden = hiddenSet.has(t.name);
                 if (!shouldNormal && !shouldHidden) {
                     const before = t.pokemons.length + t.hiddenPokemons.length;
-                    t.pokemons = t.pokemons.filter(n => n !== petName);
-                    t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== petName);
+                    t.pokemons = t.pokemons.filter(n => n !== vowName);
+                    t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== vowName);
                     if (before !== t.pokemons.length + t.hiddenPokemons.length) changed = true;
                 } else if (shouldHidden) {
-                    if (!t.hiddenPokemons.includes(petName)) { t.hiddenPokemons.push(petName); changed = true; }
-                    if (t.pokemons.includes(petName)) { t.pokemons = t.pokemons.filter(n => n !== petName); changed = true; }
+                    if (!t.hiddenPokemons.includes(vowName)) { t.hiddenPokemons.push(vowName); changed = true; }
+                    if (t.pokemons.includes(vowName)) { t.pokemons = t.pokemons.filter(n => n !== vowName); changed = true; }
                 } else {
-                    if (!t.pokemons.includes(petName)) { t.pokemons.push(petName); changed = true; }
-                    if (t.hiddenPokemons.includes(petName)) { t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== petName); changed = true; }
+                    if (!t.pokemons.includes(vowName)) { t.pokemons.push(vowName); changed = true; }
+                    if (t.hiddenPokemons.includes(vowName)) { t.hiddenPokemons = t.hiddenPokemons.filter(n => n !== vowName); changed = true; }
                 }
             });
 
@@ -772,16 +772,16 @@ createApp({
                 traits.value.unshift({
                     id: nextTraitIdLocal(),
                     name,
-                    types: Array.isArray(petData.types) ? JSON.parse(JSON.stringify(petData.types)) : [],
-                    pokemons: isHidden ? [] : [petName],
-                    hiddenPokemons: isHidden ? [petName] : [],
+                    types: Array.isArray(vowData.types) ? JSON.parse(JSON.stringify(vowData.types)) : [],
+                    pokemons: isHidden ? [] : [vowName],
+                    hiddenPokemons: isHidden ? [vowName] : [],
                     effect: effect || ''
                 });
                 changed = true;
             };
-            ensureTrait(petData.ability, petData.abilityEffect, false);
-            ensureTrait(petData.ability2, petData.ability2Effect, false);
-            ensureTrait(petData.hiddenAbility, petData.hiddenAbilityEffect, true);
+            ensureTrait(vowData.ability, vowData.abilityEffect, false);
+            ensureTrait(vowData.ability2, vowData.ability2Effect, false);
+            ensureTrait(vowData.hiddenAbility, vowData.hiddenAbilityEffect, true);
 
             if (changed) {
                 localStorage.setItem('vowmon_traits_data', JSON.stringify(traits.value));
@@ -790,11 +790,11 @@ createApp({
         };
 
         // 删除逻辑：确认弹窗走统一的 VowmonDialog（js/dialog.js + css/dialog.css）
-        const openDeleteConfirm = (pet) => {
+        const openDeleteConfirm = (vow) => {
             // 列表按编号排序展示，删除索引按对象引用反查
-            const index = pets.value.indexOf(pet);
+            const index = vows.value.indexOf(vow);
             deleteTargetIndex.value = index;
-            deleteTargetName.value = pet ? pet.name : '';
+            deleteTargetName.value = vow ? vow.name : '';
             VowmonDialog.confirm(
                 `您确定要永久删除精灵 <strong>${VowmonDialog.esc(name)}</strong> 吗？此操作不可撤销。`,
                 { type: 'danger', title: '确认删除', okText: '确认删除', cancelText: '再想想', html: true }
@@ -805,12 +805,12 @@ createApp({
 
         const confirmDelete = () => {
             if (deleteTargetIndex.value > -1) {
-                pets.value.splice(deleteTargetIndex.value, 1);
-                if (pets.value.length > 0 && (listPage.value - 1) * listPageSize >= pets.value.length) {
+                vows.value.splice(deleteTargetIndex.value, 1);
+                if (vows.value.length > 0 && (listPage.value - 1) * listPageSize >= vows.value.length) {
                     listPage.value--;
                 }
                 saveToLocal();
-                if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
+                if (window.VowmonStore) VowmonStore.save('vows', { vows: vows.value });
                 VowmonDialog.toast('已删除', 'success');
             }
             deleteTargetIndex.value = -1;
@@ -828,7 +828,7 @@ createApp({
             }
             isSyncing.value = true;
             try {
-                const jsonString = JSON.stringify({ pets: pets.value }, null, 4) + '\n';
+                const jsonString = JSON.stringify({ vows: vows.value }, null, 4) + '\n';
                 
                 // 解析多个数据仓库
                 const repos = config.value.dataRepos.split(',').map(s => s.trim()).filter(s => s);
@@ -840,7 +840,7 @@ createApp({
                 }
                 
                 // 同步成功：本机镜像与云端一致，清掉「未同步」标记
-                if (window.VowmonStore) VowmonStore.markSynced('pets');
+                if (window.VowmonStore) VowmonStore.markSynced('vows');
                 VowmonDialog.toast('数据已成功同步到所有配置的仓库', 'success', { duration: 3200 });
             } catch (error) {
                 VowmonDialog.alert('同步失败，请检查 Token 权限和仓库名。', {
@@ -871,11 +871,11 @@ createApp({
             isSyncing.value = true;
             try {
                 const bag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'vow-data.json');
-                if (!bag || !Array.isArray(bag.pets)) throw new Error('仓库里没有 vow-data.json，或字段不是 pets 数组');
+                if (!bag || !Array.isArray(bag.vows)) throw new Error('仓库里没有 vow-data.json，或字段不是 vows 数组');
 
-                pets.value = JSON.parse(JSON.stringify(bag.pets));
-                localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
-                if (window.VowmonStore) VowmonStore.replace('pets', { pets: pets.value });
+                vows.value = JSON.parse(JSON.stringify(bag.vows));
+                localStorage.setItem('vowmon_vows_data', JSON.stringify(vows.value));
+                if (window.VowmonStore) VowmonStore.replace('vows', { vows: vows.value });
                 // 顺带刷新特性库（保持精灵 ↔ 特性关联一致）
                 try {
                     const tbag = await GitHubSync.downloadJson(config.value.token, config.value.owner, repo, 'traits-data.json');
@@ -890,7 +890,7 @@ createApp({
                     }
                 } catch (e) { /* traits-data 拉取失败不影响精灵数据 */ }
                 listPage.value = 1;
-                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + pets.value.length + ' 条精灵数据', 'success', { duration: 3200 });
+                VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + vows.value.length + ' 条精灵数据', 'success', { duration: 3200 });
             } catch (error) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
                     type: 'danger',
@@ -903,7 +903,7 @@ createApp({
         };
 
         return {
-            currentTab, switchTab, pets, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
+            currentTab, switchTab, vows, config, typeData, showModal, isEdit, form, isSyncing, isUploading, isSaving,
             imgSizeOptions,
             showToken, configFilledCount, resetDataBase, resetImgBase,
             activeDropdown, fileInput, previewImageUrl,
@@ -913,12 +913,12 @@ createApp({
             showSelectionModal, selectionType, selectionSearchQuery, selectionPage,
             filteredSelectionList, paginatedSelectionList,
             showEvoModal, evoTarget, evoSearchQuery, evoSelection,
-            petNameById, filteredEvoPets, openEvoModal, toggleEvoPick, confirmEvoModal, removeEvo,
-            listPage, listPageSize, paginatedPets,
+            vowNameById, filteredEvoVows, openEvoModal, toggleEvoPick, confirmEvoModal, removeEvo,
+            listPage, listPageSize, paginatedVows,
             deleteTargetName,
             closeModal,
             closeAllDropdowns, toggleDropdown, selectOption, openSelectionModal, selectFromModal,
-            openEditor, savePet, openDeleteConfirm, confirmDelete, saveConfig, syncToGitHub, pullFromRepo, toggleType, 
+            openEditor, saveVow, openDeleteConfirm, confirmDelete, saveConfig, syncToGitHub, pullFromRepo, toggleType, 
             triggerFileUpload, handleFileUpload, updatePreview, getThumbUrl, getTypeIcon, getTypeColor,
             window
         };

@@ -40,10 +40,10 @@
         .cha-card .cc-faction { font-size: 12.5px; font-weight: 800; color: #14538f; display: flex; align-items: center; gap: 6px; }
         .cha-card .cc-money { margin-top: 9px; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 900; color: #a3720b; }
         .cha-card .cc-money i { color: #d4a017; font-size: 12px; }
-        .cha-card .cc-pets { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; min-height: 34px; }
+        .cha-card .cc-vows { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; min-height: 34px; }
         .cha-card .cc-bio { margin-top: 9px; font-size: 12px; color: #718096; line-height: 1.75; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .cha-card .cc-pets img { width: 34px; height: 34px; object-fit: contain; background: #f4f7f9; border: 1px solid #e2e8f0; border-radius: 9px; padding: 2px; }
-        .cha-card .cc-pets .cc-none { font-size: 11px; color: #cbd5e0; font-weight: 700; align-self: center; }
+        .cha-card .cc-vows img { width: 34px; height: 34px; object-fit: contain; background: #f4f7f9; border: 1px solid #e2e8f0; border-radius: 9px; padding: 2px; }
+        .cha-card .cc-vows .cc-none { font-size: 11px; color: #cbd5e0; font-weight: 700; align-self: center; }
 
         /* 详情 */
         .crumb-bar { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -147,13 +147,13 @@
         .inv-empty { font-size: 12.5px; color: #a0aec0; font-weight: 700; }
 
         /* 持有精灵 */
-        .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-        .pet-card { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 14px; padding: 12px 12px 10px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
-        .pet-card:hover { transform: translateY(-2px); border-color: #ff6b6b; box-shadow: 0 6px 14px rgba(45,55,72,.12); }
-        .pet-card img { width: 72px; height: 72px; object-fit: contain; }
-        .pet-card .p-name { font-size: 13.5px; font-weight: 900; color: #2d3748; margin-top: 4px; }
-        .pet-card .p-stage { margin-top: 5px; display: inline-block; font-size: 10.5px; font-weight: 900; color: #fff; padding: 2px 10px; border-radius: 999px; }
-        .pet-card .p-lv { font-size: 10.5px; color: #a0aec0; margin-top: 3px; }
+        .vow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        .vow-card { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 14px; padding: 12px 12px 10px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+        .vow-card:hover { transform: translateY(-2px); border-color: #ff6b6b; box-shadow: 0 6px 14px rgba(45,55,72,.12); }
+        .vow-card img { width: 72px; height: 72px; object-fit: contain; }
+        .vow-card .p-name { font-size: 13.5px; font-weight: 900; color: #2d3748; margin-top: 4px; }
+        .vow-card .p-stage { margin-top: 5px; display: inline-block; font-size: 10.5px; font-weight: 900; color: #fff; padding: 2px 10px; border-radius: 999px; }
+        .vow-card .p-lv { font-size: 10.5px; color: #a0aec0; margin-top: 3px; }
 
         .empty-state { text-align: center; color: #a0aec0; padding: 60px 20px; font-weight: 700; background: #fff; border-radius: 18px; border: 1px solid #e8edf2; max-width: 720px; margin: 40px auto; }
         .empty-state i { font-size: 34px; display: block; margin-bottom: 14px; }
@@ -165,9 +165,9 @@
             .container { padding: 0 12px; }
         }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125c" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126s" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -228,9 +228,9 @@
                 </div>
 
                 <div class="info-card">
-                    <h2><i class="fa-solid fa-paw"></i> 持有精灵 <span class="total-badge font-num">{{ chaPets.length }} 只</span></h2>
-                    <div class="pet-grid" v-if="chaPets.length">
-                        <div class="pet-card" v-for="p in chaPets" :key="p.id"
+                    <h2><i class="fa-solid fa-paw"></i> 持有精灵 <span class="total-badge font-num">{{ chaVows.length }} 只</span></h2>
+                    <div class="vow-grid" v-if="chaVows.length">
+                        <div class="vow-card" v-for="p in chaVows" :key="p.id"
                              :title="'查看 ' + indName(p) + ' 的档案'"
                              @click="gotoIndividual(p.id)">
                             <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indName(p)">
@@ -365,11 +365,11 @@
                         <div class="cc-faction" v-if="c.faction"><i class="fa-solid fa-flag"></i> {{ c.faction }}</div>
                         <div class="cc-money font-num"><i class="fa-solid fa-coins"></i> {{ fmtMoney(c.money) }} 联盟币</div>
                         <div class="cc-bio" v-if="c.bio">{{ c.bio }}</div>
-                        <div class="cc-pets">
-                            <template v-for="p in petsPreview(c)" :key="p.id">
+                        <div class="cc-vows">
+                            <template v-for="p in vowsPreview(c)" :key="p.id">
                                 <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indName(p)" :title="indName(p)">
                             </template>
-                            <span class="cc-none" v-if="!petsPreview(c).length">暂无契约精灵</span>
+                            <span class="cc-none" v-if="!vowsPreview(c).length">暂无契约精灵</span>
                         </div>
                     </div>
                 </div>
@@ -387,13 +387,13 @@
     </div>
 </div>
 
-<script src="js/type-config.js?v=20261124"></script>
-<script src="js/site-config.js?v=20261124"></script>
-<script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126r"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
+<script src="js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
+VowmonData.ready(['characters', 'individuals', 'vows']).then(function () {
 
     /* 精灵等级八阶（与 individuals.html 保持一致） */
     const RANK_BANDS = [
@@ -420,7 +420,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
 
             const characters = ref([]);
             const individuals = ref([]);
-            const pets = ref([]);
+            const vows = ref([]);
             VowmonData.onChange('characters', (data) => {
                 characters.value = (data && data.characters) || allCharactersData || [];
             });
@@ -432,7 +432,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 p.inventory = Array.isArray(p.inventory)
                     ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : it)).filter(it => it && it.name)
                     : [];
-                p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String) : [];
+                p.vowIds = Array.isArray(p.vowIds) ? p.vowIds.map(String) : (Array.isArray(p.petIds) ? p.petIds.map(String) : []);
                 p.links = Array.isArray(p.links)
                     ? p.links.map(l => ({
                         id: String((l && (l.id || l.targetId)) || '').trim(),
@@ -451,7 +451,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
             };
             characters.value = (allCharactersData || []).map(normalize);
             individuals.value = (allIndividualsData || []).map(v => Object.assign({}, v));
-            pets.value = allPetsData || [];
+            vows.value = allVowsData || [];
 
             const cha = computed(() => characters.value.find(c => c.id === urlId) || null);
 
@@ -465,7 +465,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 return IMG_BASE + String(path).replace(/^\/+/, '');
             };
 
-            const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
+            const speciesOf = (p) => vows.value.find(s => String(s.id) === String(p.speciesId)) || null;
             const speciesImageOf = (p) => { const s = speciesOf(p); return s && s.image ? getImgUrl(s.image) : ''; };
             /* 昵称选填：没起昵称就直接叫种族名 */
             const indName = (p) => {
@@ -489,12 +489,12 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 individuals.value.forEach(p => m.set(String(p.id), p));
                 return m;
             });
-            const chaPets = computed(() => {
+            const chaVows = computed(() => {
                 if (!cha.value) return [];
-                return cha.value.petIds.map(id => indById.value.get(String(id))).filter(Boolean);
+                return cha.value.vowIds.map(id => indById.value.get(String(id))).filter(Boolean);
             });
             const inventory = computed(() => (cha.value && cha.value.inventory) || []);
-            const petsPreview = (c) => (c.petIds || []).slice(0, 4).map(id => indById.value.get(String(id))).filter(Boolean);
+            const vowsPreview = (c) => (c.vowIds || []).slice(0, 4).map(id => indById.value.get(String(id))).filter(Boolean);
 
             const fmtMoney = (n) => Number(n || 0).toLocaleString('zh-CN');
 
@@ -632,11 +632,11 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
             const exportCard = () => {
                 const c = cha.value;
                 if (!c || !window.VowmonCard) return;
-                const petNames = chaPets.value.slice(0, 6).map(p => indName(p)).join(' · ');
+                const vowNames = chaVows.value.slice(0, 6).map(p => indName(p)).join(' · ');
                 const ability = {
                     tag: '身份',
                     name: c.title || c.faction || '御兽训练家',
-                    text: (c.faction ? '所属势力：' + c.faction + '　' : '') + (petNames ? '持有精灵：' + petNames : '')
+                    text: (c.faction ? '所属势力：' + c.faction + '　' : '') + (vowNames ? '持有精灵：' + vowNames : '')
                 };
                 window.VowmonCard.open({
                     label: '训练家',
@@ -645,7 +645,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                         c.faction ? { name: c.faction, color: leagueColor(c.faction), icon: 'fa-solid fa-shield-halved' } : null,
                         c.birthplace ? { name: c.birthplace, color: '#8fa8bf', icon: 'fa-solid fa-location-dot' } : null
                     ].filter(Boolean),
-                    image: (c.avatar ? getImgUrl(c.avatar) : '') || (chaPets.value[0] ? speciesImageOf(chaPets.value[0]) : ''),
+                    image: (c.avatar ? getImgUrl(c.avatar) : '') || (chaVows.value[0] ? speciesImageOf(chaVows.value[0]) : ''),
                     ability: (ability.name || ability.text) ? ability : null,
                     sections: ['ability', 'desc'],
                     secLabels: { ability: '身份条', desc: '人物简介' },
@@ -653,7 +653,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                     descLabel: '人物简介',
                     accent: c.faction ? leagueColor(c.faction) : '#185FA5',
                     variant: 'trainer',
-                    /* 编号：默认联盟编号（随联盟配色），国际编号作为灰色副编号一并显示 */
+                    /* 编号：默认只显示联盟编号（随联盟配色）；国际编号走独立开关，默认不勾选 */
                     dexNo: c.leagueNo ? 'No.' + c.leagueNo : '',
                     dexNo2: c.intlNo ? 'Intl.' + c.intlNo : '',
                     footLeft: '',
@@ -671,7 +671,7 @@ VowmonData.ready(['characters', 'individuals', 'pets']).then(function () {
                 cha, notFound, loaded,
                 characters, filteredCharacters, factions,
                 searchName, filterFaction,
-                chaPets, inventory, petsPreview,
+                chaVows, inventory, vowsPreview,
                 speciesImageOf, stageName, stageColor, indName,
                 fmtMoney, gotoIndividual, gotoCharacter, getImgUrl,
                 /* 关系 / 关系谱 */

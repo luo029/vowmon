@@ -2,27 +2,27 @@
  * 精灵数据规整（前台通用）
  *
  * 后台草稿 / 云端数据里的精灵，字段可能不完整（没有 stats、types 是空数组等）。
- * 模板里直接写 pet.stats.hp，遇到缺字段的精灵会抛异常，
+ * 模板里直接写 vow.stats.hp，遇到缺字段的精灵会抛异常，
  * 结果就是**整页渲染失败变白屏**。所以统一在这里补齐默认值。
  */
 (function () {
     function normalize(p) {
-        const pet = Object.assign({}, p || {});
-        pet.id = String(pet.id == null ? '' : pet.id);
-        pet.name = String(pet.name == null ? '' : pet.name);
-        pet.types = Array.isArray(pet.types) ? pet.types : [];
-        pet.stage = pet.stage == null ? '' : String(pet.stage);
-        pet.form = pet.form == null ? '' : String(pet.form);
-        pet.shiny = Array.isArray(pet.shiny) ? pet.shiny : [];
-        pet.stats = (pet.stats && typeof pet.stats === 'object' && !Array.isArray(pet.stats))
-            ? pet.stats
+        const vow = Object.assign({}, p || {});
+        vow.id = String(vow.id == null ? '' : vow.id);
+        vow.name = String(vow.name == null ? '' : vow.name);
+        vow.types = Array.isArray(vow.types) ? vow.types : [];
+        vow.stage = vow.stage == null ? '' : String(vow.stage);
+        vow.form = vow.form == null ? '' : String(vow.form);
+        vow.shiny = Array.isArray(vow.shiny) ? vow.shiny : [];
+        vow.stats = (vow.stats && typeof vow.stats === 'object' && !Array.isArray(vow.stats))
+            ? vow.stats
             : {};
-        return pet;
+        return vow;
     }
 
     // 编号数字（取编号开头的数字；无数字的排最后）
-    function idNum(pet) {
-        const m = String(pet.id || '').trim().match(/^\d+/);
+    function idNum(vow) {
+        const m = String(vow.id || '').trim().match(/^\d+/);
         return m ? parseInt(m[0], 10) : Infinity;
     }
 

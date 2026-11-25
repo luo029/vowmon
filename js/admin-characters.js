@@ -5,7 +5,7 @@
      编辑 -> VowmonStore.save('characters', { characters }) 写本机镜像（前台立即生效）
           -> 点「一键同步」把 characters-data.json 推到 GitHub 数据仓库
      前台 characters.html 读取生效。
-   人物持有精灵通过 petIds 引用御兽精灵档案的 id。
+   人物持有精灵通过 vowIds 引用御兽精灵档案的 id。
    注意：模板里用到的每个方法/状态都必须在 setup 的 return 里
          （undefined 引用会让生产版渲染静默失效，表现为弹窗打不开/白屏）。
    ========================================================================== */
@@ -53,7 +53,7 @@ function normalizeCharacter(c) {
         ? p.inventory.map(it => (typeof it === 'string' ? { name: it, note: '' } : { name: String((it && it.name) || '').trim(), note: String((it && it.note) || '') }))
             .filter(it => it.name)
         : [];
-    p.petIds = Array.isArray(p.petIds) ? p.petIds.map(String).filter(Boolean) : [];
+    p.vowIds = Array.isArray(p.vowIds) ? p.vowIds.map(String).filter(Boolean) : (Array.isArray(p.petIds) ? p.petIds.map(String).filter(Boolean) : []);
     p.bio = String(p.bio == null ? '' : p.bio);
     p.background = String(p.background == null ? '' : p.background);
     p.personality = String(p.personality == null ? '' : p.personality);
@@ -94,12 +94,12 @@ const app = createApp({
         const isEdit = ref(false);
         const editIndex = ref(-1);
         const deleteTargetIndex = ref(-1);
-        const showPetModal = ref(false);
-        const petSearchInput = ref('');
+        const showVowModal = ref(false);
+        const vowSearchInput = ref('');
 
         const defaultForm = () => ({
             id: '', name: '', title: '', faction: '', birthplace: '', position: '', leagueNo: '', intlNo: '', money: 0,
-            inventory: [], petIds: [], links: [],
+            inventory: [], vowIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
             avatar: '', notes: '', milestones: []
         });
@@ -165,18 +165,18 @@ const app = createApp({
             (individuals.value || []).forEach(p => m.set(String(p.id), p));
             return m;
         });
-        const petMap = computed(() => {
+        const vowMap = computed(() => {
             const m = new Map();
-            (typeof allPetsData !== 'undefined' && Array.isArray(allPetsData) ? allPetsData : [])
+            (typeof allVowsData !== 'undefined' && Array.isArray(allVowsData) ? allVowsData : [])
                 .forEach(p => m.set(String(p.id), p));
             return m;
         });
         const speciesLabel = (id) => {
-            const s = petMap.value.get(String(id));
+            const s = vowMap.value.get(String(id));
             return s ? (s.name + ' #' + s.id) : (id ? '#' + id : '未关联种族');
         };
         const speciesImageOf = (p) => {
-            const s = petMap.value.get(String(p && p.speciesId));
+            const s = vowMap.value.get(String(p && p.speciesId));
             return s && s.image ? getImgUrl(s.image) : '';
         };
         /* 昵称选填：没起昵称就直接叫种族名 */
@@ -185,8 +185,8 @@ const app = createApp({
             if (nick) return nick + (p.speciesId ? '（' + speciesLabel(p.speciesId) + '）' : '');
             return p.speciesId ? speciesLabel(p.speciesId) : '未命名精灵';
         };
-        const pickedPets = computed(() => form.value.petIds.map(id => indById.value.get(String(id))).filter(Boolean));
-        const petsOf = (c) => (c.petIds || []).map(id => indById.value.get(String(id))).filter(Boolean);
+        const pickedVows = computed(() => form.value.vowIds.map(id => indById.value.get(String(id))).filter(Boolean));
+        const vowsOf = (c) => (c.vowIds || []).map(id => indById.value.get(String(id))).filter(Boolean);
 
         const factionColor = (f) => FACTION_COLORS[f] || '#d69e2e';
         const avatarChar = (name) => (String(name || '').trim().charAt(0) || '？');
@@ -226,8 +226,8 @@ const app = createApp({
         const indexOfItem = (item) => characters.value.indexOf(item);
 
         /* ------------------------------------------------------------ 统计 */
-        const petTotal = computed(() =>
-            characters.value.reduce((a, c) => a + (c.petIds || []).length, 0)
+        const vowTotal = computed(() =>
+            characters.value.reduce((a, c) => a + (c.vowIds || []).length, 0)
         );
         const totalMoney = computed(() =>
             characters.value.reduce((a, c) => a + (Number(c.money) || 0), 0)
@@ -245,7 +245,7 @@ const app = createApp({
                 form.value = defaultForm();
                 form.value.id = nextId();
             }
-            showPetModal.value = false;
+            showVowModal.value = false;
             showModal.value = true;
         };
 
@@ -370,31 +370,31 @@ const app = createApp({
         };
 
         /* --------------------------------------------------- 精灵关联（多选） */
-        const filteredPets = computed(() => {
-            const kw = petSearchInput.value.trim().toLowerCase();
+        const filteredVows = computed(() => {
+            const kw = vowSearchInput.value.trim().toLowerCase();
             const pool = individuals.value;
             if (!kw) return pool;
             return pool.filter(p =>
                 [p.nickname, indLabel(p), speciesLabel(p.speciesId), String(p.id)].join(' ').toLowerCase().includes(kw)
             );
         });
-        const togglePet = (p) => {
+        const toggleVow = (p) => {
             const id = String(p.id);
-            const i = form.value.petIds.indexOf(id);
-            if (i > -1) form.value.petIds.splice(i, 1);
-            else form.value.petIds.push(id);
+            const i = form.value.vowIds.indexOf(id);
+            if (i > -1) form.value.vowIds.splice(i, 1);
+            else form.value.vowIds.push(id);
         };
-        const removePet = (id) => {
-            form.value.petIds = form.value.petIds.filter(x => x !== String(id));
+        const removeVow = (id) => {
+            form.value.vowIds = form.value.vowIds.filter(x => x !== String(id));
         };
-        const openPetModal = () => {
-            petSearchInput.value = '';
-            showPetModal.value = true;
+        const openVowModal = () => {
+            vowSearchInput.value = '';
+            showVowModal.value = true;
         };
 
         const closeModal = (target) => {
             if (target === 'edit') showModal.value = false;
-            if (target === 'pet') showPetModal.value = false;
+            if (target === 'vow') showVowModal.value = false;
             if (target === 'link') showLinkModal.value = false;
         };
 
@@ -478,14 +478,14 @@ const app = createApp({
             config, characters, isSyncing,
             showModal, isEdit, form,
             searchName, filteredList, indexOfItem,
-            petTotal, totalMoney,
-            fmtMoney, indLabel, pickedPets, petsOf,
+            vowTotal, totalMoney,
+            fmtMoney, indLabel, pickedVows, vowsOf,
             speciesLabel, speciesImageOf,
             factionColor, avatarChar, avatarColor,
             openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
             /* 立绘 */
             avatarUploading, avatarInput, triggerAvatarUpload, handleAvatarUpload, clearAvatar, getImgUrl,
-            showPetModal, petSearchInput, filteredPets, togglePet, removePet, openPetModal,
+            showVowModal, vowSearchInput, filteredVows, toggleVow, removeVow, openVowModal,
             /* 人物关系 */
             showLinkModal, linkSearch, linkCandidates, linkChar, linkName, linkTitle,
             openLinkModal, addLink, removeLink,

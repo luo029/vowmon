@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
 </head>
 <body>
 <div id="app" v-cloak>
@@ -226,7 +226,7 @@
                                 </span>
                             </div>
                             <div class="learner-grid">
-                                <label class="learner-check" :class="{ 'is-stone': learnMode(p.name) === 'stone' }" v-for="p in filteredLearnerPets" :key="p.id">
+                                <label class="learner-check" :class="{ 'is-stone': learnMode(p.name) === 'stone' }" v-for="p in filteredLearnerVows" :key="p.id">
                                     <input type="checkbox" :checked="hasLearner(p.name)" @change="toggleLearner(p.name)">
                                     <span class="learner-name">{{ p.name }}</span>
                                     <button type="button" class="learner-mode-btn"
@@ -241,7 +241,7 @@
                                         <i v-for="t in p.types" :key="t" :class="getTypeIcon(t)" :style="{ color: getTypeColor(t) }" :title="t"></i>
                                     </span>
                                 </label>
-                                <div class="learner-empty" v-if="!filteredLearnerPets.length">没有匹配的精灵</div>
+                                <div class="learner-empty" v-if="!filteredLearnerVows.length">没有匹配的精灵</div>
                             </div>
                         </div>
                     </div>
@@ -257,14 +257,14 @@
 </div>
 
 <!-- 统一引入 assets 目录下的文件 -->
-<script src="../js/site-config.js?v=20261124b"></script>
-<script src="../js/type-config.js?v=20261124b"></script>
-<script src="../js/category-config.js?v=20261124b"></script>
-<script src="../js/tag-config.js?v=20261124b"></script>
-<script src="../js/data-loader.js?v=20261126c"></script>
-<script src="../js/github-api.js?v=20261124b"></script>
-<script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/dialog.js?v=20261124b"></script>
-<script src="../js/admin-skills.js?v=20261124i"></script>
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/category-config.js?v=20261126s"></script>
+<script src="../js/tag-config.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261126s"></script>
+<script src="../js/github-api.js?v=20261126s"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/admin-skills.js?v=20261126s"></script>
 </body>
 </html>

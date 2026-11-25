@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124j">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261124g">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
     <style>
         .tax-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; max-width: 900px; margin: 0 auto 14px; }
         .tax-cell label { display: block; font-size: 12px; font-weight: 900; color: #4a5568; margin-bottom: 5px; text-align: center; }
@@ -54,7 +54,7 @@
         <main class="main-content">
             <div v-if="currentTab === 'sprites'">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 20px;">精灵数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ pets.length }} 只</span></h2>
+                    <h2 style="font-size: 20px;">精灵数据 <span style="font-size: 14px; color: #a0aec0; font-weight: normal;">共 {{ vows.length }} 只</span></h2>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <div class="col-settings-wrap">
                             <button class="btn btn-outline" :class="{ active: showColSettings }" @click.stop="showColSettings = !showColSettings">
@@ -92,35 +92,35 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(pet, index) in paginatedPets" :key="index">
+                            <tr v-for="(vow, index) in paginatedVows" :key="index">
                                 <td v-if="visibleCols.includes('image')" class="img-cell">
-                                    <img v-if="getThumbUrl(pet.image)" :src="getThumbUrl(pet.image)" alt="头像">
+                                    <img v-if="getThumbUrl(vow.image)" :src="getThumbUrl(vow.image)" alt="头像">
                                     <span v-else class="img-placeholder">无</span>
                                 </td>
-                                <td v-if="visibleCols.includes('id')">{{ pet.id }}</td>
-                                <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ pet.name }}</td>
+                                <td v-if="visibleCols.includes('id')">{{ vow.id }}</td>
+                                <td v-if="visibleCols.includes('name')" style="font-weight: bold;">{{ vow.name }}</td>
                                 <td v-if="visibleCols.includes('types')">
                                     <div class="type-pill-cell">
-                                        <span class="type-pill" v-for="t in pet.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }">
+                                        <span class="type-pill" v-for="t in vow.types" :key="t" :style="{ backgroundColor: getTypeColor(t) }">
                                             <i v-if="visibleCols.includes('typeIcon')" :class="getTypeIcon(t)"></i>
                                             {{ t }}
                                         </span>
                                     </div>
                                 </td>
-                                <td v-if="visibleCols.includes('stage')">{{ pet.stage }}</td>
-                                <td v-if="visibleCols.includes('form')">{{ pet.form }}</td>
-                                <td v-if="visibleCols.includes('ability')">{{ [pet.ability, pet.ability2].filter(Boolean).join(' / ') }}<span v-if="pet.hiddenAbility" style="color:#805ad5;"> ★{{ pet.hiddenAbility }}</span></td>
-                                <td v-if="visibleCols.includes('hp')">{{ pet.stats?.hp || 0 }}</td>
-                                <td v-if="visibleCols.includes('atk')">{{ pet.stats?.atk || 0 }}</td>
-                                <td v-if="visibleCols.includes('def')">{{ pet.stats?.def || 0 }}</td>
-                                <td v-if="visibleCols.includes('spAtk')">{{ pet.stats?.spAtk || 0 }}</td>
-                                <td v-if="visibleCols.includes('spDef')">{{ pet.stats?.spDef || 0 }}</td>
-                                <td v-if="visibleCols.includes('spd')">{{ pet.stats?.spd || 0 }}</td>
+                                <td v-if="visibleCols.includes('stage')">{{ vow.stage }}</td>
+                                <td v-if="visibleCols.includes('form')">{{ vow.form }}</td>
+                                <td v-if="visibleCols.includes('ability')">{{ [vow.ability, vow.ability2].filter(Boolean).join(' / ') }}<span v-if="vow.hiddenAbility" style="color:#805ad5;"> ★{{ vow.hiddenAbility }}</span></td>
+                                <td v-if="visibleCols.includes('hp')">{{ vow.stats?.hp || 0 }}</td>
+                                <td v-if="visibleCols.includes('atk')">{{ vow.stats?.atk || 0 }}</td>
+                                <td v-if="visibleCols.includes('def')">{{ vow.stats?.def || 0 }}</td>
+                                <td v-if="visibleCols.includes('spAtk')">{{ vow.stats?.spAtk || 0 }}</td>
+                                <td v-if="visibleCols.includes('spDef')">{{ vow.stats?.spDef || 0 }}</td>
+                                <td v-if="visibleCols.includes('spd')">{{ vow.stats?.spd || 0 }}</td>
                                 <td style="text-align: right; padding-right: 20px; white-space: nowrap;">
-                                    <button class="action-btn edit-btn" @click.stop="openEditor(pet)">
+                                    <button class="action-btn edit-btn" @click.stop="openEditor(vow)">
                                         <i class="fa-solid fa-pen"></i> 编辑
                                     </button>
-                                    <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(pet)">
+                                    <button class="action-btn delete-btn" @click.stop="openDeleteConfirm(vow)">
                                         <i class="fa-solid fa-trash-can"></i> 删除
                                     </button>
                                 </td>
@@ -131,11 +131,11 @@
 
                 <!-- 分页 -->
                 <div class="pagination">
-                    <span>共 {{ pets.length }} 条数据</span>
+                    <span>共 {{ vows.length }} 条数据</span>
                     <div class="page-controls">
                         <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="listPage === 1" @click="listPage--">上一页</button>
-                        <span style="font-weight: bold; margin: 0 10px;">{{ listPage }} / {{ Math.ceil(pets.length / listPageSize) || 1 }}</span>
-                        <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="listPage >= Math.ceil(pets.length / listPageSize)" @click="listPage++">下一页</button>
+                        <span style="font-weight: bold; margin: 0 10px;">{{ listPage }} / {{ Math.ceil(vows.length / listPageSize) || 1 }}</span>
+                        <button class="btn btn-outline" style="padding: 4px 10px;" :disabled="listPage >= Math.ceil(vows.length / listPageSize)" @click="listPage++">下一页</button>
                     </div>
                 </div>
             </div>
@@ -385,7 +385,7 @@
                                     <div class="evo-chain-title"><i class="fa-solid fa-seedling" style="color: #48bb78;"></i> 进化自（前一阶段）</div>
                                     <div class="evo-chips">
                                         <span class="evo-chip" v-for="id in form.evoFrom" :key="'from' + id">
-                                            {{ petNameById(id) }}
+                                            {{ vowNameById(id) }}
                                             <i class="fa-solid fa-xmark" @click="removeEvo('evoFrom', id)"></i>
                                         </span>
                                         <span v-if="!form.evoFrom.length" class="evo-chip-empty">未设置</span>
@@ -397,7 +397,7 @@
                                     <div class="evo-chain-title"><i class="fa-solid fa-dragon" style="color: #805ad5;"></i> 进化为（后一阶段）</div>
                                     <div class="evo-chips">
                                         <span class="evo-chip" v-for="id in form.evoTo" :key="'to' + id">
-                                            {{ petNameById(id) }}
+                                            {{ vowNameById(id) }}
                                             <i class="fa-solid fa-xmark" @click="removeEvo('evoTo', id)"></i>
                                         </span>
                                         <span v-if="!form.evoTo.length" class="evo-chip-empty">未设置</span>
@@ -511,7 +511,7 @@
             
             <div class="modal-footer">
                 <button class="btn btn-outline" @click="showModal = false">取消</button>
-                <button class="btn btn-primary" @click="savePet" :disabled="isSaving">
+                <button class="btn btn-primary" @click="saveVow" :disabled="isSaving">
                     <i class="fa-solid" :class="isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
                     {{ isSaving ? '处理中…' : '保存到本地' }}
                 </button>
@@ -572,7 +572,7 @@
             <div class="selection-list" style="max-height: 320px;">
                 <div
                     class="selection-item"
-                    v-for="p in filteredEvoPets"
+                    v-for="p in filteredEvoVows"
                     :key="p.id"
                     :style="evoSelection.some(x => String(x) === String(p.id)) ? 'background:#ebf8ff; border-color:#4299e1;' : ''"
                     @click="toggleEvoPick(p.id)"
@@ -583,7 +583,7 @@
                     </div>
                     <div class="item-desc">{{ p.stage || '' }}</div>
                 </div>
-                <div v-if="filteredEvoPets.length === 0" class="empty-state">没有找到相关精灵（自己不会出现在候选里）</div>
+                <div v-if="filteredEvoVows.length === 0" class="empty-state">没有找到相关精灵（自己不会出现在候选里）</div>
             </div>
 
             <div class="selection-pagination" style="justify-content: space-between;">
@@ -598,13 +598,13 @@
 
 </div>
 
-<script src="../js/site-config.js?v=20261124d"></script>
-<script src="../js/type-config.js?v=20261124d"></script>
-<script src="../js/data-loader.js?v=20261126c"></script>
-<script src="../js/github-api.js?v=20261124d"></script>
-<script src="../js/image-utils.js?v=20261124d"></script>
-<script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/dialog.js?v=20261124d"></script>
-<script src="../js/admin.js?v=20261124m"></script>
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261126s"></script>
+<script src="../js/github-api.js?v=20261126s"></script>
+<script src="../js/image-utils.js?v=20261126s"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/admin.js?v=20261126s"></script>
 </body>
 </html>

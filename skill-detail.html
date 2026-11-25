@@ -107,9 +107,9 @@
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
         .no-anim { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125c" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126s" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -203,23 +203,23 @@
             </div>
 
             <div class="learner-grid" v-if="pagedEntries.length">
-                <div class="learner-card" :class="entry.mode" v-for="entry in pagedEntries" :key="entry.pet.id + entry.mode"
-                     :title="'点击查看 ' + entry.pet.name + ' 的图鉴详情'"
-                     @click="gotoPet(entry.pet)">
+                <div class="learner-card" :class="entry.mode" v-for="entry in pagedEntries" :key="entry.vow.id + entry.mode"
+                     :title="'点击查看 ' + entry.vow.name + ' 的图鉴详情'"
+                     @click="gotoVow(entry.vow)">
                     <div class="lc-top">
-                        <span class="lc-no font-num">NO.{{ entry.pet.id }}</span>
+                        <span class="lc-no font-num">NO.{{ entry.vow.id }}</span>
                         <span class="lc-mode" :title="entry.mode === 'stone' ? '技能石学习' : '自学领悟'">
                             <i :class="entry.mode === 'stone' ? 'fa-solid fa-gem' : 'fa-solid fa-wand-sparkles'"></i>
                         </span>
                     </div>
                     <div class="lc-img">
-                        <img v-if="entry.pet.image" :src="getImgUrl(entry.pet.image)" :alt="entry.pet.name" loading="lazy" decoding="async">
+                        <img v-if="entry.vow.image" :src="getImgUrl(entry.vow.image)" :alt="entry.vow.name" loading="lazy" decoding="async">
                         <i v-else class="fa-solid fa-paw no-img"></i>
                     </div>
-                    <div class="lc-name">{{ entry.pet.name }}</div>
-                    <div class="lc-form" v-if="entry.pet.form">{{ entry.pet.form }}</div>
+                    <div class="lc-name">{{ entry.vow.name }}</div>
+                    <div class="lc-form" v-if="entry.vow.form">{{ entry.vow.form }}</div>
                     <div class="lc-types">
-                        <span class="type-dot" v-for="t in (entry.pet.types || [])" :key="t"
+                        <span class="type-dot" v-for="t in (entry.vow.types || [])" :key="t"
                               :style="{ backgroundColor: getTypeColor(t) }" :title="t">
                             <i :class="getTypeIcon(t)"></i>
                         </span>
@@ -248,13 +248,13 @@
     </div>
 </div>
 
-<script src="js/type-config.js?v=20261124"></script>
-<script src="js/category-config.js?v=20261124"></script>
-<script src="js/site-config.js?v=20261124"></script>
-<script src="js/data-loader.js?v=20261126c"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/category-config.js?v=20261126s"></script>
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
-VowmonData.ready(['skills', 'pets']).then(function () {
+VowmonData.ready(['skills', 'vows']).then(function () {
 
     createApp({
         setup() {
@@ -284,9 +284,9 @@ VowmonData.ready(['skills', 'pets']).then(function () {
             });
 
             /* ---------------- 精灵档案 ---------------- */
-            const pets = ref(allPetsData || []);
-            VowmonData.onChange('pets', (data) => {
-                pets.value = (data && data.pets) || allPetsData || [];
+            const vows = ref(allVowsData || []);
+            VowmonData.onChange('vows', (data) => {
+                vows.value = (data && data.vows) || allVowsData || [];
             });
 
             // 图片地址：本地配置 > site-config.js（与图鉴页逻辑一致）
@@ -309,9 +309,9 @@ VowmonData.ready(['skills', 'pets']).then(function () {
             const selfNames = computed(() => skill.value ? skill.value.learners : []);
             const stoneNames = computed(() => skill.value ? skill.value.stoneLearners : []);
 
-            const petByName = computed(() => {
+            const vowByName = computed(() => {
                 const m = new Map();
-                (pets.value || []).forEach(p => {
+                (vows.value || []).forEach(p => {
                     const name = String(p.name || '').trim();
                     if (!name) return;
                     if (!m.has(name)) m.set(name, []);
@@ -324,11 +324,11 @@ VowmonData.ready(['skills', 'pets']).then(function () {
             const buildEntries = (names, mode) => {
                 const out = [];
                 names.forEach(name => {
-                    (petByName.value.get(name) || []).forEach(pet => {
-                        out.push({ pet, mode });
+                    (vowByName.value.get(name) || []).forEach(vow => {
+                        out.push({ vow, mode });
                     });
                 });
-                out.sort((a, b) => String(a.pet.id).localeCompare(String(b.pet.id), 'zh-CN', { numeric: true }));
+                out.sort((a, b) => String(a.vow.id).localeCompare(String(b.vow.id), 'zh-CN', { numeric: true }));
                 return out;
             };
             const selfEntries = computed(() => buildEntries(selfNames.value, 'self'));
@@ -337,7 +337,7 @@ VowmonData.ready(['skills', 'pets']).then(function () {
 
             // 找不到的精灵名（档案里还没建）提示用
             const missingCount = computed(() => {
-                const known = petByName.value;
+                const known = vowByName.value;
                 let n = 0;
                 selfNames.value.concat(stoneNames.value).forEach(name => { if (!known.has(name)) n++; });
                 return n;
@@ -357,8 +357,8 @@ VowmonData.ready(['skills', 'pets']).then(function () {
                 const kw = searchName.value.trim().toLowerCase();
                 if (!kw) return base;
                 return base.filter(e =>
-                    String(e.pet.name || '').toLowerCase().includes(kw) ||
-                    String(e.pet.id || '').toLowerCase().includes(kw)
+                    String(e.vow.name || '').toLowerCase().includes(kw) ||
+                    String(e.vow.id || '').toLowerCase().includes(kw)
                 );
             });
 
@@ -370,9 +370,9 @@ VowmonData.ready(['skills', 'pets']).then(function () {
             watch([modeFilter, searchName], () => { page.value = 1; });
             watch(filteredEntries, () => { if (page.value > totalPages.value) page.value = totalPages.value; });
 
-            const gotoPet = (pet) => {
-                if (!pet || !pet.id) return;
-                window.location.href = 'pet-detail.html?id=' + encodeURIComponent(pet.id);
+            const gotoVow = (vow) => {
+                if (!vow || !vow.id) return;
+                window.location.href = 'vow-detail.html?id=' + encodeURIComponent(vow.id);
             };
 
             onMounted(() => {
@@ -391,7 +391,7 @@ VowmonData.ready(['skills', 'pets']).then(function () {
                 selfEntries, stoneEntries, allEntries,
                 modeFilter, searchName, page, setMode,
                 filteredEntries, pagedEntries, totalPages,
-                gotoPet, getImgUrl, getTypeColor, getTypeIcon,
+                gotoVow, getImgUrl, getTypeColor, getTypeIcon,
                 getCategoryColor, getCategoryIcon
             };
         }

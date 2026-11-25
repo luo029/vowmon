@@ -19,7 +19,7 @@ const CATEGORY_ALIAS = {
     '防御': '变化', '状态': '变化', '变化': '变化'
 };
 const normalizeCategory = (c) => CATEGORY_ALIAS[c] || SKILL_CATEGORIES[0];
-VowmonData.ready(['skills','pets'], { fresh: true }).then(function () {
+VowmonData.ready(['skills','vows'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
@@ -195,17 +195,17 @@ createApp({
 
         /* ---------------------------------------------------- 可学会精灵选择 */
         // 精灵池（来自 vow-data.json），支持按属性筛选 + 勾选 + 全选/取消全选
-        const pets = ref([]);
+        const vows = ref([]);
         const learnerFilter = ref('');   // '' = 全部属性；否则为属性名
         const learnerSearch = ref('');   // 按名称/编号搜索
 
-        const learnerPool = computed(() => (pets.value || []).map(p => ({
+        const learnerPool = computed(() => (vows.value || []).map(p => ({
             id: p.id,
             name: String(p.name || ''),
             types: Array.isArray(p.types) ? p.types : []
         })).filter(p => p.name));
 
-        const filteredLearnerPets = computed(() => {
+        const filteredLearnerVows = computed(() => {
             let list = learnerPool.value;
             if (learnerFilter.value) list = list.filter(p => p.types.includes(learnerFilter.value));
             const q = learnerSearch.value.trim();
@@ -251,14 +251,14 @@ createApp({
         // 全选：把当前筛选出的精灵全部加入「自学」
         const selectAllLearners = () => {
             if (!Array.isArray(form.value.learners)) form.value.learners = [];
-            filteredLearnerPets.value.forEach(p => {
+            filteredLearnerVows.value.forEach(p => {
                 if (!hasLearner(p.name)) form.value.learners.push(p.name);
             });
         };
 
         // 取消全选：把当前筛选出的精灵全部移除（两个列表都清，只影响可见范围）
         const clearLearners = () => {
-            const names = new Set(filteredLearnerPets.value.map(p => p.name));
+            const names = new Set(filteredLearnerVows.value.map(p => p.name));
             if (Array.isArray(form.value.learners)) {
                 form.value.learners = form.value.learners.filter(n => !names.has(n));
             }
@@ -269,7 +269,7 @@ createApp({
 
         // 当前筛选范围内是否已全部勾选（控制全选/取消按钮提示）
         const allFilteredSelected = computed(() => {
-            const list = filteredLearnerPets.value;
+            const list = filteredLearnerVows.value;
             if (!list.length) return false;
             return list.every(p => hasLearner(p.name));
         });
@@ -415,12 +415,12 @@ createApp({
                 skills.value = normalizeSkills(allSkillsData);
             }
 
-            // 精灵池：给「可学会精灵」选择器用（ready(['skills','pets']) 已保证 allPetsData 就绪）
+            // 精灵池：给「可学会精灵」选择器用（ready(['skills','vows']) 已保证 allVowsData 就绪）
             try {
-                pets.value = JSON.parse(localStorage.getItem('vowmon_pets_data') || 'null')
-                    || JSON.parse(JSON.stringify(allPetsData));
+                vows.value = JSON.parse(localStorage.getItem('vowmon_vows_data') || localStorage.getItem('vowmon_pets_data') || 'null')
+                    || JSON.parse(JSON.stringify(allVowsData));
             } catch (err) {
-                pets.value = JSON.parse(JSON.stringify(allPetsData));
+                vows.value = JSON.parse(JSON.stringify(allVowsData));
             }
 
             // 点击「显示列」浮层/标签选择器以外的地方时收起对应面板。
@@ -478,7 +478,7 @@ createApp({
             getTypeIcon, getTypeColor,
             getCategoryIcon, getCategoryColor,
             getTagIcon, getTagColor,
-            learnerFilter, learnerSearch, filteredLearnerPets,
+            learnerFilter, learnerSearch, filteredLearnerVows,
             hasLearner, learnMode, toggleLearner, toggleStoneLearner,
             selectAllLearners, clearLearners, allFilteredSelected,
             showColSettings, allColumns, visibleCols,

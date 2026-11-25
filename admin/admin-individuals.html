@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125f">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
     <style>
         /* ============ 页头统计 ============ */
         .stat-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -525,13 +525,13 @@
             </div>
             <div class="selection-list" style="max-height: 52vh;">
                 <div class="sp-grid">
-                    <div class="sp-cell" v-for="pet in filteredSpecies" :key="pet.id"
-                         :class="{ on: form.speciesId === pet.id }"
-                         @click="pickSpecies(pet)">
-                        <img v-if="pet.img" :src="pet.img" alt="">
+                    <div class="sp-cell" v-for="vow in filteredSpecies" :key="vow.id"
+                         :class="{ on: form.speciesId === vow.id }"
+                         @click="pickSpecies(vow)">
+                        <img v-if="vow.img" :src="vow.img" alt="">
                         <i v-else class="fa-solid fa-paw" style="font-size: 30px; color: #cbd5e0; padding: 12px 0; display: block;"></i>
-                        <div class="sp-n">{{ pet.name }}</div>
-                        <div class="sp-i font-num">#{{ pet.id }}</div>
+                        <div class="sp-n">{{ vow.name }}</div>
+                        <div class="sp-i font-num">#{{ vow.id }}</div>
                     </div>
                 </div>
                 <div v-if="!filteredSpecies.length" class="empty-state">没有找到相关精灵</div>
@@ -541,15 +541,15 @@
 
 </div>
 
-<script src="../js/site-config.js?v=20261124e"></script>
-<script src="../js/type-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261126c"></script>
-<script src="../js/github-api.js?v=20261124e"></script>
-<script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/vow-tip.js?v=20261125b"></script>
-<script src="../js/vow-textarea.js?v=20261125d"></script>
-<script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126j"></script>
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261126s"></script>
+<script src="../js/github-api.js?v=20261126s"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/vow-tip.js?v=20261126s"></script>
+<script src="../js/vow-textarea.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/vow-select.js?v=20261126s"></script>
+<script src="../js/admin-individuals.js?v=20261126s"></script>
 </body>
 </html>

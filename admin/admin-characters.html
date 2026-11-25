@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125f">
-    <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
-    <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261126s">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261126s">
+    <link rel="stylesheet" href="../css/dialog.css?v=20261126s">
+    <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
     <style>
         /* ============ 页头统计 ============ */
         .stat-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -54,10 +54,10 @@
         .cha-card .cha-chips { margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap; min-height: 24px; }
         .mini-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; color: #fff; display: inline-flex; align-items: center; gap: 4px; }
         .mini-chip.plain { background: #edf2f7; color: #718096; }
-        .cha-card .pet-row { margin-top: 10px; display: flex; align-items: center; gap: 4px; }
-        .cha-card .pet-row img { width: 34px; height: 34px; object-fit: contain; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 9px; padding: 2px; }
-        .cha-card .pet-row .pet-more { font-size: 11px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 4px 9px; }
-        .cha-card .pet-row .pet-none { font-size: 11.5px; color: #cbd5e0; font-weight: 700; }
+        .cha-card .vow-row { margin-top: 10px; display: flex; align-items: center; gap: 4px; }
+        .cha-card .vow-row img { width: 34px; height: 34px; object-fit: contain; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 9px; padding: 2px; }
+        .cha-card .vow-row .vow-more { font-size: 11px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 4px 9px; }
+        .cha-card .vow-row .vow-none { font-size: 11.5px; color: #cbd5e0; font-weight: 700; }
         /* 操作按钮独占卡片底部一行，不再与势力标签重叠 */
         .cha-card .ops { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8edf2; }
         .op-btn { min-width: 40px; height: 32px; padding: 0 12px; gap: 6px; border-radius: 9px; border: none; cursor: pointer; font-size: 12.5px; font-weight: 800; color: #fff; display: inline-flex; align-items: center; justify-content: center; transition: filter .15s, transform .15s; font-family: inherit; }
@@ -195,7 +195,7 @@
                 </div>
                 <div class="stat-card" style="--stat-c: #38a169;">
                     <div class="st-icon" style="background: #38a169;"><i class="fa-solid fa-paw"></i></div>
-                    <div><div class="st-num font-num">{{ petTotal }}</div><div class="st-lbl">名下精灵总数</div></div>
+                    <div><div class="st-num font-num">{{ vowTotal }}</div><div class="st-lbl">名下精灵总数</div></div>
                 </div>
                 <div class="stat-card" style="--stat-c: #4299e1;">
                     <div class="st-icon" style="background: #4299e1;"><i class="fa-solid fa-coins"></i></div>
@@ -236,18 +236,18 @@
                     <div class="cha-chips">
                         <span class="mini-chip" v-if="item.leagueNo" :style="{ background: factionColor(item.faction) }"><i class="fa-solid fa-id-badge"></i>联盟编号 No.{{ item.leagueNo }}</span>
                         <span class="mini-chip" v-if="item.intlNo" style="background: #8093a8;"><i class="fa-solid fa-globe"></i>国际编号 No.{{ item.intlNo }}</span>
-                        <span class="mini-chip" v-if="(item.petIds || []).length" style="background: #38a169;"><i class="fa-solid fa-paw"></i>{{ (item.petIds || []).length }} 只精灵</span>
+                        <span class="mini-chip" v-if="(item.vowIds || []).length" style="background: #38a169;"><i class="fa-solid fa-paw"></i>{{ (item.vowIds || []).length }} 只精灵</span>
                         <span class="mini-chip" v-if="(item.inventory || []).length" style="background: #4299e1;"><i class="fa-solid fa-suitcase"></i>{{ (item.inventory || []).length }} 件物品</span>
-                        <span class="mini-chip plain" v-if="!(item.petIds || []).length && !(item.inventory || []).length">暂无精灵与物品</span>
+                        <span class="mini-chip plain" v-if="!(item.vowIds || []).length && !(item.inventory || []).length">暂无精灵与物品</span>
                     </div>
-                    <div class="pet-row">
-                        <template v-if="petsOf(item).length">
-                            <template v-for="p in petsOf(item).slice(0, 5)" :key="p.id">
+                    <div class="vow-row">
+                        <template v-if="vowsOf(item).length">
+                            <template v-for="p in vowsOf(item).slice(0, 5)" :key="p.id">
                                 <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname" :title="p.nickname">
                             </template>
-                            <span class="pet-more" v-if="(item.petIds || []).length > 5">+{{ (item.petIds || []).length - 5 }}</span>
+                            <span class="vow-more" v-if="(item.vowIds || []).length > 5">+{{ (item.vowIds || []).length - 5 }}</span>
                         </template>
-                        <span class="pet-none" v-else>还没有关联的精灵</span>
+                        <span class="vow-none" v-else>还没有关联的精灵</span>
                     </div>
                     <div class="ops">
                         <button class="op-btn edit" title="编辑" @click.stop="openEditor(item, indexOfItem(item))"><i class="fa-solid fa-pen"></i> 编辑</button>
@@ -384,12 +384,12 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-paw"></i> 持有的御兽精灵 <i class="tip" data-tip="先在御兽精灵页录入个体，再来关联">?</i> </div>
                     <div class="trait-chips">
-                        <span class="trait-chip" v-for="p in pickedPets" :key="p.id">
+                        <span class="trait-chip" v-for="p in pickedVows" :key="p.id">
                             <i class="fa-solid fa-paw" style="color: #38a169;"></i>{{ indLabel(p) }}
-                            <i class="fa-solid fa-xmark chip-x" @click="removePet(p.id)"></i>
+                            <i class="fa-solid fa-xmark chip-x" @click="removeVow(p.id)"></i>
                         </span>
-                        <span v-if="!pickedPets.length" class="trait-chip-empty">还没有持有精灵</span>
-                        <button type="button" class="btn btn-outline btn-sm" @click.stop="openPetModal"><i class="fa-solid fa-plus"></i> 关联精灵</button>
+                        <span v-if="!pickedVows.length" class="trait-chip-empty">还没有持有精灵</span>
+                        <button type="button" class="btn btn-outline btn-sm" @click.stop="openVowModal"><i class="fa-solid fa-plus"></i> 关联精灵</button>
                     </div>
                 </div>
 
@@ -432,45 +432,45 @@
     </div>
 
     <!-- 精灵关联弹窗（多选） -->
-    <div class="modal-overlay" v-if="showPetModal" @vowmon:modal-close="closeModal('pet')" style="z-index: 1100;">
+    <div class="modal-overlay" v-if="showVowModal" @vowmon:modal-close="closeModal('vow')" style="z-index: 1100;">
         <div class="selection-modal" style="width: 520px;" @click.stop>
             <div class="modal-header">
                 <h3>关联持有的御兽精灵</h3>
-                <button class="btn-close" @click="showPetModal = false"><i class="fa-solid fa-xmark"></i></button>
+                <button class="btn-close" @click="showVowModal = false"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="selection-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input v-model="petSearchInput" placeholder="">
+                <input v-model="vowSearchInput" placeholder="">
             </div>
             <div class="selection-list">
-                <div class="selection-item" v-for="p in filteredPets" :key="p.id"
-                     :style="form.petIds.includes(p.id) ? 'background:#f0fff4; border-color:#38a169;' : ''"
-                     @click="togglePet(p)">
+                <div class="selection-item" v-for="p in filteredVows" :key="p.id"
+                     :style="form.vowIds.includes(p.id) ? 'background:#f0fff4; border-color:#38a169;' : ''"
+                     @click="toggleVow(p)">
                     <div class="item-name">
-                        <i class="fa-solid" :class="form.petIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.petIds.includes(p.id) ? 'color:#38a169;' : 'color:#cbd5e0;'"></i>
+                        <i class="fa-solid" :class="form.vowIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.vowIds.includes(p.id) ? 'color:#38a169;' : 'color:#cbd5e0;'"></i>
                         {{ p.nickname }}
                     </div>
                     <div class="item-desc">{{ speciesLabel(p.speciesId) }}</div>
                 </div>
-                <div v-if="!filteredPets.length" class="empty-state">暂无御兽精灵档案，请先到「御兽精灵」页录入</div>
+                <div v-if="!filteredVows.length" class="empty-state">暂无御兽精灵档案，请先到「御兽精灵」页录入</div>
             </div>
             <div class="selection-pagination" style="justify-content: flex-end;">
-                <span style="font-weight: bold; margin-right: 12px;">已勾选 <b style="color:#38a169;">{{ form.petIds.length }}</b> 只</span>
-                <button class="btn btn-primary" style="padding: 4px 14px;" @click="showPetModal = false">完成</button>
+                <span style="font-weight: bold; margin-right: 12px;">已勾选 <b style="color:#38a169;">{{ form.vowIds.length }}</b> 只</span>
+                <button class="btn btn-primary" style="padding: 4px 14px;" @click="showVowModal = false">完成</button>
             </div>
         </div>
     </div>
 
 </div>
 
-<script src="../js/site-config.js?v=20261124e"></script>
-<script src="../js/data-loader.js?v=20261126c"></script>
-<script src="../js/github-api.js?v=20261124e"></script>
-<script src="../js/common-ui.js?v=20261124f"></script>
-<script src="../js/vow-tip.js?v=20261125b"></script>
-<script src="../js/vow-textarea.js?v=20261125d"></script>
-<script src="../js/dialog.js?v=20261124e"></script>
-<script src="../js/image-utils.js?v=20261124a"></script>
-<script src="../js/admin-characters.js?v=20261126c"></script>
+<script src="../js/site-config.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261126s"></script>
+<script src="../js/github-api.js?v=20261126s"></script>
+<script src="../js/common-ui.js?v=20261126s"></script>
+<script src="../js/vow-tip.js?v=20261126s"></script>
+<script src="../js/vow-textarea.js?v=20261126s"></script>
+<script src="../js/dialog.js?v=20261126s"></script>
+<script src="../js/image-utils.js?v=20261126s"></script>
+<script src="../js/admin-characters.js?v=20261126s"></script>
 </body>
 </html>

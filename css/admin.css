@@ -395,27 +395,27 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .action-btn.mini.delete-btn:hover { background: #fed7d7; }
 
 /* 精灵图片网格 */
-.pet-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
-.pet-img-card { background: #fff; border: 1px solid #edf2f7; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(45,55,72,.06); }
-.pet-img-thumb { height: 150px; background: #f7fafc; display: flex; align-items: center; justify-content: center; position: relative; padding: 12px; }
-.pet-img-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.pet-img-thumb > i { font-size: 46px; color: #cbd5e0; }
-.pet-img-card.st-missing .pet-img-thumb { background: #fffaf0; }
+.vow-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+.vow-img-card { background: #fff; border: 1px solid #edf2f7; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(45,55,72,.06); }
+.vow-img-thumb { height: 150px; background: #f7fafc; display: flex; align-items: center; justify-content: center; position: relative; padding: 12px; }
+.vow-img-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.vow-img-thumb > i { font-size: 46px; color: #cbd5e0; }
+.vow-img-card.st-missing .vow-img-thumb { background: #fffaf0; }
 .status-flag { position: absolute; top: 8px; right: 8px; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 7px; }
 .flag-ok { background: #f0fff4; color: #2f855a; }
 .flag-missing { background: #fff5f5; color: #e53e3e; }
 .flag-empty { background: #f7fafc; color: #a0aec0; }
 .flag-external { background: #ebf8ff; color: #2b6cb0; }
-.pet-img-info { padding: 13px; }
-.pet-img-title { font-size: 14px; font-weight: 900; color: #2d3748; }
+.vow-img-info { padding: 13px; }
+.vow-img-title { font-size: 14px; font-weight: 900; color: #2d3748; }
 .shiny-chip {
     display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px;
     border-radius: 999px; background: #ebf8ff; color: #2b6cb0;
     font-size: 10px; font-weight: 800; vertical-align: middle;
 }
-.pet-id { color: #a0aec0; font-size: 12px; margin-right: 4px; }
-.pet-img-path { font-size: 11px; color: #a0aec0; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace; }
-.pet-img-repo { font-size: 11px; color: #2b6cb0; margin-top: 5px; font-weight: 700; }
+.vow-id { color: #a0aec0; font-size: 12px; margin-right: 4px; }
+.vow-img-path { font-size: 11px; color: #a0aec0; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace; }
+.vow-img-repo { font-size: 11px; color: #2b6cb0; margin-top: 5px; font-weight: 700; }
 
 /* 上传弹窗 */
 .upload-modal { max-width: 620px; }
@@ -438,7 +438,7 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 
 @media (max-width: 760px) {
     .stat-cards { grid-template-columns: repeat(2, 1fr); }
-    .img-grid, .pet-img-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .img-grid, .vow-img-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
     .img-tab { padding: 10px 12px; font-size: 13px; }
 }
 

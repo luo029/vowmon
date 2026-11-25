@@ -239,7 +239,7 @@
         /* 编号：dexNo 主编号（训练家卡默认联盟编号），dexNo2 副编号（国际编号） */
         opt.dexNo = String(opt.dexNo == null ? '' : opt.dexNo);
         opt.dexNo2 = String(opt.dexNo2 == null ? '' : opt.dexNo2);
-        opt.variant = opt.variant || 'pet';
+        opt.variant = opt.variant || 'vow';
         opt.fit = opt.fit === 'cover' ? 'cover' : 'contain';
         opt.types = Array.isArray(opt.types) ? opt.types.filter(Boolean).map(t => ({
             name: String(t.name || ''),
@@ -1239,7 +1239,7 @@
             { key: 'image', label: '图像', on: !!o.image },
             { key: 'types', label: '属性', on: !!o.types.length },
             { key: 'dexNo', label: '编号', on: !!o.dexNo },
-            ...(o.dexNo2 ? [{ key: 'dexNo2', label: '副编号（国际编号）', on: true }] : []),
+            ...(o.dexNo2 ? [{ key: 'dexNo2', label: '国际编号（副编号）', on: false }] : []),
             ...(o.badgeValue ? [{ key: 'badge', label: '右上角徽章（售价等）', on: true }] : []),
             { key: 'name', label: '名字', on: !!o.name },
             { key: 'footRight', label: '右下角 VOWMON WIKI', on: !!o.footRight, footText: String(o.footRight || 'VOWMON WIKI') }

@@ -11,7 +11,7 @@
  *   natures-data.json  性格
  *
  * 用法（页面里）：
- *   VowmonData.ready(['pets']).then(function () { ... 数据到位后再挂载 Vue ... });
+ *   VowmonData.ready(['vows']).then(function () { ... 数据到位后再挂载 Vue ... });
  *
  * ── 取数顺序（本地优先，再和云端对比）────────────────────────────
  *   1. 本机镜像（localStorage: vowmon_mirror_<key>）
@@ -31,9 +31,9 @@
 (function () {
     // keys：JSON 里的字段名 → 要赋值的全局变量名
     const FILES = {
-        pets: {
+        vows: {
             file: 'vow-data.json', label: '精灵',
-            keys: { pets: 'allPetsData' }
+            keys: { vows: 'allVowsData' }
         },
         skills: {
             file: 'skills-data.json', label: '技能',
@@ -334,7 +334,7 @@
 
     function load(keys, opts) {
         const fresh = !!(opts && opts.fresh);
-        const list = (keys && keys.length) ? keys : ['pets'];
+        const list = (keys && keys.length) ? keys : ['vows'];
         const tasks = list.map(function (k) {
             const ck = k + (fresh ? ':fresh' : '');
             if (!fresh && cache[ck]) return cache[ck];
@@ -422,7 +422,7 @@
             // 本机所有请求的数据都有镜像且不强制回源 → 数据立刻就能到位，
             // 不显示加载遮罩，避免页面每次打开都闪一下「正在加载数据…」
             const fresh = !!(opts && opts.fresh);
-            const list = (keys && keys.length) ? keys : ['pets'];
+            const list = (keys && keys.length) ? keys : ['vows'];
             const allLocal = !fresh && list.every(function (k) { return !!readMirror(k); });
             if (!allLocal) showBoot();
             const p = load(keys, opts);

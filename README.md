@@ -7,7 +7,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 
 ## ⚠️ 核心开发规范 (给 AI 的备忘录)
 
-1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allPetsData`）。禁止使用 Pokedex / Pokemon / pets 作为对外名称。
+1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allVowsData`）。禁止使用 Pokedex / Pokemon / vows 作为对外名称。
 2. **代码输出格式**：所有生成的代码必须使用 ` ```text ` 代码块，**禁止使用高亮**。代码文件名写在代码块上方。严禁使用省略号。
 3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`；前台 `.html` 页面留在根目录，**后台页面统一放 `admin/` 子目录**；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
@@ -23,7 +23,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 vowmon/
 ├── index.html              # 首页
 ├── vowdex.html             # 精灵图鉴
-├── pet-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
+├── vow-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
 ├── individuals.html        # 御兽精灵档案（书中精灵个体：性格/技能熟练度/血脉/主人/经历，?id=直达详情）
 ├── characters.html         # 御兽人物档案（书中角色：势力/头衔/联盟币存款/物品栏/持有精灵，?id=直达详情）
 ├── factions.html           # 势力版图（联盟制度 / 九牧地区·九牧联盟 / 权职体系 / 三大协会，已纳入页面内容 CMS）
@@ -121,7 +121,7 @@ vowmon/
 ### 1.05.1 前台页面（给访客看的）
 
 - **首页 index.html**：站点门面。一张 Hero 横幅介绍「Vowmon Wiki」，下面两张入口卡片分别导向「查阅图鉴」和「研究工具」。
-- **精灵图鉴 vowdex.html**：以卡片墙的形式展示所有精灵，每张卡片有立绘、编号、名字、属性图标和六维能力。**点击卡片跳 `pet-detail.html?id={精灵id}` 查看详情**。适合快速浏览、按形态翻页。支持：
+- **精灵图鉴 vowdex.html**：以卡片墙的形式展示所有精灵，每张卡片有立绘、编号、名字、属性图标和六维能力。**点击卡片跳 `vow-detail.html?id={精灵id}` 查看详情**。适合快速浏览、按形态翻页。支持：
   - 按名称 / 编号搜索；
   - 按「精灵阶数」「精灵形态」「属性」多选筛选（同组可多选，不同组同时满足）；
   - 分页浏览，顶部实时显示「共 X 种形态」。
@@ -137,9 +137,9 @@ vowmon/
 - **技能详情 skill-detail.html**（布局参照洛克王国 wiki，`?id={技能id}`，兼容旧写法 `?name={技能名}`）：
   - **左列**：技能图标块（类型色渐变 + 分类图标）、名称、属性 / 分类 / 标签胶囊、技能效果、威力 / 耗能，以及「学习方式统计」卡（自学 N 只 / 技能石 N 只）；
   - **右列**：可学精灵网格，带「全部 / 自学 / 技能石」筛选 Tab（含数量）、名称 / 编号搜索、每页 35 只分页；
-  - **卡片**：`NO.编号` + 学习方式角标（✦自学 / 💎技能石）+ 立绘 + 名字 + 形态 + 属性图标，点击跳 `pet-detail.html?id={精灵id}`；
+  - **卡片**：`NO.编号` + 学习方式角标（✦自学 / 💎技能石）+ 立绘 + 名字 + 形态 + 属性图标，点击跳 `vow-detail.html?id={精灵id}`；
   - 技能不存在或链接失效有兜底提示，不会白屏。
-- **精灵详情 pet-detail.html**（布局参照洛克王国 wiki，`?id={精灵id}`）：
+- **精灵详情 vow-detail.html**（布局参照洛克王国 wiki，`?id={精灵id}`）：
   - **左列**：展示台（背景渐变取主属性色，两层白色圆点纹样缓慢流动；精灵立绘上下浅浮动 + 地面影子同步缩放，只动 transform，GPU 合成保证流畅）+ 普通 / 异色切换（有异色图时显示）+ 图鉴记载卡；
   - **右列**：种族资质卡（六维彩色进度条 + 总和徽章）、资料卡（阶数 / 形态 / 身高 / 体重 / 蛋组 / 可骑乘；origin 显示为「原型参照（仅助记，非世界设定）」）、特性卡（普通 / 第二 / 隐藏特性分组）、进化链卡（点击节点跳转对应详情页）、系别克制卡（本系进攻 18 系倍率分组 + 承受攻击双系合成倍率，含 ×4 / ×0.25）；
   - **顶部**：左「图鉴总览」返回按钮 + 右侧上 / 下一只精灵芯片（按编号排序，带迷你头像）；
@@ -148,7 +148,7 @@ vowmon/
 - **书内档案（御兽精灵 individuals.html / 御兽人物 characters.html）**：存放小说里的精灵**个体**与**人物**，和精灵图鉴（种族百科）相互独立，通过编号/ID 互相引用：
   - **御兽精灵**：昵称、性别、种族（引用图鉴编号，自动带出立绘/属性）、性格、特性（引用特性库）、技能+熟练度（入门/熟练/专精[皆传：迅疾/刚猛]/完美）、血脉（异变/黑暗/光明/属性+血脉技能）、等级与阶段（**阶段由等级自动推导**：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 / 灵相61-70 / 律冠71-89 / 元灵90-99 / 元100）、主人（引用人物 id）、携带道具、经历；
   - **御兽人物**：姓名、头衔/称号、所属势力、存款（联盟币）、物品栏、持有精灵（引用御兽精灵 id）、人物简介；
-  - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `pet-detail.html`；
+  - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `vow-detail.html`；
   - 后台对应 `admin-individuals.html` / `admin-characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
 - **势力版图 factions.html**：世界观设定页（联盟制度 / 九牧地区·九牧联盟 / 权职体系：盟主、戎枢、大冠、太宰、首座、大君与古今叫法对照 / 三大协会 / 荒野警示），已纳入页面内容 CMS（lore-data.json 中的 `factions.*` 文本块）。
 - **特性大全 traits.html**：表格展示全部特性（ abilities ）。支持搜索与按关联属性筛选，并列出每个特性「拥有该特性的精灵」。
@@ -289,12 +289,12 @@ vowmon/
 - **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `items.html` 的 Tab 与筛选胶囊、后台 `admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。
-- **主图 / 异色图要分清**：图片管理页的「设为精灵图」和「上传图片」弹窗里都有「存到哪个位置」开关——`主图（替换原图）` 写 `pet.image`，`异色图（追加）` 写 `pet.shiny[]`（数组，不占编号）。文件名带 `_s` / `_s2` 的图会**自动预选「异色图」**，避免一按就把主图覆盖掉。判断函数是 `js/admin-images.js` 的 `looksShiny(path)`。
+- **主图 / 异色图要分清**：图片管理页的「设为精灵图」和「上传图片」弹窗里都有「存到哪个位置」开关——`主图（替换原图）` 写 `vow.image`，`异色图（追加）` 写 `vow.shiny[]`（数组，不占编号）。文件名带 `_s` / `_s2` 的图会**自动预选「异色图」**，避免一按就把主图覆盖掉。判断函数是 `js/admin-images.js` 的 `looksShiny(path)`。
 - **图片仓库列举**：任何「列出仓库里有哪些图」的地方都必须走 `GitHubSync.listDirectory()`，不要自己写 `fetch` 打 Contents API —— 它内部已经处理了 1000 条静默截断（超限自动切 Git Trees API，见 [§3.1](#31-图片仓库的-1000-条上限)）。
-- **后台图片列表分页**：`admin-images.html` 的两个网格必须渲染 `paginatedRepoImages` / `paginatedPetRows`，不能直接用 `filteredRepoImages` / `filteredPetRows` 全量铺（上千张图会同时请求上千个缩略图）。每页 `PAGE_SIZE = 60`。
+- **后台图片列表分页**：`admin-images.html` 的两个网格必须渲染 `paginatedRepoImages` / `paginatedVowRows`，不能直接用 `filteredRepoImages` / `filteredVowRows` 全量铺（上千张图会同时请求上千个缩略图）。每页 `PAGE_SIZE = 60`。
 - **后台属性选择**：精灵 / 技能 / 特性三页统一用胶囊款式——表格内 `.type-pill`，表单内 `.type-pill-option`，胶囊内容为「属性图标 + 属性名称」，颜色取自 `type-config.js`。不要再退回纯文本或旧复选框网格。
 - **技能分类**：只有「物理 / 特殊 / 变化」三类，取值统一来自 `js/category-config.js` 的 `categoryNames`（前后台都引用，`admin-skills.js` 的 `SKILL_CATEGORIES` 即指向它）。旧值映射表 `CATEGORY_ALIAS` 不要删（用于兼容历史数据）。
-- **后台「显示列」状态**：三个管理页（精灵 / 技能 / 特性）的列显隐分别存在 `localStorage['vowmon_pets_visible_cols']` / `['vowmon_skills_visible_cols']` / `['vowmon_traits_visible_cols']`，值为列 key 的字符串数组。勾选即刻写盘、刷新保持；要恢复默认就清掉这个键（精灵默认显示头像/编号/名称/属性/属性图标/阶数/形态，技能与特性默认全显）。
+- **后台「显示列」状态**：三个管理页（精灵 / 技能 / 特性）的列显隐分别存在 `localStorage['vowmon_vows_visible_cols']` / `['vowmon_skills_visible_cols']` / `['vowmon_traits_visible_cols']`，值为列 key 的字符串数组。勾选即刻写盘、刷新保持；要恢复默认就清掉这个键（精灵默认显示头像/编号/名称/属性/属性图标/阶数/形态，技能与特性默认全显）。
 - **显示列面板的收起判断**：document 上的点击监听必须用 `e.target.closest('.col-settings-wrap')` 判断「点在面板内还是外」，不能无条件 `showColSettings = false`。后者会把面板里勾选复选框的点击也当成外部点击，面板瞬间收起，复选框的默认切换被打断，表现为「要点好几次才生效」。技能页的监听是捕获阶段（为了穿透弹窗的 `@click.stop`），更要自己判断，因为捕获阶段先于目标元素的 `@click.stop` 执行。
 - **移动端适配**：所有页面都必须最后引入 `css/responsive.css`（放 `</head>` 前），且 viewport 带 `viewport-fit=cover`。适配断点 900 / 640 / 380px，不要在各页内联样式里另写移动端规则。
 - **图标/字体**：Font Awesome 6.4 与 Inter 变量字体走 jsDelivr CDN，各页 `<head>` 自行引入。
@@ -324,7 +324,7 @@ vowmon/
 **前台怎么读**：页面里没有 `<script src="data/xxx.js">` 了，统一走 `js/data-loader.js`：
 
 ```text
-VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); });
+VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); });
 ```
 
 加载器依次尝试 `dataCdnBase`（默认本站 `/data/*` 反代）→ jsDelivr → raw.githubusercontent，任何一个成功就把 JSON 里的字段赋给对应全局变量，然后才挂载 Vue；全都失败会显示带「重新加载」按钮的错误页，不会白屏。
@@ -346,7 +346,7 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 - **同一台电脑**：后台保存 → 写镜像 → `storage` 事件 → 前台标签页**不用刷新**就更新（实测有效）；跨标签页、跨页面（列表 / 图鉴 / 技能 / 物品）都跟着变。
 - **换设备 / 访客**：没有本机镜像，走云端；`/data/*` 代理缓存 60 秒，所以后台同步后最多 1 分钟生效。
 - 「未同步修改」标记：`vowmon_dirty_keys`。点「一键同步」成功后自动清掉；点「从仓库拉取」也会用远端覆盖本机并清掉。
-- 想让页面在数据变化时自己更新，用 `VowmonData.onChange('pets', (data) => { ... })`；`js/vowmon-utils.js` 提供 `VowmonUtils.normalizeAll()`，补齐缺字段的精灵，避免一条脏数据把整页渲染搞崩。
+- 想让页面在数据变化时自己更新，用 `VowmonData.onChange('vows', (data) => { ... })`；`js/vowmon-utils.js` 提供 `VowmonUtils.normalizeAll()`，补齐缺字段的精灵，避免一条脏数据把整页渲染搞崩。
 
 **后台怎么读写**：
 
@@ -358,7 +358,7 @@ VowmonData.ready(['pets']).then(function () { createApp({...}).mount('#app'); })
 
 | 文件 | 字段 → 全局变量 |
 |---|---|
-| `vow-data.json` | `pets` → `allPetsData` |
+| `vow-data.json` | `vows` → `allVowsData` |
 | `skills-data.json` | `skills` → `allSkillsData` |
 | `traits-data.json` | `traits` → `allTraitsData` |
 | `items-data.json` | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData` |
@@ -413,7 +413,7 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 后台要判断「每张图被哪些精灵使用」。原来的写法是 `精灵数 × 图片数` 的双重遍历 —— 1000 只精灵（含异色约 2000 张图）要跑几百万次字符串比较，主线程会卡好几秒。
 
-现在 `admin-images.js` 用 computed 预建两张 Map（按完整路径 `byPath`、按文件名 `byName`），单次查找 O(1)；`getPetUrl()` 也改成直接查索引，不再去 `petRows` 里线性 `find`（那是模板里每行调多次的 O(n²)）。
+现在 `admin-images.js` 用 computed 预建两张 Map（按完整路径 `byPath`、按文件名 `byName`），单次查找 O(1)；`getVowUrl()` 也改成直接查索引，不再去 `vowRows` 里线性 `find`（那是模板里每行调多次的 O(n²)）。
 
 ### 3.5 实测数据（1000 条精灵 / 693KB 数据文件）
 

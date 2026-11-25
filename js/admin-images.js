@@ -9,14 +9,14 @@
    依赖：Vue3 / type-config.js / vow-data.js / github-api.js / common-ui.js
    ========================================================================== */
 const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
-VowmonData.ready(['pets'], { fresh: true }).then(function () {
+VowmonData.ready(['vows'], { fresh: true }).then(function () {
 
 createApp({
     setup() {
         const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 
         const config = ref({ token: '', owner: '', dataRepos: '', imgRepos: '', imgCdnBase: '' });
-        const pets = ref([]);
+        const vows = ref([]);
 
         const currentTab = ref('repo');
         const isLoading = ref(false);
@@ -28,12 +28,12 @@ createApp({
         const repoFilter = ref('all');
         const usageFilter = ref('all');
 
-        const petSearch = ref('');
-        const petStatusFilter = ref('all');
+        const vowSearch = ref('');
+        const vowStatusFilter = ref('all');
 
         // 上传
         const showUploadModal = ref(false);
-        const uploadPet = ref(null);
+        const uploadVow = ref(null);
         const uploadRepo = ref('');
         const uploadPath = ref('');
         const uploadPreview = ref('');
@@ -74,30 +74,30 @@ createApp({
             !!(config.value.token && config.value.owner && imgRepos.value.length)
         );
 
-        const loadConfigAndPets = () => {
+        const loadConfigAndVows = () => {
             const storedConfig = localStorage.getItem('vowmon_sync_config');
             if (storedConfig) {
                 try { Object.assign(config.value, JSON.parse(storedConfig)); } catch (e) { /* ignore */ }
             }
-            const storedPets = localStorage.getItem('vowmon_pets_data');
-            if (storedPets) {
-                try { pets.value = JSON.parse(storedPets); } catch (e) { pets.value = []; }
-            } else if (typeof allPetsData !== 'undefined') {
-                pets.value = JSON.parse(JSON.stringify(allPetsData));
+            const storedVows = localStorage.getItem('vowmon_vows_data') || localStorage.getItem('vowmon_pets_data');
+            if (storedVows) {
+                try { vows.value = JSON.parse(storedVows); } catch (e) { vows.value = []; }
+            } else if (typeof allVowsData !== 'undefined') {
+                vows.value = JSON.parse(JSON.stringify(allVowsData));
             }
         };
 
-        const savePets = () => {
-            localStorage.setItem('vowmon_pets_data', JSON.stringify(pets.value));
+        const saveVows = () => {
+            localStorage.setItem('vowmon_vows_data', JSON.stringify(vows.value));
             // 写入本机镜像：前台（同一台电脑）立刻就能看到这次改动
-            if (window.VowmonStore) VowmonStore.save('pets', { pets: pets.value });
+            if (window.VowmonStore) VowmonStore.save('vows', { vows: vows.value });
         };
 
         // 往精灵的异色列表里追加一张（去重），不动主图
-        const addShinyToPet = (pet, path) => {
-            if (!Array.isArray(pet.shiny)) pet.shiny = [];
-            if (pet.shiny.indexOf(path) !== -1) return false;
-            pet.shiny.push(path);
+        const addShinyToVow = (vow, path) => {
+            if (!Array.isArray(vow.shiny)) vow.shiny = [];
+            if (vow.shiny.indexOf(path) !== -1) return false;
+            vow.shiny.push(path);
             return true;
         };
 
@@ -207,9 +207,9 @@ createApp({
         });
 
         // 匹配规则：路径完全一致优先，否则按文件名命中（兼容外链 / 不同 CDN 前缀）
-        const findImage = (petImage) => {
-            if (!petImage) return null;
-            const a = String(petImage).replace(/\\/g, '');
+        const findImage = (vowImage) => {
+            if (!vowImage) return null;
+            const a = String(vowImage).replace(/\\/g, '');
             const exact = imageIndex.value.byPath.get(a);
             if (exact) return exact;
             const aName = a.split('/').pop().split('?')[0];
@@ -218,9 +218,9 @@ createApp({
         };
 
         // 全部命中（路径命中 + 同名命中，去重），用于统计「哪张图被谁用了」
-        const matchImages = (petImage) => {
-            if (!petImage) return [];
-            const a = String(petImage).replace(/\\/g, '');
+        const matchImages = (vowImage) => {
+            if (!vowImage) return [];
+            const a = String(vowImage).replace(/\\/g, '');
             const aName = a.split('/').pop().split('?')[0];
             const out = [];
             const seen = new Set();
@@ -233,7 +233,7 @@ createApp({
 
         const buildUsage = () => {
             allImages.value.forEach(img => { img.usedBy = []; });
-            pets.value.forEach(p => {
+            vows.value.forEach(p => {
                 const label = p.name || p.id;
                 const mark = (img, who) => { if (!img.usedBy.includes(who)) img.usedBy.push(who); };
                 // 主图
@@ -261,24 +261,24 @@ createApp({
         });
 
         // 精灵图片行：状态 ok / missing / empty / external
-        const petRows = computed(() => pets.value.map(p => {
+        const vowRows = computed(() => vows.value.map(p => {
             const image = p.image || '';
-            if (!image) return { pet: p, status: 'empty', url: '', repo: '' };
-            if (/^https?:\/\//i.test(image)) return { pet: p, status: 'external', url: image, repo: '' };
+            if (!image) return { vow: p, status: 'empty', url: '', repo: '' };
+            if (/^https?:\/\//i.test(image)) return { vow: p, status: 'external', url: image, repo: '' };
             const matched = findImage(image);
-            if (matched) return { pet: p, status: 'ok', url: matched.url, repo: matched.repo };
-            return { pet: p, status: 'missing', url: fileUrl(imgRepos.value[0] || '', image), repo: '' };
+            if (matched) return { vow: p, status: 'ok', url: matched.url, repo: matched.repo };
+            return { vow: p, status: 'missing', url: fileUrl(imgRepos.value[0] || '', image), repo: '' };
         }));
 
-        const linkedCount = computed(() => petRows.value.filter(r => r.status === 'ok').length);
-        const missingPets = computed(() => petRows.value.filter(r => r.status === 'missing' || r.status === 'empty'));
+        const linkedCount = computed(() => vowRows.value.filter(r => r.status === 'ok').length);
+        const missingVows = computed(() => vowRows.value.filter(r => r.status === 'missing' || r.status === 'empty'));
 
-        const filteredPetRows = computed(() => {
-            const kw = petSearch.value.trim().toLowerCase();
-            return petRows.value.filter(r => {
-                if (petStatusFilter.value !== 'all' && r.status !== petStatusFilter.value) return false;
+        const filteredVowRows = computed(() => {
+            const kw = vowSearch.value.trim().toLowerCase();
+            return vowRows.value.filter(r => {
+                if (vowStatusFilter.value !== 'all' && r.status !== vowStatusFilter.value) return false;
                 if (kw) {
-                    const hay = ((r.pet.id || '') + ' ' + (r.pet.name || '') + ' ' + (r.pet.image || '')).toLowerCase();
+                    const hay = ((r.vow.id || '') + ' ' + (r.vow.name || '') + ' ' + (r.vow.image || '')).toLowerCase();
                     if (hay.indexOf(kw) === -1) return false;
                 }
                 return true;
@@ -290,34 +290,34 @@ createApp({
         // 页面直接卡住甚至被 jsDelivr 限流，所以两个网格都按页渲染（每页 60）。
         const PAGE_SIZE = 60;
         const repoPage = ref(1);
-        const petPage = ref(1);
+        const vowPage = ref(1);
 
         const repoTotalPages = computed(() => Math.ceil(filteredRepoImages.value.length / PAGE_SIZE) || 1);
-        const petTotalPages = computed(() => Math.ceil(filteredPetRows.value.length / PAGE_SIZE) || 1);
+        const vowTotalPages = computed(() => Math.ceil(filteredVowRows.value.length / PAGE_SIZE) || 1);
 
         const paginatedRepoImages = computed(() => {
             const page = Math.min(Math.max(repoPage.value, 1), repoTotalPages.value);
             const start = (page - 1) * PAGE_SIZE;
             return filteredRepoImages.value.slice(start, start + PAGE_SIZE);
         });
-        const paginatedPetRows = computed(() => {
-            const page = Math.min(Math.max(petPage.value, 1), petTotalPages.value);
+        const paginatedVowRows = computed(() => {
+            const page = Math.min(Math.max(vowPage.value, 1), vowTotalPages.value);
             const start = (page - 1) * PAGE_SIZE;
-            return filteredPetRows.value.slice(start, start + PAGE_SIZE);
+            return filteredVowRows.value.slice(start, start + PAGE_SIZE);
         });
 
         // 搜索结果或筛选条件一变就回到第 1 页，否则可能停在一个空页上
         watch([repoSearch, repoFilter, usageFilter], () => { repoPage.value = 1; });
-        watch([petSearch, petStatusFilter], () => { petPage.value = 1; });
+        watch([vowSearch, vowStatusFilter], () => { vowPage.value = 1; });
         // 重新扫描后总页数可能变少，越界就纠正回来
         watch(repoTotalPages, (n) => { if (repoPage.value > n) repoPage.value = n; });
-        watch(petTotalPages, (n) => { if (petPage.value > n) petPage.value = n; });
+        watch(vowTotalPages, (n) => { if (vowPage.value > n) vowPage.value = n; });
 
         const statusText = (s) => ({ ok: '正常', missing: '缺失', empty: '未填写', external: '外链' }[s] || s);        // 异色图片张数（shiny 数组，可为空）
         const shinyCount = (p) => (p && Array.isArray(p.shiny) ? p.shiny.length : 0);
         const shortRepo = (r) => r.length > 16 ? r.slice(0, 14) + '…' : r;
-        // 直接算，不再去 petRows 里线性查找（模板里每行会调多次，千条时是 O(n²)）
-        const getPetUrl = (p) => {
+        // 直接算，不再去 vowRows 里线性查找（模板里每行会调多次，千条时是 O(n²)）
+        const getVowUrl = (p) => {
             const image = (p && p.image) || '';
             if (!image) return '';
             if (/^https?:\/\//i.test(image)) return image;
@@ -334,9 +334,9 @@ createApp({
         // 切换位置时顺手把建议路径换掉（主图 ↔ 异色图），省得用户自己改文件名
         const setUploadMode = (mode) => {
             uploadMode.value = mode;
-            const pet = uploadPet.value;
-            if (!pet) return;
-            const id = pet.id;
+            const vow = uploadVow.value;
+            if (!vow) return;
+            const id = vow.id;
             const p = String(uploadPath.value || '');
             if (mode === 'shiny' && new RegExp('sprites/' + id + '\\.png$').test(p)) {
                 uploadPath.value = `sprites/${id}_s.png`;
@@ -345,18 +345,18 @@ createApp({
             }
         };
 
-        const openUpload = (pet) => {
+        const openUpload = (vow) => {
             if (!hasConfig.value) {
                 showToast('请先在「同步配置」中填写仓库信息', 'err');
                 return;
             }
-            uploadPet.value = pet || null;
+            uploadVow.value = vow || null;
             uploadRepo.value = imgRepos.value[0] || '';
             uploadMode.value = 'image';
-            if (pet && pet.image && !/^https?:\/\//i.test(pet.image)) {
-                uploadPath.value = pet.image;
-            } else if (pet) {
-                uploadPath.value = `sprites/${pet.id}.png`;
+            if (vow && vow.image && !/^https?:\/\//i.test(vow.image)) {
+                uploadPath.value = vow.image;
+            } else if (vow) {
+                uploadPath.value = `sprites/${vow.id}.png`;
             } else {
                 uploadPath.value = 'sprites/';
             }
@@ -377,8 +377,8 @@ createApp({
                 let path = (uploadPath.value || '').trim().replace(/^\/+/, '');
                 // 路径是目录（以 / 结尾或空）时，自动补全文件名
                 if (!path || /\/$/.test(path)) {
-                    const baseName = uploadPet.value
-                        ? `${uploadPet.value.id}.png`
+                    const baseName = uploadVow.value
+                        ? `${uploadVow.value.id}.png`
                         : (file.name.replace(/\.[^.]+$/, '') || 'image') + '.png';
                     path = path + baseName;
                 }
@@ -391,17 +391,17 @@ createApp({
                     config.value.token, config.value.owner, uploadRepo.value,
                     path, img.base64, `Upload image: ${path}`, true
                 );
-                if (uploadPet.value) {
+                if (uploadVow.value) {
                     if (uploadMode.value === 'shiny') {
-                        const added = addShinyToPet(uploadPet.value, path);
+                        const added = addShinyToVow(uploadVow.value, path);
                         if (!added) showToast('这张图已经在该精灵的异色列表里了', 'err');
                     } else {
-                        uploadPet.value.image = path;
+                        uploadVow.value.image = path;
                     }
-                    savePets();
+                    saveVows();
                 }
                 uploadPreview.value = `data:image/png;base64,${img.base64}`;
-                const target = uploadPet.value
+                const target = uploadVow.value
                     ? (uploadMode.value === 'shiny' ? '已作为异色图追加到精灵' : '已上传并替换精灵主图')
                     : '图片上传成功';
                 showToast(target + `（${img.canvasSize}×${img.canvasSize}，${ImageUtils.formatBytes(img.bytes)}）`);
@@ -452,7 +452,7 @@ createApp({
         };
 
         /* ------------------------------ 绑定精灵 ------------------------------ */
-        const replacePetWith = (img) => {
+        const replaceVowWith = (img) => {
             bindImage.value = img;
             bindSearch.value = '';
             // 文件名像异色图就默认选「异色」，避免一按就把主图覆盖掉
@@ -460,28 +460,28 @@ createApp({
             showBindModal.value = true;
         };
 
-        const filteredBindPets = computed(() => {
+        const filteredBindVows = computed(() => {
             const kw = bindSearch.value.trim().toLowerCase();
-            if (!kw) return pets.value;
-            return pets.value.filter(p =>
+            if (!kw) return vows.value;
+            return vows.value.filter(p =>
                 ((p.id || '') + ' ' + (p.name || '')).toLowerCase().indexOf(kw) !== -1
             );
         });
 
-        const confirmBind = (pet) => {
+        const confirmBind = (vow) => {
             if (!bindImage.value) return;
             const path = bindImage.value.path;
             if (bindMode.value === 'shiny') {
-                const added = addShinyToPet(pet, path);
-                savePets();
+                const added = addShinyToVow(vow, path);
+                saveVows();
                 showToast(added
-                    ? `已把这张图作为异色图加到「${pet.name || pet.id}」（主图不变）`
-                    : `「${pet.name || pet.id}」的异色列表里已经有这张图了`);
+                    ? `已把这张图作为异色图加到「${vow.name || vow.id}」（主图不变）`
+                    : `「${vow.name || vow.id}」的异色列表里已经有这张图了`);
                 if (!added) return;
             } else {
-                pet.image = path;
-                savePets();
-                showToast(`已将图片绑定到「${pet.name || pet.id}」的主图`);
+                vow.image = path;
+                saveVows();
+                showToast(`已将图片绑定到「${vow.name || vow.id}」的主图`);
             }
             showBindModal.value = false;
             bindImage.value = null;
@@ -505,23 +505,23 @@ createApp({
         };
 
         onMounted(() => {
-            loadConfigAndPets();
+            loadConfigAndVows();
             if (hasConfig.value) loadAll();
         });
 
         return {
-            config, pets, imgRepos, hasConfig, currentTab,
+            config, vows, imgRepos, hasConfig, currentTab,
             isLoading, loadError, repoStatus, allImages, loadAll,
             repoSearch, repoFilter, usageFilter, filteredRepoImages,
-            petSearch, petStatusFilter, filteredPetRows, linkedCount, missingPets,
-            repoPage, petPage, repoTotalPages, petTotalPages,
-            paginatedRepoImages, paginatedPetRows, PAGE_SIZE,
-            showUploadModal, uploadPet, uploadRepo, uploadPath, uploadPreview,
+            vowSearch, vowStatusFilter, filteredVowRows, linkedCount, missingVows,
+            repoPage, vowPage, repoTotalPages, vowTotalPages,
+            paginatedRepoImages, paginatedVowRows, PAGE_SIZE,
+            showUploadModal, uploadVow, uploadRepo, uploadPath, uploadPreview,
             uploadFileInput, isUploading, openUpload, handleUpload, uploadMode, setUploadMode,
             deleteTarget, isDeleting, openDelete, confirmDelete,
-            showBindModal, bindImage, bindSearch, filteredBindPets, replacePetWith, confirmBind,
+            showBindModal, bindImage, bindSearch, filteredBindVows, replaceVowWith, confirmBind,
             bindMode, looksShiny,
-            getPetUrl, statusText, shortRepo, onImgError, copyPath, shinyCount,
+            getVowUrl, statusText, shortRepo, onImgError, copyPath, shinyCount,
             window
         };
     }

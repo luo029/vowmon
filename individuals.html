@@ -53,15 +53,15 @@
         .card-share-btn:hover { background: #fff1e6; border-color: #e0a171; transform: translateY(-1px); }
         .detail-wrap { max-width: 1200px; margin: 16px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
 
-        .pet-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-        .pet-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 13px; padding: 5px 12px; border-radius: 10px; }
-        .pet-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; }
-        .pet-name-bar .gender-tag { font-size: 12px; font-weight: 800; color: #d4537e; background: #fbeaf0; border-radius: 999px; padding: 4px 12px; }
+        .vow-name-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .vow-name-bar .id-badge { background: #2d3748; color: #fff; font-size: 13px; padding: 5px 12px; border-radius: 10px; }
+        .vow-name-bar h1 { font-size: 26px; font-weight: 900; color: #1a202c; }
+        .vow-name-bar .gender-tag { font-size: 12px; font-weight: 800; color: #d4537e; background: #fbeaf0; border-radius: 999px; padding: 4px 12px; }
         .rank-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 900; padding: 4px 13px; border-radius: 999px; white-space: nowrap; }
         .rank-pill i { font-size: 11px; }
         .rank-pill.quan { color: #c2410c; background: #fdf1e7; border: 1px solid #f2d3b8; }
         .rank-pill.wei { color: #7048e8; background: #f2eefd; border: 1px solid #d9cdfa; }
-        .pet-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
+        .vow-name-bar .type-icons { margin-left: auto; display: flex; gap: 6px; }
         .type-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #fff; }
         .type-pill i { font-size: 10px; }
 
@@ -70,9 +70,9 @@
                         linear-gradient(160deg, var(--sc-c1, #bee3f8) 0%, var(--sc-c2, #e8f4fd) 55%, #f9fbfe 100%); }
         .showcase .stage { position: relative; height: 330px; display: flex; align-items: center; justify-content: center; }
         .showcase .stage img { width: 240px; height: 240px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(45,55,72,.2)); }
-        .showcase .stage img.float { animation: petFloat 3.2s ease-in-out infinite; will-change: transform; }
-        @keyframes petFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
-        .pet-shadow { width: 120px; height: 14px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.24) 0%, transparent 68%); }
+        .showcase .stage img.float { animation: vowFloat 3.2s ease-in-out infinite; will-change: transform; }
+        @keyframes vowFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-13px); } }
+        .vow-shadow { width: 120px; height: 14px; margin-top: -6px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(45,55,72,.24) 0%, transparent 68%); }
         .showcase .level-band { position: absolute; top: 14px; left: 14px; z-index: 3; font-size: 13px; font-weight: 900; color: #fff; background: var(--stage-c, #718096); padding: 6px 16px; border-radius: 999px; box-shadow: 0 3px 10px rgba(45,55,72,.18); }
         .showcase .owner-band { position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 3; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.88); border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; }
         .showcase .owner-band:hover { box-shadow: 0 5px 14px rgba(45,55,72,.18); transform: translateY(-1px); }
@@ -158,9 +158,9 @@
             .showcase .stage img { width: 195px; height: 195px; }
         }
     </style>
-    <link rel="stylesheet" href="css/navbar.css?v=20261125a">
-    <script src="js/navbar.js?v=20261125c" defer></script>
-    <link rel="stylesheet" href="css/responsive.css?v=20261124f">
+    <link rel="stylesheet" href="css/navbar.css?v=20261126s">
+    <script src="js/navbar.js?v=20261126s" defer></script>
+    <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
 
@@ -178,7 +178,7 @@
 
         <div class="detail-wrap">
             <div>
-                <div class="pet-name-bar">
+                <div class="vow-name-bar">
                     <span class="id-badge font-num">{{ indName(ind) }}</span>
                     <h1>{{ indName(ind) }}</h1>
                     <span class="gender-tag" v-if="ind.gender">{{ ind.gender }}</span>
@@ -197,7 +197,7 @@
                         <img :class="{ float: isAnimOn }" v-if="speciesImage" :src="speciesImage" :alt="speciesName">
                         <i v-else class="fa-solid fa-paw" style="font-size: 80px; color: #cbd5e0;"></i>
                     </div>
-                    <div class="pet-shadow"></div>
+                    <div class="vow-shadow"></div>
                     <div class="owner-band" v-if="owner" @click="gotoCharacter(owner.id)" title="查看主人档案">
                         <span class="ob-label">主人<br>OWNER</span>
                         <span class="ob-name">{{ owner.name }}<small style="font-size:11px; color:#a0aec0; font-weight:700;"> {{ owner.title ? '· ' + owner.title : '' }}</small></span>
@@ -212,7 +212,7 @@
                     <div class="info-grid">
                         <div class="info-box"><div class="lbl">种族</div><div class="val">
                             <template v-if="species">
-                                <a :href="'pet-detail.html?id=' + encodeURIComponent(species.id)" style="color:#185FA5; text-decoration:none;">{{ species.name }} №{{ species.id }}</a>
+                                <a :href="'vow-detail.html?id=' + encodeURIComponent(species.id)" style="color:#185FA5; text-decoration:none;">{{ species.name }} №{{ species.id }}</a>
                             </template>
                             <template v-else>{{ ind.speciesId }}（图鉴未收录）</template>
                         </div></div>
@@ -382,13 +382,13 @@
     </div>
 </div>
 
-<script src="js/type-config.js?v=20261124"></script>
-<script src="js/site-config.js?v=20261124"></script>
-<script src="js/data-loader.js?v=20261126c"></script>
-<script src="js/card-export.js?v=20261126r"></script>
+<script src="js/type-config.js?v=20261126s"></script>
+<script src="js/site-config.js?v=20261126s"></script>
+<script src="js/data-loader.js?v=20261126s"></script>
+<script src="js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function () {
+VowmonData.ready(['individuals', 'vows', 'characters', 'natures']).then(function () {
 
     /* 精灵等级八阶：由等级自动推导阶段 */
     const RANK_BANDS = [
@@ -417,7 +417,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
 
             /* ---------------- 数据 ---------------- */
             const individuals = ref([]);
-            const pets = ref([]);
+            const vows = ref([]);
             const characters = ref([]);
             VowmonData.onChange('individuals', (data) => {
                 individuals.value = (data && data.individuals) || allIndividualsData || [];
@@ -451,7 +451,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                 return p;
             };
             individuals.value = (allIndividualsData || []).map(normalize);
-            pets.value = allPetsData || [];
+            vows.value = allVowsData || [];
             characters.value = allCharactersData || [];
 
             const ind = computed(() => individuals.value.find(p => p.id === urlId) || null);
@@ -473,7 +473,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
             const getTypeIcon = (type) => (typeMap.get(type) || {}).icon || '';
 
             /* ---------------- 种族引用 ---------------- */
-            const speciesOf = (p) => pets.value.find(s => String(s.id) === String(p.speciesId)) || null;
+            const speciesOf = (p) => vows.value.find(s => String(s.id) === String(p.speciesId)) || null;
             const speciesNameOf = (p) => { const s = speciesOf(p); return s ? (s.name + ' №' + s.id) : ''; };
             /* 异色个体优先用该种族的异色图 */
             const speciesImageOf = (p) => {
@@ -629,7 +629,7 @@ VowmonData.ready(['individuals', 'pets', 'characters', 'natures']).then(function
                     desc: p.experience || p.notes || '',
                     descLabel: '契约记录',
                     accent: (speciesTypes.value && speciesTypes.value.length) ? getTypeColor(speciesTypes.value[0]) : '#c2410c',
-                    variant: 'pet',
+                    variant: 'vow',
                     shiny: !!p.shiny,
                     dexNo: (species.value && species.value.id) ? 'No.' + species.value.id : '',
                     footLeft: '',

@@ -35,7 +35,7 @@ input[type="text"], input[type="password"], input[type="number"], input[type="se
 }
 
 /* 点击高亮透明（避免移动端蓝色方块） */
-a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-card {
+a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .vow-card {
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -244,9 +244,9 @@ a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-ca
     .toolbar-left .input-with-btn { width: 100% !important; }
     .toolbar-left .search-field { width: 100% !important; }
     .filter-select { flex: 1; min-width: 0; }
-    .img-grid, .pet-img-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .img-grid, .vow-img-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .img-thumb { height: 120px; }
-    .pet-img-thumb { height: 120px; }
+    .vow-img-thumb { height: 120px; }
     .img-tab { flex: 1; justify-content: center; padding: 10px 8px; font-size: 13px; }
     .toast { width: calc(100% - 32px); justify-content: center; bottom: max(20px, env(safe-area-inset-bottom)); }
 }
@@ -258,9 +258,9 @@ a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-ca
     .stat-icon { width: 38px; height: 38px; font-size: 16px; }
     .stat-num { font-size: 19px; }
     .stat-label { font-size: 11px; }
-    .img-grid, .pet-img-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .img-card-body, .pet-img-info { padding: 10px; }
-    .img-name, .pet-img-title { font-size: 12px; }
+    .img-grid, .vow-img-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .img-card-body, .vow-img-info { padding: 10px; }
+    .img-name, .vow-img-title { font-size: 12px; }
     .action-btn.mini { padding: 5px 7px; font-size: 10px; }
     .settings-hero { gap: 12px; padding: 16px; }
     .settings-hero-icon { width: 46px; height: 46px; font-size: 20px; }
@@ -276,7 +276,7 @@ a, button, .btn, .action-btn, .filter-btn, .type-btn, .type-pill-option, .pet-ca
 @media (max-width: 380px) {
     .topbar h1 { font-size: 15px; }
     .btn { padding: 8px 12px; font-size: 12px; }
-    .img-grid, .pet-img-grid { grid-template-columns: 1fr; }
+    .img-grid, .vow-img-grid { grid-template-columns: 1fr; }
     .stat-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
     .type-pill-option { padding: 6px 10px; font-size: 12px; }
 }
