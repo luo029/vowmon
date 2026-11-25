@@ -70,7 +70,11 @@
         // 书内档案：御兽人物（书中角色，持有精灵 / 物品栏 / 存款）
         characters: {
             file: 'characters-data.json', label: '御兽人物',
-            keys: { characters: 'allCharactersData' }
+            keys: {
+                characters: 'allCharactersData',
+                factions: 'allCharFactions',
+                groups: 'allCharGroups'
+            }
         },
         // 页面内容（世界观四页的文本块）：blocks 是「页.序 → {label, html}」的扁平映射，
         // 前台 js/lore-apply.js 拿它替换 [data-lore] 元素的内容

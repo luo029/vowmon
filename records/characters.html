@@ -213,6 +213,10 @@
                     <i class="fa-solid fa-flag"></i> {{ cha.faction }}
                     <small>所属势力</small>
                 </div>
+                <div class="pf-faction" v-if="cha.groupId" style="background:#fdf6e3; border-color:#f2e6cf; color:#9c6b0e;">
+                    <i class="fa-solid fa-folder" :style="{ color: groupColorOf(cha) }"></i> {{ cha.groupId }}
+                    <small>自定义分组</small>
+                </div>
                 <div class="pf-faction" v-if="cha.birthplace">
                     <i class="fa-solid fa-location-dot"></i> {{ cha.birthplace }}
                     <small>出生地区</small>
@@ -363,6 +367,7 @@
                     </div>
                     <div class="cc-body">
                         <div class="cc-faction" v-if="c.faction"><i class="fa-solid fa-flag"></i> {{ c.faction }}</div>
+                        <div class="cc-faction" v-if="c.groupId" style="color: #6b4b12;"><i class="fa-solid fa-folder" :style="{ color: groupColorOf(c) }"></i> {{ c.groupId }}</div>
                         <div class="cc-money font-num"><i class="fa-solid fa-coins"></i> {{ fmtMoney(c.money) }} 联盟币</div>
                         <div class="cc-bio" v-if="c.bio">{{ c.bio }}</div>
                         <div class="cc-vows">
@@ -389,7 +394,7 @@
 
 <script src="../js/type-config.js?v=20261126s"></script>
 <script src="../js/site-config.js?v=20261126s"></script>
-<script src="../js/data-loader.js?v=20261126w"></script>
+<script src="../js/data-loader.js?v=20261127a"></script>
 <script src="../js/card-export.js?v=20261126s"></script>
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
@@ -506,9 +511,28 @@ VowmonData.ready(['characters', 'individuals', 'vows']).then(function () {
                 for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
                 return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
             };
-            /* 联盟配色：已知联盟用固定色，其他联盟按名字取稳定色——不同联盟编号颜色不同 */
+            /* 联盟配色：优先用后台「势力管理」配置的颜色（随 characters-data.json 同步），没配置的按名字取稳定色 */
             const FACTION_COLORS = { '九牧联盟': '#2b6cb0', '荒野': '#2f855a' };
-            const leagueColor = (f) => FACTION_COLORS[f] || avatarColor(f);
+            const dynFactionColor = (f) => {
+                try {
+                    const list = (typeof allCharFactions !== 'undefined' && Array.isArray(allCharFactions)) ? allCharFactions : [];
+                    const hit = list.find(o => o && o.name === f);
+                    if (hit && hit.color) return hit.color;
+                } catch (e) { /* 数据未就绪时用兜底 */ }
+                return '';
+            };
+            const leagueColor = (f) => dynFactionColor(f) || FACTION_COLORS[f] || avatarColor(f);
+            /* 自定义分组：名称与颜色来自后台「分组管理」 */
+            const groupInfoOf = (c) => {
+                const gid = c && c.groupId ? String(c.groupId) : '';
+                if (!gid) return null;
+                try {
+                    const list = (typeof allCharGroups !== 'undefined' && Array.isArray(allCharGroups)) ? allCharGroups : [];
+                    const hit = list.find(o => o && o.name === gid);
+                    return { name: gid, color: (hit && hit.color) || avatarColor(gid) };
+                } catch (e) { return { name: gid, color: avatarColor(gid) }; }
+            };
+            const groupColorOf = (c) => { const g = groupInfoOf(c); return g ? g.color : ''; };
             const charById = (id) => characters.value.find(c => String(c.id) === String(id)) || null;
             const linksOf = (c) => (c && Array.isArray(c.links) ? c.links : []);
             const trunc = (s, n) => {
@@ -676,7 +700,7 @@ VowmonData.ready(['characters', 'individuals', 'vows']).then(function () {
                 fmtMoney, gotoIndividual, gotoCharacter, getImgUrl,
                 /* 关系 / 关系谱 */
                 linkRows, avatarColor, gotoCharacterById,
-                leagueColor,
+                leagueColor, groupInfoOf, groupColorOf,
                 viewMode, graphCenterId, graphCenter, graph, setGraphCenter,
                 exportCard
             };

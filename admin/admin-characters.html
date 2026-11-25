@@ -145,6 +145,59 @@
         }
 
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
+
+        /* ============ 视图切换 ============ */
+        .view-seg { display: flex; gap: 0; border: 1px solid #e2e8f0; border-radius: 11px; overflow: hidden; background: #fff; }
+        .view-seg button { border: none; background: #fff; width: 40px; height: 38px; cursor: pointer; font-size: 13px; color: #a0aec0; transition: all .15s; font-family: inherit; }
+        .view-seg button + button { border-left: 1px solid #edf1f5; }
+        .view-seg button:hover { color: #4a5568; background: #f7fafc; }
+        .view-seg button.on { background: #fffaf0; color: #b7791f; }
+
+        /* ============ 分组标题 ============ */
+        .grp-head { display: flex; align-items: center; gap: 9px; margin: 18px 0 10px; }
+        .grp-head:first-of-type { margin-top: 0; }
+        .grp-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px rgba(45,55,72,.06); }
+        .grp-name { font-size: 15px; font-weight: 900; color: #2d3748; }
+        .grp-count { font-size: 11.5px; font-weight: 800; color: #718096; background: #f1f5f9; border-radius: 999px; padding: 2px 10px; }
+
+        /* ============ 势力/分组下拉行 ============ */
+        .org-field { display: flex; gap: 7px; align-items: stretch; }
+        .org-mgr { flex: none; width: 42px; border: 1px solid #e2e6ec; border-radius: 11px; background: #f8fafc; color: #718096; cursor: pointer; font-size: 13px; transition: all .15s; }
+        .org-mgr:hover { border-color: #d69e2e; color: #b7791f; background: #fffdf5; }
+
+        /* ============ 自定义属性 ============ */
+        .cf-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .cf-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 11px; }
+        .cf-head { display: flex; gap: 8px; margin-bottom: 8px; }
+        .cf-label { flex: 1; min-width: 0; height: 36px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; font-weight: 800; font-family: inherit; color: #6b4b12; background: #fff; outline: none; }
+        .cf-label::placeholder { color: #b6bfc9; font-weight: 600; }
+        .cf-label:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .cf-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 9px; background: #fff5f5; color: #e53e3e; cursor: pointer; font-size: 12px; }
+        .cf-x:hover { background: #fee; }
+        .cf-quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+        .cf-quick-label { font-size: 11.5px; color: #a0aec0; font-weight: 800; }
+        .cf-quick-btn { height: 26px; padding: 0 11px; border-radius: 999px; border: 1px dashed #cbd5e0; background: #fff; font-size: 12px; font-weight: 800; color: #4a5568; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; transition: all .12s; }
+        .cf-quick-btn i { font-size: 9px; color: #a0aec0; }
+        .cf-quick-btn:hover { border-color: #d69e2e; color: #9c6b0e; background: #fffdf5; }
+
+        /* ============ 势力/分组管理弹窗 ============ */
+        .org-mgr-body { padding: 14px 18px; max-height: 55vh; overflow-y: auto; }
+        .org-mgr-tip { font-size: 12px; color: #a0aec0; font-weight: 700; line-height: 1.6; margin: 0 0 12px; }
+        .org-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #edf1f5; flex-wrap: wrap; }
+        .org-item:last-child { border-bottom: none; }
+        .org-name { flex: 1 1 120px; min-width: 0; height: 36px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13.5px; font-weight: 800; font-family: inherit; color: #2d3748; background: #fff; outline: none; }
+        .org-name::placeholder { color: #b6bfc9; font-weight: 600; }
+        .org-name:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .org-colors { display: flex; gap: 5px; flex-wrap: wrap; }
+        .org-c { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #dbe4ec; cursor: pointer; padding: 0; transition: transform .12s; }
+        .org-c:hover { transform: scale(1.15); }
+        .org-c.on { box-shadow: 0 0 0 2px #2d3748; transform: scale(1.1); }
+        .org-del, .org-ok { flex: none; width: 36px; height: 36px; border: none; border-radius: 9px; cursor: pointer; font-size: 12px; }
+        .org-del { background: #fff5f5; color: #e53e3e; }
+        .org-del:hover { background: #fee; }
+        .org-ok { background: #f0fff4; color: #38a169; }
+        .org-ok:hover { background: #c6f6d5; }
+        .org-empty { font-size: 12.5px; color: #b6bfc9; font-weight: 700; }
         @media (max-width: 900px) { .basic-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 640px) {
             .basic-grid { grid-template-columns: 1fr; }
@@ -198,13 +251,26 @@
                     <input v-model="searchName" placeholder="">
                 </div>
                 <span class="count-pill">共 <b class="font-num">{{ filteredList.length }}</b> 位人物</span>
-                <div style="margin-left: auto;">
+                <div class="view-seg">
+                    <button type="button" :class="{ on: viewMode === 'flat' }" @click="viewMode = 'flat'" title="平铺显示"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button type="button" :class="{ on: viewMode === 'faction' }" @click="viewMode = 'faction'" title="按势力分组显示"><i class="fa-solid fa-flag"></i></button>
+                    <button type="button" :class="{ on: viewMode === 'group' }" @click="viewMode = 'group'" title="按自定义分组显示"><i class="fa-solid fa-folder-tree"></i></button>
+                </div>
+                <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-outline btn-sm" @click="openOrgModal('faction')"><i class="fa-solid fa-flag" style="color:#2b6cb0;"></i> 势力管理</button>
+                    <button class="btn btn-outline btn-sm" @click="openOrgModal('group')"><i class="fa-solid fa-folder-tree" style="color:#d69e2e;"></i> 分组管理</button>
                     <button class="btn btn-primary" @click="openEditor()"><i class="fa-solid fa-plus"></i> 添加御兽人物</button>
                 </div>
             </div>
 
-            <div class="cha-grid" v-if="filteredList.length">
-                <div class="cha-card" v-for="item in filteredList" :key="item.id"
+            <template v-for="sec in displaySections" :key="sec.key">
+                <div class="grp-head" v-if="sec.title">
+                    <span class="grp-dot" :style="{ background: sec.color }"></span>
+                    <span class="grp-name">{{ sec.title }}</span>
+                    <span class="grp-count font-num">{{ sec.items.length }}</span>
+                </div>
+                <div class="cha-grid" v-if="sec.items.length">
+                <div class="cha-card" v-for="item in sec.items" :key="item.id"
                      :style="{ '--accent': factionColor(item.faction) }">
                     <div class="head">
                         <div class="avatar">
@@ -223,6 +289,7 @@
                         <span class="m-unit">联盟币存款</span>
                     </div>
                     <div class="cha-chips">
+                        <span class="mini-chip" v-if="item.groupId" :style="{ background: groupColor(item.groupId) }"><i class="fa-solid fa-folder"></i>{{ item.groupId }}</span>
                         <span class="mini-chip" v-if="item.leagueNo" :style="{ background: factionColor(item.faction) }"><i class="fa-solid fa-id-badge"></i>联盟编号 No.{{ item.leagueNo }}</span>
                         <span class="mini-chip" v-if="item.intlNo" style="background: #8093a8;"><i class="fa-solid fa-globe"></i>国际编号 No.{{ item.intlNo }}</span>
                         <span class="mini-chip" v-if="(item.vowIds || []).length" style="background: #38a169;"><i class="fa-solid fa-paw"></i>{{ (item.vowIds || []).length }} 只精灵</span>
@@ -243,11 +310,12 @@
                         <button class="op-btn del" title="删除" @click.stop="openDeleteConfirm(indexOfItem(item), item.name)"><i class="fa-solid fa-trash"></i> 删除</button>
                     </div>
                 </div>
-            </div>
-            <div class="empty-box" v-else>
-                <i class="fa-solid fa-users"></i>
-                暂无御兽人物档案，点右上角「添加御兽人物」开始录入书中角色。
-            </div>
+                </div>
+                <div class="empty-box" v-if="!sec.items.length">
+                    <i class="fa-solid fa-users"></i>
+                    暂无御兽人物档案，点右上角「添加御兽人物」开始录入书中角色。
+                </div>
+            </template>
         </main>
     </div>
 
@@ -282,8 +350,17 @@
                     <div class="form-grid basic-grid">
                         <div class="form-group"><label>姓名 <i class="tip" data-tip="必填；书中的称呼">?</i></label><input v-model="form.name" placeholder="必填，书中的称呼"></div>
                         <div class="form-group"><label>头衔 / 称号 <i class="tip" data-tip="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder="如：大冠 / 首座"></div>
-                        <div class="form-group"><label>所属势力 <i class="tip" data-tip="如：九牧联盟 / 荒野">?</i></label>
-                            <input v-model="form.faction" placeholder="如：九牧联盟">
+                        <div class="form-group"><label>所属势力 <i class="tip" data-tip="联盟、帮派、教会…任何组织都可以。可下拉选择，也可直接输入新名称（保存时自动登记进势力列表）。点右侧旗帜按钮管理势力与颜色">?</i></label>
+                            <div class="org-field">
+                                <vow-select v-model="form.faction" :options="factionOptions" creatable placeholder="（无势力 / 荒野散人）" style="flex: 1; min-width: 0;"></vow-select>
+                                <button type="button" class="org-mgr" title="势力管理（名称与颜色）" @click="openOrgModal('faction')"><i class="fa-solid fa-flag"></i></button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>自定义分组 <i class="tip" data-tip="和势力独立的分组（如：主角团 / 反派 / 一卷人物）。可直接输入新分组名，保存时自动登记。点右侧文件夹按钮管理分组与颜色">?</i></label>
+                            <div class="org-field">
+                                <vow-select v-model="form.groupId" :options="groupOptions" creatable placeholder="（未分组）" style="flex: 1; min-width: 0;"></vow-select>
+                                <button type="button" class="org-mgr" title="分组管理（名称与颜色）" @click="openOrgModal('group')"><i class="fa-solid fa-folder-tree"></i></button>
+                            </div>
                         </div>
                         <div class="form-group"><label>出生地区 <i class="tip" data-tip="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder="如：落霞城"></div>
                         <div class="form-group"><label>联盟职位 <i class="tip" data-tip="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder="盟主 / 戎枢 / 首座…"></div>
@@ -382,11 +459,30 @@
                     </div>
                 </div>
 
+                <!-- 自定义属性 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-plus-minus"></i> 自定义属性 <i class="tip" data-tip="人设、背包、信物、口头禅……想加什么加什么。字段名可复用之前用过的（下面会列出快捷按钮），不同人物可以有不同的字段">?</i> </div>
+                    <div class="cf-list" v-if="form.customFields.length">
+                        <div class="cf-item" v-for="(f, i) in form.customFields" :key="i">
+                            <div class="cf-head">
+                                <input class="cf-label" v-model="f.label" placeholder="属性名（如：人设 / 背包 / 信物）">
+                                <button type="button" class="cf-x" title="删除该属性" @click="removeCustomField(i)"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <vow-textarea v-model="f.value" :rows="2" placeholder="内容…"></vow-textarea>
+                        </div>
+                    </div>
+                    <div class="cf-quick" v-if="knownFieldLabels.length">
+                        <span class="cf-quick-label">快速添加：</span>
+                        <button type="button" class="cf-quick-btn" v-for="l in knownFieldLabels" :key="l" @click="addCustomField(l)"><i class="fa-solid fa-plus"></i>{{ l }}</button>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addCustomField('')"><i class="fa-solid fa-plus"></i> 添加自定义属性</button>
+                </div>
+
                 <!-- 简介 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介 <i class="tip" data-tip="一两句话概括这个人物；正文详情写在下面分区">?</i></div>
                     <div class="form-group" style="margin-bottom: 12px;"><vow-textarea v-model="form.bio" :rows="3" placeholder="一两句话概括这个人物…"></vow-textarea></div>
-                    <div class="form-group"><label>备注 <i class="tip" data-tip="其它需要记下的事">?</i></label><input v-model="form.notes" placeholder="其它需要记下的事"></div>
+                    <div class="form-group"><label>备注 <i class="tip" data-tip="其它需要记下的事；右下角可拖拽调大小，右上角可弹窗放大编辑">?</i></label><vow-textarea v-model="form.notes" :rows="3" placeholder="其它需要记下的事…"></vow-textarea></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -450,17 +546,57 @@
         </div>
     </div>
 
+    <!-- 势力 / 分组管理弹窗 -->
+    <div class="modal-overlay" v-if="showOrgModal" @vowmon:modal-close="showOrgModal = ''" style="z-index: 1150;">
+        <div class="selection-modal" style="width: 460px;" @click.stop>
+            <div class="modal-header">
+                <h3 v-if="showOrgModal === 'faction'"><i class="fa-solid fa-flag" style="color:#2b6cb0;"></i> 势力管理</h3>
+                <h3 v-else><i class="fa-solid fa-folder-tree" style="color:#d69e2e;"></i> 分组管理</h3>
+                <button class="btn-close" @click="showOrgModal = ''"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="org-mgr-body">
+                <p class="org-mgr-tip" v-if="showOrgModal === 'faction'">联盟、帮派、教会、商会……任何组织都行。颜色用于卡片标签与联盟编号底色。</p>
+                <p class="org-mgr-tip" v-else>和势力独立的自由分组（如：主角团 / 反派 / 一卷人物）。颜色用于分组标题与人物卡片标签。</p>
+                <div class="org-item" v-for="o in (showOrgModal === 'faction' ? factions : groups)" :key="o.name">
+                    <input class="org-name" :value="o.name" @change="renameOrg(showOrgModal, o.name, $event.target.value)" title="改名（人物档案同步更新）">
+                    <div class="org-colors">
+                        <button type="button" v-for="c in ORG_PALETTE" :key="c" class="org-c"
+                                :class="{ on: o.color === c }" :style="{ background: c }"
+                                @click="setOrgColor(showOrgModal, o.name, c)"></button>
+                    </div>
+                    <button type="button" class="org-del" title="删除" @click="delOrg(showOrgModal, o.name)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="org-item org-add" v-if="!((showOrgModal === 'faction' ? factions : groups).length)">
+                    <span class="org-empty">还没有{{ showOrgModal === 'faction' ? '势力' : '分组' }}，在下面添加一个。</span>
+                </div>
+                <div class="org-item org-add">
+                    <input class="org-name" v-model="orgDraft.name" :placeholder="(showOrgModal === 'faction' ? '新势力名（如：暗影教会）' : '新分组名（如：主角团）')" @keydown.enter.prevent="addOrg(showOrgModal)">
+                    <div class="org-colors">
+                        <button type="button" v-for="c in ORG_PALETTE" :key="c" class="org-c"
+                                :class="{ on: orgDraft.color === c }" :style="{ background: c }"
+                                @click="orgDraft.color = c"></button>
+                    </div>
+                    <button type="button" class="org-ok" title="添加" @click="addOrg(showOrgModal)"><i class="fa-solid fa-check"></i></button>
+                </div>
+            </div>
+            <div class="selection-pagination" style="justify-content: flex-end;">
+                <button class="btn btn-primary" style="padding: 4px 14px;" @click="showOrgModal = ''">完成</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script src="../js/site-config.js?v=20261126s"></script>
-<script src="../js/data-loader.js?v=20261126w"></script>
+<script src="../js/data-loader.js?v=20261127a"></script>
 <script src="../js/github-api.js?v=20261127b"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/vow-tip.js?v=20261126s"></script>
 <script src="../js/vow-textarea.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
 <script src="../js/image-utils.js?v=20261126s"></script>
-<script src="../js/admin-characters.js?v=20261126s"></script>
+<script src="../js/vow-select.js?v=20261126s"></script>
+<script src="../js/admin-characters.js?v=20261127a"></script>
 <script src="sidebar.js?v=20261126z"></script>
 </body>
 </html>

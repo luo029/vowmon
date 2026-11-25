@@ -18,6 +18,32 @@ const FACTION_COLORS = {
 };
 const AVATAR_COLORS = ['#d69e2e', '#2b6cb0', '#38a169', '#7F77DD', '#d4537e', '#0F6E56', '#e24b4a', '#5c6bc0'];
 
+/* 势力/分组默认值：人物数据里没存时使用（存进 characters-data.json 后以数据为准） */
+const DEFT_FACTIONS = [
+    { name: '九牧联盟', color: '#2b6cb0' },
+    { name: '荒野', color: '#2f855a' }
+];
+const DEFT_GROUPS = [];
+
+/* 分组/势力颜色候选盘（作家助手同款思路：建组时点色块选色） */
+const ORG_PALETTE = ['#e53e3e', '#dd6b20', '#d69e2e', '#38a169', '#38b2ac', '#3182ce', '#5a67d8', '#9f7aea', '#d53f8c', '#718096', '#2f855a', '#b7791f'];
+
+/* 按名字取稳定颜色：新建势力/分组没选色时的兜底，同名永远同色 */
+function orgAutoColor(name) {
+    let h = 0;
+    const s = String(name || '');
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return ORG_PALETTE[h % ORG_PALETTE.length];
+}
+
+function normalizeOrgList(list, deft) {
+    const arr = Array.isArray(list) ? list : deft;
+    return (arr || []).map(o => ({
+        name: String((o && o.name) || '').trim(),
+        color: String((o && o.color) || '').trim() || orgAutoColor((o && o.name) || '')
+    })).filter(o => o.name);
+}
+
 /* 关系预设：rev = 在对方档案里自动补的反向关系（没有 rev 的关系不做反向同步） */
 const REL_PRESETS = [
     { name: '师父', rev: '徒弟' },
@@ -69,6 +95,14 @@ function normalizeCharacter(c) {
     p.avatar = String(p.avatar == null ? '' : p.avatar);
     p.strength = String(p.strength == null ? '' : p.strength);
     p.notes = String(p.notes == null ? '' : p.notes);
+    /* 自定义分组（groupId 对应分组列表里的 name）与自定义属性（[{label, value}]，作家助手式自由字段） */
+    p.groupId = String(p.groupId == null ? '' : p.groupId).trim();
+    p.customFields = Array.isArray(p.customFields)
+        ? p.customFields.map(f => ({
+            label: String((f && f.label) || '').trim(),
+            value: String((f && f.value) || '')
+        })).filter(f => f.label)
+        : [];
     p.milestones = Array.isArray(p.milestones)
         ? p.milestones.map(m => ({
             chapter: String((m && m.chapter) || '').trim(),
@@ -90,6 +124,10 @@ const app = createApp({
         const individuals = ref([]);
         const isSyncing = ref(false);
 
+        /* --------------------------------- 势力 / 分组（存在 characters-data.json 里，随人物一起同步） */
+        const factions = ref(normalizeOrgList(null, DEFT_FACTIONS));
+        const groups = ref(normalizeOrgList(null, DEFT_GROUPS));
+
         const showModal = ref(false);
         const isEdit = ref(false);
         const editIndex = ref(-1);
@@ -101,7 +139,7 @@ const app = createApp({
             id: '', name: '', title: '', faction: '', birthplace: '', position: '', leagueNo: '', intlNo: '', money: 0,
             inventory: [], vowIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
-            avatar: '', notes: '', milestones: []
+            avatar: '', notes: '', milestones: [], groupId: '', customFields: []
         });
         const form = ref(defaultForm());
 
@@ -188,7 +226,102 @@ const app = createApp({
         const pickedVows = computed(() => form.value.vowIds.map(id => indById.value.get(String(id))).filter(Boolean));
         const vowsOf = (c) => (c.vowIds || []).map(id => indById.value.get(String(id))).filter(Boolean);
 
-        const factionColor = (f) => FACTION_COLORS[f] || '#d69e2e';
+        /* 势力配色：优先用「势力管理」里配置的颜色，没配置的势力按名字取稳定色 */
+        const factionColor = (f) => {
+            const hit = factions.value.find(o => o.name === f);
+            if (hit) return hit.color;
+            return f ? orgAutoColor(f) : '#d69e2e';
+        };
+        /* 分组配色 / 名称 */
+        const groupInfo = (id) => groups.value.find(o => o.name === id) || null;
+        const groupColor = (id) => {
+            const g = groupInfo(id);
+            return g ? g.color : (id ? orgAutoColor(id) : '#a0aec0');
+        };
+
+        /* ------------------------------------ 势力管理 / 分组管理 弹窗 */
+        const showOrgModal = ref('');   // '' | 'faction' | 'group'
+        const orgDraft = ref({ name: '', color: ORG_PALETTE[5] });
+        const openOrgModal = (kind) => {
+            showOrgModal.value = kind;
+            orgDraft.value = { name: '', color: ORG_PALETTE[(factions.value.length + groups.value.length) % ORG_PALETTE.length] };
+        };
+        const orgListOf = (kind) => (kind === 'faction' ? factions : groups);
+        const addOrg = (kind) => {
+            const name = String(orgDraft.value.name || '').trim();
+            if (!name) { VowmonDialog.toast('请先填写名称', 'warning'); return; }
+            const list = orgListOf(kind).value;
+            if (list.some(o => o.name === name)) { VowmonDialog.toast('已有同名' + (kind === 'faction' ? '势力' : '分组'), 'warning'); return; }
+            list.push({ name: name, color: orgDraft.value.color || orgAutoColor(name) });
+            orgDraft.value = { name: '', color: ORG_PALETTE[list.length % ORG_PALETTE.length] };
+            saveOrgs();
+        };
+        const delOrg = (kind, name) => {
+            const list = orgListOf(kind).value;
+            const i = list.findIndex(o => o.name === name);
+            if (i < 0) return;
+            const label = kind === 'faction' ? '势力' : '分组';
+            VowmonDialog.confirm('删除「' + VowmonDialog.esc(name) + '」这个' + label + '？<br>人物档案里的' + label + '名字不会被改动，只是不再有专属颜色。', {
+                type: 'danger', title: '删除' + label, okText: '删除', html: true
+            }).then((ok) => {
+                if (ok) { list.splice(i, 1); saveOrgs(); }
+            });
+        };
+        const setOrgColor = (kind, name, color) => {
+            const hit = orgListOf(kind).value.find(o => o.name === name);
+            if (hit) { hit.color = color; saveOrgs(); }
+        };
+        const renameOrg = (kind, oldName, newName) => {
+            const name = String(newName || '').trim();
+            if (!name || name === oldName) return;
+            const list = orgListOf(kind).value;
+            if (list.some(o => o.name === name && o.name !== oldName)) { VowmonDialog.toast('已有同名' + (kind === 'faction' ? '势力' : '分组'), 'warning'); return; }
+            const hit = list.find(o => o.name === oldName);
+            if (!hit) return;
+            hit.name = name;
+            /* 同步改所有引用这个势力/分组的人物 */
+            if (kind === 'faction') {
+                characters.value.forEach(c => { if (c.faction === oldName) c.faction = name; });
+            } else {
+                characters.value.forEach(c => { if (c.groupId === oldName) c.groupId = name; });
+            }
+            saveOrgs();
+        };
+        /* 表单下拉选项：vow-select creatable 模式，可直接输入新名称（保存时自动建档） */
+        const factionOptions = computed(() => factions.value.map(o => ({ value: o.name, label: o.name })));
+        const groupOptions = computed(() => groups.value.map(o => ({ value: o.name, label: o.name })));
+        /* 保存时把新输入的势力/分组自动登记进列表 */
+        const ensureOrg = (kind, name) => {
+            const n = String(name || '').trim();
+            if (!n) return;
+            const list = orgListOf(kind).value;
+            if (!list.some(o => o.name === n)) {
+                list.push({ name: n, color: orgAutoColor(n) });
+            }
+        };
+
+        /* ------------------------------------ 列表视图：平铺 / 按势力 / 按分组 */
+        const viewMode = ref('flat');
+        const orgSections = (kind) => {
+            const list = orgListOf(kind).value;
+            return list.map(o => ({
+                key: kind + '-' + o.name,
+                title: o.name,
+                color: o.color,
+                items: filteredList.value.filter(c => (kind === 'faction' ? c.faction : c.groupId) === o.name)
+            })).filter(s => s.items.length)
+              .concat([{
+                  key: kind + '-none',
+                  title: '未设置' + (kind === 'faction' ? '势力' : '分组'),
+                  color: '#a0aec0',
+                  items: filteredList.value.filter(c => !(kind === 'faction' ? c.faction : c.groupId))
+              }]).filter(s => s.items.length);
+        };
+        const displaySections = computed(() => {
+            if (viewMode.value === 'faction') return orgSections('faction');
+            if (viewMode.value === 'group') return orgSections('group');
+            return [{ key: 'flat', title: '', color: '', items: filteredList.value }];
+        });
         const avatarChar = (name) => (String(name || '').trim().charAt(0) || '？');
         const avatarColor = (name) => {
             let h = 0;
@@ -210,7 +343,7 @@ const app = createApp({
 
         const saveLocal = () => {
             if (window.VowmonStore) {
-                VowmonStore.save('characters', { characters: characters.value });
+                VowmonStore.save('characters', { characters: characters.value, factions: factions.value, groups: groups.value });
             }
         };
 
@@ -252,11 +385,31 @@ const app = createApp({
         const addInventory = () => { form.value.inventory.push({ name: '', note: '' }); };
         const addMilestone = () => { form.value.milestones.push({ chapter: '', title: '', date: '', note: '' }); };
 
+        /* ------------------------------------ 自定义属性（作家助手式自由字段） */
+        const addCustomField = (label) => {
+            form.value.customFields.push({ label: String(label || '').trim(), value: '' });
+        };
+        const removeCustomField = (i) => { form.value.customFields.splice(i, 1); };
+        /* 全档案出现过的自定义字段名，作为快捷键点一下就加一行 */
+        const knownFieldLabels = computed(() => {
+            const set = new Set();
+            characters.value.forEach(c => (c.customFields || []).forEach(f => { if (f.label) set.add(f.label); }));
+            if (form.value.id) {
+                /* 排除当前人物已加的，避免重复 */
+                const mine = new Set((form.value.customFields || []).map(f => f.label));
+                return [...set].filter(l => !mine.has(l));
+            }
+            return [...set];
+        });
+
         const saveItem = () => {
             if (!form.value.name || !String(form.value.name).trim()) {
                 VowmonDialog.toast('请填写姓名', 'warning');
                 return;
             }
+            /* 新输入的势力 / 分组自动登记（作家助手式：直接打字就建档） */
+            ensureOrg('faction', form.value.faction);
+            ensureOrg('group', form.value.groupId);
             const item = normalizeCharacter(form.value);
             if (isEdit.value && editIndex.value > -1) {
                 characters.value.splice(editIndex.value, 1, item);
@@ -409,7 +562,7 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ characters: characters.value }, null, 1) + '\n';
+                const content = JSON.stringify({ characters: characters.value, factions: factions.value, groups: groups.value }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'characters-data.json', content, 'update characters data');
                 }
@@ -442,7 +595,9 @@ const app = createApp({
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'characters-data.json');
                 if (!bag || !Array.isArray(bag.characters)) throw new Error('仓库里没有 characters-data.json，或字段不是 characters 数组');
                 characters.value = bag.characters.map(normalizeCharacter);
-                if (window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value });
+                factions.value = normalizeOrgList(bag.factions, DEFT_FACTIONS);
+                groups.value = normalizeOrgList(bag.groups, DEFT_GROUPS);
+                if (window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value, factions: factions.value, groups: groups.value });
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + characters.value.length + ' 位御兽人物', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
@@ -465,8 +620,12 @@ const app = createApp({
                 const mirror = window.VowmonStore ? VowmonStore.getMirror('characters') : null;
                 if (mirror && Array.isArray(mirror.characters)) {
                     characters.value = mirror.characters.map(normalizeCharacter);
+                    factions.value = normalizeOrgList(mirror.factions, DEFT_FACTIONS);
+                    groups.value = normalizeOrgList(mirror.groups, DEFT_GROUPS);
                 } else {
                     characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(normalizeCharacter);
+                    factions.value = normalizeOrgList(typeof allCharFactions !== 'undefined' ? allCharFactions : null, DEFT_FACTIONS);
+                    groups.value = normalizeOrgList(typeof allCharGroups !== 'undefined' ? allCharGroups : null, DEFT_GROUPS);
                 }
                 individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(p => Object.assign({}, p));
             } catch (err) {
@@ -482,6 +641,13 @@ const app = createApp({
             fmtMoney, indLabel, pickedVows, vowsOf,
             speciesLabel, speciesImageOf,
             factionColor, avatarChar, avatarColor,
+            /* 势力 / 分组 */
+            factions, groups, groupInfo, groupColor, orgAutoColor,
+            showOrgModal, orgDraft, openOrgModal, addOrg, delOrg, setOrgColor, renameOrg,
+            factionOptions, groupOptions, ORG_PALETTE,
+            viewMode, displaySections,
+            /* 自定义属性 */
+            addCustomField, removeCustomField, knownFieldLabels,
             openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
             /* 立绘 */
             avatarUploading, avatarInput, triggerAvatarUpload, handleAvatarUpload, clearAvatar, getImgUrl,
@@ -495,5 +661,6 @@ const app = createApp({
     }
 });
 app.component('vow-textarea', window.VowTextarea);
+app.component('vow-select', window.VowSelect);
 app.mount('#app');
 });
