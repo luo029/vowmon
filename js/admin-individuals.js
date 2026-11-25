@@ -125,6 +125,13 @@ function normalizeIndividual(v) {
         : [];
     p.experience = String(p.experience == null ? '' : p.experience);
     p.notes = String(p.notes == null ? '' : p.notes);
+    /* 自定义属性（[{label, value}]，作家助手式自由字段） */
+    p.customFields = Array.isArray(p.customFields)
+        ? p.customFields.map(f => ({
+            label: String((f && f.label) || '').trim(),
+            value: String((f && f.value) || '')
+        })).filter(f => f.label)
+        : [];
     return p;
 }
 
@@ -158,11 +165,58 @@ const app = createApp({
             scopeNote: '',
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
             contractDate: '', contractChapter: '', milestones: [],
-            experience: '', notes: ''
+            experience: '', customFields: []
         });
         const form = ref(defaultForm());
         const traitInput = ref('');
         const itemsInput = ref('');
+
+        /* ------------------------------------ 自定义属性（含默认字段模板，模板存 individuals-data.json） */
+        const fieldTemplates = ref([]);
+        const addCustomField = (label) => { form.value.customFields.push({ label: String(label || '').trim(), value: '' }); };
+        const removeCustomField = (i) => { form.value.customFields.splice(i, 1); };
+        const knownFieldLabels = computed(() => {
+            const set = new Set(fieldTemplates.value);
+            individuals.value.forEach(c => (c.customFields || []).forEach(f => { if (f.label) set.add(f.label); }));
+            const mine = new Set((form.value.customFields || []).map(f => f.label));
+            return [...set].filter(l => !mine.has(l));
+        });
+        const isTemplateField = (label) => fieldTemplates.value.includes(label);
+        const toggleTemplateField = (label) => {
+            const l = String(label || '').trim();
+            if (!l) return;
+            const i = fieldTemplates.value.indexOf(l);
+            if (i > -1) {
+                fieldTemplates.value.splice(i, 1);
+                saveLocal();
+                VowmonDialog.toast('已取消「' + l + '」的默认字段，以后新建个体不再自动带上', 'success');
+            } else {
+                fieldTemplates.value.push(l);
+                saveLocal();
+                VowmonDialog.toast('已设为默认字段：以后新建个体会自动带上「' + l + '」\n改完记得点「一键同步」推到仓库', 'success', { duration: 3200 });
+            }
+        };
+        const applyFieldToAll = (label) => {
+            const l = String(label || '').trim();
+            if (!l) return;
+            const src = (form.value.customFields || []).find(f => f.label === l);
+            VowmonDialog.confirm(
+                '把字段「' + VowmonDialog.esc(l) + '」添加到全部 <b class="font-num">' + individuals.value.length + '</b> 只御兽精灵？<br>已经有这个字段的个体不会被覆盖。',
+                { type: 'info', title: '同步到所有个体', okText: '全部添加', html: true }
+            ).then((ok) => {
+                if (!ok) return;
+                let n = 0;
+                individuals.value.forEach((c, idx) => {
+                    const fields = Array.isArray(c.customFields) ? c.customFields : [];
+                    if (fields.some(f => f.label === l)) return;
+                    fields.push({ label: l, value: src ? src.value : '' });
+                    individuals.value.splice(idx, 1, normalizeIndividual(Object.assign({}, c, { customFields: fields })));
+                    n++;
+                });
+                if (n) saveLocal();
+                VowmonDialog.toast(n ? '已为 ' + n + ' 只个体添加字段「' + l + '」' : '所有个体都已有这个字段', 'success');
+            });
+        };
 
         /* ------------------------------------------------------- 图片与属性 */
         let imgBase = '';
@@ -258,7 +312,7 @@ const app = createApp({
 
         const saveLocal = () => {
             if (window.VowmonStore) {
-                VowmonStore.save('individuals', { individuals: individuals.value });
+                VowmonStore.save('individuals', { individuals: individuals.value, fieldTemplates: fieldTemplates.value });
             }
         };
 
@@ -298,6 +352,8 @@ const app = createApp({
                 editIndex.value = -1;
                 form.value = defaultForm();
                 form.value.id = nextId();
+                /* 新个体自动带出「默认字段」模板 */
+                form.value.customFields = fieldTemplates.value.map(l => ({ label: l, value: '' }));
             }
             traitInput.value = '';
             itemsInput.value = form.value.items.join(', ');
@@ -571,7 +627,7 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ individuals: individuals.value }, null, 1) + '\n';
+                const content = JSON.stringify({ individuals: individuals.value, fieldTemplates: fieldTemplates.value }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'individuals-data.json', content, 'update individuals data');
                 }
@@ -604,7 +660,8 @@ const app = createApp({
                 const bag = await GitHubSync.downloadJson(cfg.token, cfg.owner, repo, 'individuals-data.json');
                 if (!bag || !Array.isArray(bag.individuals)) throw new Error('仓库里没有 individuals-data.json，或字段不是 individuals 数组');
                 individuals.value = bag.individuals.map(normalizeIndividual);
-                if (window.VowmonStore) VowmonStore.replace('individuals', { individuals: individuals.value });
+                fieldTemplates.value = Array.isArray(bag.fieldTemplates) ? bag.fieldTemplates.map(String).filter(Boolean) : [];
+                if (window.VowmonStore) VowmonStore.replace('individuals', { individuals: individuals.value, fieldTemplates: fieldTemplates.value });
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + individuals.value.length + ' 位御兽精灵', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
@@ -637,6 +694,7 @@ const app = createApp({
                 } else {
                     individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(normalizeIndividual);
                 }
+                fieldTemplates.value = (mirror && Array.isArray(mirror.fieldTemplates)) ? mirror.fieldTemplates.map(String).filter(Boolean) : [];
                 characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(c => Object.assign({}, c));
                 vows.value = (typeof allVowsData !== 'undefined' && allVowsData) || [];
             } catch (err) {
@@ -661,6 +719,8 @@ const app = createApp({
             activeSkillIndex, skillSuggestions, setSkillName,
             editingSkillIndex, skillTypeIcon, newSkill, editSkill, finishSkill, removeSkill,
             addMilestone,
+            fieldTemplates, addCustomField, removeCustomField,
+            knownFieldLabels, isTemplateField, toggleTemplateField, applyFieldToAll,
             openEditor, saveItem,
             openDeleteConfirm, closeModal,
             showSpeciesModal, speciesSearchInput, filteredSpecies, pickSpecies,

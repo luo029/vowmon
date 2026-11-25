@@ -74,8 +74,17 @@
                 if (e.key === 'Escape' && this.open) { e.stopPropagation(); this.open = false; }
             }
         },
-        mounted: function () { document.addEventListener('click', this.onDoc); },
-        unmounted: function () { document.removeEventListener('click', this.onDoc); },
+        mounted: function () {
+            /* 捕获阶段监听：弹窗根节点上有 @click.stop，冒泡到不了 document，
+               只有捕获阶段（document -> 目标）才能在 .stop 拦截前收到事件。
+               pointerdown + click 双保险：按下别的区域立刻收起菜单。 */
+            document.addEventListener('pointerdown', this.onDoc, true);
+            document.addEventListener('click', this.onDoc, true);
+        },
+        unmounted: function () {
+            document.removeEventListener('pointerdown', this.onDoc, true);
+            document.removeEventListener('click', this.onDoc, true);
+        },
         template:
             '<div class="vsel" :class="{ open: open, disabled: disabled }" @keydown="onKey">' +
             '  <input v-if="creatable" type="text" class="vsel-trigger vsel-input" :value="modelValue" :placeholder="placeholder" :disabled="disabled" @input="onType" @focus="open = true">' +

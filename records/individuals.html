@@ -142,6 +142,12 @@
         .exp-block { font-size: 13.5px; line-height: 2.1; color: #4a5568; white-space: pre-line; }
         .exp-block::first-letter { font-size: 150%; font-weight: 900; color: var(--stage-c, #718096); }
 
+        /* 自定义属性（后台自由添加的档案字段） */
+        .cf-band { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f6; margin-bottom: 8px; }
+        .cf-band:last-child { margin-bottom: 0; }
+        .cf-band .cf-name { flex: none; max-width: 120px; font-size: 12.5px; font-weight: 900; color: #6b4b12; background: #fdf6e3; border: 1px solid #ecdfbe; padding: 4px 12px; border-radius: 999px; word-break: break-all; }
+        .cf-band .cf-text { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; color: #4a5568; line-height: 1.9; white-space: pre-line; }
+
         .blood-band { display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 12px; padding: 13px 16px; }
         .blood-band .bl-chip { font-size: 13px; font-weight: 900; color: #fff; padding: 6px 16px; border-radius: 999px; }
         .blood-band .bl-desc { font-size: 12.5px; color: #718096; font-weight: 700; line-height: 1.8; }
@@ -308,6 +314,14 @@
                 <div class="info-card" v-if="ind.experience">
                     <h2><i class="fa-solid fa-book-open"></i> 经历</h2>
                     <p class="exp-block" :style="{ '--stage-c': stageColor(ind) }">{{ ind.experience }}</p>
+                </div>
+
+                <div class="info-card" v-if="ind.customFields && ind.customFields.length">
+                    <h2><i class="fa-solid fa-plus-minus"></i> 档案属性</h2>
+                    <div class="cf-band" v-for="f in ind.customFields" :key="f.label">
+                        <span class="cf-name">{{ f.label }}</span>
+                        <span class="cf-text">{{ f.value }}</span>
+                    </div>
                 </div>
             </div>
         </div>

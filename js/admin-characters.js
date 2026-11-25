@@ -124,9 +124,11 @@ const app = createApp({
         const individuals = ref([]);
         const isSyncing = ref(false);
 
-        /* --------------------------------- 势力 / 分组（存在 characters-data.json 里，随人物一起同步） */
+        /* --------------------------------- 势力 / 分组 / 默认字段模板（存在 characters-data.json 里，随人物一起同步） */
         const factions = ref(normalizeOrgList(null, DEFT_FACTIONS));
         const groups = ref(normalizeOrgList(null, DEFT_GROUPS));
+        /* 默认字段模板：勾选「默认」的字段名，新建人物自动带出 */
+        const fieldTemplates = ref([]);
 
         const showModal = ref(false);
         const isEdit = ref(false);
@@ -139,7 +141,7 @@ const app = createApp({
             id: '', name: '', title: '', faction: '', birthplace: '', position: '', leagueNo: '', intlNo: '', money: 0,
             inventory: [], vowIds: [], links: [],
             bio: '', background: '', personality: '', relations: '', appearance: '', strength: '',
-            avatar: '', notes: '', milestones: [], groupId: '', customFields: []
+            avatar: '', milestones: [], groupId: '', customFields: []
         });
         const form = ref(defaultForm());
 
@@ -343,7 +345,7 @@ const app = createApp({
 
         const saveLocal = () => {
             if (window.VowmonStore) {
-                VowmonStore.save('characters', { characters: characters.value, factions: factions.value, groups: groups.value });
+                VowmonStore.save('characters', { characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value });
             }
         };
 
@@ -377,6 +379,8 @@ const app = createApp({
                 editIndex.value = -1;
                 form.value = defaultForm();
                 form.value.id = nextId();
+                /* 新人物自动带出「默认字段」模板 */
+                form.value.customFields = fieldTemplates.value.map(l => ({ label: l, value: '' }));
             }
             showVowModal.value = false;
             showModal.value = true;
@@ -390,17 +394,53 @@ const app = createApp({
             form.value.customFields.push({ label: String(label || '').trim(), value: '' });
         };
         const removeCustomField = (i) => { form.value.customFields.splice(i, 1); };
-        /* 全档案出现过的自定义字段名，作为快捷键点一下就加一行 */
+        /* 全档案出现过的自定义字段名 + 默认模板，作为快捷按钮点一下就加一行 */
         const knownFieldLabels = computed(() => {
-            const set = new Set();
+            const set = new Set(fieldTemplates.value);
             characters.value.forEach(c => (c.customFields || []).forEach(f => { if (f.label) set.add(f.label); }));
-            if (form.value.id) {
-                /* 排除当前人物已加的，避免重复 */
-                const mine = new Set((form.value.customFields || []).map(f => f.label));
-                return [...set].filter(l => !mine.has(l));
-            }
-            return [...set];
+            /* 排除当前人物已加的，避免重复 */
+            const mine = new Set((form.value.customFields || []).map(f => f.label));
+            return [...set].filter(l => !mine.has(l));
         });
+        /* 该字段是否已被设为「新人物默认」 */
+        const isTemplateField = (label) => fieldTemplates.value.includes(label);
+        /* 切换「新人物默认」：开 = 记入模板，新人物自动带上；关 = 从模板移除 */
+        const toggleTemplateField = (label) => {
+            const l = String(label || '').trim();
+            if (!l) return;
+            const i = fieldTemplates.value.indexOf(l);
+            if (i > -1) {
+                fieldTemplates.value.splice(i, 1);
+                saveLocal();
+                VowmonDialog.toast('已取消「' + l + '」的默认字段，以后新建人物不再自动带上', 'success');
+            } else {
+                fieldTemplates.value.push(l);
+                saveLocal();
+                VowmonDialog.toast('已设为默认字段：以后新建人物会自动带上「' + l + '」\n改完记得点「一键同步」推到仓库', 'success', { duration: 3200 });
+            }
+        };
+        /* 把某个字段（名 + 内容）填充到所有人物：没有该字段的补上，已有同名的不覆盖 */
+        const applyFieldToAll = (label) => {
+            const l = String(label || '').trim();
+            if (!l) return;
+            const src = (form.value.customFields || []).find(f => f.label === l);
+            VowmonDialog.confirm(
+                '把字段「' + VowmonDialog.esc(l) + '」添加到全部 <b class="font-num">' + characters.value.length + '</b> 位人物？<br>已经有这个字段的人物不会被覆盖。',
+                { type: 'info', title: '同步到所有人物', okText: '全部添加', html: true }
+            ).then((ok) => {
+                if (!ok) return;
+                let n = 0;
+                characters.value.forEach((c, idx) => {
+                    const fields = Array.isArray(c.customFields) ? c.customFields : [];
+                    if (fields.some(f => f.label === l)) return;
+                    fields.push({ label: l, value: src ? src.value : '' });
+                    characters.value.splice(idx, 1, normalizeCharacter(Object.assign({}, c, { customFields: fields })));
+                    n++;
+                });
+                if (n) saveLocal();
+                VowmonDialog.toast(n ? '已为 ' + n + ' 位人物添加字段「' + l + '」' : '所有人物都已有这个字段', 'success');
+            });
+        };
 
         const saveItem = () => {
             if (!form.value.name || !String(form.value.name).trim()) {
@@ -562,7 +602,7 @@ const app = createApp({
             }
             isSyncing.value = true;
             try {
-                const content = JSON.stringify({ characters: characters.value, factions: factions.value, groups: groups.value }, null, 1) + '\n';
+                const content = JSON.stringify({ characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value }, null, 1) + '\n';
                 for (const repo of targetRepos()) {
                     await GitHubSync.uploadFile(config.value.token, config.value.owner, repo, 'characters-data.json', content, 'update characters data');
                 }
@@ -597,7 +637,8 @@ const app = createApp({
                 characters.value = bag.characters.map(normalizeCharacter);
                 factions.value = normalizeOrgList(bag.factions, DEFT_FACTIONS);
                 groups.value = normalizeOrgList(bag.groups, DEFT_GROUPS);
-                if (window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value, factions: factions.value, groups: groups.value });
+                fieldTemplates.value = Array.isArray(bag.fieldTemplates) ? bag.fieldTemplates.map(String).filter(Boolean) : [];
+                if (window.VowmonStore) VowmonStore.replace('characters', { characters: characters.value, factions: factions.value, groups: groups.value, fieldTemplates: fieldTemplates.value });
                 VowmonDialog.toast('已从 ' + repo + ' 拉取 ' + characters.value.length + ' 位御兽人物', 'success', { duration: 3200 });
             } catch (err) {
                 VowmonDialog.alert('拉取失败，请检查 Token 权限和仓库名。', {
@@ -622,10 +663,12 @@ const app = createApp({
                     characters.value = mirror.characters.map(normalizeCharacter);
                     factions.value = normalizeOrgList(mirror.factions, DEFT_FACTIONS);
                     groups.value = normalizeOrgList(mirror.groups, DEFT_GROUPS);
+                    fieldTemplates.value = Array.isArray(mirror.fieldTemplates) ? mirror.fieldTemplates.map(String).filter(Boolean) : [];
                 } else {
                     characters.value = ((typeof allCharactersData !== 'undefined' && allCharactersData) || []).map(normalizeCharacter);
                     factions.value = normalizeOrgList(typeof allCharFactions !== 'undefined' ? allCharFactions : null, DEFT_FACTIONS);
                     groups.value = normalizeOrgList(typeof allCharGroups !== 'undefined' ? allCharGroups : null, DEFT_GROUPS);
+                    fieldTemplates.value = [];
                 }
                 individuals.value = ((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []).map(p => Object.assign({}, p));
             } catch (err) {
@@ -648,6 +691,7 @@ const app = createApp({
             viewMode, displaySections,
             /* 自定义属性 */
             addCustomField, removeCustomField, knownFieldLabels,
+            isTemplateField, toggleTemplateField, applyFieldToAll,
             openEditor, addInventory, addMilestone, saveItem, openDeleteConfirm, closeModal,
             /* 立绘 */
             avatarUploading, avatarInput, triggerAvatarUpload, handleAvatarUpload, clearAvatar, getImgUrl,

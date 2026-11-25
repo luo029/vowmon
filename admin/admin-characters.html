@@ -172,7 +172,14 @@
         .cf-label { flex: 1; min-width: 0; height: 36px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; font-weight: 800; font-family: inherit; color: #6b4b12; background: #fff; outline: none; }
         .cf-label::placeholder { color: #b6bfc9; font-weight: 600; }
         .cf-label:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .cf-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 9px; background: #fff5f5; color: #e53e3e; cursor: pointer; font-size: 12px; }
+        .cf-star, .cf-sync, .cf-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 9px; cursor: pointer; font-size: 12.5px; transition: all .12s; }
+        .cf-star { background: #fffaf0; color: #d1b06b; }
+        .cf-star.on { background: #fdf6e3; color: #d69e2e; }
+        .cf-star.on i { color: #d69e2e; }
+        .cf-star:hover { background: #fdf3d9; }
+        .cf-sync { background: #f0f7ff; color: #74a4d4; }
+        .cf-sync:hover { background: #dbeafe; color: #2b6cb0; }
+        .cf-x { background: #fff5f5; color: #e53e3e; }
         .cf-x:hover { background: #fee; }
         .cf-quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
         .cf-quick-label { font-size: 11.5px; color: #a0aec0; font-weight: 800; }
@@ -461,11 +468,13 @@
 
                 <!-- 自定义属性 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-plus-minus"></i> 自定义属性 <i class="tip" data-tip="人设、背包、信物、口头禅……想加什么加什么。字段名可复用之前用过的（下面会列出快捷按钮），不同人物可以有不同的字段">?</i> </div>
+                    <div class="sect-title"><i class="fa-solid fa-plus-minus"></i> 自定义属性 <i class="tip" data-tip="人设、背包、信物、口头禅……想加什么加什么。点字段上的 ★ 可设为「新人物默认」；点 ⇄ 可把该字段（含内容）同步到所有人物">?</i> </div>
                     <div class="cf-list" v-if="form.customFields.length">
                         <div class="cf-item" v-for="(f, i) in form.customFields" :key="i">
                             <div class="cf-head">
                                 <input class="cf-label" v-model="f.label" placeholder="属性名（如：人设 / 背包 / 信物）">
+                                <button type="button" class="cf-star" :class="{ on: isTemplateField(f.label) }" :title="isTemplateField(f.label) ? '已设为默认：新人物自动带上（点击取消）' : '设为默认字段：以后新建人物自动带上'" @click="toggleTemplateField(f.label)"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" class="cf-sync" title="把该字段（含内容）同步到所有人物" @click="applyFieldToAll(f.label)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>
                                 <button type="button" class="cf-x" title="删除该属性" @click="removeCustomField(i)"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                             <vow-textarea v-model="f.value" :rows="2" placeholder="内容…"></vow-textarea>
@@ -480,9 +489,8 @@
 
                 <!-- 简介 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介 <i class="tip" data-tip="一两句话概括这个人物；正文详情写在下面分区">?</i></div>
-                    <div class="form-group" style="margin-bottom: 12px;"><vow-textarea v-model="form.bio" :rows="3" placeholder="一两句话概括这个人物…"></vow-textarea></div>
-                    <div class="form-group"><label>备注 <i class="tip" data-tip="其它需要记下的事；右下角可拖拽调大小，右上角可弹窗放大编辑">?</i></label><vow-textarea v-model="form.notes" :rows="3" placeholder="其它需要记下的事…"></vow-textarea></div>
+                    <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介 <i class="tip" data-tip="一两句话概括这个人物；其它补充信息用上面的自定义属性记">?</i></div>
+                    <div class="form-group"><vow-textarea v-model="form.bio" :rows="3" placeholder="一两句话概括这个人物…"></vow-textarea></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -595,8 +603,8 @@
 <script src="../js/vow-textarea.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
 <script src="../js/image-utils.js?v=20261126s"></script>
-<script src="../js/vow-select.js?v=20261126s"></script>
-<script src="../js/admin-characters.js?v=20261127a"></script>
+<script src="../js/vow-select.js?v=20261127a"></script>
+<script src="../js/admin-characters.js?v=20261127b"></script>
 <script src="sidebar.js?v=20261126z"></script>
 </body>
 </html>

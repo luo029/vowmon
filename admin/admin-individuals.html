@@ -190,6 +190,28 @@
         .ms-del:hover { background: #fee; }
         .ms-add { margin-top: 2px; }
 
+        /* ============ 自定义属性（作家助手式自由字段） ============ */
+        .cf-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .cf-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 11px; }
+        .cf-head { display: flex; gap: 8px; margin-bottom: 8px; }
+        .cf-label { flex: 1; min-width: 0; height: 36px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; font-weight: 800; font-family: inherit; color: #6b4b12; background: #fff; outline: none; }
+        .cf-label::placeholder { color: #b6bfc9; font-weight: 600; }
+        .cf-label:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .cf-star, .cf-sync, .cf-x { flex: none; width: 36px; height: 36px; border: none; border-radius: 9px; cursor: pointer; font-size: 12.5px; transition: all .12s; }
+        .cf-star { background: #fffaf0; color: #d1b06b; }
+        .cf-star.on { background: #fdf6e3; color: #d69e2e; }
+        .cf-star.on i { color: #d69e2e; }
+        .cf-star:hover { background: #fdf3d9; }
+        .cf-sync { background: #f0f7ff; color: #74a4d4; }
+        .cf-sync:hover { background: #dbeafe; color: #2b6cb0; }
+        .cf-x { background: #fff5f5; color: #e53e3e; }
+        .cf-x:hover { background: #fee; }
+        .cf-quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+        .cf-quick-label { font-size: 11.5px; color: #a0aec0; font-weight: 800; }
+        .cf-quick-btn { height: 26px; padding: 0 11px; border-radius: 999px; border: 1px dashed #cbd5e0; background: #fff; font-size: 12px; font-weight: 800; color: #4a5568; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; transition: all .12s; }
+        .cf-quick-btn i { font-size: 9px; color: #a0aec0; }
+        .cf-quick-btn:hover { border-color: #d69e2e; color: #9c6b0e; background: #fffdf5; }
+
         /* ============ 种族选择弹窗 ============ */
         .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 4px 6px 10px; }
         .sp-cell { border: 2px solid transparent; border-radius: 12px; padding: 8px 6px; text-align: center; cursor: pointer; background: #f8fafc; transition: all .12s; }
@@ -490,8 +512,28 @@
                         </div>
                         <div class="form-group"><label>携带道具 <i class="tip" data-tip="多个道具用逗号分隔">?</i></label><input v-model="itemsInput" placeholder="如：疗伤药、风铃草"></div>
                         <div class="form-group" style="grid-column: span 2;"><label>经历 <i class="tip" data-tip="这只精灵的故事">?</i></label><vow-textarea v-model="form.experience" :rows="3" placeholder="这只精灵的经历：出身、被契约、关键战斗、成长变化…"></vow-textarea></div>
-                        <div class="form-group" style="grid-column: span 2;"><label>备注 <i class="tip" data-tip="其它需要记下的事">?</i></label><input v-model="form.notes" placeholder="其它需要记下的事"></div>
                     </div>
+                </div>
+
+                <!-- 自定义属性 -->
+                <div class="sect">
+                    <div class="sect-title"><i class="fa-solid fa-plus-minus"></i> 自定义属性 <i class="tip" data-tip="档案、习性补充、口头禅、信物……想加什么加什么。点字段上的 ★ 可设为「新建个体默认」；点 ⇄ 可把该字段（含内容）同步到所有个体">?</i> </div>
+                    <div class="cf-list" v-if="form.customFields.length">
+                        <div class="cf-item" v-for="(f, i) in form.customFields" :key="i">
+                            <div class="cf-head">
+                                <input class="cf-label" v-model="f.label" placeholder="属性名（如：档案 / 信物 / 口头禅）">
+                                <button type="button" class="cf-star" :class="{ on: isTemplateField(f.label) }" :title="isTemplateField(f.label) ? '已设为默认：新建个体自动带上（点击取消）' : '设为默认字段：以后新建个体自动带上'" @click="toggleTemplateField(f.label)"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" class="cf-sync" title="把该字段（含内容）同步到所有个体" @click="applyFieldToAll(f.label)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>
+                                <button type="button" class="cf-x" title="删除该属性" @click="removeCustomField(i)"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <vow-textarea v-model="f.value" :rows="2" placeholder="内容…"></vow-textarea>
+                        </div>
+                    </div>
+                    <div class="cf-quick" v-if="knownFieldLabels.length">
+                        <span class="cf-quick-label">快速添加：</span>
+                        <button type="button" class="cf-quick-btn" v-for="l in knownFieldLabels" :key="l" @click="addCustomField(l)"><i class="fa-solid fa-plus"></i>{{ l }}</button>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" @click="addCustomField('')"><i class="fa-solid fa-plus"></i> 添加自定义属性</button>
                 </div>
             </div>
             <div class="modal-footer">
@@ -538,8 +580,8 @@
 <script src="../js/vow-tip.js?v=20261126s"></script>
 <script src="../js/vow-textarea.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/vow-select.js?v=20261126s"></script>
-<script src="../js/admin-individuals.js?v=20261126s"></script>
+<script src="../js/vow-select.js?v=20261127a"></script>
+<script src="../js/admin-individuals.js?v=20261127c"></script>
 <script src="sidebar.js?v=20261126z"></script>
 </body>
 </html>
