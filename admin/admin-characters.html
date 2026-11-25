@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125e">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125f">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
@@ -59,44 +59,58 @@
         .empty-box { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; background: #fff; border: 1px dashed #dbe4ec; border-radius: 16px; }
         .empty-box i { font-size: 34px; display: block; margin-bottom: 12px; }
 
-        /* ============ 编辑弹窗 · 分区卡片式排版 ============ */
-        .modal-body { background: #f5f8fb; padding: 18px 20px 20px; }
-        .sect { background: #fff; border: 1px solid #e5ecf3; border-radius: 14px; padding: 16px 18px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(45,55,72,.04); }
+        /* ============ 编辑弹窗 · 分区卡片 ============ */
+        .modal-body { background: #f6f7f9; padding: 18px 20px 22px; }
+        .sect { background: #fff; border: 1px solid #eceff3; border-radius: 14px; padding: 15px 18px 17px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(45,55,72,.04); }
         .sect:last-child { margin-bottom: 0; }
-        .sect-title { font-size: 13.5px; font-weight: 900; color: #b7791f; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed #e8edf2; display: flex; align-items: center; gap: 8px; }
-        .sect-title i { font-size: 12px; }
-        .sect-title::after { content: none; }
+        .sect-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 900; color: #b7791f; margin: 0 0 14px; padding: 0 0 10px; border-bottom: 1px dashed #f0e9dc; }
+        .sect-title > i.fa-solid { font-size: 12px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
-        .basic-grid { grid-template-columns: repeat(3, 1fr); }
-        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; display: block; }
-        .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fbfdff; transition: border-color .15s, box-shadow .15s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .modal .modal-header { background: linear-gradient(120deg, #fffaf0, #fff 70%); border-bottom: 1px solid #f0e4cc; }
-        .modal .modal-footer { position: sticky; bottom: 0; z-index: 2; background: #fff; border-top: 1px solid #e8edf2; }
+        .form-group { min-width: 0; }
+        .form-group > label { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; line-height: 1.2; }
+        .form-group > label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; }
+        .form-group > label .tip, .sect-title .tip { flex: none; margin-left: 0; }
 
-        .inv-row { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .inv-head { display: grid; grid-template-columns: 1.2fr 1fr 34px; gap: 8px; font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .04em; padding: 0 2px 4px; }
-        .inv-row input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+
+        /* ---- 统一控件规格：单行控件一律 42px 高 / 11px 圆角 ---- */
+        .form-group input, .form-group select { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #e2e6ec; border-radius: 11px; font-size: 14px; font-family: inherit; color: #2d3748; outline: none; background: #fbfcfd; transition: border-color .15s, box-shadow .15s, background .15s; }
+        .form-group input:hover, .form-group select:hover { border-color: #d4dae2; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .form-group input::placeholder { color: #b6bfc9; font-weight: 600; }
+        .basic-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+        .basic-grid .form-group { min-width: 0; }
+
+        /* ============ 物品栏 ============ */
+        .inv-head { display: grid; grid-template-columns: 1.2fr 1fr 38px; gap: 8px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; padding: 0 2px 6px; }
+        .inv-row { display: grid; grid-template-columns: 1.2fr 1fr 38px; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .inv-row input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .inv-row input::placeholder { color: #b6bfc9; font-weight: 600; }
         .inv-row input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .inv-row .row-x, .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
+        .inv-row .row-x, .ms-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
         .inv-row .row-x:hover, .ms-row .row-x:hover { background: #fee; }
 
-        /* ============ 成就经历卡片 ============ */
-        /* ============ 成就经历卡片 ============ */
-        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
-        .ms-head-row { display: grid; grid-template-columns: 28px minmax(100px, .8fr) minmax(150px, 1.6fr) minmax(110px, .9fr) 32px; gap: 8px; align-items: center; }
+        /* ============ 成就经历 ============ */
+        .ms-cols { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-item { background: #fbfcfd; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
+        .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
         .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        .ms-item input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #e2e6ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .ms-item input::placeholder { color: #b6bfc9; font-weight: 600; }
         .ms-item input:focus { border-color: #d69e2e; background: #fff; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
-        .ms-note { width: 100%; margin-top: 8px; }
-        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 32px; width: 32px; }
+        .ms-note { margin-top: 8px; }
+        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
         .ms-del:hover { background: #fee; }
         .ms-add { margin-top: 2px; }
 
-        /* 字段提示：默认不占位置，悬浮显示说明 */
-
         .empty-state { text-align: center; color: #a0aec0; padding: 30px 0; font-size: 14px; }
+        @media (max-width: 900px) { .basic-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) {
+            .basic-grid { grid-template-columns: 1fr; }
+            .ms-cols { display: none; }
+            .ms-head-row { display: flex; flex-wrap: wrap; }
+            .ms-head-row input { flex: 1 1 40%; }
+            .ms-head-row .ms-del { margin-left: auto; }
+        }
     </style>
 </head>
 <body>
@@ -212,29 +226,29 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
                     <div class="form-grid basic-grid">
-                        <div class="form-group"><label>姓名 <i class="tip" data-tip="必填">?</i></label><input v-model="form.name" placeholder=""></div>
-                        <div class="form-group"><label>头衔 / 称号 <i class="tip" data-tip="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder=""></div>
+                        <div class="form-group"><label>姓名 <i class="tip" data-tip="必填；书中的称呼">?</i></label><input v-model="form.name" placeholder="必填，书中的称呼"></div>
+                        <div class="form-group"><label>头衔 / 称号 <i class="tip" data-tip="如：职业称号 / 首座 / 大冠">?</i></label><input v-model="form.title" placeholder="如：大冠 / 首座"></div>
                         <div class="form-group"><label>所属势力 <i class="tip" data-tip="如：九牧联盟 / 荒野">?</i></label>
-                            <input v-model="form.faction" placeholder="">
+                            <input v-model="form.faction" placeholder="如：九牧联盟">
                         </div>
-                        <div class="form-group"><label>出生地区 <i class="tip" data-tip="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder=""></div>
-                        <div class="form-group"><label>联盟职位 <i class="tip" data-tip="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder=""></div>
-                        <div class="form-group"><label>存款 <i class="tip" data-tip="联盟币">?</i></label><input type="text" inputmode="numeric" v-model.number="form.money"></div>
+                        <div class="form-group"><label>出生地区 <i class="tip" data-tip="人物出生的地区 / 村落 / 城邦">?</i></label><input v-model="form.birthplace" placeholder="如：落霞城"></div>
+                        <div class="form-group"><label>联盟职位 <i class="tip" data-tip="盟主 / 戎枢 / 大冠 / 太宰 / 首座 / 大君等；没有可留空">?</i></label><input v-model="form.position" placeholder="盟主 / 戎枢 / 首座…"></div>
+                        <div class="form-group"><label>存款 <i class="tip" data-tip="联盟币">?</i></label><input type="text" inputmode="numeric" v-model.number="form.money" placeholder="0"></div>
                     </div>
                 </div>
 
                 <!-- 御兽师个人成就 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-medal"></i> 御兽师个人成就 <i class="tip" data-tip="契约与突破经历请写在精灵档案里">?</i> </div>
+                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span></span></div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
-                            <input v-model="m.chapter" placeholder="">
-                            <input v-model="m.title" placeholder="">
-                            <input v-model="m.date" placeholder="">
+                            <input v-model="m.chapter" placeholder="第几章">
+                            <input v-model="m.title" placeholder="发生了什么">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        <input class="ms-note" v-model="m.note" placeholder="">
+                        <input class="ms-note" v-model="m.note" placeholder="补充说明：成就的细节、影响…">
                     </div>
                     <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
                 </div>
@@ -243,11 +257,11 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-address-book"></i> 人物档案详情</div>
                     <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <i class="tip" data-tip="出身、来历、成长环境">?</i></label><vow-textarea v-model="form.background" :rows="3"></vow-textarea></div>
-                        <div class="form-group"><label>性格 <i class="tip" data-tip="脾气秉性">?</i></label><vow-textarea v-model="form.personality" :rows="2"></vow-textarea></div>
-                        <div class="form-group"><label>外貌 <i class="tip" data-tip="外形特征">?</i></label><vow-textarea v-model="form.appearance" :rows="2"></vow-textarea></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <i class="tip" data-tip="师徒、亲友、宿敌等">?</i></label><vow-textarea v-model="form.relations" :rows="2"></vow-textarea></div>
-                        <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <i class="tip" data-tip="能力、战绩、短板">?</i></label><vow-textarea v-model="form.strength" :rows="3"></vow-textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>背景 <i class="tip" data-tip="出身、来历、成长环境">?</i></label><vow-textarea v-model="form.background" :rows="3" placeholder="出身、来历、成长环境…"></vow-textarea></div>
+                        <div class="form-group"><label>性格 <i class="tip" data-tip="脾气秉性">?</i></label><vow-textarea v-model="form.personality" :rows="2" placeholder="脾气秉性、行事风格…"></vow-textarea></div>
+                        <div class="form-group"><label>外貌 <i class="tip" data-tip="外形特征">?</i></label><vow-textarea v-model="form.appearance" :rows="2" placeholder="外形特征、常穿的衣饰…"></vow-textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>关系 <i class="tip" data-tip="师徒、亲友、宿敌等">?</i></label><vow-textarea v-model="form.relations" :rows="2" placeholder="师徒、亲友、宿敌…"></vow-textarea></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>实力 <i class="tip" data-tip="能力、战绩、短板">?</i></label><vow-textarea v-model="form.strength" :rows="3" placeholder="能力、战绩、短板…"></vow-textarea></div>
                     </div>
                 </div>
 
@@ -256,8 +270,8 @@
                     <div class="sect-title"><i class="fa-solid fa-suitcase"></i> 物品栏 <i class="tip" data-tip="道具名可引用物品图鉴里的名称">?</i> </div>
                     <div class="inv-head" v-if="form.inventory.length"><span>道具名</span><span>备注</span><span></span></div>
                     <div class="inv-row" v-for="(it, i) in form.inventory" :key="i">
-                        <input v-model="it.name" placeholder="">
-                        <input v-model="it.note" placeholder="">
+                        <input v-model="it.name" placeholder="道具名">
+                        <input v-model="it.note" placeholder="备注">
                         <button type="button" class="row-x" @click="form.inventory.splice(i, 1)"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     <button type="button" class="btn btn-outline btn-sm" @click="addInventory"><i class="fa-solid fa-plus"></i> 添加物品</button>
@@ -278,9 +292,9 @@
 
                 <!-- 简介 -->
                 <div class="sect">
-                    <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介</div>
-                    <div class="form-group" style="margin-bottom: 12px;"><vow-textarea v-model="form.bio" :rows="3"></vow-textarea></div>
-                    <div class="form-group"><label>备注</label><input v-model="form.notes"></div>
+                    <div class="sect-title"><i class="fa-solid fa-feather"></i> 简介 <i class="tip" data-tip="一两句话概括这个人物；正文详情写在下面分区">?</i></div>
+                    <div class="form-group" style="margin-bottom: 12px;"><vow-textarea v-model="form.bio" :rows="3" placeholder="一两句话概括这个人物…"></vow-textarea></div>
+                    <div class="form-group"><label>备注 <i class="tip" data-tip="其它需要记下的事">?</i></label><input v-model="form.notes" placeholder="其它需要记下的事"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -327,7 +341,7 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/vow-tip.js?v=20261125b"></script>
-<script src="../js/vow-textarea.js?v=20261125c"></script>
+<script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/admin-characters.js?v=20261125h"></script>
 </body>

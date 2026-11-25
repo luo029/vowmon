@@ -93,6 +93,7 @@ body.no-anim .vow-tip { transition: none; }
 .vta-row { display: flex; gap: 6px; align-items: flex-start; }
 .vta-small { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; line-height: 1.7; font-family: inherit; background: #fbfdff; color: #2d3748; outline: none; resize: vertical; overflow-y: auto; min-height: 44px; transition: border-color .15s, box-shadow .15s; }
 .vta-small:focus, .vta-big:focus { border-color: #4299e1; background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+.vta-small::placeholder, .vta-big::placeholder { color: #b3c2d1; font-weight: 600; }
 .vta-expand { flex: none; width: 34px; border: 1px solid #dbe4ec; background: #fff; border-radius: 9px; color: #718096; cursor: pointer; transition: background .14s, color .14s; }
 .vta-expand:hover { background: #ebf8ff; color: #2b6cb0; }
 .vta-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(23,31,43,.46); display: flex; align-items: center; justify-content: center; padding: 20px; }

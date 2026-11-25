@@ -14,7 +14,8 @@
         name: 'VowTextarea',
         props: {
             modelValue: { type: String, default: '' },
-            rows: { type: Number, default: 2 }
+            rows: { type: Number, default: 2 },
+            placeholder: { type: String, default: '' }
         },
         emits: ['update:modelValue'],
         data: function () { return { expanded: false }; },
@@ -26,14 +27,14 @@
         template:
             '<div class="vta">' +
             '  <div class="vta-row">' +
-            '    <textarea ref="small" class="vta-small" :rows="rows" :value="modelValue" @input="onInput"></textarea>' +
+            '    <textarea ref="small" class="vta-small" :rows="rows" :placeholder="placeholder" :value="modelValue" @input="onInput"></textarea>' +
             '    <button type="button" class="vta-expand" @click="toggle" title="放大编辑"><i class="fa-solid fa-expand"></i></button>' +
             '  </div>' +
             '  <teleport to="body">' +
             '    <div class="vta-overlay" v-if="expanded" @click.self="done">' +
             '      <div class="vta-modal">' +
             '        <div class="vta-head"><b>放大编辑</b><button type="button" class="btn-close" @click="done"><i class="fa-solid fa-xmark"></i></button></div>' +
-            '        <textarea ref="big" class="vta-big" :value="modelValue" @input="onInput"></textarea>' +
+            '        <textarea ref="big" class="vta-big" :placeholder="placeholder" :value="modelValue" @input="onInput"></textarea>' +
             '        <div class="vta-foot"><button type="button" class="btn btn-primary btn-sm" @click="done"><i class="fa-solid fa-check"></i> 完成</button></div>' +
             '      </div>' +
             '    </div>' +

@@ -51,6 +51,7 @@ createApp({
             color: '',
             desc: '',
             obtain: [],
+            price: '',      // 联盟币价格，可留空
             origin: ''      // 原型 / 取材自（自由填写，默认空）
         });
 
@@ -318,6 +319,7 @@ createApp({
             item.iconClass = item.iconClass || getItemFallbackIcon(item);
             item.desc = String(item.desc || '').trim();
             item.origin = String(item.origin || '').trim();
+            item.price = item.price == null ? '' : String(item.price).trim();
             item.obtain = Array.isArray(item.obtain)
                 ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                 : (item.obtain ? [String(item.obtain)] : []);
@@ -328,7 +330,7 @@ createApp({
         const showColSettings = ref(false);
         const allColumns = {
             icon: '图标', name: '物品名称', kind: '类型',
-            group: '分组', obtain: '获取方式', desc: '描述'
+            group: '分组', price: '价格', obtain: '获取方式', desc: '描述'
         };
         const COLS_KEY = 'vowmon_items_visible_cols';
         const loadVisibleCols = () => {
@@ -340,6 +342,11 @@ createApp({
                 const valid = Object.keys(allColumns);
                 const filtered = saved.filter(k => valid.includes(k));
                 if (saved.length && !filtered.length) return null;
+                /* 只有老配置（v1）才补上新增的「价格」列；之后用户自己关掉就保持关掉 */
+                if (localStorage.getItem(COLS_KEY + '_v') !== '2') {
+                    if (!filtered.includes('price')) filtered.push('price');
+                    localStorage.setItem(COLS_KEY + '_v', '2');
+                }
                 return filtered;
             } catch (err) {
                 console.warn('显示列配置解析失败，改用默认', err);
@@ -462,6 +469,7 @@ createApp({
             item.color = String(item.color || '').trim() || getItemFallbackColor(item);
             item.desc = String(item.desc || '').trim();
             item.origin = String(item.origin || '').trim();   // 原型 / 取材自，默认留空
+            item.price = String(item.price == null ? '' : item.price).trim();   // 联盟币价格，可留空
             item.obtain = String(obtainText.value || '')
                 .split('\n')
                 .map(line => line.trim())

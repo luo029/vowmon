@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/admin.css?v=20261124i">
-    <link rel="stylesheet" href="../css/common-ui.css?v=20261125e">
+    <link rel="stylesheet" href="../css/common-ui.css?v=20261125f">
     <link rel="stylesheet" href="../css/dialog.css?v=20261124f">
     <link rel="stylesheet" href="../css/responsive.css?v=20261124f">
     <style>
@@ -56,96 +56,122 @@
         .empty-box { text-align: center; padding: 50px 20px; color: #a0aec0; font-weight: 700; background: #fff; border: 1px dashed #dbe4ec; border-radius: 16px; }
         .empty-box i { font-size: 34px; display: block; margin-bottom: 12px; }
 
-        /* ============ 编辑弹窗 · 分区卡片式排版 ============ */
-        .modal-body { background: #f5f8fb; padding: 18px 20px 20px; }
-        .sect { background: #fff; border: 1px solid #e5ecf3; border-radius: 14px; padding: 16px 18px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(45,55,72,.04); }
+        /* ============ 编辑弹窗 · 分区卡片 ============ */
+        .modal-body { background: #f4f7fb; padding: 18px 20px 22px; }
+        .sect { background: #fff; border: 1px solid #e6edf4; border-radius: 14px; padding: 15px 18px 17px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(45,55,72,.04); }
         .sect:last-child { margin-bottom: 0; }
-        .sect-title { font-size: 13.5px; font-weight: 900; color: #2b6cb0; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed #e8edf2; display: flex; align-items: center; gap: 8px; }
-        .sect-title i { font-size: 12px; }
-        .sect-title::after { content: none; }
+        .sect-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 900; color: #2b6cb0; margin: 0 0 14px; padding: 0 0 10px; border-bottom: 1px dashed #e8eef5; }
+        .sect-title > i.fa-solid { font-size: 12px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
-        .form-group label { font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; display: block; }
-        .form-group label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; margin-left: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fbfdff; transition: border-color .15s, box-shadow .15s; }
+        .form-group { min-width: 0; }
+        .form-group > label { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #4a5568; margin-bottom: 7px; line-height: 1.2; }
+        .form-group > label .opt { font-size: 11px; color: #a0aec0; font-weight: 700; }
+        .form-group > label .tip, .sect-title .tip { flex: none; margin-left: 0; }
+
+
+        /* ---- 统一控件规格：单行控件一律 42px 高 / 11px 圆角 ---- */
+        .form-group input, .form-group select { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #dbe4ec; border-radius: 11px; font-size: 14px; font-family: inherit; color: #2d3748; outline: none; background: #fbfdff; transition: border-color .15s, box-shadow .15s, background .15s; }
+        .form-group input:hover, .form-group select:hover { border-color: #c3d7e9; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #4299e1; background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .modal .modal-header { background: linear-gradient(120deg, #f0f7ff, #fff 70%); border-bottom: 1px solid #dbe9f8; }
-        .modal .modal-footer { position: sticky; bottom: 0; z-index: 2; background: #fff; border-top: 1px solid #e8edf2; }
-        .species-pick { display: flex; gap: 10px; align-items: center; }
-        .species-pick .sp-view { flex: 1; display: flex; align-items: center; gap: 10px; padding: 7px 12px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; min-height: 56px; cursor: default; }
-        .species-pick .sp-view img { width: 42px; height: 42px; object-fit: contain; }
-        .species-pick .sp-view .sp-name { font-size: 14px; font-weight: 800; color: #2d3748; }
-        .species-pick .sp-view .sp-id { font-size: 11.5px; color: #a0aec0; font-weight: 700; }
-        .species-pick .sp-btn { white-space: nowrap; padding: 9px 14px; border: 1px solid #cbd5e0; background: #fff; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 13px; color: #4a5568; transition: all .15s; }
-        .species-pick .sp-btn:hover { border-color: #4299e1; color: #2b6cb0; }
-        .sub-row { display: grid; grid-template-columns: 1fr 120px 110px 34px; gap: 8px; margin-bottom: 8px; }
-        .sub-row .row-x { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; }
-        .sub-row .row-x:hover { background: #fee; }
+        .form-group input::placeholder { color: #b3c2d1; font-weight: 600; }
+        .form-group .vsel-trigger { height: 42px; min-height: 42px; padding: 0 12px; border-radius: 11px; font-size: 14px; background: #fbfdff; }
+        .form-group .vsel.open .vsel-trigger { background: #fff; }
+        .form-group .vsel-placeholder { color: #b3c2d1; font-weight: 600; }
 
-        /* ============ 分段选择（替代原生 select 的系统菜单） ============ */
-        .seg-group { display: flex; gap: 6px; flex-wrap: wrap; }
-        .seg-opt { padding: 8px 16px; border-radius: 10px; border: 1px solid #dbe4ec; background: #fff; font-size: 13px; font-weight: 800; color: #718096; cursor: pointer; transition: all .13s; font-family: inherit; line-height: 1; }
-        .seg-opt:hover { border-color: #b8cbe0; color: #4a5568; }
-        .seg-opt.on { background: var(--seg-c, #4299e1); border-color: var(--seg-c, #4299e1); color: #fff; box-shadow: 0 2px 8px rgba(45,55,72,.18); }
+        /* ---- 分段选择 ---- */
+        .seg-group { display: flex; flex-wrap: wrap; gap: 6px; }
+        .seg-group.seg-fill { display: grid; grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); }
+        .seg-opt { height: 42px; padding: 0 10px; display: flex; align-items: center; justify-content: center; border-radius: 11px; border: 1px solid #dbe4ec; background: #fbfdff; font-size: 13px; font-weight: 800; color: #718096; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .13s; }
+        .seg-opt:hover { border-color: #b8cbe0; color: #4a5568; background: #fff; }
+        .seg-opt.on { background: var(--seg-c, #4299e1); border-color: var(--seg-c, #4299e1); color: #fff; box-shadow: 0 3px 9px rgba(45,55,72,.16); }
 
-        /* ============ 特性（单行输入框 + 图鉴搜索下拉） ============ */
+        /* ---- 种族选择 ---- */
+        .species-pick { display: flex; gap: 8px; align-items: stretch; }
+        .species-pick .sp-view { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 10px; border: 1px solid #dbe4ec; border-radius: 11px; background: #fbfdff; }
+        .species-pick .sp-view img { width: 30px; height: 30px; object-fit: contain; flex: none; }
+        .species-pick .sp-view > div { min-width: 0; }
+        .species-pick .sp-name { font-size: 13.5px; font-weight: 800; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .species-pick .sp-id { font-size: 11px; color: #a0aec0; font-weight: 700; }
+        .species-pick .sp-btn { flex: none; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid #dbe4ec; background: #fff; border-radius: 11px; cursor: pointer; font-size: 14px; color: #4a5568; transition: all .15s; }
+        .species-pick .sp-btn:hover { border-color: #4299e1; color: #2b6cb0; background: #f0f7ff; }
+
+        /* ---- 等级：数字框 + 阶位胶囊，与左右列同高 ---- */
+        .level-row { display: flex; align-items: center; gap: 8px; }
+        .level-row input { flex: 1 1 auto; width: auto; height: 42px; padding: 0 8px; text-align: center; font-size: 16px; font-weight: 900; }
+        .level-row .lv-tag { flex: none; min-width: 76px; height: 42px; padding: 0 14px; display: flex; align-items: center; justify-content: center; border-radius: 11px; font-size: 12.5px; font-weight: 900; letter-spacing: .06em; color: #fff; white-space: nowrap; box-shadow: 0 2px 6px rgba(45,55,72,.14); }
+
+        /* ---- 特性（单行输入框 + 图鉴搜索下拉） ---- */
         .trait-wrap { position: relative; min-width: 0; }
-        .trait-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 42px; padding: 6px 10px; border: 1px solid #dbe4ec; border-radius: 11px; background: #fbfdff; cursor: text; transition: border-color .15s, background .15s, box-shadow .15s; }
+        .trait-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 42px; padding: 5px 10px; border: 1px solid #dbe4ec; border-radius: 11px; background: #fbfdff; cursor: text; transition: border-color .15s, background .15s, box-shadow .15s; }
         .trait-field:hover { border-color: #c3d7e9; }
         .trait-field:focus-within { border-color: #4299e1; background: #fff; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .form-group .trait-field input.trait-native { flex: 1 1 90px; width: auto; min-width: 70px; height: 26px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: 13.5px; font-weight: 700; color: #2d3748; font-family: inherit; outline: none; }
+        .form-group .trait-field input.trait-native { flex: 1 1 90px; width: auto; min-width: 70px; height: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: 13.5px; font-weight: 700; color: #2d3748; font-family: inherit; outline: none; }
         .form-group .trait-field input.trait-native:focus { border: 0; background: transparent; box-shadow: none; }
         .form-group .trait-field input.trait-native::placeholder { color: #b3c2d1; font-weight: 600; }
         .trait-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 4px 8px 4px 11px; border-radius: 999px; background: #e8f2ff; color: #2b6cb0; font-size: 12.5px; font-weight: 900; line-height: 1.5; }
         .trait-chip .chip-x { flex: none; font-size: 10px; opacity: .5; cursor: pointer; transition: opacity .12s, color .12s; }
         .trait-chip .chip-x:hover { opacity: 1; color: #e53e3e; }
         .trait-drop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 1200; max-height: 244px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; }
-        .trait-drop .td-head { font-size: 10.5px; font-weight: 900; letter-spacing: .05em; color: #a0aec0; padding: 5px 9px 4px; }
         .trait-drop .td-item { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 700; color: #2d3748; transition: background .12s; }
         .trait-drop .td-item:hover { background: #ebf8ff; }
         .trait-drop .td-item i { color: #2b6cb0; font-size: 12px; }
         .trait-drop .td-tag { margin-left: auto; font-size: 10px; font-weight: 800; color: #a0aec0; background: #f1f5f9; padding: 2px 8px; border-radius: 999px; }
-        .td-head { font-size: 11px; font-weight: 900; color: #a0aec0; letter-spacing: .06em; padding: 6px 11px 4px; }
+        .td-head { font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; padding: 5px 9px 4px; }
         .td-none { padding: 10px 11px; font-size: 12px; font-weight: 700; color: #a0aec0; }
 
-        /* ============ 技能搜索下拉 ============ */
-        /* ============ 技能胶囊（默认展示，点击才编辑） ============ */
+        /* ---- 技能与熟练度 ---- */
         .skill-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-        .skill-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; transition: filter .14s, transform .14s; }
-        .skill-chip:hover { filter: saturate(1.35) brightness(1.08); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(45,55,72,.16); border-width: 2px; }
+        .skill-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; transition: filter .14s, transform .14s, box-shadow .14s; }
+        .skill-chip:hover { filter: saturate(1.35) brightness(1.06); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(45,55,72,.16); }
         .skill-chip small { font-size: 10px; font-weight: 900; opacity: .75; }
         .skill-edit-wrap { flex: 1 1 100%; position: relative; }
-        .skill-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }        .skill-input-wrap { position: relative; flex: 1; min-width: 0; }
+        .skill-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
+        .skill-input-wrap { position: relative; flex: 1; min-width: 0; }
         .skill-drop { position: absolute; left: 0; right: auto; width: 100%; top: calc(100% + 6px); z-index: 1200; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 34px rgba(45,55,72,.18); padding: 6px; max-height: 260px; overflow-y: auto; }
-
-        /* ============ 契约信息 + 成就经历卡片 ============ */
-        .contract-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: linear-gradient(150deg, #fffdf6, #fffaf0); border: 1px solid #f1e4c9; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
-        .contract-panel label { display: block; font-size: 12px; font-weight: 900; color: #9c6b0e; margin-bottom: 7px; }
-        .contract-panel label small { font-size: 10.5px; font-weight: 700; color: #b7791f; margin-left: 5px; }
-        .contract-panel input { width: 100%; padding: 9px 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; outline: none; font-family: inherit; background: #fff; }
-        .contract-panel input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
-        .ms-head-row { display: grid; grid-template-columns: 28px minmax(100px, .8fr) minmax(150px, 1.6fr) minmax(110px, .9fr) 32px; gap: 8px; align-items: center; }
-        .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        .ms-item input { padding: 9px 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; min-width: 0; }
-        .ms-item input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .ms-note { width: 100%; margin-top: 8px; }
-        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 32px; width: 32px; }
-        .ms-del:hover { background: #fee; }
-        .ms-add { margin-top: 2px; }
-
-        /* 字段提示：默认不占位置，悬浮显示说明 */
-
-        /* ============ 技能胶囊 ============ */
-        .skill-row input.sk-name { width: 100%; min-width: 0; padding: 8px 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+        .skill-row input.sk-name { width: 100%; min-width: 0; height: 38px; padding: 0 12px; border: 1px solid #dbe4ec; border-radius: 10px; font-size: 14px; outline: none; font-family: inherit; background: #fff; color: #2d3748; transition: border-color .15s, box-shadow .15s; }
         .skill-row input.sk-name:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
         .skill-lv-group { display: flex; gap: 4px; flex: none; }
-        .skill-lv { padding: 7px 10px; border-radius: 9px; border: 1px solid #dbe4ec; background: #fff; font-size: 12px; font-weight: 800; color: #718096; cursor: pointer; font-family: inherit; line-height: 1; transition: all .13s; }
+        .skill-lv { height: 38px; padding: 0 11px; border-radius: 9px; border: 1px solid #dbe4ec; background: #fff; font-size: 12px; font-weight: 800; color: #718096; cursor: pointer; font-family: inherit; transition: all .13s; }
         .skill-lv:hover { border-color: #90b8dd; background: #ebf8ff; color: #2b6cb0; }
         .skill-lv.on { background: var(--lv-c, #90a4ae); border-color: var(--lv-c, #90a4ae); color: #fff; box-shadow: 0 2px 6px rgba(45,55,72,.16); }
-        .skill-row .row-x, .skill-row .skill-ok { flex: none; border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
+        .skill-row .row-x, .skill-row .skill-ok { flex: none; border: none; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
+        .skill-row .row-x { background: #fff5f5; color: #e53e3e; }
         .skill-row .row-x:hover { background: #fee; }
-        .skill-row .skill-ok { border: none; background: #38a169; color: #fff; border-radius: 9px; cursor: pointer; font-size: 12px; height: 34px; width: 34px; }
+        .skill-row .skill-ok { background: #38a169; color: #fff; }
+        .skill-row .skill-ok:hover { background: #2f855a; }
         .nature-hint { font-size: 11.5px; color: #2b6cb0; font-weight: 700; margin-top: 6px; }
+
+        /* ============ 三律标记：权 · 位 · 力 ============ */
+        .rank-group { grid-column: 1 / -1; }
+        .rank-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 13px; }
+        .rank-item { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: flex-start; gap: 7px; padding: 6px 10px; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: pointer; font-family: inherit; text-align: left; transition: background .15s, border-color .15s, box-shadow .15s; }
+        .rank-item:hover { background: #fff; border-color: #dbe4ec; }
+        .rank-item.on { background: #fff; border-color: var(--rf-c); box-shadow: 0 1px 4px rgba(45,55,72,.07); }
+        .rank-item .ri-dot { flex: none; width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900; color: #fff; background: #c8d3de; transition: background .15s; }
+        .rank-item.on .ri-dot { background: var(--rf-c); }
+        .rank-item .ri-name { flex: none; font-size: 11px; font-weight: 800; color: #a0aec0; }
+        .rank-item.on .ri-name { color: var(--rf-c); opacity: .8; }
+        .rank-item .ri-val { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 900; color: #bcc8d4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-item.on .ri-val { color: #2d3748; }
+        .rank-item .ri-tick { flex: none; font-size: 10px; color: var(--rf-c); }
+
+        /* ============ 契约信息 + 成就经历 ============ */
+        .contract-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; background: #fffdf7; border: 1px solid #f0e5cd; border-radius: 12px; padding: 13px 14px; margin-bottom: 14px; }
+        .contract-panel label { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 900; color: #9c6b0e; margin-bottom: 7px; }
+        .contract-panel input { width: 100%; height: 40px; padding: 0 11px; border: 1px solid #eadfc5; border-radius: 10px; font-size: 13.5px; font-family: inherit; color: #2d3748; outline: none; background: #fff; transition: border-color .15s, box-shadow .15s; }
+        .contract-panel input:focus { border-color: #d69e2e; box-shadow: 0 0 0 3px rgba(214,158,46,.14); }
+        .contract-panel input::placeholder { color: #cfc0a4; font-weight: 600; }
+        .ms-cols { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; padding: 0 2px 6px; font-size: 10.5px; font-weight: 900; color: #a0aec0; letter-spacing: .05em; }
+        .ms-item { background: #fbfdff; border: 1px solid #e3eaf2; border-radius: 12px; padding: 10px 11px; margin-bottom: 10px; }
+        .ms-head-row { display: grid; grid-template-columns: 28px minmax(80px, .7fr) minmax(150px, 1.6fr) 38px; gap: 8px; align-items: center; }
+        .ms-num { width: 26px; height: 26px; border-radius: 50%; background: #fff3d6; color: #b7791f; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .ms-item input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; background: #fff; color: #2d3748; min-width: 0; }
+        .ms-item input::placeholder { color: #b3c2d1; font-weight: 600; }
+        .ms-item input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
+        .ms-note { margin-top: 8px; }
+        .ms-del { border: none; background: #fff5f5; color: #e53e3e; border-radius: 9px; cursor: pointer; font-size: 12px; height: 38px; width: 38px; }
+        .ms-del:hover { background: #fee; }
+        .ms-add { margin-top: 2px; }
 
         /* ============ 种族选择弹窗 ============ */
         .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 4px 6px 10px; }
@@ -156,36 +182,19 @@
         .sp-cell .sp-n { font-size: 12px; font-weight: 800; color: #2d3748; margin-top: 3px; }
         .sp-cell .sp-i { font-size: 10.5px; color: #a0aec0; font-weight: 700; }
 
-        .lv-tag { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12px; font-weight: 900; letter-spacing: .05em; padding: 7px 18px; border-radius: 999px; color: #fff; flex-shrink: 0; }
-        /* 基本信息三列紧凑排版 */
+        /* 基本信息三列对称排版 */
         .basic-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
         .basic-grid .form-group { min-width: 0; }
-        .basic-grid .seg-opt { padding: 8px 11px; }
-        .basic-grid .species-pick { gap: 7px; }
-        .basic-grid .sp-view { flex: 1; min-width: 0; min-height: 46px; padding: 5px 8px; gap: 7px; }
-        .basic-grid .sp-view img { width: 34px; height: 34px; }
-        .basic-grid .sp-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .basic-grid .sp-btn { padding: 8px 11px; }
-        .level-row { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 12px; padding: 8px 10px; }
-        .level-row input { flex: none; width: 72px; padding: 8px 10px; border: 1px solid #dbe4ec; border-radius: 10px; background: #fff; color: #2d3748; font-size: 14px; font-weight: 800; text-align: center; outline: none; font-family: inherit; }
-        .level-row input:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,.12); }
-        .level-row .lv-arrow { color: #a0aec0; font-size: 13px; }
-        .level-row .lv-label { font-size: 12px; font-weight: 800; color: #718096; }
-
-        /* ============ 三律标记：权 · 位 · 力（阶元 / 阶位 / 等级） ============ */
-        .rank-group { grid-column: 1 / -1; }
-        .rank-bar { display: flex; gap: 6px; padding: 6px; background: #f8fafc; border: 1px solid #e8edf2; border-radius: 13px; }
-        .rank-item { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-start; gap: 7px; padding: 7px 10px; border: 1px solid transparent; border-radius: 9px; background: transparent; cursor: pointer; font-family: inherit; text-align: left; transition: background .15s, border-color .15s, box-shadow .15s; }
-        .rank-item:hover { background: #fff; border-color: #dbe4ec; }
-        .rank-item.on { background: #fff; border-color: var(--rf-c); box-shadow: 0 1px 4px rgba(45,55,72,.07); }
-        .rank-item .ri-dot { flex: none; width: 22px; height: 22px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900; color: #fff; background: #c8d3de; transition: background .15s; }
-        .rank-item.on .ri-dot { background: var(--rf-c); }
-        .rank-item .ri-name { flex: none; font-size: 11px; font-weight: 800; color: #a0aec0; }
-        .rank-item.on .ri-name { color: var(--rf-c); opacity: .8; }
-        .rank-item .ri-val { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 900; color: #bcc8d4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rank-item.on .ri-val { color: #2d3748; }
-        .rank-item .ri-tick { flex: none; font-size: 10px; color: var(--rf-c); }
-        @media (max-width: 640px) { .rank-bar { flex-direction: column; } }
+        @media (max-width: 900px) { .basic-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) {
+            .basic-grid { grid-template-columns: 1fr; }
+            .rank-bar { grid-template-columns: 1fr; }
+            .ms-cols { display: none; }
+            .ms-head-row { display: flex; flex-wrap: wrap; }
+            .ms-head-row input { flex: 1 1 40%; }
+            .ms-head-row .ms-del { margin-left: auto; }
+            .level-row .lv-tag { min-width: 68px; padding: 0 10px; }
+        }
     </style>
 </head>
 <body>
@@ -298,9 +307,9 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-circle-info"></i> 基本信息</div>
                     <div class="form-grid basic-grid">
-                        <div class="form-group"><label>昵称 <i class="tip" data-tip="可以不填；留空则直接用种族名当称呼">?</i></label><input v-model="form.nickname" placeholder=""></div>
-                        <div class="form-group"><label>性别</label>
-                            <div class="seg-group">
+                        <div class="form-group"><label>昵称 <i class="tip" data-tip="可以不填；留空则直接用种族名当称呼">?</i></label><input v-model="form.nickname" placeholder="留空则用种族名"></div>
+                        <div class="form-group"><label>性别 <i class="tip" data-tip="点选后再次点击可取消">?</i></label>
+                            <div class="seg-group seg-fill">
                                 <button type="button" class="seg-opt" v-for="g in GENDERS" :key="g"
                                         :class="{ on: form.gender === g }" style="--seg-c: #d4537e;"
                                         @click="form.gender = (form.gender === g ? '' : g)">{{ g }}</button>
@@ -320,8 +329,8 @@
                             </div>
                         </div>
                         <div class="form-group"><label>等级 <i class="tip" data-tip="填 1-100；阶段自动推导">?</i></label>
-                            <div class="level-row compact">
-                                <input type="text" inputmode="numeric" v-model.number="form.level">
+                            <div class="level-row">
+                                <input type="text" inputmode="numeric" v-model.number="form.level" placeholder="1-100">
                                 <span class="lv-tag" :style="{ background: formStageColor }">{{ stageName(form.level) }}</span>
                             </div>
                         </div>
@@ -347,7 +356,7 @@
                             </div>
                         </div>
                         <div class="form-group rank-group">
-                            <label>三律标记 <i class="tip" data-tip="默认勾【权】【力】。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与数值面板。">?</i></label>
+                            <label>三律标记 <i class="tip" data-tip="默认勾【位】【力】，【权】需明确是某层阶元的掌权者才勾。【权】权柄——掌辖某一层阶元的掌权者（初灵掌种、升灵掌属、族尊掌科、基座掌目、灵相掌纲、律冠掌门、元灵掌界、元掌域）；【位】生态位——在八阶体系中占据的阶位；【力】战力——等级与数值面板。">?</i></label>
                             <div class="rank-bar">
                                 <button type="button" class="rank-item" v-for="f in RANK_FLAGS" :key="f.key"
                                         :class="{ on: form.rankFlags[f.key] }"
@@ -369,7 +378,7 @@
                 <!-- 习性 -->
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-feather-pointed"></i> 习性 <i class="tip" data-tip="这只精灵的脾气秉性，自由描述">?</i></div>
-                    <vow-textarea v-model="form.personality" :rows="2"></vow-textarea>
+                    <vow-textarea v-model="form.personality" :rows="2" placeholder="如：温和、粘人，饿了会撒娇；战斗中不退缩…"></vow-textarea>
                 </div>
 
                 <!-- 技能与熟练度 -->
@@ -412,7 +421,7 @@
                     <div class="sect-title"><i class="fa-solid fa-dna"></i> 血脉</div>
                     <div class="form-grid">
                         <div class="form-group"><label>血脉类型 <i class="tip" data-tip="异变 / 黑暗 / 光明 / 属性血脉">?</i></label>
-                            <div class="seg-group">
+                            <div class="seg-group seg-fill">
                                 <button type="button" class="seg-opt" v-for="b in BLOODLINES" :key="b"
                                         :class="{ on: form.bloodline === b }"
                                         :style="form.bloodline === b ? { '--seg-c': bloodColorOf(b) } : {}"
@@ -436,18 +445,18 @@
                 <div class="sect">
                     <div class="sect-title"><i class="fa-solid fa-calendar-check"></i> 契约与成就经历</div>
                     <div class="contract-panel">
-                        <div><label>契约日 <i class="tip" data-tip="书内时间或现实日期均可">?</i></label><input v-model="form.contractDate" placeholder=""></div>
-                        <div><label>契约章节 <i class="tip" data-tip="记录在书的第几章">?</i></label><input v-model="form.contractChapter" placeholder=""></div>
+                        <div><label>契约日 <i class="tip" data-tip="书内时间或现实日期均可">?</i></label><input v-model="form.contractDate" placeholder="如：第三纪元 · 春"></div>
+                        <div><label>契约章节 <i class="tip" data-tip="记录在书的第几章">?</i></label><input v-model="form.contractChapter" placeholder="如：第 12 章"></div>
                     </div>
+                    <div class="ms-cols" v-if="form.milestones.length"><span></span><span>章节</span><span>事件</span><span></span></div>
                     <div class="ms-item" v-for="(m, i) in form.milestones" :key="i">
                         <div class="ms-head-row">
                             <span class="ms-num font-num">{{ i + 1 }}</span>
-                            <input v-model="m.chapter" placeholder="">
-                            <input v-model="m.title" placeholder="">
-                            <input v-model="m.date" placeholder="">
+                            <input v-model="m.chapter" placeholder="第几章">
+                            <input v-model="m.title" placeholder="发生了什么">
                             <button type="button" class="ms-del" @click="form.milestones.splice(i, 1)" title="删除该经历"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        <input class="ms-note" v-model="m.note" placeholder="">
+                        <input class="ms-note" v-model="m.note" placeholder="补充说明：这一章它突破到了什么程度…">
                     </div>
                     <button type="button" class="btn btn-outline btn-sm ms-add" @click="addMilestone"><i class="fa-solid fa-plus"></i> 添加成就经历</button>
                 </div>
@@ -459,9 +468,9 @@
                         <div class="form-group"><label>主人 <i class="tip" data-tip="来自御兽人物档案">?</i></label>
                             <vow-select v-model="form.ownerId" :options="ownerOptions" placeholder="（未定 / 无主）"></vow-select>
                         </div>
-                        <div class="form-group"><label>携带道具 <i class="tip" data-tip="多个道具用逗号分隔">?</i></label><input v-model="itemsInput" placeholder=""></div>
-                        <div class="form-group" style="grid-column: span 2;"><label>经历 <i class="tip" data-tip="这只精灵的故事">?</i></label><vow-textarea v-model="form.experience" :rows="3"></vow-textarea></div>
-                        <div class="form-group" style="grid-column: span 2;"><label>备注</label><input v-model="form.notes"></div>
+                        <div class="form-group"><label>携带道具 <i class="tip" data-tip="多个道具用逗号分隔">?</i></label><input v-model="itemsInput" placeholder="如：疗伤药、风铃草"></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>经历 <i class="tip" data-tip="这只精灵的故事">?</i></label><vow-textarea v-model="form.experience" :rows="3" placeholder="这只精灵的经历：出身、被契约、关键战斗、成长变化…"></vow-textarea></div>
+                        <div class="form-group" style="grid-column: span 2;"><label>备注 <i class="tip" data-tip="其它需要记下的事">?</i></label><input v-model="form.notes" placeholder="其它需要记下的事"></div>
                     </div>
                 </div>
             </div>
@@ -507,9 +516,9 @@
 <script src="../js/github-api.js?v=20261124e"></script>
 <script src="../js/common-ui.js?v=20261124f"></script>
 <script src="../js/vow-tip.js?v=20261125b"></script>
-<script src="../js/vow-textarea.js?v=20261125c"></script>
+<script src="../js/vow-textarea.js?v=20261125d"></script>
 <script src="../js/dialog.js?v=20261124e"></script>
 <script src="../js/vow-select.js?v=20261126d"></script>
-<script src="../js/admin-individuals.js?v=20261126f"></script>
+<script src="../js/admin-individuals.js?v=20261126g"></script>
 </body>
 </html>

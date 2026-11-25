@@ -67,7 +67,8 @@ const RANK_FLAGS = [
     { key: 'wei',  label: '位', name: '生态位', color: '#7048e8', tip: '生态位：精灵在生态界中占据的位置，对应八阶阶位' },
     { key: 'li',   label: '力', name: '战力', color: '#1971c2', tip: '战力：自身的数值面板与技能，对应等级，修炼就能增长' }
 ];
-const DEFAULT_FLAGS = { quan: true, wei: false, li: true };
+/* 新建个体默认勾【位】【力】；【权】要明确是某层阶元的掌权者才勾 */
+const DEFAULT_FLAGS = { quan: false, wei: true, li: true };
 
 function stageNameOf(level) {
     const lv = Number(level) || 0;

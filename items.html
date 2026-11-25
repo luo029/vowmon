@@ -76,6 +76,9 @@
 
         .detail-cat { font-size: 12.5px; font-weight: 900; color: #c08a2a; letter-spacing: .5px; margin-bottom: 10px; }
         .detail-desc { font-size: 15px; line-height: 1.85; color: #4a5568; font-weight: 600; }
+        .detail-price { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 5px 12px; border-radius: 999px; background: #fffdf5; border: 1px solid #f0e5cd; color: #9c6b0e; font-size: 14px; font-weight: 900; }
+        .detail-price i { font-size: 12px; color: #d4a017; }
+        .detail-price span { font-size: 11px; font-weight: 800; color: #b7791f; }
         .detail-divider { height: 1px; background: #f0e3cb; margin: 20px 0 16px; }
         .obtain-title { font-size: 16px; font-weight: 900; color: #4a3c28; margin-bottom: 10px; }
         .obtain-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
@@ -201,6 +204,7 @@
                 </div>
                 <div class="detail-info">
                     <div class="detail-cat">{{ currentItem.category || currentItem.group }}</div>
+                    <div class="detail-price" v-if="currentItem.price"><i class="fa-solid fa-coins"></i> {{ currentItem.price }} <span>联盟币</span></div>
                     <p class="detail-desc">{{ currentItem.desc || '暂无描述。' }}</p>
                     <div class="detail-divider"></div>
                     <h3 class="obtain-title">获取方式</h3>
@@ -274,6 +278,7 @@ VowmonData.ready(['items']).then(function () {
                 item.color = item.color || getItemFallbackColor(item);
                 item.iconClass = item.iconClass || getItemFallbackIcon(item);
                 item.desc = String(item.desc || '').trim();
+                item.price = item.price == null ? '' : String(item.price).trim();
                 item.obtain = Array.isArray(item.obtain)
                     ? item.obtain.map(o => String(o).trim()).filter(Boolean)
                     : (item.obtain ? [String(item.obtain)] : []);
