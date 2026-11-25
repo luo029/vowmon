@@ -178,12 +178,12 @@ const app = createApp({
                 }
                 const el = e.target.closest ? e.target.closest('[data-lore]') : null;
                 if (el) {
-                    // 正在编辑时点了另一个文本块：先取消当前编辑再切换
-                    if (editing && el !== editing.el) cancelEdit();
-                    startEdit(el, doc);
+                    // 正在编辑时点了另一个文本块：先保存当前块再切换（不刷新 iframe，避免跳动）
+                    if (editing && el !== editing.el) { saveEdit(true); startEdit(el, doc); }
+                    else if (!editing) startEdit(el, doc);
                 } else if (editing) {
-                    // 点了文本块以外的空白区域：默认取消编辑、还原内容
-                    cancelEdit();
+                    // 点了文本块以外的空白区域：自动保存（原来静默还原，常被误以为「改了没生效」）
+                    saveEdit(true);
                 }
             }, true);
 
@@ -192,6 +192,7 @@ const app = createApp({
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     cancelEdit();
+                    try { VowmonDialog.toast('已还原，本次改动未保存', 'info'); } catch (err) { /* ignore */ }
                 } else if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.key === 's' || e.key === 'S')) {
                     e.preventDefault();
                     saveEdit();
@@ -249,7 +250,7 @@ const app = createApp({
             finishEdit();
         }
 
-        function saveEdit() {
+        function saveEdit(skipReload) {
             if (!editing) return;
             const key = editing.key;
             const html = editing.el.innerHTML;
@@ -272,7 +273,7 @@ const app = createApp({
                 return;
             }
             VowmonDialog.toast('「' + label + '」已保存，前台已生效。改完记得点「一键同步」推到仓库', 'success', { duration: 3600 });
-            reloadFrame();
+            if (!skipReload) reloadFrame();
         }
 
         let pendingScroll = 0;

@@ -89,6 +89,7 @@ createApp({
         // 异色图片（可多张）：挂在精灵对象上的 shiny 数组，不占编号、不算独立条目
         const shinyFileInput = ref(null);
         const shinyInput = ref('');
+        const regionInput = ref('');   // 出现地区输入框（回车/点「新增」加入 form.region）
         const isShinyUploading = ref(false);
         const shinyProgress = ref('');
 
@@ -120,7 +121,7 @@ createApp({
             eggGroup: '', rideable: '', height: '', weight: '',
             // 分类学：域界门纲目科属种（科决定族尊下发的十八系血脉技能；同一条进化链共用同一套，保存时自动同步）
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
-            region: '',                                 // 出现地区（如：九牧地区；留空 = 不限地区 / 全域）
+            region: [],                                 // 出现地区（多选数组，如 ['九牧地区']；空数组 = 不限地区 / 全域）
             origin: '',                                 // 原型 / 取材自（自由填写，默认空）
             image: '', shiny: [], description: '',
             stats: { hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 0 }
@@ -367,6 +368,49 @@ createApp({
             form[target] = form[target].filter(x => String(x) !== String(id));
         };
 
+        /* -------------------------------------------------------- 出现地区（多选 + 可新增） */
+        // 把任意精灵的 region 字段规整成字符串数组（旧数据可能是字符串）
+        const regionArrOf = (p) => {
+            const r = p && p.region;
+            if (Array.isArray(r)) return r.map(s => String(s).trim()).filter(Boolean);
+            const s = String(r || '').trim();
+            return s ? [s] : [];
+        };
+        // 全站已用过的地区（供下拉点选）
+        const allRegions = computed(() => {
+            const set = new Set();
+            vows.value.forEach(p => regionArrOf(p).forEach(r => set.add(r)));
+            return [...set];
+        });
+        // 下拉建议：已用过的地区里排除已选中的；输入框有字时按字过滤
+        const regionSuggestions = computed(() => {
+            const picked = Array.isArray(form.region) ? form.region : [];
+            const q = regionInput.value.trim().toLowerCase();
+            return allRegions.value
+                .filter(r => !picked.includes(r))
+                .filter(r => !q || r.toLowerCase().includes(q));
+        });
+        const regionUsedCount = (r) => vows.value.filter(p => regionArrOf(p).includes(r)).length;
+        const addRegion = (e) => {
+            // 中文输入法回车确认候选词时不要误加（isComposing / keyCode 229）
+            if (e && (e.isComposing || e.keyCode === 229)) return;
+            const r = String(regionInput.value || '').trim();
+            if (!r) return;
+            if (!Array.isArray(form.region)) form.region = [];
+            if (!form.region.includes(r)) form.region.push(r);
+            regionInput.value = '';
+            activeDropdown.value = 'region';
+        };
+        const toggleRegion = (r) => {
+            if (!Array.isArray(form.region)) form.region = [];
+            const i = form.region.indexOf(r);
+            if (i > -1) form.region.splice(i, 1);
+            else form.region.push(r);
+        };
+        const removeRegion = (r) => toggleRegion(r);
+        // 展示用：数组 → 顿号串（兼容旧字符串）
+        const regionText = (p) => regionArrOf(p).join('、');
+
         // 表单交互
         const closeAllDropdowns = () => { 
             activeDropdown.value = ''; 
@@ -434,6 +478,11 @@ createApp({
             if (!Array.isArray(form.evoFrom)) form.evoFrom = [];
             if (form.evoTo && !Array.isArray(form.evoTo)) form.evoTo = [form.evoTo];
             if (!Array.isArray(form.evoTo)) form.evoTo = [];
+            // 出现地区：多选数组；旧数据可能是单个字符串
+            if (typeof form.region === 'string') form.region = form.region.trim() ? [form.region.trim()] : [];
+            if (!Array.isArray(form.region)) form.region = [];
+            form.region = form.region.map(s => String(s).trim()).filter(Boolean);
+            regionInput.value = '';
             shinyInput.value = '';
             
             if (form.image) {
@@ -746,7 +795,11 @@ createApp({
             const vowData = JSON.parse(JSON.stringify(form));
             if (!Array.isArray(vowData.shiny)) vowData.shiny = [];
             vowData.origin = String(vowData.origin || '').trim();   // 原型 / 取材自，默认留空
-            vowData.region = String(vowData.region || '').trim();   // 出现地区，默认留空（= 不限地区）
+            // 出现地区：统一存成去空、去重的字符串数组（兼容旧的字符串形态）
+            if (!Array.isArray(vowData.region)) {
+                vowData.region = String(vowData.region || '').trim() ? [String(vowData.region).trim()] : [];
+            }
+            vowData.region = [...new Set(vowData.region.map(s => String(s).trim()).filter(Boolean))];
 
             /* 分类学进化链同步：同一条进化链上的精灵共用同一套域界门纲目科属种。
                只要本次保存的 taxonomy 有内容，就沿 evoFrom/evoTo 双向遍历整条链，
@@ -1087,6 +1140,7 @@ createApp({
             filteredSelectionList, paginatedSelectionList,
             showEvoModal, evoTarget, evoSearchQuery, evoSelection,
             vowNameById, filteredEvoVows, openEvoModal, toggleEvoPick, confirmEvoModal, removeEvo,
+            regionInput, allRegions, regionSuggestions, regionUsedCount, addRegion, toggleRegion, removeRegion, regionText,
             listPage, listPageSize, paginatedVows,
             deleteTargetName,
             closeModal,

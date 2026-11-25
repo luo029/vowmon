@@ -285,7 +285,7 @@
                     <div class="info-grid">
                         <div class="info-box" v-if="vow.stage"><div class="lbl">阶数</div><div class="val">{{ vow.stage }} <span class="rank-line" :style="{ background: stageRank.color }">{{ stageRank.name }}线</span></div></div>
                         <div class="info-box" v-if="vow.form"><div class="lbl">形态</div><div class="val">{{ vow.form }}</div></div>
-                        <div class="info-box" v-if="vow.region"><div class="lbl">出现地区</div><div class="val">{{ vow.region }}</div></div>
+                        <div class="info-box" v-if="regionText"><div class="lbl">出现地区</div><div class="val">{{ regionText }}</div></div>
                         <div class="info-box" v-if="realmLabels"><div class="lbl">天地类别</div><div class="val">{{ realmLabels }}</div></div>
                         <div class="info-box" v-if="heightText"><div class="lbl">身高</div><div class="val font-num">{{ heightText }}</div></div>
                         <div class="info-box" v-if="weightText"><div class="lbl">体重</div><div class="val font-num">{{ weightText }}</div></div>
@@ -549,6 +549,12 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
                     ['目', 'order'], ['科', 'family'], ['属', 'genus'], ['种', 'species']
                 ].filter(([label, key]) => vow.value.taxonomy[key]).map(([label, key]) => ({ label, value: String(vow.value.taxonomy[key]) }));
             });
+            /* 出现地区：多选数组（新）/ 字符串（旧数据兼容）→ 顿号串展示 */
+            const regionText = computed(() => {
+                const r = vow.value && vow.value.region;
+                const list = Array.isArray(r) ? r.map(s => String(s).trim()).filter(Boolean) : (String(r || '').trim() ? [String(r).trim()] : []);
+                return list.join('、');
+            });
 
             /* ---------------- 进化链 ---------------- */
             const vowById = computed(() => {
@@ -669,7 +675,7 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
                 isShiny, displayImg, showcaseStyle, bubbleStyle,
                 statLines, hasStats, statsTotal,
                 heightText, weightText, stageRank, realmLabels,
-                abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows,
+                abilityRows, evoNodes, bloodlineSkillRows, taxonomyRows, regionText,
                 attackGroups, defendGroups, exportCard
             };
         }

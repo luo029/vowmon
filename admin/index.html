@@ -18,6 +18,23 @@
         .tax-cell label { display: block; font-size: 12px; font-weight: 900; color: #4a5568; margin-bottom: 5px; text-align: center; }
         .tax-cell input { width: 100%; padding: 8px 6px; border: 1px solid #dbe4ec; border-radius: 9px; font-size: 13px; outline: none; font-family: inherit; text-align: center; background: #fbfdff; }
         .tax-cell input:focus { border-color: #4299e1; box-shadow: 0 0 0 2px rgba(66,153,225,.12); }
+        /* —— 出现地区多选控件 —— */
+        .region-box { position: relative; border: 1.5px solid #dbe4ec; border-radius: 11px; background: #fbfdff; padding: 6px 8px; transition: border-color .15s, box-shadow .15s; }
+        .region-box.is-open { border-color: #4299e1; box-shadow: 0 0 0 2.5px rgba(66,153,225,.13); }
+        .region-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 30px; }
+        .region-tag { display: inline-flex; align-items: center; gap: 6px; background: #ebf4ff; color: #2b6cb0; border: 1px solid #bfdbf7; padding: 3px 8px 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+        .region-x { cursor: pointer; font-size: 11px; opacity: .65; padding: 2px; }
+        .region-x:hover { opacity: 1; color: #c53030; }
+        .region-input { flex: 1; min-width: 140px; border: 0; outline: none; background: transparent; font-size: 13px; font-family: inherit; padding: 5px 2px; }
+        .region-menu { position: absolute; left: 0; right: 0; top: calc(100% + 5px); background: #fff; border: 1px solid #dbe4f0; border-radius: 12px; box-shadow: 0 10px 28px rgba(45,55,72,.16); max-height: 210px; overflow-y: auto; z-index: 60; padding: 5px; }
+        .region-opt { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #4a5568; cursor: pointer; }
+        .region-opt:hover { background: #f0f6ff; color: #2b6cb0; }
+        .region-opt .fa-square-check { color: #4299e1; }
+        .region-opt .fa-square { color: #a0aec0; }
+        .region-used { margin-left: auto; font-weight: 500; font-size: 11px; color: #a0aec0; }
+        .region-new { color: #2f855a; }
+        .region-new:hover { background: #f0fff4; color: #276749; }
+        .region-empty { padding: 10px; font-size: 12px; color: #a0aec0; text-align: center; }
         /* —— 天地图鉴 Tab —— */
         .realm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 18px; }
         .realm-card { background: #fff; border: 1px solid #e8eef4; border-radius: 16px; padding: 18px 18px 16px; box-shadow: 0 1px 3px rgba(45,55,72,.05); display: flex; flex-direction: column; gap: 12px; transition: box-shadow .2s; }
@@ -133,7 +150,7 @@
                                 </td>
                                 <td v-if="visibleCols.includes('stage')">{{ vow.stage }}</td>
                                 <td v-if="visibleCols.includes('form')">{{ vow.form }}</td>
-                                <td v-if="visibleCols.includes('region')">{{ vow.region || '—' }}</td>
+                                <td v-if="visibleCols.includes('region')">{{ regionText(vow) || '—' }}</td>
                                 <td v-if="visibleCols.includes('ability')">{{ [vow.ability, vow.ability2].filter(Boolean).join(' / ') }}<span v-if="vow.hiddenAbility" style="color:#805ad5;"> ★{{ vow.hiddenAbility }}</span></td>
                                 <td v-if="visibleCols.includes('hp')">{{ vow.stats?.hp || 0 }}</td>
                                 <td v-if="visibleCols.includes('atk')">{{ vow.stats?.atk || 0 }}</td>
@@ -580,9 +597,35 @@
                         
                         <div class="form-group"><label>身高 (m)</label><input type="number" step="0.1" v-model="form.height"></div>
                         <div class="form-group"><label>体重 (kg)</label><input type="number" step="0.1" v-model="form.weight"></div>
-                        <div class="form-group">
-                            <label>出现地区 <span class="opt">留空 = 不限地区</span></label>
-                            <input v-model="form.region" placeholder="如：九牧地区（只在这个地区出现）">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>出现地区 <span class="opt">点选已有地区，或在框内输入后回车新增；可多选；不选 = 不限地区</span></label>
+                            <div class="region-box" :class="{ 'is-open': activeDropdown === 'region' }">
+                                <div class="region-tags">
+                                    <span class="region-tag" v-for="r in form.region" :key="r">
+                                        {{ r }}
+                                        <i class="fa-solid fa-xmark region-x" @click.stop="removeRegion(r)"></i>
+                                    </span>
+                                    <input class="region-input" v-model="regionInput"
+                                           :placeholder="form.region.length ? '再输入或点选…' : '如：九牧地区'"
+                                           @keydown.enter.prevent="addRegion($event)"
+                                           @focus="activeDropdown = 'region'"
+                                           @click.stop="activeDropdown = 'region'">
+                                </div>
+                                <div class="region-menu" v-show="activeDropdown === 'region'">
+                                    <div class="region-opt" v-for="r in regionSuggestions" :key="r" @click.stop="toggleRegion(r)">
+                                        <i class="fa-regular" :class="form.region.includes(r) ? 'fa-square-check' : 'fa-square'"></i>
+                                        <span>{{ r }}</span>
+                                        <small class="region-used">已用于 {{ regionUsedCount(r) }} 只</small>
+                                    </div>
+                                    <div class="region-opt region-new" v-if="regionInput.trim() && !allRegions.includes(regionInput.trim())" @click.stop="addRegion()">
+                                        <i class="fa-solid fa-plus"></i> 新增「{{ regionInput.trim() }}」
+                                    </div>
+                                    <div class="region-empty" v-if="!regionSuggestions.length && !(regionInput.trim() && !allRegions.includes(regionInput.trim()))">
+                                        {{ allRegions.length ? '没有更多可选地区' : '还没有任何地区记录，直接输入后回车即可新建' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="hint" style="margin-top:4px;">地区形态的精灵（同种族不同地区）可另建一条图鉴条目：形态选「地区形态」+ 勾选对应地区。</p>
                         </div>
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>原型 <span class="opt">取材自哪里，可留空</span></label>
@@ -705,7 +748,7 @@
 <script src="../js/image-utils.js?v=20261126s"></script>
 <script src="../js/common-ui.js?v=20261126s"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
-<script src="../js/admin.js?v=20261127c"></script>
+<script src="../js/admin.js?v=20261127d"></script>
 <script src="sidebar.js?v=20261127b"></script>
 </body>
 </html>
