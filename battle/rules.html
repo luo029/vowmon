@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>对战规则 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127e">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <script src="../js/navbar.js?v=20261127f" defer></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2d3748; margin: 0; }
+        .rules-page { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+        .page-title { font-size: 22px; font-weight: 900; margin: 6px 0 4px; }
+        .page-sub { font-size: 13px; color: #718096; margin-bottom: 20px; line-height: 1.7; }
+
+        .rule-card { background: #fff; border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(45,55,72,.08); }
+        .rule-card h2 { margin: 0 0 12px; font-size: 17px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+        .rule-card h2 .idx { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg,#e53e3e,#3182ce); color: #fff; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+        .rule-card p, .rule-card li { font-size: 13.5px; line-height: 1.9; color: #4a5568; margin: 6px 0; }
+        .rule-card ul { padding-left: 20px; margin: 6px 0; }
+        b.k { color: #2d3748; }
+        .formula { background: #1a202c; color: #e2e8f0; border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.9; margin: 10px 0; font-family: Consolas, "JetBrains Mono", monospace; overflow-x: auto; white-space: nowrap; }
+        .formula em { color: #f6ad55; font-style: normal; }
+        .formula i { color: #68d391; font-style: normal; }
+
+        table.rt { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+        table.rt th, table.rt td { border: 1px solid #e2e8f0; padding: 7px 10px; text-align: left; line-height: 1.6; }
+        table.rt th { background: #f7fafc; font-weight: 900; font-size: 12.5px; white-space: nowrap; }
+        table.rt td b { color: #2d3748; }
+        .num { font-family: Consolas, monospace; font-weight: 700; color: #2b6cb0; white-space: nowrap; }
+        .tip { background: #fff5f5; border-left: 4px solid #e53e3e; border-radius: 0 10px 10px 0; padding: 8px 14px; font-size: 12.5px; color: #822727; margin: 10px 0; line-height: 1.8; }
+        .tip.blue { background: #ebf8ff; border-left-color: #3182ce; color: #2a4365; }
+
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin: 10px 0; }
+        .status-card { background: #f7fafc; border-radius: 12px; padding: 12px 14px; }
+        .status-card .st-name { font-weight: 900; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .st-badge { font-size: 11px; color: #fff; padding: 1px 9px; border-radius: 999px; font-weight: 900; }
+        .status-card .st-desc { font-size: 12.5px; color: #4a5568; line-height: 1.8; margin-top: 6px; }
+        .status-card .st-immune { font-size: 11.5px; color: #a0aec0; margin-top: 6px; }
+
+        @media (max-width: 640px) {
+            .status-grid { grid-template-columns: 1fr; }
+            table.rt { font-size: 12px; }
+            table.rt th, table.rt td { padding: 5px 7px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <div id="site-navbar"></div>
+    <main class="rules-page">
+        <div class="page-title">📜 对战规则与设定</div>
+        <div class="page-sub">对战模拟器的全部规则，数值照抄宝可梦官方（52poke 百科）。写文时直接对照本文即可。数据源自 <b>vowmon_data</b> 数据仓库：种族值、技能、性格、克制表全部真实生效。</div>
+
+        <!-- 1 伤害公式 -->
+        <div class="rule-card">
+            <h2><span class="idx">1</span>伤害公式</h2>
+            <div class="formula">伤害 = <em>基础伤害</em> × 能力阶级 × 击中要害 × 本系加成 × 属性克制 × 天气 × 场地 × 灼伤 × <i>随机 0.85~1.00</i></div>
+            <div class="formula">基础伤害 = ⌊⌊⌊2×等级/5⌋ + 2⌋ × 威力 × 攻/防 ÷ 50⌋ + 2</div>
+            <ul>
+                <li><b class="k">攻</b>：物理招式取攻击、特殊招式取特攻；<b class="k">防</b>：物理取防御、特殊取特防。</li>
+                <li>能力值按<b class="k">满个体值（31）、无努力值</b>折算；性格接图鉴数据（+攻击/−防御等 ±10%）。</li>
+                <li><b class="k">本系加成</b>：招式属性与自身属性一致时 ×1.5。</li>
+                <li><b class="k">随机波动</b>：0.85~1.00，战报里会写出具体数值。</li>
+                <li>伤害最低 1 点；属性不生效（×0）则直接写"完全没有效果"。</li>
+            </ul>
+            <div class="tip blue">每一击的战报都会列出<b>完整结算明细</b>（基础伤害、每项倍率、随机数），写文时逐项照抄即可。</div>
+        </div>
+
+        <!-- 2 能力变化 -->
+        <div class="rule-card">
+            <h2><span class="idx">2</span>能力变化（±6 级）</h2>
+            <p>攻击 / 防御 / 特攻 / 特防 / 速度五项各可 ±6 级，初始 0 级：</p>
+            <table class="rt">
+                <tr><th>阶级</th><td class="num">-6</td><td class="num">-5</td><td class="num">-4</td><td class="num">-3</td><td class="num">-2</td><td class="num">-1</td><td class="num">0</td><td class="num">+1</td><td class="num">+2</td><td class="num">+3</td><td class="num">+4</td><td class="num">+5</td><td class="num">+6</td></tr>
+                <tr><th>倍率</th><td>2/8</td><td>2/7</td><td>2/6</td><td>2/5</td><td>2/4</td><td>2/3</td><td>2/2</td><td>3/2</td><td>4/2</td><td>5/2</td><td>6/2</td><td>7/2</td><td>8/2</td></tr>
+            </table>
+            <ul>
+                <li>速度阶级影响<b class="k">行动顺序</b>；「大幅提高/降低」= ±2 级。</li>
+                <li>能力变化在整场对战中持续保留，点「清除双方状态」可一键归零。</li>
+                <li>来源：技能效果文案里写「提高/降低 ××N 级」就会自动生效，<b>不用改代码</b>。</li>
+            </ul>
+        </div>
+
+        <!-- 3 击中要害 -->
+        <div class="rule-card">
+            <h2><span class="idx">3</span>击中要害</h2>
+            <ul>
+                <li>每次攻击有 <span class="num">1/24</span> 概率击中要害，伤害 <span class="num">×1.5</span>。</li>
+                <li>要害时：<b class="k">攻击方的攻击/特攻下降阶级按 0 级算</b>；<b class="k">防御方的防御/特防上升阶级按 0 级算</b>（宝可梦第三世代起规则）。</li>
+                <li>战报与结算明细中都会标注「击中要害 ×1.5」。</li>
+            </ul>
+        </div>
+
+        <!-- 4 异常状态 -->
+        <div class="rule-card">
+            <h2><span class="idx">4</span>异常状态</h2>
+            <p>六种异常状态<b class="k">不可共存</b>——已有异常状态时不会再陷入新的：</p>
+            <div class="status-grid">
+                <div class="status-card" v-for="s in statusList" :key="s.key">
+                    <div class="st-name"><span class="st-badge" :style="{background: s.color}">{{ s.icon }} {{ s.name }}</span></div>
+                    <div class="st-desc">{{ s.desc }}</div>
+                    <div class="st-immune" v-if="s.immune">免疫：{{ s.immune }}属性</div>
+                </div>
+            </div>
+            <ul>
+                <li><b class="k">灼伤</b>：物理伤害 ×0.5，回合末损失最大体力 1/16（上限 1/16，第七世代起规则）。</li>
+                <li><b class="k">剧毒</b>：回合末损失 1/16 → 2/16 → 3/16…，最多 15/16。</li>
+                <li><b class="k">冰冻</b>：受火系招式攻击立即解冻；<b class="k">大日照 / 大日照天气下不会陷入冰冻</b>。</li>
+                <li>灼伤 / 冰冻 / 麻痹 / 中毒 / 剧毒均有属性免疫（见卡片）。</li>
+            </ul>
+        </div>
+
+        <!-- 5 状态变化 -->
+        <div class="rule-card">
+            <h2><span class="idx">5</span>状态变化（可与异常状态共存）</h2>
+            <ul>
+                <li><b class="k">混乱</b>：持续 1~4 次行动；每次行动 50% 攻击自己（40 威力物理、打自己）；行动结束后自然解除。</li>
+                <li><b class="k">畏缩</b>：被追加效果吓到时，若<b class="k">本回合尚未行动</b>则无法使出招式；已行动过则无效果。</li>
+            </ul>
+        </div>
+
+        <!-- 6 行动顺序 -->
+        <div class="rule-card">
+            <h2><span class="idx">6</span>行动顺序与优先度</h2>
+            <ul>
+                <li>先比<b class="k">招式优先度</b>：先制招式必先行动，速度再慢也没用。</li>
+                <li>优先度相同再比<b class="k">速度</b>（含速度阶级、麻痹 ×0.5）；同速随机。</li>
+                <li>知名先制技内置名单：神速(+2)、电光一闪/子弹拳/冰砾/音速拳/影子偷袭/突袭/真空波/水流喷射/飞水手里剑(+1)、击掌奇袭(+3)、守住/看穿/挺住(+4)。</li>
+                <li>技能效果文案含「先制」「必定先攻」也会按 +1 处理。</li>
+            </ul>
+        </div>
+
+        <!-- 7 追加效果 -->
+        <div class="rule-card">
+            <h2><span class="idx">7</span>追加效果（改文案即可生效）</h2>
+            <p>引擎从技能的「效果」文案里自动解析追加效果，命中后按概率触发：</p>
+            <table class="rt">
+                <tr><th>类型</th><th>触发关键词</th><th>默认概率</th></tr>
+                <tr><td>异常状态 / 混乱</td><td>灼烧・烧伤 / 麻痹 / 中毒 / 剧毒 / 冰冻 / 催眠・睡眠 / 混乱</td><td>写了 <span class="num">X%</span> 按写的算；「有时」按 <span class="num">10%</span>；纯变化招式 <span class="num">100%</span></td></tr>
+                <tr><td>能力升降</td><td>「提高/降低 + 能力名 +（N）级」，「自己的→升自己，目标的/对手的→降对方」</td><td>变化类 100%；攻击类按文案概率</td></tr>
+                <tr><td>畏缩</td><td>畏缩 / 退缩 / 害怕</td><td>同上</td></tr>
+                <tr><td>吸取回复</td><td>吸取 / 吸血 / 回复…伤害的一半（回一半，其余回 1/4）</td><td>命中即触发</td></tr>
+                <tr><td>反作用力</td><td>反作用 / 自己也受到…伤害（1/3 写明按 1/3，否则 1/4）</td><td>命中即触发</td></tr>
+            </table>
+            <div class="tip">后台改技能文案 = 改对战规则，<b>完全不用碰代码</b>。天气 / 场地技能同理（写「烈阳」「求雨」「电气场地」等关键词）。</div>
+        </div>
+
+        <!-- 8 天气 -->
+        <div class="rule-card">
+            <h2><span class="idx">8</span>天气（持续 5 回合）</h2>
+            <table class="rt">
+                <tr><th>天气</th><th>效果</th></tr>
+                <tr><td><b>☀️ 大晴天</b></td><td>火系 <span class="num">×1.5</span>，水系 <span class="num">×0.5</span>；不会陷入冰冻</td></tr>
+                <tr><td><b>🌧️ 下雨</b></td><td>水系 <span class="num">×1.5</span>，火系 <span class="num">×0.5</span>；打雷必中</td></tr>
+                <tr><td><b>🌪️ 沙暴</b></td><td>回合末非地面/岩石/钢系受 <span class="num">1/16</span>；岩石系特防 <span class="num">×1.5</span></td></tr>
+                <tr><td><b>🧊 冰雹</b></td><td>回合末非冰系受 <span class="num">1/16</span>；暴风雪必中</td></tr>
+                <tr><td><b>🌨️ 下雪</b></td><td>冰系防御 <span class="num">×1.5</span>（无回合末伤害，第九世代规则）</td></tr>
+                <tr><td><b>🌫️ 大雾</b></td><td>技能命中率 <span class="num">×0.6</span></td></tr>
+                <tr><td><b>🔥 大日照</b></td><td>火系 <span class="num">×1.5</span>；<b>水系招式完全失效</b>；无法换成下雨类天气</td></tr>
+                <tr><td><b>🌊 大雨</b></td><td>水系 <span class="num">×1.5</span>；<b>火系招式完全失效</b>；无法换成晴天类天气</td></tr>
+            </table>
+            <ul>
+                <li>技能触发的天气/场地持续 <span class="num">5</span> 回合后自动消退；手动设置不消退。</li>
+            </ul>
+        </div>
+
+        <!-- 9 场地 -->
+        <div class="rule-card">
+            <h2><span class="idx">9</span>场地（持续 5 回合）</h2>
+            <table class="rt">
+                <tr><th>场地</th><th>效果</th></tr>
+                <tr><td><b>⚡ 电气场地</b></td><td>电系 <span class="num">×1.3</span>；不会陷入睡眠</td></tr>
+                <tr><td><b>🌿 青草场地</b></td><td>草系 <span class="num">×1.3</span>；回合末双方回复 <span class="num">1/16</span> 最大体力</td></tr>
+                <tr><td><b>🔮 精神场地</b></td><td>超能力系 <span class="num">×1.3</span></td></tr>
+                <tr><td><b>💨 迷雾场地</b></td><td>龙系 <span class="num">×0.5</span>；不会陷入异常状态</td></tr>
+            </table>
+        </div>
+
+        <!-- 10 不参与的机制 -->
+        <div class="rule-card">
+            <h2><span class="idx">10</span>没有采用的机制</h2>
+            <p>以下宝可梦机制与 1v1 单挑的写文场景无关，暂不引入：</p>
+            <ul>
+                <li>经验值 / 捕获率 / 逃走 —— 对战外概念</li>
+                <li>替换宝可梦 / PP / 挣扎 —— 单挑无后备、无 PP 记账</li>
+                <li>超级进化 / 原始回归 / 极巨化 / 太晶化 / Z 招式 —— 形态变化系统</li>
+                <li>教授招式 / 蛋招式 / 连接交换 —— 收集养成系统</li>
+                <li>特性全量效果（数据里只有特性名，无效果文本，暂按白板处理）</li>
+            </ul>
+        </div>
+    </main>
+</div>
+
+<script>
+const { createApp, reactive } = Vue;
+createApp({
+    setup() {
+        const statusList = [
+            { key: 'burn',      name: '灼伤', icon: '🔥', color: '#ea580c', desc: '物理伤害 ×0.5；回合末损失最大体力的 1/16', immune: '火' },
+            { key: 'para',      name: '麻痹', icon: '⚡', color: '#ca8a04', desc: '速度 ×0.5；每次行动 25% 无法行动', immune: '电' },
+            { key: 'poison',    name: '中毒', icon: '☠️', color: '#7c3aed', desc: '回合末损失最大体力的 1/8', immune: '毒、钢' },
+            { key: 'badpoison', name: '剧毒', icon: '☠️', color: '#6d28d9', desc: '回合末损失 1/16 → 2/16 → …，最多 15/16', immune: '毒、钢' },
+            { key: 'sleep',     name: '睡眠', icon: '💤', color: '#64748b', desc: '1~3 回合无法行动后自然苏醒；电气场地不入睡', immune: '' },
+            { key: 'freeze',    name: '冰冻', icon: '🧊', color: '#0ea5e9', desc: '无法行动；每回合 20% 解冻；受火系招式立即解冻', immune: '冰' }
+        ];
+        return { statusList };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>

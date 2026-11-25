@@ -5,27 +5,20 @@
 
    伤害公式（宝可梦官方公式改造，等级 L）：
        基础 = floor(floor(2L/5 + 2) × 威力 × 攻/防) / 50) + 2
-       修正 = 本系加成 1.5 × 属性克制 × 天气 × 场地 × 随机 0.85~1.0
+       修正 = 能力阶级 × 击中要害 × 本系 1.5 × 属性克制 × 天气 × 场地 × 灼伤 × 随机 0.85~1.0
 
-   天气规则照抄宝可梦（52poke 百科「天气」条目）：
-       大晴天  火系 ×1.5，水系 ×0.5
-       下雨    水系 ×1.5，火系 ×0.5；打雷必中
-       沙暴    回合末对非地面/岩石/钢系造成 1/16 最大体力伤害；岩石系特防 ×1.5
-       冰雹    回合末对非冰系造成 1/16 最大体力伤害；暴风雪必中
-       下雪    冰系防御 ×1.5（无回合末伤害，Gen9 规则）
-       大雾    命中率 ×0.6
-       大日照  火系 ×1.5，水系招式完全失效（原始固拉多规则）
-       大雨    水系 ×1.5，火系招式完全失效（原始盖欧卡规则）
-   天气/场地由技能触发时持续 5 回合后消退（手动设置则不消退）。
-
-   场地规则：
-       电气场地 电系 ×1.3
-       青草场地 草系 ×1.3，回合末双方回复 1/16 最大体力
-       精神场地 超能力系 ×1.3
-       迷雾场地 龙系 ×0.5，命中率不受影响
-
-   天气/场地由「变化类技能」触发：按技能名 + 效果文本的关键词自动识别，
-   不用改技能数据；以后新增天气技能只要文案里带对应关键词就能被识别。
+   机制全部照抄宝可梦（52poke 百科）：
+       · 能力变化   ±6 级，+n=×(2+n)/2、-n=×2/(2-n)，攻击/防御/特攻/特防/速度
+       · 击中要害   1/24 概率，伤害 ×1.5；要害时攻方降阶按 0、守方升阶按 0 计算
+       · 异常状态   灼伤(物伤×0.5+每回合1/16)、中毒(1/8)、剧毒(递增1/16)、
+                    麻痹(速度×0.5+25%无法行动)、睡眠(1~3回合)、冰冻(20%/回合解冻)
+                    火免疫灼伤、冰免疫冰冻、电免疫麻痹、毒/钢免疫中毒；
+                    大日照下不会冰冻；电气场地不入睡；迷雾场地不中异常状态
+       · 状态变化   混乱(1~4回合，50%自伤40威力)、畏缩(本回合未行动则无法行动)
+       · 优先度     先制招式优先行动（知名先制技名单 + 效果文本含「先制」）
+       · 追加效果   异常状态 / 能力升降 / 畏缩 / 混乱 / 吸取回复 / 反作用力伤害
+                    —— 全部由技能「效果」文案关键词解析，改文案即可生效
+       · 天气/场地  大晴天/下雨/沙暴/冰雹/下雪/大雾/大日照/大雨 + 四场地，持续 5 回合
    ========================================================================== */
 
 const BattleEngine = (function () {
@@ -45,10 +38,10 @@ const BattleEngine = (function () {
     };
 
     const TERRAINS = {
-        electric: { key: 'electric', name: '电气场地', icon: '⚡', color: '#eab308', boostType: '电',     desc: '电系伤害 ×1.3' },
+        electric: { key: 'electric', name: '电气场地', icon: '⚡', color: '#eab308', boostType: '电',     desc: '电系伤害 ×1.3；地面上的精灵不会入睡' },
         grassy:   { key: 'grassy',   name: '青草场地', icon: '🌿', color: '#22c55e', boostType: '草',     desc: '草系伤害 ×1.3；回合末双方回复 1/16 最大体力' },
         psychic:  { key: 'psychic',  name: '精神场地', icon: '🔮', color: '#ec4899', boostType: '超能力', desc: '超能力系伤害 ×1.3' },
-        misty:    { key: 'misty',    name: '迷雾场地', icon: '💨', color: '#c084fc', vsType: '龙',        desc: '龙系伤害 ×0.5' }
+        misty:    { key: 'misty',    name: '迷雾场地', icon: '💨', color: '#c084fc', vsType: '龙',        desc: '龙系伤害 ×0.5；不会陷入异常状态' }
     };
 
     /* 技能触发天气/场地的持续回合（宝可梦标准：5 回合） */
@@ -94,10 +87,44 @@ const BattleEngine = (function () {
         return false;
     }
 
-    /* ------------------------------------------------------------ 能力值计算 */
+    /* ------------------------------------------------------------ 异常状态定义 */
 
-    // natures-data 里 up/down 用中文能力名，这里映射到内部键
+    const STATUS_META = {
+        burn:      { key: 'burn',      name: '灼伤', icon: '🔥', color: '#ea580c', desc: '物理伤害 ×0.5，回合末损失 1/16 最大体力' },
+        para:      { key: 'para',      name: '麻痹', icon: '⚡', color: '#ca8a04', desc: '速度 ×0.5，25% 无法行动' },
+        poison:    { key: 'poison',    name: '中毒', icon: '☠️', color: '#7c3aed', desc: '回合末损失 1/8 最大体力' },
+        badpoison: { key: 'badpoison', name: '剧毒', icon: '☠️', color: '#6d28d9', desc: '回合末损失递增（1/16、2/16…最多 15/16）' },
+        sleep:     { key: 'sleep',     name: '睡眠', icon: '💤', color: '#64748b', desc: '1~3 回合无法行动后自然苏醒' },
+        freeze:    { key: 'freeze',    name: '冰冻', icon: '🧊', color: '#0ea5e9', desc: '无法行动，每回合 20% 解冻；受火系招式立即解冻' }
+    };
+    const CONFUSION_META = { key: 'confusion', name: '混乱', icon: '💫', color: '#db2777', desc: '1~4 回合内 50% 攻击自己' };
+
+    /* 属性对异常状态的免疫（宝可梦规则） */
+    const STATUS_IMMUNE_TYPES = {
+        burn: ['火'],
+        freeze: ['冰'],
+        para: ['电'],
+        poison: ['毒', '钢'],
+        badpoison: ['毒', '钢']
+    };
+
+    /* 先制招式名单（52poke「优先度」条目） */
+    const PRIORITY_MOVES = {
+        '神速': 2, '电光一闪': 1, '子弹拳': 1, '冰砾': 1, '音速拳': 1, '影子偷袭': 1, '突袭': 1,
+        '真空波': 1, '水流喷射': 1, '飞水手里剑': 1, '击掌奇袭': 3, '守住': 4, '看穿': 4, '挺住': 4, '佯攻': 2
+    };
+
+    /* ------------------------------------------------------------ 能力阶级 */
+
+    // natures-data 里 up/down 用中文能力名，映射到内部键
     const STAT_NAME_TO_KEY = { '攻击': 'atk', '防御': 'def', '特攻': 'spa', '特防': 'spd', '速度': 'spe' };
+    const STAT_KEY_TO_NAME = { atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' };
+
+    /* ±6 级修正倍率：+n = (2+n)/2，-n = 2/(2-n)（宝可梦第三世代起标准） */
+    function stageMult(stage) {
+        const s = Math.max(-6, Math.min(6, stage | 0));
+        return s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
+    }
 
     /**
      * 宝可梦能力值公式（个体值按满值 31、无努力值折算）：
@@ -129,6 +156,13 @@ const BattleEngine = (function () {
         return out;
     }
 
+    /* 麻痹 ×0.5 + 速度阶级（行动顺序用） */
+    function effSpeed(f) {
+        let v = f.stats.spe * stageMult(f.stages ? f.stages.spe : 0);
+        if (f.status && f.status.key === 'para') v *= 0.5;
+        return v;
+    }
+
     /**
      * 组装一名参战精灵。
      * vow      种族数据（types / stats / image / name）
@@ -147,12 +181,86 @@ const BattleEngine = (function () {
             image: o.image !== undefined ? o.image : (vow.image || ''),
             stats: computeStats(base, level, o.nature),
             skills: (o.skills || []).slice(),
+            stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
+            status: null,        // 异常状态 { key, turns }（灼伤/中毒等 turns 无意义）
+            confusion: 0,        // 状态变化：混乱剩余行动次数
+            flinch: false,       // 状态变化：畏缩（本回合未行动则跳过）
+            toxicCounter: 1,     // 剧毒伤害计数
             maxHp: 0,
             hp: 0
         };
     }
 
     const initHp = (fighter) => { fighter.maxHp = fighter.stats.hp; fighter.hp = fighter.stats.hp; };
+
+    /* ------------------------------------------------------------ 追加效果解析 */
+
+    /**
+     * 从技能「效果」文案解析追加效果。全部来自 52poke「追加效果」条目分类：
+     *   异常状态 / 能力升降 / 畏缩 / 混乱 / 吸取回复 / 反作用力
+     * 返回数组，元素形如：
+     *   { type:'status', key:'burn', chance:0.1 }
+     *   { type:'stat', target:'self'|'foe', stat:'atk', delta:1, chance:1 }
+     *   { type:'flinch'|'confusion', chance }
+     *   { type:'drain', frac:0.5 } / { type:'recoil', frac:0.25 }
+     */
+    function parseEffects(skill) {
+        const text = String(skill.effect || '');
+        if (!text) return [];
+        const out = [];
+        const chanceOf = (seg) => {
+            const m = seg.match(/(\d+(?:\.\d+)?)%/);
+            if (m) return Math.min(1, parseFloat(m[1]) / 100);
+            if (/有时|偶尔|几率|概率|一定几率|可能/.test(seg)) return 0.1;
+            if (skill.category === '变化') return 1;
+            return 0.1;   // 攻击招式未写概率时按宝可梦最常见的 10% 处理
+        };
+
+        // 异常状态（混乱单独归类为状态变化）
+        const stMap = [
+            [/灼烧|烧伤|炙烧|烫伤/, 'burn', 'status'],
+            [/麻痹/, 'para', 'status'],
+            [/剧毒/, 'badpoison', 'status'],
+            [/中毒/, 'poison', 'status'],
+            [/冰冻|冻僵/, 'freeze', 'status'],
+            [/睡眠|催眠|陷入沉睡|哈欠/, 'sleep', 'status']
+        ];
+        for (const [re, key, type] of stMap) {
+            if (re.test(text)) { out.push({ type: type, key: key, chance: chanceOf(text) }); break; }
+        }
+        if (/混乱/.test(text)) out.push({ type: 'confusion', chance: chanceOf(text) });
+        if (/畏缩|退缩|害怕/.test(text)) out.push({ type: 'flinch', chance: chanceOf(text) });
+
+        // 能力变化：逐句解析（「令目标的攻击降低1级」「提高自己的防御」等）
+        for (const seg of text.split(/[\n。；]/)) {
+            const m = seg.match(/(攻击|防御|特攻|特防|速度)[^\u4e00-\u9fa5]{0,6}?(提高|提升|上升|增强|降低|下降|减弱)(?:\s*)(\d)?\s*级?/);
+            if (!m) continue;
+            const stat = STAT_NAME_TO_KEY[m[1]];
+            if (!stat) continue;
+            if (/无视|无法/.test(seg)) continue;
+            const up = /提高|提升|上升|增强/.test(m[2]);
+            const delta = (m[3] ? parseInt(m[3]) : (/大幅|巨幅|极大幅/.test(seg) ? 2 : 1)) * (up ? 1 : -1);
+            let target;
+            if (/目标|对手|对方/.test(seg) && !/自己|自身/.test(seg)) target = 'foe';
+            else if (/自己|自身|我方/.test(seg)) target = 'self';
+            else target = up ? 'self' : 'foe';
+            out.push({ type: 'stat', target: target, stat: stat, delta: delta, chance: chanceOf(seg) });
+        }
+
+        // 吸取 / 反作用力
+        if (/回复[^。\n]{0,10}伤害|吸取|吸血|吸收/.test(text)) out.push({ type: 'drain', frac: /一半|1\/2/.test(text) ? 0.5 : 0.25 });
+        if (/反作用|自己[^。\n]{0,12}受到[^。\n]{0,12}伤害|受到不小的伤害/.test(text)) out.push({ type: 'recoil', frac: /三分之一|1\/3/.test(text) ? 1 / 3 : 0.25 });
+        return out;
+    }
+
+    /* 优先度：数据字段优先，其次知名先制技名单，最后效果文本含「先制」 */
+    function getPriority(skill) {
+        if (!skill) return 0;
+        if (typeof skill.priority === 'number') return skill.priority;
+        if (PRIORITY_MOVES[skill.name]) return PRIORITY_MOVES[skill.name];
+        if (/先制|必定先攻|先手攻击/.test(String(skill.effect || ''))) return 1;
+        return 0;
+    }
 
     /* ------------------------------------------------------------ 伤害计算 */
 
@@ -187,12 +295,12 @@ const BattleEngine = (function () {
 
     /* 暴雨中的打雷 / 冰雹中的暴风雪必中（宝可梦规则） */
     const ALWAYS_HIT_IN_WEATHER = [
-        { re: /打雷|鸣雷|雷击|雷霆/, weather: 'rain', label: '下雨' },
-        { re: /暴风雪|雪崩/, weather: 'hail', label: '冰雹' }
+        { re: /打雷|鸣雷|雷击|雷霆/, weather: 'rain' },
+        { re: /暴风雪|雪崩/, weather: 'hail' }
     ];
 
     /**
-     * 计算一次攻击。返回事件对象（含伤害、倍率明细、是否命中/失效、是否倒下）。
+     * 计算一次攻击。返回事件对象（含伤害、倍率明细、是否命中/失效/要害）。
      * field = { weather, terrain, weatherTurns, terrainTurns }
      */
     function calcAttack(attacker, defender, skill, field, rng) {
@@ -204,6 +312,7 @@ const BattleEngine = (function () {
             skill: skill,
             missed: false,
             failed: false,
+            critical: false,
             damage: 0,
             effectiveness: 1,
             breakdown: []
@@ -225,7 +334,6 @@ const BattleEngine = (function () {
             return ev;
         }
         if (always && field.weather === 'fog' && random() > 0.9) {
-            // 即使必中招式，大雾里仍有小概率偏出（×0.6 后约 54% 保底不上限，这里给 90% 命中）
             ev.missed = true;
             ev.text = attacker.name + '的' + skill.name + '在大雾中偏了，没有命中！';
             return ev;
@@ -242,8 +350,19 @@ const BattleEngine = (function () {
         }
 
         const isPhysical = skill.category === '物理';
-        const A = isPhysical ? attacker.stats.atk : attacker.stats.spa;
-        let D = isPhysical ? defender.stats.def : defender.stats.spd;
+        // 能力阶级修正（击中要害时：攻方降阶按 0、守方升阶按 0——宝可梦第三世代起规则）
+        const crit = random() < 1 / 24;
+        ev.critical = crit;
+        const offKey = isPhysical ? 'atk' : 'spa';
+        const defKey = isPhysical ? 'def' : 'spd';
+        const offStage = crit ? Math.max(0, attacker.stages[offKey]) : attacker.stages[offKey];
+        const defStage = crit ? Math.min(0, defender.stages[defKey]) : defender.stages[defKey];
+        const A = Math.floor(attacker.stats[offKey] * stageMult(offStage));
+        let D = Math.floor(defender.stats[defKey] * stageMult(defStage));
+        if (crit) ev.breakdown.push('击中要害！');
+        if (offStage !== 0) ev.breakdown.push(STAT_KEY_TO_NAME[offKey] + (offStage > 0 ? '+' : '') + offStage + '（×' + stageMult(offStage).toFixed(2) + '）');
+        if (defStage !== 0) ev.breakdown.push('对方' + STAT_KEY_TO_NAME[defKey] + (defStage > 0 ? '+' : '') + defStage + '（×' + stageMult(defStage).toFixed(2) + '）');
+
         const power = Math.max(1, skill.power || 40);
 
         // 沙暴：岩石系特防 ×1.5；下雪：冰系防御 ×1.5（宝可梦规则）
@@ -261,6 +380,8 @@ const BattleEngine = (function () {
         ev.breakdown.push('基础伤害 ' + base);
 
         let mult = 1;
+        if (crit) { mult *= 1.5; ev.breakdown.push('击中要害 ×1.5'); }
+
         const stab = (attacker.types || []).indexOf(skill.type) !== -1;
         if (stab) { mult *= 1.5; ev.breakdown.push('本系加成 ×1.5'); }
 
@@ -272,6 +393,12 @@ const BattleEngine = (function () {
         const tMult = terrainDamageMult(field.terrain, skill.type);
         if (tMult !== 1) { mult *= tMult; ev.breakdown.push((TERRAINS[field.terrain] || {}).name + ' ×' + tMult); }
 
+        // 灼伤：物理伤害 ×0.5（宝可梦规则）
+        if (attacker.status && attacker.status.key === 'burn' && isPhysical) {
+            mult *= 0.5;
+            ev.breakdown.push('灼伤 ×0.5');
+        }
+
         const roll = (0.85 + random() * 0.15);
         mult *= roll;
         ev.breakdown.push('随机波动 ×' + roll.toFixed(2));
@@ -279,14 +406,108 @@ const BattleEngine = (function () {
         const damage = Math.max(1, Math.floor(base * mult));
         ev.damage = damage;
         ev.text = attacker.name + '使用了' + skill.name + '！'
+            + (crit ? '击中了要害！' : '')
             + (typeMult > 1 ? '效果拔群！' : (typeMult < 1 ? '效果不理想…' : ''));
         return ev;
     }
 
+    /* ------------------------------------------------------------ 状态施加 */
+
+    /**
+     * 尝试给目标施加异常状态 / 混乱。
+     * 返回事件；失败（免疫/已有状态）返回 note 事件。
+     */
+    function applyStatus(attacker, target, key, field) {
+        const label = key === 'confusion' ? CONFUSION_META.name : STATUS_META[key].name;
+        // 迷雾场地：不会陷入异常状态（宝可梦规则）；电气场地：不会入睡
+        if (field.terrain === 'misty' && key !== 'confusion') {
+            return { kind: 'note', text: '迷雾场地守护着' + target.name + '，不会陷入' + label + '状态。' };
+        }
+        if (field.terrain === 'electric' && key === 'sleep') {
+            return { kind: 'note', text: '电气场地之下，' + target.name + '不会入睡。' };
+        }
+        if (key !== 'confusion') {
+            // 异常状态不可共存（宝可梦规则）
+            if (target.status) {
+                return { kind: 'note', text: target.name + '已经处于' + STATUS_META[target.status.key].name + '状态，不会陷入' + label + '。' };
+            }
+            // 属性免疫
+            const immune = STATUS_IMMUNE_TYPES[key] || [];
+            if ((target.types || []).some(t => immune.indexOf(t) !== -1)) {
+                return { kind: 'note', text: target.name + '是' + immune.join('/') + '属性，免疫' + label + '状态。' };
+            }
+            // 大日照下不会冰冻（宝可梦规则）
+            if (key === 'freeze' && (field.weather === 'sun' || field.weather === 'desolate')) {
+                return { kind: 'note', text: (WEATHERS[field.weather] || {}).name + '之下，' + target.name + '不会陷入冰冻状态。' };
+            }
+            const meta = STATUS_META[key];
+            target.status = { key: key, turns: key === 'sleep' ? 1 + Math.floor(Math.random() * 3) : 0 };
+            return { kind: 'status', text: target.name + '陷入了' + meta.name + '状态！（' + meta.desc + '）', side: target.side, key: key };
+        }
+        // 混乱（状态变化，可与异常状态共存）
+        if (target.confusion > 0) {
+            return { kind: 'note', text: target.name + '已经处于混乱状态。' };
+        }
+        target.confusion = 1 + Math.floor(Math.random() * 4);   // 1~4 行动次数
+        return { kind: 'status', text: target.name + '混乱了！（' + CONFUSION_META.desc + '）', side: target.side, key: 'confusion' };
+    }
+
+    /** 能力阶级变化（±6 级封顶，宝可梦规则） */
+    function applyStatChange(target, stat, delta) {
+        const name = STAT_KEY_TO_NAME[stat];
+        const before = target.stages[stat];
+        const after = Math.max(-6, Math.min(6, before + delta));
+        target.stages[stat] = after;
+        if (after === before) {
+            return { kind: 'note', text: target.name + '的' + name + '已经无法再' + (delta > 0 ? '提高' : '降低') + '了！' };
+        }
+        const steps = Math.abs(after - before);
+        const word = delta > 0 ? (steps >= 2 ? '大幅提高了' : '提高了') : (steps >= 2 ? '大幅降低了' : '降低了');
+        return { kind: 'stat-change', text: target.name + '的' + name + word + steps + '级！', side: target.side, stat: stat, delta: delta, after: after };
+    }
+
     /* ------------------------------------------------------------ 回合流程 */
 
-    /** 回合末结算：天气/场地持续回合递减，到 0 消退 */
-    function tickField(field, events) {
+    /** 回合末结算：异常状态磨血 → 天气磨血/青草回复 → 天气/场地消退 */
+    function endOfTurn(a, b, field, events) {
+        for (const f of [a, b]) {
+            if (f.hp <= 0) continue;
+            if (f.status && f.status.key === 'burn') {
+                const dmg = Math.max(1, Math.floor(f.maxHp / 16));
+                f.hp = Math.max(0, f.hp - dmg);
+                events.push({ kind: 'status-dmg', text: '灼伤折磨着' + f.name + '，损失了 ' + dmg + ' 点体力。', side: f.side, hpAfter: f.hp });
+                if (f.hp <= 0) events.push({ kind: 'faint', text: f.name + '倒下了！' });
+            } else if (f.status && (f.status.key === 'poison' || f.status.key === 'badpoison')) {
+                const n = f.status.key === 'poison' ? 8 : 16;
+                const cnt = f.status.key === 'badpoison' ? Math.min(15, f.toxicCounter++) : 1;
+                const dmg = Math.max(1, Math.floor(f.maxHp * cnt / n));
+                f.hp = Math.max(0, f.hp - dmg);
+                events.push({ kind: 'status-dmg', text: '毒素侵蚀着' + f.name + '，损失了 ' + dmg + ' 点体力。', side: f.side, hpAfter: f.hp });
+                if (f.hp <= 0) events.push({ kind: 'faint', text: f.name + '倒下了！' });
+            }
+        }
+        // 天气磨血 / 青草回复
+        for (const f of [a, b]) {
+            if (f.hp <= 0) continue;
+            if (field.weather === 'sand' || field.weather === 'hail') {
+                const immune = field.weather === 'sand' ? ['地面', '岩石', '钢'] : ['冰'];
+                const hurt = !(f.types || []).some(t => immune.indexOf(t) !== -1);
+                if (!hurt) {
+                    events.push({ kind: 'note', text: f.name + '不受' + (WEATHERS[field.weather] || {}).name + '影响。' });
+                } else {
+                    const dmg = Math.max(1, Math.floor(f.maxHp / 16));
+                    f.hp = Math.max(0, f.hp - dmg);
+                    events.push({ kind: 'chip', text: (WEATHERS[field.weather] || {}).name + '刮着，' + f.name + '受到了 ' + dmg + ' 点伤害！', side: f.side, hpAfter: f.hp });
+                    if (f.hp <= 0) events.push({ kind: 'faint', text: f.name + '倒下了！' });
+                }
+            }
+            if (field.terrain === 'grassy') {
+                const heal = Math.max(1, Math.floor(f.maxHp / 16));
+                f.hp = Math.min(f.maxHp, f.hp + heal);
+                events.push({ kind: 'heal', text: '青草场地滋养着' + f.name + '，回复了 ' + heal + ' 点体力。', side: f.side, hpAfter: f.hp });
+            }
+        }
+        // 天气 / 场地消退
         const defs = [
             ['weather', 'weatherTurns', '天气', 'weather-end'],
             ['terrain', 'terrainTurns', '场地', 'terrain-end']
@@ -313,9 +534,71 @@ const BattleEngine = (function () {
     function executeTurn(a, b, skillA, skillB, field, rng) {
         const random = rng || Math.random;
         const events = [];
+        const acted = new Set();   // 已行动的精灵（畏缩判定用）
 
+        /** 单个行动（先手判定后的全部状态检查） */
         const act = (attacker, defender, skill) => {
             if (attacker.hp <= 0) return;
+
+            // 畏缩（宝可梦：本回合未行动时无法使出招式）
+            if (attacker.flinch) {
+                attacker.flinch = false;
+                events.push({ kind: 'flinch', text: attacker.name + '因为害怕而畏缩了，无法使出招式！' });
+                return;
+            }
+
+            // 混乱（宝可梦：50% 攻击自己，40 威力物理）
+            if (attacker.confusion > 0) {
+                attacker.confusion--;
+                if (random() < 0.5) {
+                    const selfEv = calcAttack(attacker, attacker, { name: '混乱中的胡乱攻击', type: '一般', category: '物理', power: 40 }, field, random);
+                    selfEv.attacker = attacker.name;
+                    selfEv.defender = attacker.name;
+                    selfEv.text = attacker.name + '混乱了，攻击了自己！';
+                    selfEv.selfHit = true;
+                    events.push(selfEv);
+                    if (!selfEv.missed && selfEv.damage > 0) {
+                        attacker.hp = Math.max(0, attacker.hp - selfEv.damage);
+                        selfEv.defenderHpAfter = attacker.hp;
+                        if (attacker.hp <= 0) events.push({ kind: 'faint', text: attacker.name + '倒下了！' });
+                    }
+                    if (attacker.confusion <= 0) events.push({ kind: 'note', text: attacker.name + '的混乱解除了。' });
+                    return;
+                }
+                if (attacker.confusion <= 0) {
+                    events.push({ kind: 'note', text: attacker.name + '的混乱解除了。' });
+                } else {
+                    events.push({ kind: 'note', text: attacker.name + '头晕目眩，但稳住了心神…' });
+                }
+            }
+
+            // 睡眠（宝可梦：1~3 回合后苏醒，苏醒当回合可行动）
+            if (attacker.status && attacker.status.key === 'sleep') {
+                if (attacker.status.turns > 1) {
+                    attacker.status.turns--;
+                    events.push({ kind: 'note', text: attacker.name + '睡得很沉…（还剩 ' + attacker.status.turns + ' 回合）' });
+                    return;
+                }
+                attacker.status = null;
+                events.push({ kind: 'note', text: attacker.name + '醒过来了！' });
+            }
+
+            // 冰冻（宝可梦：每回合 20% 解冻，受火系招式解冻）
+            if (attacker.status && attacker.status.key === 'freeze') {
+                if (random() < 0.2) {
+                    attacker.status = null;
+                    events.push({ kind: 'note', text: attacker.name + '的冰冻解除了！' });
+                } else {
+                    events.push({ kind: 'note', text: attacker.name + '被冻住了，动弹不得…' });
+                    return;
+                }
+            }
+
+            // 麻痹（宝可梦：25% 无法行动）
+            if (attacker.status && attacker.status.key === 'para' && random() < 0.25) {
+                events.push({ kind: 'note', text: attacker.name + '身体麻痹，无法行动！' });
+                return;
+            }
 
             // 天气 / 场地技能
             const fieldChange = detectFieldSkill(skill);
@@ -355,52 +638,72 @@ const BattleEngine = (function () {
 
             const ev = calcAttack(attacker, defender, skill, field, random);
             events.push(ev);
-            if (!ev.missed && !ev.failed && ev.damage > 0) {
+            if (ev.missed || ev.failed) return;
+
+            if (ev.damage > 0) {
                 defender.hp = Math.max(0, defender.hp - ev.damage);
                 ev.defenderHpAfter = defender.hp;
                 if (defender.hp <= 0) {
                     events.push({ kind: 'faint', text: defender.name + '倒下了！' });
+                    return;
+                }
+                // 火系招式命中冰冻目标 → 解冻（宝可梦规则）
+                if (defender.status && defender.status.key === 'freeze' && skill.type === '火') {
+                    defender.status = null;
+                    events.push({ kind: 'note', text: '烈焰融化了坚冰，' + defender.name + '的冰冻解除了！' });
+                }
+            }
+
+            // 追加效果（宝可梦：命中之后按概率触发）
+            for (const fx of parseEffects(skill)) {
+                if (random() >= (fx.chance === undefined ? 1 : fx.chance)) continue;
+                if (fx.type === 'status' || fx.type === 'confusion') {
+                    if (ev.damage <= 0) continue;
+                    events.push(applyStatus(attacker, defender, fx.type === 'confusion' ? 'confusion' : fx.key, field));
+                } else if (fx.type === 'flinch') {
+                    if (ev.damage <= 0 || acted.has(defender)) continue;
+                    defender.flinch = true;
+                    events.push({ kind: 'note', text: defender.name + '被吓得畏缩了！' });
+                } else if (fx.type === 'stat') {
+                    const target = fx.target === 'self' ? attacker : defender;
+                    events.push(applyStatChange(target, fx.stat, fx.delta));
+                } else if (fx.type === 'drain' && ev.damage > 0) {
+                    const heal = Math.max(1, Math.floor(ev.damage * fx.frac));
+                    attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                    events.push({ kind: 'heal', text: attacker.name + '吸取了力量，回复了 ' + heal + ' 点体力。', side: attacker.side, hpAfter: attacker.hp });
+                } else if (fx.type === 'recoil' && ev.damage > 0) {
+                    const rec = Math.max(1, Math.floor(ev.damage * fx.frac));
+                    attacker.hp = Math.max(0, attacker.hp - rec);
+                    events.push({ kind: 'status-dmg', text: attacker.name + '受到了 ' + rec + ' 点反作用力伤害！', side: attacker.side, hpAfter: attacker.hp });
+                    if (attacker.hp <= 0) events.push({ kind: 'faint', text: attacker.name + '倒下了！' });
                 }
             }
         };
 
-        // 先手：速度高者先动，同速随机
-        const aFirst = a.stats.spe > b.stats.spe || (a.stats.spe === b.stats.spe && random() < 0.5);
-        const order = aFirst ? [[a, b, skillA], [b, a, skillB]] : [[b, a, skillB], [a, b, skillA]];
+        // 行动顺序：先比优先度（先制招式必先动），同优先度比速度，同速随机（宝可梦规则）
+        const priA = getPriority(skillA), priB = getPriority(skillB);
+        let aFirst;
+        if (priA !== priB) aFirst = priA > priB;
+        else {
+            const speA = effSpeed(a), speB = effSpeed(b);
+            aFirst = speA > speB || (speA === speB && random() < 0.5);
+        }
+        const order = aFirst
+            ? [[a, b, skillA], [b, a, skillB]]
+            : [[b, a, skillB], [a, b, skillA]];
+
+        if (priA !== priB) {
+            const fast = priA > priB ? a.name : b.name;
+            events.push({ kind: 'note', text: fast + '的招式优先度更高，抢先行动！' });
+        }
 
         for (const [att, def, skill] of order) {
             act(att, def, skill);
+            acted.add(att);
         }
 
-        // 回合末：沙暴 / 冰雹磨血 + 青草场地回复 + 天气/场地消退
-        if (a.hp > 0 || b.hp > 0) {
-            const chip = (fighter, weatherKey) => {
-                if (fighter.hp <= 0) return;
-                const immune = weatherKey === 'sand'
-                    ? ['地面', '岩石', '钢']
-                    : ['冰'];
-                const hurt = !(fighter.types || []).some(t => immune.indexOf(t) !== -1);
-                if (!hurt) {
-                    events.push({ kind: 'note', text: fighter.name + '不受' + (WEATHERS[weatherKey] || {}).name + '影响。' });
-                    return;
-                }
-                const dmg = Math.max(1, Math.floor(fighter.maxHp / 16));
-                fighter.hp = Math.max(0, fighter.hp - dmg);
-                events.push({ kind: 'chip', text: (WEATHERS[weatherKey] || {}).name + '刮着，' + fighter.name + '受到了 ' + dmg + ' 点伤害！', side: fighter.side, hpAfter: fighter.hp });
-                if (fighter.hp <= 0) events.push({ kind: 'faint', text: fighter.name + '倒下了！' });
-            };
-            if (field.weather === 'sand') { chip(a, 'sand'); chip(b, 'sand'); }
-            if (field.weather === 'hail') { chip(a, 'hail'); chip(b, 'hail'); }
-            if (field.terrain === 'grassy') {
-                for (const f of [a, b]) {
-                    if (f.hp <= 0) continue;
-                    const heal = Math.max(1, Math.floor(f.maxHp / 16));
-                    f.hp = Math.min(f.maxHp, f.hp + heal);
-                    events.push({ kind: 'heal', text: '青草场地滋养着' + f.name + '，回复了 ' + heal + ' 点体力。', side: f.side, hpAfter: f.hp });
-                }
-            }
-            tickField(field, events);
-        }
+        // 回合末：异常状态磨血 → 天气磨血/青草回复 → 天气/场地消退
+        endOfTurn(a, b, field, events);
 
         const over = a.hp <= 0 || b.hp <= 0;
         return {
@@ -410,16 +713,31 @@ const BattleEngine = (function () {
         };
     }
 
+    /** 清除双方全部状态（异常状态/混乱/能力阶级/畏缩），供页面重置按钮调用 */
+    function clearStates(f) {
+        f.status = null;
+        f.confusion = 0;
+        f.flinch = false;
+        f.toxicCounter = 1;
+        f.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    }
+
     return {
         WEATHERS: WEATHERS,
         TERRAINS: TERRAINS,
+        STATUS_META: STATUS_META,
+        CONFUSION_META: CONFUSION_META,
         FIELD_TURNS: FIELD_TURNS,
         detectFieldSkill: detectFieldSkill,
+        parseEffects: parseEffects,
+        getPriority: getPriority,
+        stageMult: stageMult,
         computeStats: computeStats,
         buildFighter: buildFighter,
         initHp: initHp,
         calcAttack: calcAttack,
-        executeTurn: executeTurn
+        executeTurn: executeTurn,
+        clearStates: clearStates
     };
 })();
 
