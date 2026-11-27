@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20261128b">
-    <link rel="stylesheet" href="css/navbar.css?v=20261128b">
-    <script src="js/navbar.js?v=20261128b" defer></script>
+    <link rel="stylesheet" href="css/style.css?v=20261128c">
+    <link rel="stylesheet" href="css/navbar.css?v=20261128c">
+    <script src="js/navbar.js?v=20261128c" defer></script>
     <link rel="stylesheet" href="css/responsive.css?v=20261126s">
 </head>
 <body>
@@ -24,8 +24,11 @@
                 <div class="banner-content">
                     <span class="tag">✨ 御兽：只有我能看到世界频道？</span>
                     <h1>Vowmon Wiki<br>图鉴百科</h1>
-                    <p>探索元域十八界</p>
-                    <button class="banner-btn" onclick="window.location.href='dex/vowdex.html'">开始探索 →</button>
+                    <p>探索元域十八界 · 收录图鉴、技能、血脉与书内档案</p>
+                    <div class="banner-actions">
+                        <button class="banner-btn" onclick="window.location.href='dex/vowdex.html'"><i class="fa-solid fa-book"></i> 开始探索</button>
+                        <button class="banner-btn ghost" onclick="window.VowmonGlobalSearch ? VowmonGlobalSearch.open() : document.getElementById('siteSearchBtn').click()"><i class="fa-solid fa-magnifying-glass"></i> 全站搜索 <kbd>Ctrl K</kbd></button>
+                    </div>
                 </div>
                 <div class="banner-image-area">
                     <div class="glow-circle"></div>
@@ -33,7 +36,14 @@
                 </div>
             </div>
 
-            <div class="section-title"><span>图鉴与资料</span></div>
+            <div class="home-stats">
+                <div class="stat"><i class="fa-solid fa-paw"></i><b>16</b><span>图鉴精灵</span></div>
+                <div class="stat"><i class="fa-solid fa-bolt"></i><span class="stat-plus">持续扩充</span><span>技能数据</span></div>
+                <div class="stat"><i class="fa-solid fa-dna"></i><b>4</b><span>后天血脉</span></div>
+                <div class="stat"><i class="fa-solid fa-globe"></i><b>18</b><span>生态界</span></div>
+            </div>
+
+            <div class="section-title"><span><i class="fa-solid fa-book-open"></i> 图鉴与资料</span></div>
             <div class="menu-grid">
                 <div class="menu-card card-blue" onclick="window.location.href='dex/vowdex.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-book" style="font-size: 32px; color: #2b6cb0;"></i></div><div class="menu-text"><h3>精灵图鉴</h3><p>收录元域所有精灵数据</p></div><div class="menu-sub"><a href="dex/list.html" onclick="event.stopPropagation()">列表</a><a href="dex/realm-dex.html" onclick="event.stopPropagation()">天地图鉴</a><a href="dex/compare.html" onclick="event.stopPropagation()">对比</a><a href="dex/region-forms.html" onclick="event.stopPropagation()">地区形态</a></div></div>
                 <div class="menu-card card-yellow" onclick="window.location.href='reference/skills.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-bolt" style="font-size: 32px; color: #d69e2e;"></i></div><div class="menu-text"><h3>技能图鉴</h3><p>技能效果与学习方式</p></div></div>
@@ -41,7 +51,7 @@
                 <div class="menu-card card-pink" onclick="window.location.href='reference/items.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-box-open" style="font-size: 32px; color: #d53f8c;"></i></div><div class="menu-text"><h3>物品图鉴</h3><p>道具、果实与精灵蛋</p></div></div>
             </div>
 
-            <div class="section-title"><span>世界观</span></div>
+            <div class="section-title"><span><i class="fa-solid fa-earth-asia"></i> 世界观</span></div>
             <div class="menu-grid">
                 <div class="menu-card card-blue" onclick="window.location.href='world/ranks.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-layer-group" style="font-size: 32px; color: #2b6cb0;"></i></div><div class="menu-text"><h3>等级体系</h3><p>力 · 位 · 权 三律之下</p></div><div class="menu-sub"><a href="world/ranks-path.html" onclick="event.stopPropagation()">阶元路径</a><a href="world/authority.html" onclick="event.stopPropagation()">权柄看板</a></div></div>
                 <div class="menu-card card-green" onclick="window.location.href='reference/bloodlines.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-dna" style="font-size: 32px; color: #38a169;"></i></div><div class="menu-text"><h3>血脉图鉴</h3><p>石之共鸣 · 四大后天血脉</p></div><div class="menu-sub"><a href="reference/bloodline-sim.html" onclick="event.stopPropagation()">血脉共鸣</a></div></div>
@@ -49,7 +59,7 @@
                 <div class="menu-card card-pink" onclick="window.location.href='world/factions.html'"><div class="menu-icon-wrap"><i class="fa-solid fa-globe" style="font-size: 32px; color: #d53f8c;"></i></div><div class="menu-text"><h3>势力版图</h3><p>九牧联盟与荒野</p></div><div class="menu-sub"><a href="world/lore.html" onclick="event.stopPropagation()">元域演化史</a></div></div>
             </div>
 
-            <div class="section-title"><span>研究工具</span></div>
+            <div class="section-title"><span><i class="fa-solid fa-screwdriver-wrench"></i> 研究工具</span></div>
             <div class="tool-grid">
                 <div class="tool-card" onclick="window.location.href='reference/calculator.html'"><div class="tool-icon-wrap bg-cyan"><i class="fa-solid fa-scale-balanced" style="font-size: 28px; color: #00b5d8;"></i></div><div class="tool-desc"><h4>属性克制</h4><p>防守面/进攻面计算</p></div></div>
                 <div class="tool-card" onclick="window.location.href='reference/coverage.html'"><div class="tool-icon-wrap bg-orange"><i class="fa-solid fa-crosshairs" style="font-size: 28px; color: #dd6b20;"></i></div><div class="tool-desc"><h4>打击面</h4><p>多技能盲点检测</p></div></div>

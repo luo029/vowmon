@@ -35,13 +35,20 @@
     var NAV = [
         { key: 'home', label: '首页', href: 'index.html' },
         {
-            key: 'records', label: '书内档案', href: 'records/individuals.html',
+            key: 'records', label: '档案', href: 'records/individuals.html',
             columns: [
                 {
                     title: '书中个体',
                     links: [
-                        { label: '御兽精灵', href: 'records/individuals.html' },
-                        { label: '御兽人物', href: 'records/characters.html' }
+                        { label: '御兽精灵', href: 'records/individuals.html', icon: 'fa-solid fa-paw' },
+                        { label: '御兽人物', href: 'records/characters.html', icon: 'fa-solid fa-user' }
+                    ]
+                },
+                {
+                    title: '剧情索引',
+                    links: [
+                        { label: '故事时间线', href: 'records/timeline.html', icon: 'fa-solid fa-timeline' },
+                        { label: '权柄纪事', href: 'world/authority.html', icon: 'fa-solid fa-crown' }
                     ]
                 }
             ]
@@ -92,17 +99,17 @@
                 {
                     title: '查询与计算',
                     links: [
-                        { label: '⚔️ 精灵对战', href: 'battle/' },
-                        { label: '⚖️ 属性克制计算器', href: 'reference/calculator.html' },
-                        { label: '🎯 技能打击面计算器', href: 'reference/coverage.html' },
-                        { label: '🔍 设定一致性检查', href: 'tools/consistency.html' },
-                        { label: '📡 数据源诊断', href: 'tools/diagnostics.html' }
+                        { label: '精灵对战', href: 'battle/', icon: 'fa-solid fa-swords' },
+                        { label: '属性克制', href: 'reference/calculator.html', icon: 'fa-solid fa-scale-balanced' },
+                        { label: '打击面计算', href: 'reference/coverage.html', icon: 'fa-solid fa-crosshairs' }
                     ]
                 },
                 {
-                    title: '管理',
+                    title: '检查与管理',
                     links: [
-                        { label: '🛠️ 管理者后台', href: 'admin/' }
+                        { label: '设定检查', href: 'tools/consistency.html', icon: 'fa-solid fa-shield-check' },
+                        { label: '数据源诊断', href: 'tools/diagnostics.html', icon: 'fa-solid fa-heart-pulse' },
+                        { label: '管理者后台', href: 'admin/', icon: 'fa-solid fa-screwdriver-wrench' }
                     ]
                 }
             ]
@@ -211,11 +218,13 @@
     }
 
     function linkHtml(link, cls) {
+        var ico = link.icon ? '<i class="' + esc(link.icon) + '"></i>' : '';
         if (link.soon) {
             return '<a href="javascript:void(0)" class="' + (cls || '') + ' soon" aria-disabled="true">' +
-                esc(link.label) + '<span class="soon-tag">敬请期待</span></a>';
+                ico + esc(link.label) + '<span class="soon-tag">敬请期待</span></a>';
         }
-        return '<a href="' + esc(ROOT + link.href) + '" class="' + (cls || '') + '">' + esc(link.label) + '</a>';
+        return '<a href="' + esc(ROOT + link.href) + '" class="' + (cls || '') + '">' +
+            ico + '<span>' + esc(link.label) + '</span></a>';
     }
 
     function itemHtml(item, active) {
@@ -243,10 +252,11 @@
             return '<div class="dropdown-column"><h4>' + esc(col.title) + '</h4>' + links + '</div>';
         }).join('');
 
+        var wide = item.columns.length > 1 ? ' dropdown-wide' : ' dropdown-slim';
         return '<div class="nav-item has-dropdown">' +
             '<a href="' + esc(ROOT + item.href) + '"' + (isActive ? ' class="active"' : '') + '>' +
             esc(item.label) + '<span class="chev">▾</span></a>' +
-            '<div class="dropdown-panel">' + cols + '</div>' +
+            '<div class="dropdown-panel' + wide + '">' + cols + '</div>' +
             '</div>';
     }
 

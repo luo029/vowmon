@@ -25,6 +25,7 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .main-container { max-width: 1200px; margin: 30px auto; background: #fdfdfd; border-radius: 24px; padding: 30px; min-height: 800px; }
 .section-title { text-align: center; font-size: 24px; font-weight: 900; color: #2c3e50; margin: 40px 0 25px 0; position: relative; }
 .section-title span { position: relative; z-index: 1; padding: 0 20px; background: #fdfdfd; }
+.section-title span i { color: #ff6b6b; font-size: 19px; margin-right: 8px; }
 .section-title::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); z-index: 0; }
 
 /* Banner */
@@ -33,7 +34,18 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .tag { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
 .hero-banner h1 { margin: 15px 0 10px 0; font-size: 42px; font-weight: 900; line-height: 1.2; }
 .hero-banner p { color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 30px; }
-.banner-btn { background: #fff; color: #764ba2; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.banner-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.banner-btn { background: #fff; color: #764ba2; border: none; padding: 12px 26px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: transform .15s, box-shadow .15s; }
+.banner-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+.banner-btn.ghost { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.4); }
+.banner-btn kbd { font-size: 10px; background: rgba(255,255,255,.22); padding: 2px 6px; border-radius: 4px; font-family: inherit; }
+/* 首页统计条 */
+.home-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-top: 22px; }
+.home-stats .stat { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 14px 10px; background: #fff; border: 1px solid #f0f4f8; border-radius: 14px; }
+.home-stats .stat i { color: #ff6b6b; font-size: 18px; }
+.home-stats .stat b, .home-stats .stat .stat-plus { font-size: 19px; color: #2c3e50; font-weight: 900; }
+.home-stats .stat .stat-plus { font-size: 13px; color: #718096; }
+.home-stats .stat span:last-child { font-size: 12px; color: #718096; }
 .banner-image-area { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
 .magic-pokeball { width: 170px; height: 170px; border-radius: 50%; position: relative; overflow: hidden; border: 8px solid #fff; }
 .pb-top { position: absolute; top: 0; width: 100%; height: 50%; background: #ff6b6b; }
@@ -76,6 +88,7 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 @media (max-width: 900px) {
     .menu-grid { grid-template-columns: repeat(2, 1fr); }
     .tool-grid { grid-template-columns: 1fr; }
+    .home-stats { grid-template-columns: repeat(2,1fr); }
     .nav-links { display: none; }
     .hero-banner { flex-direction: column; text-align: center; padding: 30px; }
 }
