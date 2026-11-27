@@ -50,38 +50,38 @@
             key: 'dex', label: '图鉴', href: 'dex/vowdex.html',
             columns: [
                 {
-                    title: '精灵资料',
+                    title: '精灵与资料',
                     links: [
-                        { label: '精灵图鉴', href: 'dex/vowdex.html' },
-                        { label: '天地图鉴', href: 'dex/realm-dex.html' },
-                        { label: '精灵列表', href: 'dex/list.html' },
-                        { label: '精灵对比器', href: 'dex/compare.html' },
-                        { label: '地区形态对照', href: 'dex/region-forms.html' },
+                        { label: '精灵图鉴', href: 'dex/vowdex.html', subs: [
+                            { label: '天地图鉴', href: 'dex/realm-dex.html' },
+                            { label: '精灵列表', href: 'dex/list.html' },
+                            { label: '精灵对比', href: 'dex/compare.html' },
+                            { label: '地区形态', href: 'dex/region-forms.html' }
+                        ] },
                         { label: '技能图鉴', href: 'reference/skills.html' },
                         { label: '特性大全', href: 'reference/traits.html' },
-                        { label: '性格大全', href: 'reference/natures.html' }
-                    ]
-                },
-                {
-                    title: '生态与物品',
-                    links: [
-                        { label: '物品图鉴', href: 'reference/items.html' },
-                        { label: '精灵果实', soon: true }
+                        { label: '性格大全', href: 'reference/natures.html' },
+                        { label: '物品图鉴', href: 'reference/items.html', subs: [
+                            { label: '精灵果实', soon: true }
+                        ] }
                     ]
                 },
                 {
                     title: '世界观',
                     links: [
-                        { label: '等级体系', href: 'world/ranks.html' },
-                        { label: '血脉图鉴', href: 'reference/bloodlines.html' },
+                        { label: '等级体系', href: 'world/ranks.html', subs: [
+                            { label: '阶元路径', href: 'world/ranks-path.html' },
+                            { label: '权柄看板', href: 'world/authority.html' }
+                        ] },
+                        { label: '血脉图鉴', href: 'reference/bloodlines.html', subs: [
+                            { label: '血脉共鸣', href: 'reference/bloodline-sim.html' }
+                        ] },
                         { label: '御兽师图鉴', href: 'world/trainers.html' },
                         { label: '势力版图', href: 'world/factions.html' },
-                        { label: '权柄看板', href: 'world/authority.html' },
-                        { label: '阶元路径', href: 'world/ranks-path.html' },
-                        { label: '血脉共鸣', href: 'reference/bloodline-sim.html' },
                         { label: '故事时间线', href: 'records/timeline.html' },
-                        { label: '十八生态界', soon: true },
-                        { label: '元域演化史', href: 'world/lore.html' }
+                        { label: '元域演化史', href: 'world/lore.html', subs: [
+                            { label: '十八生态界', soon: true }
+                        ] }
                     ]
                 }
             ]
@@ -231,7 +231,15 @@
         }
 
         var cols = item.columns.map(function (col) {
-            var links = col.links.map(function (l) { return linkHtml(l, ''); }).join('');
+            var links = col.links.map(function (l) {
+                var main = linkHtml(l, '');
+                if (!l.subs || !l.subs.length) return main;
+                var subs = l.subs.map(function (s) {
+                    if (s.soon) return '<span class="dd-sub soon">· ' + esc(s.label) + '</span>';
+                    return '<a class="dd-sub" href="' + esc(ROOT + s.href) + '">· ' + esc(s.label) + '</a>';
+                }).join('');
+                return '<div class="dd-group">' + main + '<div class="dd-subs">' + subs + '</div></div>';
+            }).join('');
             return '<div class="dropdown-column"><h4>' + esc(col.title) + '</h4>' + links + '</div>';
         }).join('');
 
