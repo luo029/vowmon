@@ -1,0 +1,21 @@
+/* Vowmon Wiki 折叠式系别筛选样式（tf- 前缀） */
+.type-filter{border-top:1px solid #eef1f6;padding-top:10px;margin-top:2px}
+.tf-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tf-label{font-size:13px;font-weight:700;color:#4a5872;flex:none}
+.tf-trigger{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid #e4e9f2;border-radius:9px;background:#fff;color:#243044;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;max-width:320px}
+.tf-trigger:hover{border-color:#ff6b6b}
+.tf-trigger i{font-size:10px;color:#8593ad;transition:transform .18s}
+.type-filter.open .tf-trigger i{transform:rotate(180deg)}
+.tf-summary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tf-clear{border:0;background:none;color:#ff6b6b;font-size:12px;cursor:pointer;font-weight:700;font-family:inherit}
+.tf-panel{margin-top:10px;padding:12px;border:1px solid #eef1f6;border-radius:12px;background:#fbfcfe}
+.tf-search{width:100%;padding:8px 10px;border:1px solid #e4e9f2;border-radius:8px;font-size:12px;outline:none;font-family:inherit;margin-bottom:10px}
+.tf-search:focus{border-color:#ff6b6b}
+.tf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.tf-item{display:flex;align-items:center;gap:5px;padding:7px 8px;border:1px solid #e4e9f2;border-radius:8px;background:#fff;color:#4a5872;font-size:12px;cursor:pointer;font-family:inherit;text-align:left}
+.tf-item:hover{border-color:#ff6b6b;color:#ff6b6b}
+.tf-item.on{border-color:#ff6b6b;background:#fff5f5;color:#c53030;font-weight:700}
+.tf-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.tf-item small{margin-left:auto;color:#a5b0c2;font-size:10px}
+.no-anim .tf-trigger i{transition:none}
+@media(max-width:640px){.type-filter{padding-top:8px}.tf-trigger{max-width:100%;flex:1}.tf-grid{grid-template-columns:repeat(3,1fr)}}

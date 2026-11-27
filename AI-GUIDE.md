@@ -126,7 +126,7 @@ vowmon/
 
 | 页面 | URL | 功能要点 | 关键文件 |
 |---|---|---|---|
-| 首页 | `index.html` | Hero 横幅 + 图鉴/工具入口卡 | 静态 |
+| 首页 | `index.html` | Hero 横幅 + 三组入口卡（图鉴与资料 / 世界观 / 研究工具），卡片下挂小字快捷链接 | 静态 |
 | 权柄看板 | `world/authority.html` | 力位权三律、权柄沙盘（等级→阶元→权限/代价）、权柄循环五步、三大机制、书内纪事 | `authority-config.js` |
 | 阶元路径 | `world/ranks-path.html` | 等级轴联动精灵八阶/御兽师八阶/权限/联盟名号，两条铁律 | `authority-config.js` + `StageConfig` |
 | 血脉共鸣模拟器 | `reference/bloodline-sim.html` | 选精灵+血脉之石→形态/技能/克制不变演示，族群技能包联动 | `bloodline-config.js` |
@@ -165,7 +165,7 @@ vowmon/
 
 ## 5. 后台页面逐页手册
 
-后台统一：不加载全站 navbar（自带 topbar + `admin/sidebar.js` 侧栏）；弹窗用 `js/dialog.js`；
+后台统一：不加载全站 navbar（自带 topbar + `admin/sidebar.js` 侧栏，侧栏按「图鉴数据 / 书内档案 / 内容与系统」三组）；弹窗用 `js/dialog.js`；
 下拉用 `js/vow-select.js` 组件（**禁止原生 select**，会弹系统菜单）；长文本用 `js/vow-textarea.js`；
 提示气泡用 `js/vow-tip.js`；同步/拉取全部带 **diff 预览弹窗**（见 §7）。
 
@@ -198,6 +198,7 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 | `navbar.js` | 全站导航唯一来源（NAV 数组 + ROOT 前缀 + 动效开关 + 搜索跳转 + isActive 补 .html——CF 会 308 去扩展名） |
 | `admin/sidebar.js` | 后台侧栏唯一来源（12 项；`.html` 补齐；data-tab 仅 index 页拦截） |
 | `type-config.js` | 18 属性图标/颜色唯一来源 |
+| `css/type-filter.css` | 折叠式系别筛选（vowdex/list/skills/traits 四页共用，18 系别默认收起可搜索） |
 | `type-chart.js` | 18×18 克制表 + `getTypeMultiplier` / `getComboMultiplier` |
 | `category-config.js` | 技能分类（物理/特殊/变化）图标颜色 |
 | `tag-config.js` | 技能标签内置库 23 个 + hash 兜底配色 |

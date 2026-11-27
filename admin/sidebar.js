@@ -10,17 +10,20 @@
 
     /* 导航定义：tab:true 表示精灵管理页内的 Tab（无刷新切换），否则是页面跳转 */
     var NAV = [
+        { group: '图鉴数据' },
         { href: 'index.html', icon: 'fa-solid fa-book', label: '精灵管理', tab: 'sprites' },
         { href: 'index.html?tab=realm', icon: 'fa-solid fa-mountain-sun', label: '天地图鉴', tab: 'realm' },
         { href: 'admin-skills.html', icon: 'fa-solid fa-fire', label: '技能管理' },
         { href: 'admin-traits.html', icon: 'fa-solid fa-leaf', label: '特性管理' },
         { href: 'admin-bloodline-skills.html', icon: 'fa-solid fa-dna', label: '血脉技能' },
         { href: 'admin-items.html', icon: 'fa-solid fa-box-open', label: '物品管理' },
-        { href: 'admin-images.html', icon: 'fa-solid fa-images', label: '图片管理' },
-        { href: 'admin-lore.html', icon: 'fa-solid fa-file-pen', label: '页面内容' },
+        { group: '书内档案' },
         { href: 'admin-individuals.html', icon: 'fa-solid fa-paw', label: '御兽精灵' },
         { href: 'admin-characters.html', icon: 'fa-solid fa-users', label: '御兽人物' },
         { href: 'admin-stages.html', icon: 'fa-solid fa-layer-group', label: '阶段境界' },
+        { group: '内容与系统' },
+        { href: 'admin-images.html', icon: 'fa-solid fa-images', label: '图片管理' },
+        { href: 'admin-lore.html', icon: 'fa-solid fa-file-pen', label: '页面内容' },
         { href: 'index.html?tab=settings', icon: 'fa-solid fa-gear', label: '同步配置', tab: 'settings' },
         { href: 'admin-audit.html', icon: 'fa-solid fa-clock-rotate-left', label: '操作审计' }
     ];
@@ -44,6 +47,7 @@
     var mount = document.querySelector('.side-nav');
     if (mount) {
         mount.innerHTML = NAV.map(function (item) {
+            if (item.group) return '<div class="side-group">' + item.group + '</div>';
             var active = isActive(item) ? ' class="active"' : '';
             return '<a href="' + item.href + '"' + active + ' data-tab="' + (item.tab || '') + '">' +
                 '<i class="' + item.icon + '"></i> ' + item.label + '</a>';

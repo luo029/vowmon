@@ -131,6 +131,7 @@
             .vowdex-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         }
     </style>
+    <link rel="stylesheet" href="../css/type-filter.css?v=20261128b">
     <link rel="stylesheet" href="../css/navbar.css?v=20261128b">
     <script src="../js/navbar.js?v=20261128b" defer></script>
     <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
@@ -200,19 +201,23 @@
                 </div>
             </div>
 
-            <div class="filter-row">
-                <div class="filter-label">精灵系别</div>
-                <div class="filter-options">
-                    <div 
-                        v-for="t in typeData" 
-                        :key="t.name" 
-                        class="type-btn-icon" 
-                        :class="{active: selectedTypes.includes(t.name)}" 
-                        @click="toggleType(t.name)"
-                    >
-                        <div class="type-icon-svg" :style="{ backgroundColor: t.color }"><i :class="t.icon"></i></div>
-                        {{ t.name }}
-                        <span class="count-badge font-num">{{ typeCounts[t.name] || 0 }}</span>
+            <div class="type-filter" :class="{open: typeOpen}">
+                <div class="tf-head">
+                    <span class="tf-label">精灵系别</span>
+                    <button type="button" class="tf-trigger" @click="typeOpen = !typeOpen">
+                        <span class="tf-summary">{{ selectedTypes.length ? selectedTypes.join('、') : '全部系别' }}</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <button type="button" class="tf-clear" v-if="selectedTypes.length" @click="selectedTypes = []">清除</button>
+                </div>
+                <div class="tf-panel" v-show="typeOpen">
+                    <input class="tf-search" type="search" placeholder="搜索系别…" v-model="typeQuery">
+                    <div class="tf-grid">
+                        <button type="button" class="tf-item" v-for="t in filteredTypeData" :key="t.name" :class="{on: selectedTypes.includes(t.name)}" @click="toggleType(t.name)">
+                            <span class="tf-dot" :style="{background: t.color}"></span>
+                            <i :class="t.icon"></i>{{ t.name }}
+                            <small>{{ typeCounts[t.name] || 0 }}</small>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -397,6 +402,13 @@ VowmonData.ready(['vows']).then(function () {
 
             // 筛选状态操作
             const selectedTypes = ref([]);
+            // 系别筛选改为折叠面板：18 个系别默认收起，按需搜索展开
+            const typeOpen = ref(false);
+            const typeQuery = ref('');
+            const filteredTypeData = computed(() => {
+                const q = String(typeQuery.value || '').trim().toLowerCase();
+                return typeData.filter(t => !q || String(t.name).toLowerCase().includes(q));
+            });
             const toggleType = (name) => {
                 const index = selectedTypes.value.indexOf(name);
                 index > -1 ? selectedTypes.value.splice(index, 1) : selectedTypes.value.push(name);
@@ -441,7 +453,7 @@ VowmonData.ready(['vows']).then(function () {
 
             return {
                 isAnimOn, toggleAnim,
-                searchName, filters, selectedTypes, typeData,
+                searchName, filters, selectedTypes, typeData, typeOpen, typeQuery, filteredTypeData,
                 filteredVows, paginatedVows, currentPage, totalPages, startIndex, endIndex,
                 stageCounts, formCounts, typeCounts,
                 toggleType, toggleFilter, clearFilters,

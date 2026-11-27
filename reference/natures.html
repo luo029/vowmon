@@ -87,7 +87,9 @@
         .empty-state { text-align: center; color: #b08d5a; padding: 50px 20px; font-weight: 700; }
 
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
-    </style>
+    .filter-pairs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.filter-pairs{grid-template-columns:1fr;gap:0}}
+</style>
     <link rel="stylesheet" href="../css/navbar.css?v=20261128b">
     <script src="../js/navbar.js?v=20261128b" defer></script>
     <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
@@ -148,7 +150,8 @@
                 </div>
             </div>
 
-            <div class="filter-row">
+            <div class="filter-pairs">
+            <div class="filter-row filter-pair">
                 <div class="filter-label">提高的能力</div>
                 <div class="filter-options">
                     <div class="filter-btn" :class="{active: selectedUp.includes(s.name)}" v-for="s in stats" :key="s.name" @click="toggleUp(s.name)">
@@ -157,7 +160,7 @@
                     <div class="filter-btn" :class="{active: selectedUp.includes('无')}" @click="toggleUp('无')">无修正</div>
                 </div>
             </div>
-            <div class="filter-row">
+            <div class="filter-row filter-pair">
                 <div class="filter-label">降低的能力</div>
                 <div class="filter-options">
                     <div class="filter-btn" :class="{active: selectedDown.includes(s.name)}" v-for="s in stats" :key="s.name" @click="toggleDown(s.name)">
@@ -165,6 +168,7 @@
                     </div>
                     <div class="filter-btn" :class="{active: selectedDown.includes('无')}" @click="toggleDown('无')">无修正</div>
                 </div>
+            </div>
             </div>
 
             <div class="result-count">共 {{ filteredNatures.length }} 种性格</div>

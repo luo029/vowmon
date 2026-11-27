@@ -52,6 +52,12 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .card-pink .menu-icon-wrap { background: #fff5f7; }
 .menu-text h3 { font-size: 18px; margin-bottom: 8px; color: #2c3e50; font-weight: 900; }
 .menu-text p { font-size: 13px; color: #718096; }
+/* 首页卡片下的小字快捷入口（父卡片已是链接，子链接仅作补充跳转） */
+.menu-sub { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #edf0f5; width: 100%; }
+.menu-sub a { color: #94a3b8; font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.menu-sub a:hover { color: #ff6b6b; }
+.bg-green { background: #ebfbee; }
+.bg-red { background: #fff5f5; }
 
 /* 研究工具网格 */
 .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }

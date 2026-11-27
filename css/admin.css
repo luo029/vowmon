@@ -15,6 +15,8 @@ body { font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont
 .layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 64px); }
 .sidebar { width: 210px; background: #fff; border-right: 1px solid #e2e8f0; flex: 0 0 auto; }
 .side-nav { padding: 18px 12px; display: flex; flex-direction: column; gap: 6px; }
+.side-group { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #a0aec0; padding: 14px 14px 4px; }
+.side-group:first-child { padding-top: 2px; }
 .side-nav a { text-decoration: none; padding: 11px 14px; border-radius: 10px; color: #4a5568; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background .15s, color .15s; }
 .side-nav a i { width: 18px; text-align: center; color: #a0aec0; transition: color .15s; }
 .side-nav a:hover { background: #f7fafc; color: #2b6cb0; }

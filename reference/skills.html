@@ -97,6 +97,7 @@
 
         .no-anim *, .no-anim *::before, .no-anim *::after { transition: none !important; animation: none !important; }
     </style>
+    <link rel="stylesheet" href="../css/type-filter.css?v=20261128b">
     <link rel="stylesheet" href="../css/navbar.css?v=20261128b">
     <script src="../js/navbar.js?v=20261128b" defer></script>
     <link rel="stylesheet" href="../css/responsive.css?v=20261126s">
@@ -157,12 +158,22 @@
                 </div>
             </div>
 
-            <div class="filter-row">
-                <div class="filter-label"><i class="fa-solid fa-water"></i>技能系别</div>
-                <div class="filter-options">
-                    <div class="filter-btn" v-for="t in typeOptions" :key="t" :class="{active: selectedTypes.includes(t)}" @click="toggleType(t)">
-                        <span class="filter-icon" :style="{backgroundColor: getTypeColor(t)}"><i :class="getTypeIcon(t)"></i></span>
-                        {{ t }} <span class="count-badge font-num">{{ getTypeCount(t) }}</span>
+            <div class="type-filter" :class="{open: typeOpen}">
+                <div class="tf-head">
+                    <span class="tf-label"><i class="fa-solid fa-water"></i> 技能系别</span>
+                    <button type="button" class="tf-trigger" @click="typeOpen = !typeOpen">
+                        <span class="tf-summary">{{ selectedTypes.length ? selectedTypes.join('、') : '全部系别' }}</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <button type="button" class="tf-clear" v-if="selectedTypes.length" @click="selectedTypes = []">清除</button>
+                </div>
+                <div class="tf-panel" v-show="typeOpen">
+                    <input class="tf-search" type="search" placeholder="搜索系别…" v-model="typeQuery">
+                    <div class="tf-grid">
+                        <button type="button" class="tf-item" v-for="t in filteredTypeOptions" :key="t" :class="{on: selectedTypes.includes(t)}" @click="toggleType(t)">
+                            <span class="tf-dot" :style="{background: getTypeColor(t)}"></span>
+                            <i :class="getTypeIcon(t)"></i>{{ t }} <small>{{ getTypeCount(t) }}</small>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -242,6 +253,13 @@ VowmonData.ready(['skills']).then(function () {
             const selectedCosts = ref([]);
             const selectedTags = ref([]);
             const selectedTypes = ref([]);
+            // 系别折叠面板
+            const typeOpen = ref(false);
+            const typeQuery = ref('');
+            const filteredTypeOptions = computed(() => {
+                const q = String(typeQuery.value || '').trim().toLowerCase();
+                return typeOptions.value.filter(t => !q || String(t).toLowerCase().includes(q));
+            });
 
             // 表头排序：sortKey 为列名，sortOrder 为 asc / desc / ''（原序）
             const sortKey = ref('');
@@ -351,7 +369,7 @@ VowmonData.ready(['skills']).then(function () {
             });
 
             return {
-                searchName, categories, usedTagNames, selectedCategories, selectedCosts, selectedTags, selectedTypes,
+                searchName, categories, usedTagNames, selectedCategories, selectedCosts, selectedTags, selectedTypes, typeOpen, typeQuery, filteredTypeOptions,
                 costOptions, typeOptions, filteredSkills, sortedSkills, sortKey, sortOrder, sortBy, sortArrow,
                 toggleCategory, toggleCost, toggleTag, toggleType, clearFilters,
                 getCategoryCount, getCostCount, getTagCount, getTypeCount,
