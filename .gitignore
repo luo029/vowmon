@@ -21,3 +21,6 @@ _imgtest.html
 # wrangler 本地缓存（部署时自动生成）
 .wrangler/
 _lore-data.json
+
+# PokéAPI 抓取缓存（206MB，本地专用）
+_tools/.pokemon-cache/

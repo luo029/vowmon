@@ -101,7 +101,8 @@
                     links: [
                         { label: '精灵对战', href: 'battle/', icon: 'fa-solid fa-swords' },
                         { label: '属性克制', href: 'reference/calculator.html', icon: 'fa-solid fa-scale-balanced' },
-                        { label: '打击面计算', href: 'reference/coverage.html', icon: 'fa-solid fa-crosshairs' }
+                        { label: '打击面计算', href: 'reference/coverage.html', icon: 'fa-solid fa-crosshairs' },
+                        { label: '每日精灵灵感', href: 'tools/daily-pokemon.html', icon: 'fa-solid fa-lightbulb' }
                     ]
                 },
                 {
@@ -143,6 +144,7 @@
         'compare.html': 'dex',
         'consistency.html': 'tools',
         'diagnostics.html': 'tools',
+        'daily-pokemon.html': 'tools',
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',
