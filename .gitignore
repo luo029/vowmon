@@ -24,3 +24,6 @@ _lore-data.json
 
 # PokéAPI 抓取缓存（206MB，本地专用）
 _tools/.pokemon-cache/
+
+# 洛克王国抓取缓存（~77MB，本地专用）
+_tools/.rock-cache/

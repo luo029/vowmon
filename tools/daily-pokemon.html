@@ -23,13 +23,21 @@
         .sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:20px;box-shadow:0 2px 12px rgba(61,50,34,.04)}
         .sec h2{font-size:18px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:9px}
         .sec h2 i{color:var(--accent)}
-        .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:18px}
+        .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
         .btn{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
         .btn:hover{border-color:var(--accent);color:var(--accent)}
         .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
         .btn.primary:hover{background:#d18d0a;color:#fff}
         .btn:disabled{opacity:.5;cursor:wait}
-        .switch{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);font-weight:600;cursor:pointer;user-select:none;margin-left:auto}
+        /* 数据源开关（分段按钮） */
+        .src-seg{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-bottom:6px}
+        .seg-opt{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1.5px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:700;color:var(--ink-3);cursor:pointer;user-select:none;transition:.15s}
+        .seg-opt img{width:16px;height:16px;object-fit:contain}
+        .seg-opt .dot{width:9px;height:9px;border-radius:50%;background:#d8d0bd;flex-shrink:0}
+        .seg-opt.on{border-color:var(--seg-c,#e8a013);color:var(--ink);background:color-mix(in srgb,var(--seg-c,#e8a013) 10%,#fff)}
+        .seg-opt.on .dot{background:var(--seg-c,#e8a013)}
+        .seg-opt.off-src{opacity:.55}
+        .switch{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);font-weight:600;cursor:pointer;user-select:none}
         .switch input{display:none}
         .switch .track{width:42px;height:24px;border-radius:999px;background:#d8d0bd;position:relative;transition:.2s;flex-shrink:0}
         .switch .track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
@@ -38,9 +46,10 @@
         /* 卡片 */
         .mon-card{display:flex;gap:26px;align-items:flex-start}
         .art-side{flex-shrink:0;width:230px;text-align:center}
-        .art-wrap{width:230px;height:230px;border-radius:18px;background:radial-gradient(circle at 50% 42%,#fdeec2,#f7ead0 72%);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #f2e3b8}
-        .art-wrap img{max-width:200px;max-height:200px;transition:transform .25s}
+        .art-wrap{width:230px;height:230px;border-radius:18px;background:radial-gradient(circle at 50% 42%,#fdeec2,#f7ead0 72%);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #f2e3b8;position:relative}
+        .art-wrap img{max-width:210px;max-height:210px;transition:transform .25s}
         .art-wrap img:hover{transform:scale(1.06)}
+        .src-badge{position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;color:#fff;font-size:11px;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.15)}
         .mystery{font-size:64px;font-weight:800;color:#c9b98d}
         .no-tag{margin-top:8px;font-size:12px;color:var(--ink-3);font-weight:700;letter-spacing:1px}
         .info-side{flex:1;min-width:0}
@@ -54,6 +63,15 @@
         .meta b{color:var(--ink)}
         .dex-quote{background:#fbf6e8;border-left:4px solid var(--accent-2);border-radius:0 12px 12px 0;padding:12px 16px;font-size:13px;line-height:1.9;color:var(--ink-2)}
         .dex-quote .ver{display:inline-block;margin-top:6px;font-size:11px;color:var(--ink-3);font-weight:700}
+        /* 进化链 */
+        .evo-row{margin-top:16px}
+        .evo-row h3{font-size:13px;color:var(--ink-3);font-weight:700;margin-bottom:8px}
+        .evo-items{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+        .evo-item{display:flex;flex-direction:column;align-items:center;gap:3px;width:76px;padding:6px 4px;border-radius:12px;border:1px solid var(--line);background:#fbf6e8;cursor:pointer;transition:.15s}
+        .evo-item:hover{border-color:var(--accent)}
+        .evo-item img{width:44px;height:44px;object-fit:contain}
+        .evo-item span{font-size:11px;font-weight:700;color:var(--ink);text-align:center;line-height:1.3}
+        .evo-arrow{color:#c9b98d;font-weight:800;font-size:14px}
         /* 种族值 */
         .stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
         .stat-label{width:44px;font-size:12px;font-weight:700;color:var(--ink-3);text-align:right;flex-shrink:0}
@@ -80,8 +98,9 @@
             .mon-card{flex-direction:column;align-items:stretch;gap:14px}
             .art-side{width:100%}.art-wrap{margin:0 auto;width:200px;height:200px}
             .art-wrap img{max-width:170px;max-height:170px}
-            .switch{margin-left:0}
+            .seg-opt{padding:6px 11px;font-size:12px}
             .tip{padding:13px 14px}
+            .evo-item{width:64px}.evo-item img{width:36px;height:36px}
         }
     </style>
 </head>
@@ -91,10 +110,10 @@
 <div class="page">
     <div class="hero">
         <h1><i class="fa-solid fa-lightbulb"></i> 每日精灵灵感</h1>
-        <p>每天随机抽一只宝可梦作参考——看它的属性、地区、种族值和图鉴介绍，再根据随机提示原创一只属于你的誓约精灵。数据来自 PokéAPI，全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。</p>
+        <p>每天从宝可梦、洛克王国、奥奇传说里随机抽一只做参考——看它的属性、种族值、图鉴介绍和进化链，再根据随机提示原创一只属于你的誓约精灵。数据全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。</p>
     </div>
 
-    <div class="loading" v-if="state==='loading'"><i class="fa-solid fa-spinner"></i>正在加载宝可梦数据库…</div>
+    <div class="loading" v-if="state==='loading'"><i class="fa-solid fa-spinner"></i>正在加载精灵数据库…</div>
     <div class="loading" v-else-if="state==='error'">
         <i class="fa-solid fa-triangle-exclamation" style="animation:none"></i>
         加载失败：{{ errMsg }}
@@ -104,55 +123,89 @@
     <template v-else>
         <section class="sec">
             <div class="toolbar">
+                <div class="src-seg">
+                    <span class="seg-opt" v-for="s in srcList" :key="s.key"
+                          :class="{on: srcOn[s.key], 'off-src': !s.loaded}"
+                          :style="{'--seg-c': s.color}"
+                          @click="toggleSrc(s)">
+                        <span class="dot"></span>{{ s.label }}
+                        <b>{{ s.count || 0 }}</b>
+                        <span v-if="!s.loaded" style="font-weight:600;font-size:11px">（未加载）</span>
+                    </span>
+                </div>
                 <button class="btn primary" @click="randomOne"><i class="fa-solid fa-dice"></i> 随机一只</button>
                 <button class="btn" @click="backToToday" v-if="!isDaily"><i class="fa-regular fa-calendar"></i> 回到今日精灵</button>
                 <label class="switch">
-                    <span>{{ showRef ? '显示宝可梦参考' : '盲盒模式（隐藏参考）' }}</span>
+                    <span>{{ showRef ? '显示参考' : '盲盒模式' }}</span>
                     <input type="checkbox" v-model="showRef">
                     <span class="track"></span>
                 </label>
-                <label class="switch" style="margin-left:0">
+                <label class="switch">
                     <span>排除已参照{{ excludedCount ? '（' + excludedCount + ' 只）' : '' }}</span>
                     <input type="checkbox" v-model="skipRef">
                     <span class="track"></span>
                 </label>
             </div>
-            <div class="genus" style="margin:0 0 16px">「排除已参照」依据图鉴里每只誓约精灵的【原型】字段：凡写了「宝可梦-××」（如圆笙童子的原型「宝可梦-圆法师」），对应宝可梦就不会再出现在随机结果里，直到你清掉那行原型。</div>
+            <div class="genus" style="margin:0 0 16px">「排除已参照」依据图鉴里每只誓约精灵的【原型】字段：凡写了对应名字（如圆笙童子的原型「宝可梦-圆法师」），它就不会再出现在随机结果里，直到你清掉那行原型。</div>
 
-            <div class="mon-card">
+            <div class="mon-card" v-if="mon.src">
                 <div class="art-side">
                     <div class="art-wrap">
-                        <img v-if="showRef && artUrl" :src="artUrl" :alt="mon.name" loading="lazy"
-                             @error="artFallback">
+                        <span class="src-badge" :style="{background:srcMeta[mon.src].color}">
+                            <img v-if="srcMeta[mon.src].favicon" :src="srcMeta[mon.src].favicon" alt="" @error="$event.target.style.display='none'" style="width:12px;height:12px;object-fit:contain">
+                            {{ srcMeta[mon.src].label }}
+                        </span>
+                        <img v-if="showRef && mon.img" :src="mon.img" :alt="mon.name" loading="lazy" @error="artFallback">
                         <span v-else class="mystery">?</span>
                     </div>
-                    <div class="no-tag">No.{{ mon.no }} · 编号 {{ mon.id }}</div>
+                    <div class="no-tag">{{ mon.no ? 'No.' + mon.no : '编号 ' + mon.id }}</div>
                 </div>
                 <div class="info-side">
                     <template v-if="showRef">
-                        <div class="mon-name">{{ mon.name }}<small>{{ mon.en }}</small></div>
-                        <div class="genus">{{ mon.genus }}</div>
-                        <div class="chips">
-                            <span class="chip" v-for="t in mon.types" :key="t" :style="{background:typeColor(t)}">{{ t }}</span>
+                        <div class="mon-name">{{ mon.name }}<small v-if="mon.en">{{ mon.en }}</small></div>
+                        <div class="genus" v-if="mon.genus">{{ mon.genus }}</div>
+                        <div class="chips" v-if="mon.types.length || mon.region">
+                            <span class="chip" v-for="t in mon.types" :key="t" :style="{background:typeColor(mon,t)}">{{ t }}</span>
                             <span class="chip plain" v-if="mon.region">{{ mon.region }}地区</span>
                         </div>
-                        <div class="meta">身高 <b>{{ (mon.h/10).toFixed(1) }} m</b> ／ 体重 <b>{{ (mon.w/10).toFixed(1) }} kg</b></div>
-                        <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver">——《{{ mon.dexVer }}》图鉴介绍</span></div>
+                        <div class="meta" v-if="mon.h || mon.w">
+                            <template v-if="mon.h">身高 <b>{{ mon.h }}</b></template>
+                            <template v-if="mon.h && mon.w"> ／ </template>
+                            <template v-if="mon.w">体重 <b>{{ mon.w }}</b></template>
+                        </div>
+                        <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver" v-if="mon.dexVer">——《{{ mon.dexVer }}》图鉴介绍</span></div>
+                        <div class="dex-quote" v-else style="margin-top:12px">这只精灵暂无图鉴介绍。<a v-if="mon.link" :href="mon.link" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">去来源页面查看 →</a></div>
                     </template>
                     <template v-else>
                         <div class="mon-name">？？？<small>隐藏的参考精灵</small></div>
                         <div class="genus">下面的灵感提示就是根据它生成的——先别偷看，试着直接创作。</div>
                     </template>
-                    <div v-if="showRef" style="margin-top:16px">
-                        <div class="stat-row" v-for="s in statRows" :key="s.k">
+
+                    <div v-if="showRef && mon.stats.length" style="margin-top:16px">
+                        <div class="stat-row" v-for="s in mon.stats" :key="s.zh">
                             <span class="stat-label">{{ s.zh }}</span>
-                            <div class="stat-bar"><div class="stat-fill" :style="{width:(s.v/255*100)+'%',background:s.color}"></div></div>
+                            <div class="stat-bar"><div class="stat-fill" :style="{width:(s.v/255*100)+'%',background:statColor(s.v)}"></div></div>
                             <span class="stat-num">{{ s.v }}</span>
                         </div>
-                        <div class="stat-total">种族值合计 <b>{{ mon.total }}</b></div>
+                        <div class="stat-total" v-if="mon.total">种族值合计 <b>{{ mon.total }}</b></div>
+                    </div>
+
+                    <div class="evo-row" v-if="showRef && mon.evo.length > 1">
+                        <h3>进化链</h3>
+                        <div class="evo-items">
+                            <template v-for="(ev,ei) in mon.evo" :key="ev.name+ei">
+                                <span class="evo-arrow" v-if="ei > 0">→</span>
+                                <span class="evo-item" :title="ev.name">
+                                    <img :src="ev.img" :alt="ev.name" loading="lazy" @error="$event.target.style.display='none'">
+                                    <span>{{ ev.name }}</span>
+                                </span>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="loading" v-else style="padding:24px 0">当前选中的数据源里没有精灵，去上面点亮至少一个。</div>
         </section>
 
         <section class="sec">
@@ -170,8 +223,10 @@
         </section>
 
         <div class="foot">
-            参考数据：<a href="https://pokeapi.co" target="_blank" rel="noopener">PokéAPI</a> · 共 {{ count }} 只 · 生成于 {{ updated }} ·
-            每日精灵由日期决定，同一台设备上今天看到的永远是同一只；「排除已参照」开启时会从剔除后的名单里重新抽取。
+            数据来源：<a href="https://pokeapi.co" target="_blank" rel="noopener">PokéAPI</a>（{{ srcMeta.pk.count }} 只）·
+            <a href="https://rocokingdomworld.org/zh/pokedex/" target="_blank" rel="noopener">洛克王国世界图鉴</a>（{{ srcMeta.rk.count }} 只）·
+            <a href="http://aoqi.100bt.com/jingling/daquan_list.html" target="_blank" rel="noopener">奥奇传说精灵大全</a>（{{ srcMeta.aq.count }} 只）·
+            每日精灵由日期决定，同一台设备上今天看到的永远是同一只；数据源与「排除已参照」变化后会重新抽取。
         </div>
     </template>
 </div>
@@ -183,7 +238,25 @@
 <script>
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
-/* ---------------- 种族值颜色（低→高） ---------------- */
+/* ---------------- 数据源元信息 ---------------- */
+const SRC_META = {
+    pk: { label: '宝可梦',   color: '#e8a013', favicon: 'https://pokeapi.co/favicon.ico' },
+    rk: { label: '洛克王国', color: '#3b82f6', favicon: 'https://rocokingdomworld.org/favicon.svg' },
+    aq: { label: '奥奇传说', color: '#8b5cf6', favicon: '' }
+};
+/* 各源种族值标签 */
+const STAT_LABELS = {
+    pk: { hp: 'HP', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' },
+    rk: { hp: '精力', atk: '攻击', def: '防御', spe: '速度' }
+};
+const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','def','spe'] };
+/* 宝可梦 18 系配色 */
+const PK_TYPE_COLORS = {
+    '一般':'#9FA19F','火':'#E62829','水':'#2980EF','电':'#FAC000','草':'#3FA129','冰':'#3DCEF3',
+    '格斗':'#FF8000','毒':'#9141CB','地面':'#915121','飞行':'#81B9EF','超能力':'#EF4179','虫':'#91A119',
+    '岩石':'#AFA981','幽灵':'#704170','龙':'#5060E1','恶':'#50415F','钢':'#60A1B8','妖精':'#EF70EF'
+};
+
 function statColor(v) {
     if (v >= 150) return '#3fa129';
     if (v >= 120) return '#57c422';
@@ -192,13 +265,6 @@ function statColor(v) {
     if (v >= 40)  return '#ef8f4a';
     return '#e06060';
 }
-
-const TYPE_COLORS = {
-    '一般':'#9FA19F','火':'#E62829','水':'#2980EF','电':'#FAC000','草':'#3FA129','冰':'#3DCEF3',
-    '格斗':'#FF8000','毒':'#9141CB','地面':'#915121','飞行':'#81B9EF','超能力':'#EF4179','虫':'#91A119',
-    '岩石':'#AFA981','幽灵':'#704170','龙':'#5060E1','恶':'#50415F','钢':'#60A1B8','妖精':'#EF70EF'
-};
-const STAT_ZH = { hp:'HP', atk:'攻击', def:'防御', spa:'特攻', spd:'特防', spe:'速度' };
 
 /* ---------------- 可复现的随机（每日同一结果） ---------------- */
 function hashStr(str) {
@@ -223,75 +289,92 @@ function todayStr() {
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
 }
 
-/* ---------------- 灵感提示模板 ---------------- */
-function buildTipPool(mon) {
-    const stats = mon.stats || {};
-    const topKey = Object.keys(STAT_ZH).reduce((a, b) => (stats[a] >= stats[b] ? a : b), 'hp');
-    const lowKey = Object.keys(STAT_ZH).reduce((a, b) => (stats[a] <= stats[b] ? a : b), 'hp');
-    const type = mon.types && mon.types[0] ? mon.types[0] : '一般';
-    const genus = String(mon.genus || '').replace(/宝可梦$/, '');
-    const dexShort = String(mon.dex || '').slice(0, 46);
-    return [
-        { title: '属性意象', text: '它的核心属性是「' + type + '」。围绕这个属性构思一只全新的誓约精灵：它的外表、栖息环境、招牌技能分别是什么？' },
-        { title: '地区迁移', text: mon.region ? '它登记在' + mon.region + '地区。把同一种生态搬到完全不同的环境（雪山、深海、废都）里，它会演化成什么样？那就是你的原创精灵。' : '想象它生活在元域的某个生态界里。换一片截然不同的环境，它会长成什么样？' },
-        { title: '强项放大', text: '它最突出的是' + STAT_ZH[topKey] + '（' + stats[topKey] + '）。让你的原创精灵把这一点推到极致——极端的速度、极端的防御或极端的爆发，各会催生什么样的战斗方式？' },
-        { title: '反向设计', text: '它最弱的一项是' + STAT_ZH[lowKey] + '。反过来做一只这一项极强、其他平庸的精灵，只用一招立足——这样的精灵该怎么设计？' },
-        { title: '称号法', text: genus ? '它被称作「' + genus + '」类精灵。先给你的原创精灵起一个两个字的称号（如「雾行」「磷火」），称号定了，形象往往自己就浮现出来。' : '给你的原创精灵起一个简短称号，称号定了，形象往往自己浮现。' },
-        { title: '数值预算', text: '它的种族值合计 ' + mon.total + '。给你的原创精灵也定一个相近的预算，六项加起来不超过它，强度节奏会更贴近原作。' },
-        { title: '契约视角', text: '如果一位御兽师与它缔结契约，誓词会怎么写？用一句誓词概括它最打动人的特质，再把同样的特质移植给你的原创精灵。' },
-        { title: '图鉴放大', text: dexShort ? '图鉴说：「' + dexShort + '…」。从这句话里挑一个画面感最强的细节，放大成你的原创精灵的核心设定。' : '为你的原创精灵先写一句图鉴介绍——介绍写好了，精灵就立起来了。' },
-        { title: '属性组合', text: '试试给它加一个第二属性：' + type + '+X 会变得更强还是更奇怪？为你的原创精灵选一个少见但说得通的属性组合。' },
-        { title: '体型推演', text: '它身高 ' + (mon.h / 10).toFixed(1) + ' 米、体重 ' + (mon.w / 10).toFixed(1) + ' 千克。你的原创精灵更庞大还是更娇小？体型直接决定它的战斗方式与生态位。' },
-        { title: '进化推演', text: '假设它是一条三段进化链的中间形态。它的幼年形态和最终形态长什么样？倒推出来的那一只，往往就是你自己的新精灵。' }
-    ];
+/* ---------------- 灵感提示模板（按可用字段生成） ---------------- */
+function buildTipPool(pet) {
+    const pool = [];
+    const stats = pet.stats || [];
+    const statTop = stats.length ? stats.reduce((a, b) => (a.v >= b.v ? a : b)) : null;
+    const statLow = stats.length ? stats.reduce((a, b) => (a.v <= b.v ? a : b)) : null;
+    const type = pet.types && pet.types[0] ? pet.types[0] : '';
+    const genus = pet.genus || '';
+    const dexShort = pet.dex ? String(pet.dex).slice(0, 46) : '';
+
+    if (type) {
+        pool.push({ title: '属性意象', text: '它的核心属性是「' + type + '」。围绕这个属性构思一只全新的誓约精灵：它的外表、栖息环境、招牌技能分别是什么？' });
+        pool.push({ title: '属性组合', text: '试试给它加一个第二属性：' + type + '+X 会变得更强还是更奇怪？为你的原创精灵选一个少见但说得通的属性组合。' });
+    }
+    if (pet.region) {
+        pool.push({ title: '地区迁移', text: '它登记在' + pet.region + '地区。把同一种生态搬到完全不同的环境（雪山、深海、废都）里，它会演化成什么样？那就是你的原创精灵。' });
+    }
+    if (statTop) {
+        pool.push({ title: '强项放大', text: '它最突出的是' + statTop.zh + '（' + statTop.v + '）。让你的原创精灵把这一点推到极致——极端的速度、极端的防御或极端的爆发，各会催生什么样的战斗方式？' });
+        pool.push({ title: '反向设计', text: '它最弱的一项是' + statLow.zh + '（' + statLow.v + '）。反过来做一只这一项极强、其他平庸的精灵，只用一招立足——这样的精灵该怎么设计？' });
+    }
+    if (pet.total) {
+        pool.push({ title: '数值预算', text: '它的种族值合计 ' + pet.total + '。给你的原创精灵也定一个相近的预算，各项加起来不超过它，强度节奏会更贴近原作。' });
+    }
+    pool.push({
+        title: '称号法',
+        text: genus
+            ? '它被称作「' + genus + '」。先给你的原创精灵起一个两个字的称号（如「雾行」「磷火」），称号定了，形象往往自己就浮现出来。'
+            : '先给你的原创精灵起一个两个字的称号（如「雾行」「磷火」），称号定了，形象往往自己就浮现出来。'
+    });
+    pool.push({ title: '契约视角', text: '如果一位御兽师与它缔结契约，誓词会怎么写？用一句誓词概括它最打动人的特质，再把同样的特质移植给你的原创精灵。' });
+    if (dexShort) {
+        pool.push({ title: '图鉴放大', text: '图鉴说：「' + dexShort + '…」。从这句话里挑一个画面感最强的细节，放大成你的原创精灵的核心设定。' });
+    }
+    if (pet.h) {
+        pool.push({ title: '体型推演', text: '它身高体重约 ' + pet.h + (pet.w ? '／' + pet.w : '') + '。你的原创精灵更庞大还是更娇小？体型直接决定它的战斗方式与生态位。' });
+    }
+    if (pet.evo && pet.evo.length > 1) {
+        const names = pet.evo.map(e => e.name).join(' → ');
+        pool.push({ title: '进化推演', text: '它属于「' + names + '」这条进化链。你的原创精灵会长成什么样？倒推它的幼年形态或最终形态，往往就是一只新精灵的雏形。' });
+    }
+    pool.push({ title: '场景法', text: '不看任何参考，直接写一个场景：清晨、废墟、暴雨。你的原创精灵就藏在这个场景里——它此刻在做什么？' });
+    if (pool.length < 3) {
+        pool.push({ title: '命名法', text: '从它的名字里挑一个字，配一个新字组成你的精灵名，再围绕新名字设计外形与习性。' });
+        pool.push({ title: '招牌技能', text: '为你的原创精灵设计一个招牌技能：名字、属性、效果各一句话。技能定了，精灵的战斗风格就立起来了。' });
+        pool.push({ title: '相遇故事', text: '写一段你的主角与这只原创精灵初次相遇的故事。相遇方式往往能反推出它的性格与习性。' });
+    }
+    return pool;
 }
 
 createApp({
     setup() {
         const state = ref('loading');
         const errMsg = ref('');
-        const list = ref([]);
-        const updated = ref('');
         const showRef = ref(localStorage.getItem('vowmon_daily_show') !== 'false');
-        // 排除已参照：图鉴 vow 的【原型】(origin) 写了「宝可梦-××」的，对应宝可梦不再随机出现
+        // 排除已参照：图鉴 vow 的【原型】(origin) 写了对应名字的，不再随机出现
         const skipRef = ref(localStorage.getItem('vowmon_daily_skip_ref') !== 'false');
         const excludedNames = ref(new Set());
-        const dailyIdx = ref(0);          // 今日精灵在候选池里的下标
-        const curIdx = ref(0);            // 当前展示的下标（随机后会变）
-        const tipSeed = ref(0);           // 提示随机种子
+        // 数据源开关（默认只开宝可梦；洛克/奥奇数据是外部来源，由用户自己点亮）
+        const srcOn = ref(JSON.parse(localStorage.getItem('vowmon_daily_src') || '{"pk":true,"rk":false,"aq":false}'));
+        const srcMeta = ref({ pk: { count: 0 }, rk: { count: 0 }, aq: { count: 0 } });
+        const srcList = computed(() => ['pk', 'rk', 'aq'].map(k => ({
+            key: k, label: SRC_META[k].label, color: SRC_META[k].color,
+            loaded: srcMeta.value[k].count > 0, count: srcMeta.value[k].count
+        })));
+        const dailyIdx = ref(0);
+        const curIdx = ref(0);
+        const tipSeed = ref(0);
         const artFallbackUsed = ref(false);
+        const allPets = ref([]);        // 归一化后的全部精灵（三源合并）
 
-        const count = computed(() => list.value.length);
-        // 候选池：按「排除已参照」开关过滤
+        const excludedCount = computed(() => allPets.value.filter(p => excludedNames.value.has(p.name)).length);
         const pool = computed(() => {
+            const on = srcOn.value;
+            let list = allPets.value.filter(p => on[p.src]);
             if (skipRef.value && excludedNames.value.size) {
-                return list.value.filter(m => !excludedNames.value.has(m.name));
+                list = list.filter(p => !excludedNames.value.has(p.name));
             }
-            return list.value;
+            return list;
         });
-        const excludedCount = computed(() => {
-            if (!skipRef.value) return 0;
-            return list.value.filter(m => excludedNames.value.has(m.name)).length;
-        });
-        const mon = computed(() => pool.value[curIdx.value] || { types: [], stats: {}, h: 0, w: 0, no: '---', name: '' });
+        const mon = computed(() => pool.value[curIdx.value] || { src: '', types: [], stats: [], evo: [] });
         const isDaily = computed(() => curIdx.value === dailyIdx.value);
-        const artUrl = computed(() => {
-            if (!mon.value.id) return '';
-            const id = mon.value.id;
-            if (artFallbackUsed.value) {
-                return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + id + '.png';
-            }
-            return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + id + '.png';
-        });
-        const statRows = computed(() => {
-            const s = mon.value.stats || {};
-            return Object.keys(STAT_ZH).map(k => ({ k, zh: STAT_ZH[k], v: s[k] || 0, color: statColor(s[k] || 0) }));
-        });
         const tips = computed(() => {
-            const pool0 = buildTipPool(mon.value);
+            const p = buildTipPool(mon.value);
             const rng = mulberry32(hashStr('tips-' + tipSeed.value));
-            const copy = pool0.slice();
-            // 洗牌后取前 3 条
+            const copy = p.slice();
             for (let i = copy.length - 1; i > 0; i--) {
                 const j = Math.floor(rng() * (i + 1));
                 const t = copy[i]; copy[i] = copy[j]; copy[j] = t;
@@ -299,65 +382,124 @@ createApp({
             return copy.slice(0, 3);
         });
 
-        function typeColor(t) { return TYPE_COLORS[t] || '#c9b98d'; }
+        function typeColor(pet, t) {
+            return (pet.typeColors && pet.typeColors[t]) || PK_TYPE_COLORS[t] || '#c9b98d';
+        }
         function artFallback() { artFallbackUsed.value = true; }
 
-        /* 扫描图鉴 vow 的【原型】字段，找出已被参照的宝可梦名 */
+        /* 当前开关组合的签名：决定今日精灵的随机种子 */
+        function sig() {
+            const on = ['pk', 'rk', 'aq'].filter(k => srcOn.value[k]).join('-');
+            return (on || 'none') + '|' + (skipRef.value ? 'skip' : 'all');
+        }
+        function reseedDaily() {
+            const n = pool.value.length;
+            if (!n) return;
+            const rng = mulberry32(hashStr('vowmon-daily-' + todayStr() + '-' + sig()));
+            dailyIdx.value = Math.floor(rng() * n);
+            curIdx.value = dailyIdx.value;
+            tipSeed.value = hashStr('daily-' + todayStr() + '-' + sig());
+            artFallbackUsed.value = false;
+        }
+
+        /* 扫描图鉴 vow 的【原型】字段，找出已被参照的精灵名（三源通用） */
         function scanPrototypes() {
             const vows = window.allVowsData || [];
             const found = new Set();
-            const pokes = list.value;
             for (const v of vows) {
                 const o = String((v && (v.origin || v['原型'])) || '');
                 if (!o) continue;
-                for (const m of pokes) {
-                    if (o.indexOf(m.name) !== -1 ||
-                        (m.en && o.toLowerCase().indexOf(m.en.toLowerCase()) !== -1)) {
-                        found.add(m.name);
+                const oLow = o.toLowerCase();
+                for (const p of allPets.value) {
+                    if (o.indexOf(p.name) !== -1 ||
+                        (p.en && oLow.indexOf(p.en.toLowerCase()) !== -1) ||
+                        (p.full && o.indexOf(p.full) !== -1)) {
+                        found.add(p.name);
                     }
                 }
             }
             excludedNames.value = found;
         }
 
-        /* 候选池变化后重选今日精灵（日期种子对池子取模，保持可复现） */
-        function reseedDaily() {
-            const n = pool.value.length;
-            if (!n) return;
-            const rng = mulberry32(hashStr('vowmon-daily-' + todayStr()));
-            dailyIdx.value = Math.floor(rng() * n);
-            curIdx.value = dailyIdx.value;
-            tipSeed.value = hashStr('daily-' + todayStr());
-            artFallbackUsed.value = false;
-        }
-
-        async function loadData() {
-            state.value = 'loading'; errMsg.value = '';
+        /* 单个数据源的取数（三源顺序兜底），失败返回 null（不阻塞其它源） */
+        async function fetchSource(file) {
             const cfg = window.VOWMON_SITE_CONFIG || {};
             const bases = [
                 String(cfg.dataCdnBase || '').replace(/\/+$/, ''),
                 'https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main',
                 'https://raw.githubusercontent.com/luo029/vowmon_data/main'
             ].filter(Boolean);
-            let data = null, lastErr = null;
+            let lastErr = null;
             for (const base of bases) {
                 try {
-                    const res = await fetch(base + '/pokemon-data.json?_=20261128', { cache: 'no-store' });
-                    if (!res.ok) { lastErr = base + ' 返回 HTTP ' + res.status; continue; }
+                    const res = await fetch(base + '/' + file + '?_=20261128b', { cache: 'no-store' });
+                    if (!res.ok) { lastErr = base + ' HTTP ' + res.status; continue; }
                     const obj = await res.json();
-                    if (obj && Array.isArray(obj.pokemon) && obj.pokemon.length) { data = obj; break; }
+                    if (obj && typeof obj === 'object') return obj;
                     lastErr = base + ' 数据为空';
                 } catch (e) { lastErr = String(e && e.message || e); }
             }
-            if (!data) {
+            console.warn(file + ' 加载失败：' + lastErr);
+            return null;
+        }
+
+        function normalizePk(data) {
+            const byId = {};
+            for (const p of data.pokemon) byId[p.id] = p;
+            return data.pokemon.map(p => {
+                const labels = STAT_LABELS.pk, order = STAT_ORDER.pk;
+                const stats = order.filter(k => p.stats[k] != null).map(k => ({ zh: labels[k], v: p.stats[k] }));
+                return {
+                    src: 'pk', id: p.id, no: p.no, name: p.name, en: p.en, genus: p.genus,
+                    types: p.types || [], typeColors: null, region: p.region || '',
+                    stats: stats, total: p.total || 0,
+                    h: p.h ? (p.h / 10).toFixed(1) + ' m' : '', w: p.w ? (p.w / 10).toFixed(1) + ' kg' : '',
+                    dex: p.dex || '', dexVer: p.dexVer || '',
+                    img: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + p.id + '.png',
+                    evo: (p.evo || []).map(id => byId[id] ? { name: byId[id].name, img: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + id + '.png' } : null).filter(Boolean),
+                    link: '', full: ''
+                };
+            });
+        }
+        function normalizeRk(data) {
+            return (data.pets || []).map(p => {
+                const labels = STAT_LABELS.rk, order = STAT_ORDER.rk;
+                const stats = order.filter(k => p.stats && p.stats[k] != null).map(k => ({ zh: labels[k], v: p.stats[k] }));
+                return {
+                    src: 'rk', id: p.id, no: (p.no || '').replace(/^NO/, ''), name: p.name, en: p.en || '',
+                    genus: '', types: p.types || [], typeColors: p.typeColors || {}, region: '',
+                    stats: stats, total: p.total || 0, h: p.h || '', w: p.w || '',
+                    dex: p.dex || '', dexVer: '',
+                    img: p.img || '', evo: p.evo || [], link: 'https://rocokingdomworld.org/zh/pokedex/' + p.id, full: ''
+                };
+            });
+        }
+        function normalizeAq(data) {
+            return (data.pets || []).map(p => ({
+                src: 'aq', id: p.id, no: '', name: p.name, en: '', genus: '',
+                types: [], typeColors: {}, region: '', stats: [], total: 0, h: '', w: '',
+                dex: '', dexVer: '', img: p.img || '', evo: [], link: p.link || '', full: p.full || ''
+            }));
+        }
+
+        async function loadData() {
+            state.value = 'loading'; errMsg.value = '';
+            const [pk, rk, aq] = await Promise.all([
+                fetchSource('pokemon-data.json'),
+                fetchSource('rock-data.json'),
+                fetchSource('aoqi-data.json')
+            ]);
+            const pets = [];
+            if (pk) { pets.push(...normalizePk(pk)); srcMeta.value.pk.count = (pk.pokemon || []).length; }
+            if (rk) { pets.push(...normalizeRk(rk)); srcMeta.value.rk.count = (rk.pets || []).length; }
+            if (aq) { pets.push(...normalizeAq(aq)); srcMeta.value.aq.count = (aq.pets || []).length; }
+            if (!pets.length) {
                 state.value = 'error';
-                errMsg.value = lastErr || '网络错误';
+                errMsg.value = '三个数据源都拉取失败，请检查网络后重试';
                 return;
             }
-            list.value = data.pokemon;
-            updated.value = data.updated || '';
+            allPets.value = pets;
             state.value = 'ok';
-            // 今日精灵：日期字符串做种子，稳定可复现
             reseedDaily();
             // 静默加载图鉴数据，扫描【原型】字段构建「已参照」名单
             try {
@@ -381,30 +523,33 @@ createApp({
         }
         function backToToday() {
             curIdx.value = dailyIdx.value;
-            tipSeed.value = hashStr('daily-' + todayStr());
+            tipSeed.value = hashStr('daily-' + todayStr() + '-' + sig());
             artFallbackUsed.value = false;
         }
         function reshuffleTips() {
             tipSeed.value = (Math.random() * 4294967296) >>> 0;
         }
+        function toggleSrc(s) {
+            if (!s.loaded) return;
+            srcOn.value[s.key] = !srcOn.value[s.key];
+        }
 
-        watch(showRef, v => {
-            localStorage.setItem('vowmon_daily_show', v ? 'true' : 'false');
-        });
-        watch(skipRef, v => {
-            localStorage.setItem('vowmon_daily_skip_ref', v ? 'true' : 'false');
-            reseedDaily();
-        });
+        watch(showRef, v => { localStorage.setItem('vowmon_daily_show', v ? 'true' : 'false'); });
+        watch(skipRef, v => { localStorage.setItem('vowmon_daily_skip_ref', v ? 'true' : 'false'); reseedDaily(); });
+        watch(srcOn, v => { localStorage.setItem('vowmon_daily_src', JSON.stringify(v)); reseedDaily(); }, { deep: true });
         window.addEventListener('storage', e => {
             if (e.key === 'vowmon_daily_show') showRef.value = localStorage.getItem(e.key) !== 'false';
             if (e.key === 'vowmon_daily_skip_ref') skipRef.value = localStorage.getItem(e.key) !== 'false';
+            if (e.key === 'vowmon_daily_src') {
+                try { srcOn.value = JSON.parse(localStorage.getItem(e.key) || '{}'); } catch (e2) { /* ignore */ }
+            }
         });
 
         onMounted(loadData);
         return {
-            state, errMsg, count, updated, mon, isDaily, showRef, skipRef, excludedCount,
-            artUrl, statRows, tips,
-            typeColor, artFallback, loadData, randomOne, backToToday, reshuffleTips
+            state, errMsg, showRef, skipRef, srcOn, srcMeta, srcList,
+            mon, isDaily, tips, excludedCount,
+            typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc
         };
     }
 }).mount('#app');

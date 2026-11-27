@@ -19,7 +19,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 - **性能**：异色图空闲预载（点「异色」从等 15 秒下载变成 5ms 秒切）；图片上传自动生成 WebP，反代优先返回；PWA Service Worker 离线缓存。
 - **视觉**：导航两级下拉（档案改名、工具 FA 图标统一）、首页三组卡片 + 统计条 + 快速搜索、系别筛选折叠、后台侧栏三组、后台审计日志。
 - **移动端**：全站 41 页 × 390/360px 审计，零横向溢出；安全区适配、触控目标 ≥ 20px。
-- **每日精灵灵感**（`tools/daily-pokemon.html`）：从 1025 只宝可梦里按日期抽一只做参考卡片（中文名/属性/地区/种族值/最新世代图鉴介绍），配随机灵感提示帮助原创誓约精灵；可开「盲盒模式」隐藏参考只看提示。数据由 `_tools/gen-pokemon-data.mjs` 从 PokéAPI 一次性抓取（不接 AI、不实时调外部站点），纯静态可复现。
+- **每日精灵灵感**（`tools/daily-pokemon.html`）：**三源合一卡**——宝可梦 1025 只 / 洛克王国世界 644 只 / 奥奇传说 1606 只，卡片顶部有数据源开关（决定随机池）。含中文名/属性（洛克用源站官方色）/地区/种族值/**进化链可视化**/最新世代图鉴介绍，配随机灵感提示帮助原创誓约精灵；可开「盲盒模式」隐藏参考只看提示；「排除已参照」读取图鉴 vow 的【原型】字段自动剔除已写过的精灵。数据由 `_tools/gen-{pokemon,rock,aoqi}-data.mjs` 一次性抓取（不接 AI、不实时调外部站点），纯静态可复现。
 - **同步安全**：push/pull 差异预览弹窗（每条可勾选）+ 三方合并防回滚；审计快照可恢复。
 
 ### 问题 → 修复前后对照
@@ -415,7 +415,9 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 | `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体） |
 | `characters-data.json` | `characters` → `allCharactersData`（书内档案：御兽人物） |
 | `lore-data.json` | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块） |
-| `pokemon-data.json` | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
+| `pokemon-data.json` | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
+| `rock-data.json` | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/4 维种族值/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成 |
+| `aoqi-data.json` | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取，仅名字+立绘+出处链接；官网属性是 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成 |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
 

@@ -186,7 +186,7 @@ function pickName(species) {
     };
 }
 
-function buildEntry(id, species, poke) {
+function buildEntry(id, species, poke, evoIds) {
     if (species.__empty || poke.__empty) return null;
     const gen = GENERATIONS.find(g => g.key === (species.generation && species.generation.name));
     const types = (poke.types || [])
@@ -216,8 +216,53 @@ function buildEntry(id, species, poke) {
         w: poke.weight,          // 百克，展示时 /10 = 千克
         dex: dex.text,
         dexVer: dex.ver,
-        dexLang: dex.lang
+        dexLang: dex.lang,
+        evo: evoIds || []        // 进化链上所有成员的 species id（按进化顺序）
     };
+}
+
+/* ------------------------- 进化链 ------------------------- */
+
+// 从缓存 species 收集进化链 URL，逐条抓取并摊平成成员 id 列表（DFS 序）
+function flattenChain(node, out, seen) {
+    if (!node || seen.has(node.species.name)) return;
+    seen.add(node.species.name);
+    const m = node.species.url.match(/\/(\d+)\/?$/);
+    if (m) out.push(parseInt(m[1], 10));
+    for (const next of (node.evolves_to || [])) flattenChain(next, out, seen);
+}
+
+async function buildEvoMap(speciesArr) {
+    const urlSet = new Set();
+    for (const s of speciesArr) {
+        if (s && !s.__empty && s.evolution_chain && s.evolution_chain.url) {
+            urlSet.add(s.evolution_chain.url);
+        }
+    }
+    console.log('共 ' + urlSet.size + ' 条进化链，开始抓取…');
+    const urls = [...urlSet];
+    const chainOf = await pool(urls, async (url) => {
+        const cid = url.match(/\/(\d+)\/?$/)[1];
+        let obj = readCache('chain', cid);
+        if (!obj) {
+            try {
+                obj = await fetchJson(url);
+                writeCache('chain', cid, obj);
+            } catch (e) {
+                console.warn('chain ' + cid + ' 失败: ' + e.message);
+                obj = { __empty: true };
+            }
+        }
+        return obj;
+    });
+    const map = new Map();   // species url -> [ids]
+    for (let i = 0; i < urls.length; i++) {
+        if (chainOf[i].__empty) continue;
+        const out = [];
+        flattenChain(chainOf[i].chain, out, new Set());
+        map.set(urls[i], out);
+    }
+    return map;
 }
 
 /* ------------------------- 主流程 ------------------------- */
@@ -258,9 +303,13 @@ const pokeArr = await pool(ids, async (id) => {
     return obj;
 });
 
+const evoMap = await buildEvoMap(speciesArr);
+
 const pokemon = [];
 for (let i = 0; i < ids.length; i++) {
-    const entry = buildEntry(ids[i], speciesArr[i], pokeArr[i]);
+    const sp = speciesArr[i];
+    const evoIds = (sp && !sp.__empty && sp.evolution_chain && evoMap.get(sp.evolution_chain.url)) || [];
+    const entry = buildEntry(ids[i], sp, pokeArr[i], evoIds);
     if (entry) pokemon.push(entry);
 }
 // 补抓失败的（__empty 的）
