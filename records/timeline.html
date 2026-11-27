@@ -88,11 +88,16 @@
 <link rel="stylesheet" href="../css/responsive.css?v=20261126u">
 <script>
 const { createApp, ref, computed } = Vue;
-VowmonData.ready(['individuals','characters']).then(function () {
+VowmonData.ready(['individuals','characters','vows']).then(function () {
     createApp({
         setup() {
             const individuals = ref((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []);
             const characters = ref((typeof allCharactersData !== 'undefined' && allCharactersData) || []);
+            const indName = i => {
+                if (!i) return '';
+                const sp = (typeof allVowsData !== 'undefined' && allVowsData || []).find(v => v.id === i.speciesId);
+                return i.nickname || (sp && sp.name) || i.speciesId || i.id || '';
+            };
             VowmonData.onChange('individuals', d => { individuals.value = (d && d.individuals) || []; });
             VowmonData.onChange('characters', d => { characters.value = (d && d.characters) || []; });
             const kind = ref('all');
@@ -112,7 +117,7 @@ VowmonData.ready(['individuals','characters']).then(function () {
                             const text = [m.title, m.note].join(' ');
                             out.push({
                                 chapter: m.chapter || '', date: m.date || '', title: m.title || '', note: m.note || '',
-                                source: label + ' · ' + (item.name || item.id || ''), category: categoryOf(text), type: type,
+                                source: label + ' · ' + (label === '精灵' ? indName(item) : (item.name || item.id || '')), category: categoryOf(text), type: type,
                                 sortKey: chapterNum(m.chapter)
                             });
                         });

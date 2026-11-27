@@ -14,13 +14,14 @@ function normalizeSkill(s) {
     return o;
 }
 
-VowmonData.ready(['bloodlineSkills', 'individuals']).then(function () {
+VowmonData.ready(['bloodlineSkills', 'individuals', 'vows']).then(function () {
 
 const app = createApp({
     setup() {
         const config = ref({ token: '', owner: '', dataRepos: 'vowmon_data' });
         const skills = ref([]);
         const individuals = ref([]);
+        const vows = ref((typeof allVowsData !== 'undefined' && allVowsData) || []);
         const families = ref({});
         const familyOptions = computed(() => Object.keys(families.value));
         const activeFamily = ref('');
@@ -74,7 +75,8 @@ const app = createApp({
             const seen = {};
             const out = [];
             pool.forEach(p => {
-                const name = String((p.nickname && String(p.nickname).trim()) || (p.speciesId ? '#' + p.speciesId : '')).trim();
+                const sp = (vows.value || []).find(v => v.id === p.speciesId);
+                const name = String((p.nickname && String(p.nickname).trim()) || (sp && sp.name) || (p.speciesId ? '#' + p.speciesId : p.id)).trim();
                 if (!name || seen[name]) return;
                 seen[name] = true;
                 const fam = String((p.taxonomy && p.taxonomy.family) || '');

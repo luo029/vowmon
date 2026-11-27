@@ -130,21 +130,20 @@ VowmonData.ready(['vows','individuals','bloodlineSkills']).then(function () {
             const individuals = ref((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []);
             VowmonData.onChange('individuals', d => { individuals.value = (d && d.individuals) || []; });
             const indId = ref((individuals.value[0] || {}).id || '');
-            const stoneKey = ref('mutation');
             const ind = computed(() => individuals.value.find(i => i.id === indId.value) || null);
             const speciesOf = i => vows.value.find(v => v.id === (i && i.speciesId)) || {};
             const indName = i => !i ? '' : (i.nickname || speciesOf(i).name || i.speciesId || i.id);
-            // 个体档案已记录的血脉作为默认选中项
-            watch(indId, id => {
-                const i = individuals.value.find(x => x.id === id);
-                if (i && i.bloodline) {
-                    const key = String(i.bloodline).includes('异变') ? 'mutation'
-                        : String(i.bloodline).includes('黑暗') ? 'dark'
-                        : String(i.bloodline).includes('光明') ? 'light'
-                        : String(i.bloodline).includes('属性') ? 'attribute' : 'mutation';
-                    stoneKey.value = key;
-                }
-            });
+            // 个体档案已记录的血脉 → 血脉之石（初始值也生效，不只是切换时）
+            const bloodlineKeyOf = i => {
+                const b = String((i && i.bloodline) || '');
+                if (b.includes('异变')) return 'mutation';
+                if (b.includes('黑暗')) return 'dark';
+                if (b.includes('光明')) return 'light';
+                if (b.includes('属性')) return 'attribute';
+                return 'mutation';
+            };
+            const stoneKey = ref(bloodlineKeyOf(ind.value));
+            watch(ind, i => { stoneKey.value = bloodlineKeyOf(i); });
             const stone = computed(() => bloodlines.find(t => t.key === stoneKey.value) || null);
             const families = computed(() => (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData) || {});
             const familyName = computed(() => speciesOf(ind.value).taxonomy && speciesOf(ind.value).taxonomy.family ? speciesOf(ind.value).taxonomy.family + '科' : '');

@@ -307,7 +307,7 @@
                     <div class="vow-row">
                         <template v-if="vowsOf(item).length">
                             <template v-for="p in vowsOf(item).slice(0, 5)" :key="p.id">
-                                <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="p.nickname" :title="p.nickname">
+                                <img v-if="speciesImageOf(p)" :src="speciesImageOf(p)" :alt="indLabel(p)" :title="indLabel(p)">
                             </template>
                             <span class="vow-more" v-if="(item.vowIds || []).length > 5">+{{ (item.vowIds || []).length - 5 }}</span>
                         </template>
@@ -542,7 +542,7 @@
                      @click="toggleVow(p)">
                     <div class="item-name">
                         <i class="fa-solid" :class="form.vowIds.includes(p.id) ? 'fa-square-check' : 'fa-square'" :style="form.vowIds.includes(p.id) ? 'color:#38a169;' : 'color:#cbd5e0;'"></i>
-                        {{ p.nickname }}
+                        {{ indLabel(p) }}
                     </div>
                     <div class="item-desc">{{ speciesLabel(p.speciesId) }}</div>
                 </div>

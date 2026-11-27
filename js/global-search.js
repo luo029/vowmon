@@ -127,10 +127,15 @@
             out.push({ cat: 'item', icon: 'fa-box', title: i.name, sub: (i.kind || '') + ' · ' + (i.id || ''),
                 href: ROOT + 'reference/items.html?id=' + encodeURIComponent(i.id || i.name), key: i.id });
         });
+        var vowMap = {};
+        (arr(d.vows.vows)).forEach(function (v) { vowMap[v.id] = v; });
         (arr(d.individuals.individuals)).forEach(function (i) {
-            if (!hit([i.id, i.nickname, i.speciesId, i.personality].join(' '))) return;
-            out.push({ cat: 'individual', icon: 'fa-user-paw', title: i.nickname || i.speciesId || i.id,
-                sub: '御兽精灵 · ' + (i.id || ''), href: ROOT + 'records/individuals.html?id=' + encodeURIComponent(i.id), key: i.id });
+            var speciesName = (vowMap[i.speciesId] || {}).name || '';
+            var indName = i.nickname || speciesName || i.speciesId || i.id;
+            if (!hit([i.id, i.nickname, i.speciesId, speciesName, i.personality].join(' '))) return;
+            out.push({ cat: 'individual', icon: 'fa-user-paw', title: indName,
+                sub: '御兽精灵 · ' + (speciesName ? speciesName + ' · ' : '') + (i.id || ''),
+                href: ROOT + 'records/individuals.html?id=' + encodeURIComponent(i.id), key: i.id });
         });
         (arr(d.characters.characters)).forEach(function (c) {
             if (!hit([c.name, c.title, c.faction, c.bio].join(' '))) return;

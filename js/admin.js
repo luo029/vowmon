@@ -1084,7 +1084,7 @@ createApp({
                         local: vows.value,
                         remote: remoteBag && Array.isArray(remoteBag.vows) ? remoteBag.vows : [],
                         key: v => v.id,
-                        name: v => v.name || v.nickname || v.id
+                        name: v => v.name || v.id
                     }]
                 });
                 if (!res.ok) {
@@ -1140,7 +1140,7 @@ createApp({
                         local: vows.value,
                         remote: bag.vows,
                         key: v => v.id,
-                        name: v => v.name || v.nickname || v.id
+                        name: v => v.name || v.id
                     }]
                 });
                 if (!res.ok) {

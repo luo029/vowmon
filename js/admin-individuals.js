@@ -145,7 +145,7 @@ const app = createApp({
             nature: '', personality: '', traits: [], skills: [],
             bloodline: '无', bloodlineSkill: '', bloodlineAttr: '',
             level: 1, ownerId: '', items: [], shiny: false,
-            rankFlags: { quan: true, wei: false, li: true },
+            rankFlags: { quan: false, wei: true, li: true },
             scopeNote: '',
             taxonomy: { domain: '', kingdom: '', phylum: '', class: '', order: '', family: '', genus: '', species: '' },
             contractDate: '', contractChapter: '', milestones: [],

@@ -256,7 +256,7 @@ VowmonData.ready(['vows','individuals','characters','stages']).then(function () 
                         (item.milestones || []).forEach(m => {
                             const text = [m.title, m.note, m.chapter].join(' ');
                             if (AuthorityConfig.isAuthorityEvent(text)) {
-                                out.push({ chapter: m.chapter || '', title: m.title || '', date: m.date || '', note: m.note || '', source: source + ' · ' + (item.name || item.id || '') });
+                                out.push({ chapter: m.chapter || '', title: m.title || '', date: m.date || '', note: m.note || '', source: source + ' · ' + (source === '精灵' ? indName(item) : (item.name || item.id || '')) });
                             }
                         });
                     });

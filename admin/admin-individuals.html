@@ -295,7 +295,7 @@
                     <div class="top">
                         <span class="stage-badge">{{ stageName(item.level) }}</span>
                         <span class="lv-badge font-num">Lv.{{ item.level }}</span>
-                        <img v-if="speciesImageOf(item)" :src="speciesImageOf(item)" :alt="item.nickname">
+                        <img v-if="speciesImageOf(item)" :src="speciesImageOf(item)" :alt="displayName(item)">
                         <i v-else class="fa-solid fa-paw no-img"></i>
                     </div>
                     <div class="body">

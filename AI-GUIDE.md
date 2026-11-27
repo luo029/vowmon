@@ -278,6 +278,7 @@ diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
 对战引擎   node _tools/test-battle.mjs
 异色预载   node _tools/test-shiny-preload.mjs（图片基址指本地 1×1 fixture，测"点击前已预载/秒切/只预载1张"）
 手机审计   node _tools/audit-mobile.mjs（41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
+功能 E2E   node _tools/test-site-e2e.mjs（21 项：筛选/排序/异色/Ctrl+K/个体源/血脉默认/审计等）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
 iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.title（PASS-click-open / FAIL-…）
            _tools/test-frontend-check.html?page=xxx.html（前台挂载检查，查 {{ }} 残留）
