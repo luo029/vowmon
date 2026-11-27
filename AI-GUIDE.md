@@ -130,7 +130,7 @@ vowmon/
 | 精灵图鉴 | `dex/vowdex.html` | 卡片墙，搜索+阶数/形态/属性多选筛选，分页 30；**异色悬停轮播**（有异色的卡悬停淡入异色图不放大，关动画只显示第一张） | 页内 Vue |
 | 天地图鉴 | `dex/realm-dex.html` | 按 `realmTags`（权柄精灵/遥世精灵/伙伴精灵/晚熟精灵，文案来自 `realm-data.json`）分类的图鉴视图 | `realm-data.json` |
 | 精灵列表 | `dex/list.html` | 表格视图，自定义显示列、列排序、多条件筛选；属性列用胶囊（图标+色来自 type-config） | 页内 Vue |
-| 精灵详情 | `dex/vow-detail.html?id=` | 洛克王国 wiki 风：浮动展示台（纯 transform 动画）+ 种族值条 + 资料（含出现地区 region、taxonomy 分类）+ 特性卡 + 进化链 + 系别克制卡；顶部上/下一只芯片 | 页内 Vue |
+| 精灵详情 | `dex/vow-detail.html?id=` | 洛克王国 wiki 风：浮动展示台（纯 transform 动画）+ 种族值条 + 资料（含出现地区 region、taxonomy 分类）+ 特性卡 + 进化链 + 系别克制卡；顶部上/下一只芯片；**异色图在主图落地后空闲预载当前一只**（只预载 1 张，避免首屏抢带宽，点「异色」近乎秒切） | 页内 Vue |
 | 技能图鉴 | `reference/skills.html` | 表格 + 四组筛选（类型/能耗/标签/系别，组内 OR 组间 AND），能耗与系别从数据自动派生，标签只显示实际用到的；技能名可点进详情 | `tag-config.js` |
 | 技能详情 | `reference/skill-detail.html?id=` | 左列技能卡+学习方式统计，右列可学精灵网格（全部/自学/技能石 Tab，`learners[]` / `stoneLearners[]`） | `skills-data.json` |
 | 特性大全 | `reference/traits.html` | 表格 + 按属性筛选，列出拥有者（`pokemons[]` / `hiddenPokemons[]`） | `trait-table` 子组件 |
@@ -259,6 +259,7 @@ diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
            node _tools/test-diff-modal.mjs（桌面 E2E 15 项）
            node _tools/test-diff-modal-mobile.mjs（390/360px 移动端 6 项）
 对战引擎   node _tools/test-battle.mjs
+异色预载   node _tools/test-shiny-preload.mjs（图片基址指本地 1×1 fixture，测"点击前已预载/秒切/只预载1张"）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
 iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.title（PASS-click-open / FAIL-…）
            _tools/test-frontend-check.html?page=xxx.html（前台挂载检查，查 {{ }} 残留）

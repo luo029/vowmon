@@ -424,7 +424,37 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
 
             /* ---------------- 展示台：属性色背景 + 异色切换 ---------------- */
             const isShiny = ref(false);
-            watch(vow, () => { isShiny.value = false; });   // 切换精灵时回到普通形态
+            /* 空闲预载当前精灵的异色图：等主图落地、浏览器空闲后才下载，
+               避免抢首屏带宽；这样点「异色」时大概率已缓存、秒切。
+               每只精灵约 216KB，只预载当前这一只，不做全图鉴批量预载。 */
+            let shinyPreloadToken = 0;
+            const preloadShinyWhenIdle = () => {
+                const token = ++shinyPreloadToken;
+                const run = () => {
+                    if (token !== shinyPreloadToken || !vow.value) return;
+                    const list = vow.value.shiny;
+                    if (!Array.isArray(list) || !list.length) return;
+                    const img = new Image();
+                    img.decoding = 'async';
+                    img.src = getImgUrl(list[0]);
+                };
+                const afterMain = () => {
+                    if (token !== shinyPreloadToken) return;
+                    if (typeof window.requestIdleCallback === 'function') {
+                        window.requestIdleCallback(run, { timeout: 2500 });
+                    } else {
+                        setTimeout(run, 400);
+                    }
+                };
+                const mainImg = document.querySelector('.vow-figure img');
+                if (mainImg && !mainImg.complete) {
+                    mainImg.addEventListener('load', afterMain, { once: true });
+                    mainImg.addEventListener('error', afterMain, { once: true });
+                } else {
+                    setTimeout(afterMain, mainImg ? 0 : 400);
+                }
+            };
+            watch(vow, () => { isShiny.value = false; preloadShinyWhenIdle(); });   // 切换精灵时回到普通形态，并预载新的异色图
             const displayImg = computed(() => {
                 if (!vow.value) return '';
                 if (isShiny.value && vow.value.shiny && vow.value.shiny.length) {
@@ -667,6 +697,7 @@ VowmonData.ready(['vows', 'bloodlineSkills']).then(function () {
                 updateBodyClass();
                 if (!urlId) notFound.value = true;
                 setTimeout(() => { if (urlId && !vow.value) notFound.value = true; }, 0);
+                preloadShinyWhenIdle();
             });
 
             return {
