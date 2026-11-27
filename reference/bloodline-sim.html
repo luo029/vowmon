@@ -67,13 +67,13 @@
 
     <section class="sec">
         <h2><i class="fa-solid fa-sliders"></i> 共鸣设置</h2>
-        <div class="sub">血脉技能来自后台「血脉技能」页的族群技能包（families），族群由精灵分类的「科」决定。</div>
+        <div class="sub">选择书内正式精灵（个体）；血脉之石默认读取档案已记录的血脉，也可切换推演。族群技能包由种族分类的「科」决定。</div>
         <div class="pick">
             <div class="field">
-                <label>选择精灵</label>
-                <select v-model="vowId">
+                <label>选择御兽精灵（书内个体）</label>
+                <select v-model="indId">
                     <option value="">— 请选择 —</option>
-                    <option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}（{{ (v.types||[]).join('/') }}）</option>
+                    <option v-for="i in individuals" :key="i.id" :value="i.id">{{ indName(i) }} · LV{{ i.level || 1 }}{{ i.bloodline ? ' · ' + i.bloodline + '血脉' : '' }}</option>
                 </select>
             </div>
             <div class="field">
@@ -88,11 +88,11 @@
             </div>
         </div>
 
-        <div class="result" v-if="vow && stone">
+        <div class="result" v-if="ind && stone">
             <div class="figure">
-                <img :src="imgUrl(vow.image)" :alt="vow.name">
-                <h3>{{ vow.name }}</h3>
-                <div class="types">{{ (vow.types||[]).join(' · ') }} ｜ {{ vow.taxonomy && vow.taxonomy.family ? vow.taxonomy.family + '科' : '未分类' }}</div>
+                <img :src="imgUrl(speciesOf(ind).image)" :alt="indName(ind)">
+                <h3>{{ indName(ind) }}</h3>
+                <div class="types">{{ (speciesOf(ind).types||[]).join(' · ') }} ｜ {{ speciesOf(ind).taxonomy && speciesOf(ind).taxonomy.family ? speciesOf(ind).taxonomy.family + '科' : '未分类' }}</div>
             </div>
             <div class="info">
                 <div class="banner" :style="{background:'linear-gradient(135deg,'+stone.color+','+darken(stone.color)+')'}">
@@ -103,7 +103,7 @@
                     <div class="b"><h4>形态变化</h4><p>{{ stone.form }}</p></div>
                     <div class="b"><h4>战力 / 技能</h4><p>{{ stone.power }}</p><div class="skills" v-if="skillList.length"><span class="sk" v-for="(s,i) in skillList" :key="i">{{ s.type }} · {{ s.name }}</span></div></div>
                 </div>
-                <div class="warn"><i class="fa-solid fa-triangle-exclamation"></i> <b>血脉不渡克制。</b> {{ vow.name }} 的属性是 {{ (vow.types||[]).join(' / ') || '未记录' }}，共鸣赋予的是形态与技能，不改变克制关系——即使拥有别的血脉，依旧按原属性被克制。</div>
+                <div class="warn"><i class="fa-solid fa-triangle-exclamation"></i> <b>血脉不渡克制。</b> {{ indName(ind) }} 的属性是 {{ (speciesOf(ind).types||[]).join(' / ') || '未记录' }}，共鸣赋予的是形态与技能，不改变克制关系——即使拥有别的血脉，依旧按原属性被克制。</div>
                 <div class="proto">{{ stone.alias }}　·　{{ stone.prototype }}</div>
             </div>
         </div>
@@ -119,23 +119,38 @@
 <script src="../js/bloodline-config.js?v=20261128"></script>
 <link rel="stylesheet" href="../css/responsive.css?v=20261126u">
 <script>
-const { createApp, ref, computed } = Vue;
-VowmonData.ready(['vows','bloodlineSkills']).then(function () {
+const { createApp, ref, computed, watch } = Vue;
+VowmonData.ready(['vows','individuals','bloodlineSkills']).then(function () {
     createApp({
         setup() {
             const bloodlines = BloodlineConfig.TYPES;
             const verse = BloodlineConfig.VERSE;
             const vows = ref(VowmonUtils.normalizeAll(allVowsData));
             VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
-            const vowId = ref((vows.value[0] || {}).id || '');
+            const individuals = ref((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []);
+            VowmonData.onChange('individuals', d => { individuals.value = (d && d.individuals) || []; });
+            const indId = ref((individuals.value[0] || {}).id || '');
             const stoneKey = ref('mutation');
-            const vow = computed(() => vows.value.find(v => v.id === vowId.value) || null);
+            const ind = computed(() => individuals.value.find(i => i.id === indId.value) || null);
+            const speciesOf = i => vows.value.find(v => v.id === (i && i.speciesId)) || {};
+            const indName = i => !i ? '' : (i.nickname || speciesOf(i).name || i.speciesId || i.id);
+            // 个体档案已记录的血脉作为默认选中项
+            watch(indId, id => {
+                const i = individuals.value.find(x => x.id === id);
+                if (i && i.bloodline) {
+                    const key = String(i.bloodline).includes('异变') ? 'mutation'
+                        : String(i.bloodline).includes('黑暗') ? 'dark'
+                        : String(i.bloodline).includes('光明') ? 'light'
+                        : String(i.bloodline).includes('属性') ? 'attribute' : 'mutation';
+                    stoneKey.value = key;
+                }
+            });
             const stone = computed(() => bloodlines.find(t => t.key === stoneKey.value) || null);
             const families = computed(() => (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData) || {});
-            const familyName = computed(() => vow.value && vow.value.taxonomy && vow.value.taxonomy.family ? vow.value.taxonomy.family + '科' : '');
+            const familyName = computed(() => speciesOf(ind.value).taxonomy && speciesOf(ind.value).taxonomy.family ? speciesOf(ind.value).taxonomy.family + '科' : '');
             const group = computed(() => families.value[familyName.value] || null);
             const skillList = computed(() => {
-                if (!stone.value || !vow.value) return [];
+                if (!stone.value || !ind.value) return [];
                 if (stone.value.key === 'attribute' && group.value) return group.value.skills || [];
                 if (stone.value.key === 'attribute') {
                     const all = (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || [];
@@ -158,7 +173,7 @@ VowmonData.ready(['vows','bloodlineSkills']).then(function () {
                 const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
                 return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
             };
-            return { bloodlines, verse, vows, vowId, stoneKey, vow, stone, skillList, darken, imgUrl: getImgUrl };
+            return { bloodlines, verse, vows, individuals, indId, stoneKey, ind, stone, skillList, indName, speciesOf, darken, imgUrl: getImgUrl };
         }
     }).mount('#app');
 });

@@ -127,9 +127,9 @@ vowmon/
 | 页面 | URL | 功能要点 | 关键文件 |
 |---|---|---|---|
 | 首页 | `index.html` | Hero 横幅 + 三组入口卡（图鉴与资料 / 世界观 / 研究工具），卡片下挂小字快捷链接 | 静态 |
-| 权柄看板 | `world/authority.html` | 力位权三律、权柄沙盘（等级→阶元→权限/代价）、权柄循环五步、三大机制、书内纪事 | `authority-config.js` |
+| 权柄看板 | `world/authority.html` | 力位权三律、权柄沙盘（**选书内御兽精灵个体**，图鉴仅取种族图/名）、权柄循环五步、三大机制、书内纪事 | `authority-config.js` |
 | 阶元路径 | `world/ranks-path.html` | 等级轴联动精灵八阶/御兽师八阶/权限/联盟名号，两条铁律 | `authority-config.js` + `StageConfig` |
-| 血脉共鸣模拟器 | `reference/bloodline-sim.html` | 选精灵+血脉之石→形态/技能/克制不变演示，族群技能包联动 | `bloodline-config.js` |
+| 血脉共鸣模拟器 | `reference/bloodline-sim.html` | **选书内个体**（默认读档案已记录的血脉）+ 血脉之石→形态/技能/克制不变演示 | `bloodline-config.js` |
 | 地区形态对照 | `dex/region-forms.html` | 按进化链/物种聚合，按地区筛选并排对照形态 | `region` / `form` 字段 |
 | 故事时间线 | `records/timeline.html` | 按章节串联契约/进化/权柄事件，支持分类筛选 | 个体+人物 `milestones` |
 | 精灵对比器 | `dex/compare.html` | 并排六维雷达图、总和、属性、身高体重对比 | 页内 SVG |
@@ -277,6 +277,7 @@ diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
            node _tools/test-diff-modal-mobile.mjs（390/360px 移动端 6 项）
 对战引擎   node _tools/test-battle.mjs
 异色预载   node _tools/test-shiny-preload.mjs（图片基址指本地 1×1 fixture，测"点击前已预载/秒切/只预载1张"）
+手机审计   node _tools/audit-mobile.mjs（41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
 iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.title（PASS-click-open / FAIL-…）
            _tools/test-frontend-check.html?page=xxx.html（前台挂载检查，查 {{ }} 残留）
@@ -308,6 +309,8 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 ---
 
 ## 11. 御兽世界设定观（世界观正典）
+
+> **重要概念区分**：**御兽精灵（individuals-data.json 的个体）** 才是书里正式存在的精灵，权柄 / 血脉 / 契约状态等只属于个体；**精灵图鉴（vow-data.json）** 只是种族图谱，展示所有可能的精灵，不承载个体属性。两者靠 `speciesId` 关联。做功能时先想清楚数据属于哪一层——把权柄挂在图鉴种族上是概念错误（曾发生过，现已修正）。
 
 > 以下内容是**小说的世界观设定**，站点的数据结构、页面、文案全部围绕它构建。
 > 正文原文存于 `lore-data.json`（382 块），本节是结构化摘要 + AI 理解用的解读。

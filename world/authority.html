@@ -41,7 +41,8 @@
         .field select:focus,.field input:focus{border-color:var(--accent)}
         input[type=range]{width:100%;accent-color:var(--accent)}
         .switch{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none}
-        .switch input{width:18px;height:18px;accent-color:var(--accent)}
+        .switch{padding:8px 0;min-height:34px}
+        .switch input{width:20px;height:20px;accent-color:var(--accent)}
         .result{border:1px solid #ffe3d3;background:linear-gradient(135deg,#fff9f5,#fff);border-radius:16px;padding:22px}
         .result .badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
         .badge{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--ink)}
@@ -107,10 +108,10 @@
         <div class="sim">
             <div class="ctl">
                 <div class="field">
-                    <label>选择精灵</label>
+                    <label>选择御兽精灵（书内个体）</label>
                     <select v-model="selectedId">
                         <option value="">— 请选择 —</option>
-                        <option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}</option>
+                        <option v-for="i in individuals" :key="i.id" :value="i.id">{{ indName(i) }} · LV{{ i.level || 1 }}{{ i.ownerId ? ' · ' + ownerName(i.ownerId) : '' }}</option>
                     </select>
                 </div>
                 <div class="field">
@@ -118,9 +119,14 @@
                     <input type="range" min="1" max="100" v-model.number="level">
                 </div>
                 <label class="switch"><input type="checkbox" v-model="hasAuthority"> 当前正在掌权</label>
-                <div v-if="selectedVow" style="border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fbfcfe">
-                    <img :src="imgUrl(selectedVow.image)" :alt="selectedVow.name" style="width:96px;height:96px;object-fit:contain">
-                    <div style="font-weight:700;color:var(--ink);margin-top:6px">{{ selectedVow.name }}</div>
+                <div class="tip" v-if="authorityFromHistory && !hasAuthority" style="font-size:11px;color:var(--accent);line-height:1.6">
+                    <i class="fa-solid fa-circle-info"></i> 档案里程碑显示这只精灵曾夺权且未放权；勾选上方开关可查看掌权状态下的权限。
+                </div>
+                <div v-if="selectedInd" style="border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fbfcfe">
+                    <img v-if="speciesOf(selectedInd).image" :src="imgUrl(speciesOf(selectedInd).image)" :alt="indName(selectedInd)" style="width:96px;height:96px;object-fit:contain">
+                    <div style="font-weight:700;color:var(--ink);margin-top:6px">{{ indName(selectedInd) }}</div>
+                    <div style="font-size:11px;color:var(--ink-3);margin-top:3px">种族 · {{ speciesOf(selectedInd).name || selectedInd.speciesId }} ｜ 主人 · {{ ownerName(selectedInd.ownerId) }}</div>
+                    <div style="font-size:11px;color:var(--accent);margin-top:3px">血脉 · {{ selectedInd.bloodline || '未记录' }}</div>
                 </div>
             </div>
             <div class="result">
@@ -184,16 +190,17 @@
     </section>
 
     <section class="sec">
-        <h2><i class="fa-solid fa-list"></i> 在册精灵</h2>
-        <div class="sub">点击卡片带入上方沙盘；标记了权柄相关定位的精灵会显示角标。</div>
+        <h2><i class="fa-solid fa-list"></i> 在册御兽精灵</h2>
+        <div class="sub">书内正式精灵（个体）。点击卡片带入沙盘；图鉴只提供种族外形与基础资料，不承载权柄。</div>
         <div class="dex-grid">
-            <div class="vcard" v-for="v in vows" :key="v.id" :class="{on:selectedId===v.id}" @click="selectedId=v.id">
-                <img v-if="v.image" :src="imgUrl(v.image)" :alt="v.name">
-                <div class="nm">{{ v.name }}</div>
-                <div class="meta">{{ v.id }} · {{ stageOf(v) }}</div>
-                <div class="meta" v-if="(v.realmTags||[]).length" style="color:var(--accent)">{{ v.realmTags.join(' / ') }}</div>
+            <div class="vcard" v-for="i in individuals" :key="i.id" :class="{on:selectedId===i.id}" @click="selectedId=i.id">
+                <img v-if="speciesOf(i).image" :src="imgUrl(speciesOf(i).image)" :alt="indName(i)">
+                <div class="nm">{{ indName(i) }}</div>
+                <div class="meta">{{ i.id }} · LV{{ i.level || 1 }} · {{ StageConfig.stageName(i.level) }}</div>
+                <div class="meta" v-if="i.bloodline" style="color:var(--accent)">{{ i.bloodline }}</div>
             </div>
         </div>
+        <div class="empty" v-if="!individuals.length">书内档案还没有御兽精灵个体。可在后台「御兽精灵」里添加。</div>
     </section>
 </div>
 </div>
@@ -206,7 +213,7 @@
 <script src="../js/authority-config.js?v=20261128"></script>
 <link rel="stylesheet" href="../css/responsive.css?v=20261126u">
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, watch } = Vue;
 VowmonData.ready(['vows','individuals','characters','stages']).then(function () {
     createApp({
         setup() {
@@ -215,10 +222,30 @@ VowmonData.ready(['vows','individuals','characters','stages']).then(function () 
             const mechanisms = AuthorityConfig.MECHANISMS;
             const vows = ref(VowmonUtils.normalizeAll(allVowsData));
             VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
-            const selectedId = ref((vows.value[0] || {}).id || '');
-            const selectedVow = computed(() => vows.value.find(v => v.id === selectedId.value) || null);
-            const level = ref(42);
+            const individuals = ref((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []);
+            VowmonData.onChange('individuals', d => { individuals.value = (d && d.individuals) || []; });
+            const characters = ref((typeof allCharactersData !== 'undefined' && allCharactersData) || []);
+            VowmonData.onChange('characters', d => { characters.value = (d && d.characters) || []; });
+            const selectedId = ref((individuals.value[0] || {}).id || '');
+            const selectedInd = computed(() => individuals.value.find(i => i.id === selectedId.value) || null);
+            const speciesOf = ind => vows.value.find(v => v.id === (ind && ind.speciesId)) || {};
+            // 昵称选填，未填回退种族名（与全站约定一致）
+            const indName = ind => !ind ? '' : (ind.nickname || speciesOf(ind).name || ind.speciesId || ind.id);
+            const ownerName = id => (characters.value.find(c => c.id === id) || {}).name || '未记录';
+            // 权柄状态：从个体里程碑推导；手动开关可覆盖做推演
+            const authorityFromHistory = computed(() => {
+                const ms = (selectedInd.value && selectedInd.value.milestones) || [];
+                return ms.some(m => /夺权|掌权|晋位|权柄/.test([m.title, m.note].join(' ')))
+                    && !ms.some(m => /放权/.test([m.title, m.note].join(' ')));
+            });
+            const level = ref(selectedInd.value ? (selectedInd.value.level || 1) : 1);
             const hasAuthority = ref(false);
+            // 换个体时等级与权柄状态跟随个体
+            watch(selectedId, id => {
+                const i = individuals.value.find(x => x.id === id);
+                level.value = i ? (i.level || 1) : 1;
+                hasAuthority.value = false;
+            });
             const levelStage = computed(() => StageConfig.stageName(level.value));
             const rank = computed(() => AuthorityConfig.RANKS.find(r => r.stage === levelStage.value) || null);
             const stageOf = v => v.stage || StageConfig.stageName(v.level || 1);
@@ -247,8 +274,9 @@ VowmonData.ready(['vows','individuals','characters','stages']).then(function () 
                 const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
                 return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
             };
-            return { laws, cycle, mechanisms, vows, selectedId, selectedVow, level, hasAuthority,
-                levelStage, rank, stageOf, events, imgUrl: getImgUrl };
+            return { laws, cycle, mechanisms, vows, individuals, selectedId, selectedInd, level, hasAuthority,
+                levelStage, rank, stageOf, events, indName, speciesOf, ownerName, authorityFromHistory,
+                StageConfig, imgUrl: getImgUrl };
         }
     }).mount('#app');
 });
