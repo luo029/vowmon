@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>血脉共鸣模拟器 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#9c36b5;--accent-soft:#f8f0fc;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#f8f0fc,#fff 65%);border:1px solid #eed4f5;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .verse{margin-top:16px;padding:12px 16px;background:#fff;border-left:4px solid var(--accent);border-radius:8px;color:#7b2c8f;font-size:13px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .sub{font-size:13px;color:var(--ink-3);margin-bottom:18px;line-height:1.7}
+        .pick{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+        .field label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
+        .field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--ink);background:#fff;outline:none}
+        .stones{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .stone{border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:.18s;background:#fbfcfe}
+        .stone:hover{transform:translateY(-2px)}
+        .stone.on{border-color:var(--c);background:#fff;box-shadow:0 5px 16px rgba(156,54,181,.12)}
+        .stone i{font-size:20px;color:var(--c);display:block;margin-bottom:6px}
+        .stone .nm{font-size:12px;font-weight:800;color:var(--ink)}
+        .stone .st{font-size:10px;color:var(--ink-3);margin-top:2px}
+        .result{display:grid;grid-template-columns:250px 1fr;gap:22px;margin-top:20px}
+        .figure{text-align:center;border:1px solid var(--line);border-radius:16px;padding:18px;background:linear-gradient(160deg,#faf5fc,#fff)}
+        .figure img{width:160px;height:160px;object-fit:contain}
+        .figure h3{font-size:18px;color:var(--ink);margin-top:8px}
+        .figure .types{font-size:12px;color:var(--ink-3);margin-top:4px}
+        .info .banner{border-radius:14px;padding:18px 20px;color:#fff;margin-bottom:16px}
+        .info .banner h3{font-size:18px;margin-bottom:6px}
+        .info .banner p{font-size:13px;line-height:1.8;opacity:.95}
+        .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .kv .b{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fbfcfe}
+        .kv h4{font-size:12px;color:var(--ink-3);margin-bottom:6px}
+        .kv p{font-size:13px;line-height:1.75}
+        .warn{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fff4ed;border:1px solid #ffd8c2;color:#a3400d;font-size:13px;line-height:1.75}
+        .skills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .sk{padding:6px 12px;border-radius:999px;background:#f3f0ff;border:1px solid #e5dfff;font-size:12px;font-weight:700;color:#5f3dc4}
+        .proto{margin-top:12px;font-size:11px;color:var(--ink-3)}
+        @media(max-width:900px){.pick,.result{grid-template-columns:1fr}.stones{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.kv{grid-template-columns:1fr}.figure img{width:120px;height:120px}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-gem"></i> 血脉共鸣模拟器</h1>
+        <p>精灵天生两条血脉：先天锁死主属性，后天四选一。御兽师手持对应的血脉之石，与精灵沉睡的后天血脉共鸣，唤醒力量、改变形态与技能。选择一只精灵、一颗血脉之石，看看会发生什么。</p>
+        <div class="verse"><span v-for="(v,i) in verse" :key="i">{{ v }}<br></span></div>
+    </div>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-sliders"></i> 共鸣设置</h2>
+        <div class="sub">血脉技能来自后台「血脉技能」页的族群技能包（families），族群由精灵分类的「科」决定。</div>
+        <div class="pick">
+            <div class="field">
+                <label>选择精灵</label>
+                <select v-model="vowId">
+                    <option value="">— 请选择 —</option>
+                    <option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}（{{ (v.types||[]).join('/') }}）</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>选择血脉之石</label>
+                <div class="stones">
+                    <div class="stone" v-for="t in bloodlines" :key="t.key" :class="{on:stoneKey===t.key}" :style="{'--c':t.color}" @click="stoneKey=t.key">
+                        <i :class="t.icon"></i>
+                        <div class="nm">{{ t.name }}</div>
+                        <div class="st">{{ t.stone }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="result" v-if="vow && stone">
+            <div class="figure">
+                <img :src="imgUrl(vow.image)" :alt="vow.name">
+                <h3>{{ vow.name }}</h3>
+                <div class="types">{{ (vow.types||[]).join(' · ') }} ｜ {{ vow.taxonomy && vow.taxonomy.family ? vow.taxonomy.family + '科' : '未分类' }}</div>
+            </div>
+            <div class="info">
+                <div class="banner" :style="{background:'linear-gradient(135deg,'+stone.color+','+darken(stone.color)+')'}">
+                    <h3><i :class="stone.icon"></i> {{ stone.name }} · {{ stone.stone }}</h3>
+                    <p>{{ stone.desc }}</p>
+                </div>
+                <div class="kv">
+                    <div class="b"><h4>形态变化</h4><p>{{ stone.form }}</p></div>
+                    <div class="b"><h4>战力 / 技能</h4><p>{{ stone.power }}</p><div class="skills" v-if="skillList.length"><span class="sk" v-for="(s,i) in skillList" :key="i">{{ s.type }} · {{ s.name }}</span></div></div>
+                </div>
+                <div class="warn"><i class="fa-solid fa-triangle-exclamation"></i> <b>血脉不渡克制。</b> {{ vow.name }} 的属性是 {{ (vow.types||[]).join(' / ') || '未记录' }}，共鸣赋予的是形态与技能，不改变克制关系——即使拥有别的血脉，依旧按原属性被克制。</div>
+                <div class="proto">{{ stone.alias }}　·　{{ stone.prototype }}</div>
+            </div>
+        </div>
+        <div class="empty" v-else style="text-align:center;padding:30px;color:#8593ad">请选择精灵与血脉之石以开始共鸣。</div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
+<script src="../js/vowmon-utils.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<script src="../js/bloodline-config.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['vows','bloodlineSkills']).then(function () {
+    createApp({
+        setup() {
+            const bloodlines = BloodlineConfig.TYPES;
+            const verse = BloodlineConfig.VERSE;
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
+            const vowId = ref((vows.value[0] || {}).id || '');
+            const stoneKey = ref('mutation');
+            const vow = computed(() => vows.value.find(v => v.id === vowId.value) || null);
+            const stone = computed(() => bloodlines.find(t => t.key === stoneKey.value) || null);
+            const families = computed(() => (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData) || {});
+            const familyName = computed(() => vow.value && vow.value.taxonomy && vow.value.taxonomy.family ? vow.value.taxonomy.family + '科' : '');
+            const group = computed(() => families.value[familyName.value] || null);
+            const skillList = computed(() => {
+                if (!stone.value || !vow.value) return [];
+                if (stone.value.key === 'attribute' && group.value) return group.value.skills || [];
+                if (stone.value.key === 'attribute') {
+                    const all = (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || [];
+                    return all.filter(s => s.name === '本心一击');
+                }
+                return [];
+            });
+            const darken = hex => {
+                const h = String(hex || '#9c36b5').replace('#','');
+                if (h.length !== 6) return '#7b2c8f';
+                const n = parseInt(h, 16);
+                const r = Math.max(0, (n >> 16) - 45), g = Math.max(0, ((n >> 8) & 255) - 45), b = Math.max(0, (n & 255) - 45);
+                return 'rgb(' + r + ',' + g + ',' + b + ')';
+            };
+            const getImgUrl = p => {
+                if (!p) return '';
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+                const cfg = window.VOWMON_SITE_CONFIG || {};
+                const base = String(cfg.imgCdnBase || '').replace(/\/+$/, '');
+                const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
+                return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
+            };
+            return { bloodlines, verse, vows, vowId, stoneKey, vow, stone, skillList, darken, imgUrl: getImgUrl };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>精灵对比器 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#5f3dc4;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#f3f0ff,#fff 65%);border:1px solid #e5dbff;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .pick{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+        .field label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
+        .field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--ink);background:#fff;outline:none}
+        .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+        .card{border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;gap:16px;align-items:center;background:#fbfcfe}
+        .card.b{border-color:#d3d9e8;background:#f8fafc}
+        .card img{width:110px;height:110px;object-fit:contain}
+        .card h3{font-size:19px;color:var(--ink)}
+        .card .meta{font-size:12px;color:var(--ink-3);margin:4px 0}
+        .total{font-size:13px;font-weight:800;color:var(--accent)}
+        .core{display:grid;grid-template-columns:420px 1fr;gap:24px;align-items:center;margin-top:22px}
+        .radar{width:100%;max-width:420px;height:auto}
+        .statrows{display:flex;flex-direction:column;gap:9px}
+        .srow{display:grid;grid-template-columns:46px 1fr 46px;gap:10px;align-items:center;font-size:12px}
+        .srow .lbl{color:var(--ink-3);text-align:center}
+        .bar{height:14px;border-radius:8px;background:#edf0f6;position:relative;overflow:hidden}
+        .bar .a{position:absolute;left:0;top:0;height:7px;background:#7048e8;border-radius:8px}
+        .bar .b{position:absolute;left:0;bottom:0;height:7px;background:#495057;border-radius:8px}
+        .cmp-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}
+        .cmp-table th,.cmp-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center}
+        .cmp-table th{color:var(--ink-3);font-size:11px;background:#fbfcfe}
+        .cmp-table td:first-child{text-align:left;color:var(--ink-3);width:130px}
+        .win{color:#c92a2a;font-weight:800}
+        @media(max-width:900px){.core{grid-template-columns:1fr}.radar{max-width:340px;margin:0 auto}}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.pick,.cards{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-arrows-left-right"></i> 精灵对比器</h1>
+        <p>并排对比两只精灵的六维种族值、总和、属性与克制面。紫色为 A，深色为 B，雷达图直观看出侧重差异。</p>
+    </div>
+    <section class="sec">
+        <h2><i class="fa-solid fa-user-group"></i> 选择对比对象</h2>
+        <div class="pick">
+            <div class="field"><label>A · 左侧</label><select v-model="idA"><option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}</option></select></div>
+            <div class="field"><label>B · 右侧</label><select v-model="idB"><option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}</option></select></div>
+        </div>
+        <div class="cards" v-if="a && b">
+            <div class="card"><img v-if="a.image" :src="imgUrl(a.image)" :alt="a.name"><div><h3>{{ a.name }}</h3><div class="meta">No.{{ a.id }} · {{ (a.types||[]).join(' / ') }}</div><div class="meta">{{ a.stage || '—' }} · {{ a.form || '—' }}</div><div class="total">总和 {{ sum(a) }}</div></div></div>
+            <div class="card b"><img v-if="b.image" :src="imgUrl(b.image)" :alt="b.name"><div><h3>{{ b.name }}</h3><div class="meta">No.{{ b.id }} · {{ (b.types||[]).join(' / ') }}</div><div class="meta">{{ b.stage || '—' }} · {{ b.form || '—' }}</div><div class="total">总和 {{ sum(b) }}</div></div></div>
+        </div>
+        <div class="core" v-if="a && b">
+            <svg class="radar" viewBox="0 0 400 340" aria-label="六维雷达图">
+                <g v-for="(lv,i) in [1,2,3,4,5]" :key="'grid'+i">
+                    <polygon :points="poly(160*lv/5)" fill="none" stroke="#e4e9f2" stroke-width="1"></polygon>
+                </g>
+                <line v-for="(k,i) in statKeys" :key="'axis'+i" x1="200" y1="170" :x2="point(160,i).x" :y2="point(160,i).y" stroke="#e4e9f2"></line>
+                <polygon :points="polyFor(a)" fill="rgba(112,72,232,.18)" stroke="#7048e8" stroke-width="2"></polygon>
+                <polygon :points="polyFor(b)" fill="rgba(73,80,87,.15)" stroke="#495057" stroke-width="2"></polygon>
+                <text v-for="(k,i) in statKeys" :key="'lab'+i" :x="point(196,i).x" :y="point(196,i).y" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#8593ad">{{ statLabel[k] }}</text>
+            </svg>
+            <div>
+                <div class="statrows">
+                    <div class="srow" v-for="k in statKeys" :key="k">
+                        <span class="lbl">{{ statLabel[k] }}</span>
+                        <div class="bar"><div class="a" :style="{width:pct(a,k)+'%'}"></div><div class="b" :style="{width:pct(b,k)+'%'}"></div></div>
+                        <span class="lbl">{{ stat(a,k) }} / {{ stat(b,k) }}</span>
+                    </div>
+                </div>
+                <table class="cmp-table">
+                    <tr><th></th><th style="color:#7048e8">{{ a.name }}</th><th style="color:#495057">{{ b.name }}</th></tr>
+                    <tr><td>属性</td><td>{{ (a.types||[]).join(' / ') }}</td><td>{{ (b.types||[]).join(' / ') }}</td></tr>
+                    <tr><td>总和</td><td :class="{win:sum(a)>sum(b)}">{{ sum(a) }}</td><td :class="{win:sum(b)>sum(a)}">{{ sum(b) }}</td></tr>
+                    <tr><td>身高 / 体重</td><td>{{ a.height || '—' }}m / {{ a.weight || '—' }}kg</td><td>{{ b.height || '—' }}m / {{ b.weight || '—' }}kg</td></tr>
+                    <tr><td>血脉 / 技能简述</td><td>{{ (a.ability||'').slice(0,20) || '—' }}</td><td>{{ (b.ability||'').slice(0,20) || '—' }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
+<script src="../js/type-chart.js?v=20261126s"></script>
+<script src="../js/vowmon-utils.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['vows']).then(function () {
+    createApp({
+        setup() {
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
+            const idA = ref((vows.value[0] || {}).id || '');
+            const idB = ref((vows.value[1] || {}).id || (vows.value[0] || {}).id || '');
+            const a = computed(() => vows.value.find(v => v.id === idA.value) || null);
+            const b = computed(() => vows.value.find(v => v.id === idB.value) || null);
+            const statKeys = ['hp','atk','def','spAtk','spDef','spd'];
+            const statLabel = { hp:'生命', atk:'攻击', def:'防御', spAtk:'特攻', spDef:'特防', spd:'速度' };
+            const stat = (v,k) => Number((v && v.stats && v.stats[k]) || 0);
+            const sum = v => statKeys.reduce((n,k) => n + stat(v,k), 0);
+            const maxV = computed(() => Math.max(160, ...vows.value.map(sum)));
+            const pct = (v,k) => Math.min(100, Math.round(stat(v,k) / maxV.value * 100));
+            const point = (radius, i) => {
+                const ang = -Math.PI / 2 + i * Math.PI / 3;
+                return { x: 200 + Math.cos(ang) * radius, y: 170 + Math.sin(ang) * radius };
+            };
+            const polyFor = v => statKeys.map((k,i) => {
+                const p = point(160 * Math.min(1, stat(v,k) / 160), i);
+                return p.x.toFixed(1) + ',' + p.y.toFixed(1);
+            }).join(' ');
+            const poly = radius => statKeys.map((k,i) => { const p = point(radius, i); return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+            const getImgUrl = p => {
+                if (!p) return '';
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+                const cfg = window.VOWMON_SITE_CONFIG || {};
+                const base = String(cfg.imgCdnBase || '').replace(/\/+$/, '');
+                const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
+                return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
+            };
+            return { vows, idA, idB, a, b, statKeys, statLabel, stat, sum, pct, point, poly, polyFor, imgUrl: getImgUrl };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

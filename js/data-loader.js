@@ -483,11 +483,22 @@
      *   save()       —— 后台保存时调用：写本机镜像 + 标记「有未同步修改」+ 广播
      *   markSynced() —— 一键同步成功后调用：清掉「未同步」标记
      */
+    function audit(action, detail, key) {
+        try {
+            if (window.AuditLog && window.AuditLog.record) {
+                var snap = {};
+                if (key) snap['vowmon_mirror_' + key] = readMirror(key);
+                snap['vowmon_dirty_keys'] = dirtyMap();
+                window.AuditLog.record(action, detail, snap);
+            }
+        } catch (e) { /* 审计失败不影响数据保存 */ }
+    }
     window.VowmonStore = {
         save: function (key, data) {
             if (!FILES[key] || !data) return;
             writeMirror(key, data);
             setDirty(key, true);
+            audit('保存', '保存 ' + (FILES[key].label || key) + ' 到本机镜像', key);
             // 同一标签页里的其它组件也能马上收到通知
             try {
                 document.dispatchEvent(new CustomEvent('vowmon:data-changed', { detail: { key: key, data: data } }));
@@ -495,6 +506,7 @@
         },
         markSynced: function (key) {
             setDirty(key, false);
+            audit('同步成功', '已推送 ' + (FILES[key].label || key) + ' 到仓库', key);
         },
         /**
          * 用一份「确定就是最新的」数据覆盖本机镜像（后台从云端拉取后用），
@@ -504,6 +516,7 @@
             if (!FILES[key] || !data) return;
             writeMirror(key, data);
             setDirty(key, false);
+            audit('从仓库拉取', '拉取 ' + (FILES[key].label || key) + ' 覆盖本机镜像', key);
             try {
                 document.dispatchEvent(new CustomEvent('vowmon:data-changed', { detail: { key: key, data: data } }));
             } catch (e) { /* ignore */ }

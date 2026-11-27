@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>设定一致性检查 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#c92a2a;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1000px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#fff5f5,#fff 65%);border:1px solid #ffdcdc;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .sub{font-size:13px;color:var(--ink-3);margin-bottom:18px;line-height:1.7}
+        .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+        .st{flex:1;min-width:130px;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;background:#fbfcfe}
+        .st b{display:block;font-size:26px}
+        .st span{font-size:12px;color:var(--ink-3)}
+        .st.err b{color:#c92a2a}.st.warn b{color:#e67700}.st.info b{color:#1971c2}
+        .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+        .f{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fbfcfe;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer}
+        .f.on{background:var(--accent);border-color:var(--accent);color:#fff}
+        .issue{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fbfcfe}
+        .issue .tag{flex:none;font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;margin-top:2px}
+        .issue.error .tag{background:#fff0f0;color:#c92a2a}.issue.warn .tag{background:#fff4e6;color:#e67700}.issue.info .tag{background:#e7f5ff;color:#1971c2}
+        .issue .body{flex:1}
+        .issue .body b{font-size:13px;color:var(--ink)}
+        .issue .body p{font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:3px}
+        .issue .meta{font-size:11px;color:var(--ink-3)}
+        .ok{text-align:center;padding:36px;color:#2b8a3e;font-size:16px;font-weight:700;background:#f4fbf5;border-radius:14px}
+        .note{font-size:12px;color:var(--ink-3);line-height:1.8;margin-top:16px}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-shield-check"></i> 设定一致性检查</h1>
+        <p>自动扫描图鉴与书内档案：等级↔阶元、进化链 taxonomy、引用完整性、图片缺失、地区形态冲突、血脉技能与重复 ID。所有检查均为只读，不会修改任何数据。</p>
+    </div>
+
+    <section class="sec" v-if="report">
+        <h2><i class="fa-solid fa-chart-pie"></i> 检查报告</h2>
+        <div class="sub">已检查 {{ report.checked.vows }} 只精灵 / {{ report.checked.individuals }} 只个体 / {{ report.checked.characters }} 位人物。</div>
+        <div class="stat-row">
+            <div class="st err"><b>{{ report.counts.error }}</b><span>严重问题</span></div>
+            <div class="st warn"><b>{{ report.counts.warn }}</b><span>需注意</span></div>
+            <div class="st info"><b>{{ report.counts.info }}</b><span>提示</span></div>
+        </div>
+        <div class="filters">
+            <div class="f" :class="{on:level==='all'}" @click="level='all'">全部</div>
+            <div class="f" :class="{on:level==='error'}" @click="level='error'">严重</div>
+            <div class="f" :class="{on:level==='warn'}" @click="level='warn'">需注意</div>
+            <div class="f" :class="{on:level==='info'}" @click="level='info'">提示</div>
+        </div>
+        <div v-if="shown.length">
+            <div class="issue" v-for="(x,i) in shown" :key="i" :class="x.level">
+                <span class="tag">{{ x.level==='error'?'严重':(x.level==='warn'?'注意':'提示') }}</span>
+                <div class="body">
+                    <b>{{ x.type }} · {{ x.target }}</b>
+                    <p>{{ x.message }}</p>
+                    <div class="meta">检查项：{{ x.type }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="ok" v-else><i class="fa-solid fa-circle-check"></i> 当前筛选下没有问题。</div>
+        <div class="note">说明：图鉴的「阶段」（一阶/二阶/三阶）与等级推导的「境界」（初灵/升灵…）属于不同维度，相关提醒仅供人工确认；后台修改数据后刷新本页即可重新检查。</div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<script src="../js/consistency-check.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['vows','skills','traits','stages','individuals','characters','bloodlineSkills']).then(function () {
+    createApp({
+        setup() {
+            const report = ref(ConsistencyCheck.run({
+                vows: allVowsData, skills: allSkillsData || [], traits: allTraitsData || [],
+                individuals: allIndividualsData || [], characters: allCharactersData || [],
+                bloodlineSkills: (typeof allBloodlineSkillsData !== 'undefined' && allBloodlineSkillsData) || [],
+                families: (typeof allBloodlineFamiliesData !== 'undefined' && allBloodlineFamiliesData) || {},
+                stages: allStagesData || []
+            }));
+            const level = ref('all');
+            const shown = computed(() => level.value === 'all' ? report.value.issues : report.value.issues.filter(x => x.level === level.value));
+            return { report, level, shown };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

@@ -127,6 +127,14 @@ vowmon/
 | 页面 | URL | 功能要点 | 关键文件 |
 |---|---|---|---|
 | 首页 | `index.html` | Hero 横幅 + 图鉴/工具入口卡 | 静态 |
+| 权柄看板 | `world/authority.html` | 力位权三律、权柄沙盘（等级→阶元→权限/代价）、权柄循环五步、三大机制、书内纪事 | `authority-config.js` |
+| 阶元路径 | `world/ranks-path.html` | 等级轴联动精灵八阶/御兽师八阶/权限/联盟名号，两条铁律 | `authority-config.js` + `StageConfig` |
+| 血脉共鸣模拟器 | `reference/bloodline-sim.html` | 选精灵+血脉之石→形态/技能/克制不变演示，族群技能包联动 | `bloodline-config.js` |
+| 地区形态对照 | `dex/region-forms.html` | 按进化链/物种聚合，按地区筛选并排对照形态 | `region` / `form` 字段 |
+| 故事时间线 | `records/timeline.html` | 按章节串联契约/进化/权柄事件，支持分类筛选 | 个体+人物 `milestones` |
+| 精灵对比器 | `dex/compare.html` | 并排六维雷达图、总和、属性、身高体重对比 | 页内 SVG |
+| 设定一致性检查 | `tools/consistency.html` | 只读扫描等级↔阶元、进化链 taxonomy、引用、图片、region 冲突、血脉技能 | `consistency-check.js` |
+| 数据源诊断 | `tools/diagnostics.html` | CF/jsDelivr/raw 三线路测速 + 本机镜像/脏标记/动画/SW 状态 | 页内 Vue |
 | 精灵图鉴 | `dex/vowdex.html` | 卡片墙，搜索+阶数/形态/属性多选筛选，分页 30；**异色悬停轮播**（有异色的卡悬停淡入异色图不放大，关动画只显示第一张） | 页内 Vue |
 | 天地图鉴 | `dex/realm-dex.html` | 按 `realmTags`（权柄精灵/遥世精灵/伙伴精灵/晚熟精灵，文案来自 `realm-data.json`）分类的图鉴视图 | `realm-data.json` |
 | 精灵列表 | `dex/list.html` | 表格视图，自定义显示列、列排序、多条件筛选；属性列用胶囊（图标+色来自 type-config） | 页内 Vue |
@@ -172,6 +180,7 @@ vowmon/
 | `admin-individuals.html` | 御兽精灵个体 | 自定义属性 fieldTemplates（默认模板/同步全部）；技能只存 name+level（**不存皆传模式**）；熟练度四档彩色（入门灰/熟练蓝/专精紫/完美金）；血脉=图鉴属性+血脉技能；阶段由等级经 `StageConfig.stageName()` 推导；昵称选填，空则回退种族名 |
 | `admin-characters.html` | 御兽人物 | 势力/头衔/联盟币存款/物品栏/持有精灵（vowIds 引用个体）/简介等扩展字段 |
 | `admin-stages.html` | 阶段境界 | 自定义八阶的个数/名字/区间/颜色（max=null 不封顶）；重叠/空洞校验；上下移；恢复默认 |
+| `admin-audit.html` | 操作审计 | 保存/同步/拉取操作日志（含镜像快照），可导出 JSON / 恢复快照 / 清空 |
 | `admin-bloodline-skills.html` | 血脉技能 | skills 数组 + families 族群技能包（map 段）一起 diff/同步 |
 
 **Vue 生产版铁律（白屏事故教训）**：setup `return` 清单里漏任何一个模板引用 → 生产版
@@ -202,6 +211,12 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 | `common-ui.js` | 后台通用 UI + 应用 `.no-anim`（后台不加载 navbar） |
 | `lore-apply.js` | 用 lore-data.json 覆盖 `[data-lore]` 元素，发 `vowmon:lore-applied` |
 | `battle-engine.js` | 对战引擎纯逻辑（rng 注入可测），见 §4 battle 行 |
+| `authority-config.js` | 权柄看板/阶元路径规则（三律、八阶权限、循环五步、三大机制）唯一来源 |
+| `bloodline-config.js` | 血脉共鸣规则（四条后天血脉、血脉口诀）唯一来源 |
+| `consistency-check.js` | 设定一致性检查纯逻辑（可在 Node 跑单测） |
+| `global-search.js` | Ctrl/⌘+K 全站搜索面板（由 navbar.js 按需注入） |
+| `audit-log.js` | 后台操作审计（保存/同步/拉取自动埋点于 VowmonStore，快照恢复） |
+| `sw.js` + `manifest.webmanifest` | PWA 离线缓存（图片 cache-first / 数据 network-first / 静态 SWR；后台不注册） |
 | `card-export.js` | 把精灵/个体/人物/物品渲染成 TCG 收藏卡 PNG（霞鹜文楷+思源宋体） |
 | `vow-select.js` | 自绘下拉组件（捕获阶段 pointerdown 关菜单——修过"点外面不关"的 bug） |
 | `vow-textarea.js` | 长文本编辑器组件（rows 固定高 + 放大弹窗） |
@@ -243,6 +258,7 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 `/data/*` 60 秒；HTML 协商缓存。**本地 css/js 引用统一带 `?v=YYYYMMDD`，每次改版手动升号**。
 
 CF Pages 会把 `*.html` 308 到无扩展名路径——**所有 isActive 判断必须补 `.html`**（navbar.js 与 sidebar.js 都修过此 bug）。
+图片上传时 `image-utils.js` 同时生成 `.webp` 副产物（压缩画布 `toDataURL('image/webp', 0.86)`），`/img/*` 反代优先返回同名 webp，不存在则回落原 PNG；换图靠 `imgVer` 破缓存。PWA SW 只在前台注册（后台不注册，避免缓存草稿）。
 
 ---
 

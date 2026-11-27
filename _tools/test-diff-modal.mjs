@@ -37,7 +37,8 @@ const ok = (cond, msg) => { console.log((cond ? '✓ ' : '✗ ') + msg); if (!co
 
 // 1. push 场景
 await send('Page.navigate', { url: `${BASE}/_tools/test-diff-modal.html?auto=push` });
-await sleep(1600);
+for (let i = 0; i < 100; i++) { if (await evalJs(`!!document.querySelector('.vwdiff-root.is-show')`)) break; await sleep(200); }
+await sleep(300);
 ok(await evalJs(`!!document.querySelector('.vwdiff-root.is-show')`), '弹窗已渲染（is-show）');
 ok(await evalJs(`document.querySelectorAll('.vwdiff-item').length`) === 7, '共 7 条差异（精灵 4 + 技能包 3）');
 const okText = await evalJs(`document.querySelector('.vwdiff-btn-ok').textContent`);

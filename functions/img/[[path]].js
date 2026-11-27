@@ -59,6 +59,32 @@ export async function onRequestGet(context) {
     const cached = await cache.match(cacheKey);
     if (cached) return cached;
 
+    // WebP 优先：同名 .webp 存在则用（体积约为 PNG 的 1/6），不存在继续用原图。
+    // 仓库图片按编号命名，webp 由后台上传时自动生成（image-utils.js）。
+    const webpPath = path.replace(/\.(png|jpe?g|bmp)$/i, '.webp');
+    if (webpPath !== path) {
+        for (const base of UPSTREAMS) {
+            let up;
+            try {
+                up = await fetch(`${base}/${webpPath}`, { cf: { cacheEverything: true, cacheTtl: CACHE_TTL } });
+            } catch { continue; }
+            if (up.ok && up.body) {
+                const res = new Response(up.body, {
+                    status: 200,
+                    headers: {
+                        'content-type': 'image/webp',
+                        'cache-control': `public, max-age=${CACHE_TTL}, immutable`,
+                        'access-control-allow-origin': '*',
+                        'x-img-source': base.includes('jsdelivr') ? 'jsdelivr' : 'github',
+                        'x-img-format': 'webp',
+                    },
+                });
+                context.waitUntil(cache.put(cacheKey, res.clone()));
+                return res;
+            }
+        }
+    }
+
     for (const base of UPSTREAMS) {
         let upstream;
         try {

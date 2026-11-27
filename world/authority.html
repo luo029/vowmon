@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>权柄看板 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#d9480f;--accent-soft:#fff4ed;--accent-deep:#c92a2a;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1100px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#fff4ed,#fff 65%);border:1px solid #ffe3d3;border-radius:20px;padding:34px 36px;margin-bottom:26px;box-shadow:0 8px 30px rgba(217,72,15,.06)}
+        .hero h1{font-size:30px;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:12px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{line-height:1.9;font-size:15px;max-width:860px}
+        .hero .quote{margin-top:16px;padding:12px 16px;background:#fff;border-left:4px solid var(--accent);border-radius:8px;color:#8a4b2a;font-size:14px}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:20px;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .sub{font-size:13px;color:var(--ink-3);margin-bottom:20px;line-height:1.7}
+        /* 三律 */
+        .law-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .law{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fbfcfe;position:relative;overflow:hidden}
+        .law::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+        .law .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--c);color:#fff;font-size:18px;margin-bottom:12px}
+        .law h3{font-size:18px;color:var(--ink);margin-bottom:2px}
+        .law h3 small{font-size:12px;color:var(--ink-3);font-weight:500;margin-left:6px}
+        .law p{font-size:13px;line-height:1.8}
+        /* 沙盘 */
+        .sim{display:grid;grid-template-columns:300px 1fr;gap:24px}
+        .ctl{display:flex;flex-direction:column;gap:16px}
+        .field label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
+        .field select,.field input[type=number]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--ink);background:#fff;outline:none}
+        .field select:focus,.field input:focus{border-color:var(--accent)}
+        input[type=range]{width:100%;accent-color:var(--accent)}
+        .switch{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none}
+        .switch input{width:18px;height:18px;accent-color:var(--accent)}
+        .result{border:1px solid #ffe3d3;background:linear-gradient(135deg,#fff9f5,#fff);border-radius:16px;padding:22px}
+        .result .badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .badge{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--ink)}
+        .badge.hot{background:var(--accent);border-color:var(--accent);color:#fff}
+        .result h3{font-size:18px;color:var(--ink);margin:14px 0 6px}
+        .result p{font-size:14px;line-height:1.85}
+        .warn{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fff4ed;border:1px solid #ffd8c2;color:#a3400d;font-size:13px;line-height:1.7}
+        /* 循环 */
+        .cycle{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+        .step{border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;background:#fbfcfe}
+        .step .n{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;margin:0 auto 10px}
+        .step h4{font-size:14px;color:var(--ink);margin-bottom:6px}
+        .step p{font-size:12px;line-height:1.7}
+        /* 机制 */
+        .mech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .mech{border:1px solid var(--line);border-radius:14px;padding:18px}
+        .mech .ico{font-size:20px;margin-bottom:10px}
+        .mech h4{font-size:15px;color:var(--ink);margin-bottom:8px}
+        .mech p{font-size:13px;line-height:1.8}
+        /* 史实 */
+        .events{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+        .ev{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:16px;background:#fbfcfe}
+        .ev .meta{font-size:11px;color:var(--ink-3);margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap}
+        .ev h4{font-size:15px;color:var(--ink);margin-bottom:6px}
+        .ev p{font-size:12px;line-height:1.7}
+        .empty{color:var(--ink-3);font-size:14px;padding:20px;text-align:center;background:#fbfcfe;border-radius:12px}
+        /* 名录 */
+        .dex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+        .vcard{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fff;cursor:pointer;transition:.18s}
+        .vcard:hover,.vcard.on{border-color:var(--accent);box-shadow:0 4px 16px rgba(217,72,15,.12);transform:translateY(-2px)}
+        .vcard img{width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 8px}
+        .vcard .nm{font-size:13px;font-weight:700;color:var(--ink)}
+        .vcard .meta{font-size:11px;color:var(--ink-3);margin-top:3px}
+        @media(max-width:900px){.law-grid,.mech-grid{grid-template-columns:1fr}.sim{grid-template-columns:1fr}.cycle{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.cycle{grid-template-columns:1fr}.dex-grid{grid-template-columns:repeat(2,1fr)}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-crown"></i> 权柄看板</h1>
+        <p>精灵与御兽师的等级，本质上是「在生态界中占据的地位」。三律之下，万物有序——下面的沙盘把正典里的静态规则变成可交互推演：选一只精灵、给一个等级，看它在当前阶元能做什么；开启掌权，再看看代价。</p>
+        <div class="quote">「契约的只是【力】与【位】。只要不碰【权】，精灵可以一直待在御兽空间里，保持原本的样子。」</div>
+    </div>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-triangle"></i> 核心三律</h2>
+        <div class="sub">力可修炼，位需占据，权只能争夺。三者叠加，才是完整的精灵。</div>
+        <div class="law-grid">
+            <div class="law" v-for="l in laws" :key="l.key" :style="{'--c':l.color}">
+                <div class="ico"><i :class="l.icon"></i></div>
+                <h3>{{ l.name }}<small>{{ l.sub }}</small></h3>
+                <p>{{ l.desc }}</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-sliders"></i> 权柄沙盘</h2>
+        <div class="sub">数据取自书内档案与精灵图鉴；等级→阶元统一走全站 StageConfig。</div>
+        <div class="sim">
+            <div class="ctl">
+                <div class="field">
+                    <label>选择精灵</label>
+                    <select v-model="selectedId">
+                        <option value="">— 请选择 —</option>
+                        <option v-for="v in vows" :key="v.id" :value="v.id">{{ v.id }} · {{ v.name }}</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>等级：{{ level }} <small style="font-weight:400;color:#8593ad">（{{ levelStage }}）</small></label>
+                    <input type="range" min="1" max="100" v-model.number="level">
+                </div>
+                <label class="switch"><input type="checkbox" v-model="hasAuthority"> 当前正在掌权</label>
+                <div v-if="selectedVow" style="border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fbfcfe">
+                    <img :src="imgUrl(selectedVow.image)" :alt="selectedVow.name" style="width:96px;height:96px;object-fit:contain">
+                    <div style="font-weight:700;color:var(--ink);margin-top:6px">{{ selectedVow.name }}</div>
+                </div>
+            </div>
+            <div class="result">
+                <div class="badges">
+                    <span class="badge">精灵阶元 · {{ levelStage }}</span>
+                    <span class="badge">御兽师 · {{ rank ? rank.trainer : '—' }}</span>
+                    <span class="badge" :class="{hot:hasAuthority}">权柄 · {{ rank ? rank.authority : '—' }}</span>
+                </div>
+                <template v-if="rank">
+                    <h3>{{ rank.power }}</h3>
+                    <p>{{ rank.note }}</p>
+                    <div class="warn" v-if="hasAuthority && rank.authority !== '无权限'">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 掌权中：{{ rank.authority }} 生效。下级同属性精灵正在托举它，御兽师会被瞬间抽干——唯有主动放权、重新契约，才能永远在一起。
+                    </div>
+                    <div class="warn" v-else-if="hasAuthority">
+                        <i class="fa-solid fa-circle-info"></i> 此阶元没有对应权限。掌权不会带来法则增益，只有争夺与托举的代价。
+                    </div>
+                    <div class="warn" v-else style="background:#f3f7ff;border-color:#d9e4ff;color:#3b5bdb">
+                        <i class="fa-solid fa-circle-info"></i> 未掌权的常态：契约只涉及【力】与【位】，战力本身不受权限限制。
+                    </div>
+                </template>
+                <div class="empty" v-else>未选择精灵，或等级超出设定范围。</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-rotate"></i> 权柄循环五步</h2>
+        <div class="sub">精灵要夺权，御兽师必须放生；夺权完成后主动放权，才能重新契约。</div>
+        <div class="cycle">
+            <div class="step" v-for="s in cycle" :key="s.n">
+                <div class="n">{{ s.n }}</div>
+                <h4>{{ s.title }}</h4>
+                <p>{{ s.desc }}</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-gears"></i> 三大机制</h2>
+        <div class="mech-grid">
+            <div class="mech" v-for="m in mechanisms" :key="m.name" :style="{'--c':m.color}">
+                <div class="ico" :style="{color:m.color}"><i :class="m.icon"></i></div>
+                <h4>{{ m.name }}</h4>
+                <p>{{ m.desc }}</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-book"></i> 书内权柄纪事</h2>
+        <div class="sub">从「御兽精灵 / 御兽人物」档案的里程碑中自动提取契约、晋位、夺权与放权事件。</div>
+        <div class="events" v-if="events.length">
+            <div class="ev" v-for="(e,i) in events" :key="i">
+                <div class="meta"><span>{{ e.chapter }}</span><span v-if="e.date">· {{ e.date }}</span><span>· {{ e.source }}</span></div>
+                <h4>{{ e.title }}</h4>
+                <p>{{ e.note }}</p>
+            </div>
+        </div>
+        <div class="empty" v-else>书内档案暂无权柄相关里程碑。可在后台「御兽精灵 / 御兽人物」里为个体添加里程碑。</div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-list"></i> 在册精灵</h2>
+        <div class="sub">点击卡片带入上方沙盘；标记了权柄相关定位的精灵会显示角标。</div>
+        <div class="dex-grid">
+            <div class="vcard" v-for="v in vows" :key="v.id" :class="{on:selectedId===v.id}" @click="selectedId=v.id">
+                <img v-if="v.image" :src="imgUrl(v.image)" :alt="v.name">
+                <div class="nm">{{ v.name }}</div>
+                <div class="meta">{{ v.id }} · {{ stageOf(v) }}</div>
+                <div class="meta" v-if="(v.realmTags||[]).length" style="color:var(--accent)">{{ v.realmTags.join(' / ') }}</div>
+            </div>
+        </div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
+<script src="../js/vowmon-utils.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<script src="../js/stage-config.js?v=20261127"></script>
+<script src="../js/authority-config.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['vows','individuals','characters','stages']).then(function () {
+    createApp({
+        setup() {
+            const laws = AuthorityConfig.LAWS;
+            const cycle = AuthorityConfig.CYCLE;
+            const mechanisms = AuthorityConfig.MECHANISMS;
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
+            const selectedId = ref((vows.value[0] || {}).id || '');
+            const selectedVow = computed(() => vows.value.find(v => v.id === selectedId.value) || null);
+            const level = ref(42);
+            const hasAuthority = ref(false);
+            const levelStage = computed(() => StageConfig.stageName(level.value));
+            const rank = computed(() => AuthorityConfig.RANKS.find(r => r.stage === levelStage.value) || null);
+            const stageOf = v => v.stage || StageConfig.stageName(v.level || 1);
+            const events = computed(() => {
+                const out = [];
+                const scan = (list, source) => {
+                    (list || []).forEach(item => {
+                        (item.milestones || []).forEach(m => {
+                            const text = [m.title, m.note, m.chapter].join(' ');
+                            if (AuthorityConfig.isAuthorityEvent(text)) {
+                                out.push({ chapter: m.chapter || '', title: m.title || '', date: m.date || '', note: m.note || '', source: source + ' · ' + (item.name || item.id || '') });
+                            }
+                        });
+                    });
+                };
+                scan(allIndividualsData, '精灵');
+                scan(allCharactersData, '人物');
+                const num = s => { const m = String(s || '').match(/\d+/); return m ? Number(m[0]) : 9999; };
+                return out.sort((a, b) => num(a.chapter) - num(b.chapter));
+            });
+            const getImgUrl = p => {
+                if (!p) return '';
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+                const cfg = window.VOWMON_SITE_CONFIG || {};
+                const base = String(cfg.imgCdnBase || '').replace(/\/+$/, '');
+                const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
+                return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
+            };
+            return { laws, cycle, mechanisms, vows, selectedId, selectedVow, level, hasAuthority,
+                levelStage, rank, stageOf, events, imgUrl: getImgUrl };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

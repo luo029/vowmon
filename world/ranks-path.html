@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>阶元晋升路径 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#4c6ef5;--accent-soft:#edf1fe;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#edf1fe,#fff 65%);border:1px solid #dbe4ff;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .slider-row{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+        .slider-row input[type=range]{flex:1;accent-color:var(--accent)}
+        .lvl-box{min-width:130px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfcfe}
+        .lvl-box b{font-size:24px;color:var(--accent)}
+        .lvl-box span{font-size:12px;color:var(--ink-3);display:block}
+        .path{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative}
+        .node{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fbfcfe;cursor:pointer;transition:.18s;position:relative}
+        .node:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(36,48,68,.07)}
+        .node.on{border-color:var(--c,var(--accent));background:#fff;box-shadow:0 5px 20px rgba(76,110,245,.14)}
+        .node .lv{font-size:11px;color:var(--ink-3)}
+        .node .nm{font-size:16px;font-weight:800;color:var(--ink);margin:4px 0}
+        .node .tr{font-size:12px;color:var(--c,var(--accent))}
+        .node .dot{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--c,var(--accent));opacity:.22}
+        .node.on .dot{opacity:1;box-shadow:0 0 0 4px rgba(76,110,245,.14)}
+        .detail{margin-top:22px;border:1px solid #dbe4ff;background:linear-gradient(135deg,#f7f9ff,#fff);border-radius:16px;padding:22px}
+        .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+        .chip{padding:6px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--ink)}
+        .chip.hot{background:var(--accent);border-color:var(--accent);color:#fff}
+        .detail h3{font-size:18px;color:var(--ink);margin:10px 0 6px}
+        .detail p{font-size:14px;line-height:1.85}
+        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+        .box{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fbfcfe}
+        .box h4{font-size:13px;color:var(--ink-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+        .box p{font-size:13px;line-height:1.8}
+        .iron{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .iron .b{border-left:4px solid var(--accent);padding:12px 14px;background:#fbfcfe;border-radius:8px;font-size:13px;line-height:1.8}
+        .iron .b b{display:block;color:var(--ink);margin-bottom:4px}
+        @media(max-width:900px){.path{grid-template-columns:repeat(2,1fr)}.grid2,.iron{grid-template-columns:1fr}}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.slider-row{flex-wrap:wrap}.path{grid-template-columns:1fr 1fr;gap:8px}.node{padding:10px}.node .nm{font-size:14px}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-route"></i> 阶元晋升路径</h1>
+        <p>一条等级轴，两套阶梯：精灵的八阶（初灵 → 元）与御兽师的八阶（初生 → 掌元）一一对应，形态不变，变的是权限、法则与技
+能特效。拖动等级或点击任一阶元，查看该阶段的权限、表现与联盟名号。</p>
+    </div>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-ruler"></i> 等级定位</h2>
+        <div class="slider-row">
+            <input type="range" min="1" max="100" v-model.number="level">
+            <div class="lvl-box"><b>{{ level }}</b><span>LV · {{ stageOf(level) }}</span></div>
+        </div>
+        <div class="path">
+            <div class="node" v-for="(b,i) in bands" :key="b.name" :class="{on:i===index}" :style="{'--c':b.color}" @click="level=b.min">
+                <span class="dot"></span>
+                <div class="lv">{{ b.min }} – {{ b.max == null ? '∞' : b.max }}</div>
+                <div class="nm">{{ b.name }}</div>
+                <div class="tr">{{ detail(i).trainer }}</div>
+            </div>
+        </div>
+        <div class="detail" v-if="current">
+            <div class="chips">
+                <span class="chip hot">{{ current.stage }}</span>
+                <span class="chip">御兽师 · {{ current.trainer }}</span>
+                <span class="chip">权限 · {{ current.authority }}</span>
+                <span class="chip" v-if="current.title!=='—'">名号 · {{ current.title }}</span>
+            </div>
+            <h3>{{ current.power }}</h3>
+            <p>{{ current.note }}</p>
+            <div class="grid2">
+                <div class="box"><h4>形态原则</h4><p>无论升到多高等级，精灵始终保留生物形态——一只火鸟到了律冠，它依然是一只鸟，只是羽毛可以引发核爆。</p></div>
+                <div class="box"><h4>战斗逻辑</h4><p>低级打高级，哪怕克制也打不过（数值碾压）；同级别打架，看的才是环境、特效与战术（技能核心组合）。</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-shield-halved"></i> 两条铁律</h2>
+        <div class="iron">
+            <div class="b"><b>数值碾压</b>跨阶战斗以数值面板为绝对前提；克制关系只在同级别对抗中才成为胜负手。</div>
+            <div class="b"><b>形态不变</b>晋位改的是权限与法则，不是物种外形；所以图鉴形态与阶元可以解耦维护。</div>
+        </div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<script src="../js/stage-config.js?v=20261127"></script>
+<script src="../js/authority-config.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['stages']).then(function () {
+    createApp({
+        setup() {
+            const bands = computed(() => StageConfig.bands());
+            const level = ref(50);
+            const index = computed(() => {
+                const list = bands.value;
+                for (let i = 0; i < list.length; i++) {
+                    const b = list[i];
+                    if (level.value >= b.min && (b.max == null || level.value <= b.max)) return i;
+                }
+                return level.value < list[0].min ? 0 : list.length - 1;
+            });
+            const detail = i => AuthorityConfig.RANKS[Math.min(i, AuthorityConfig.RANKS.length - 1)];
+            const current = computed(() => detail(index.value));
+            const stageOf = lv => StageConfig.stageName(lv);
+            return { bands, level, index, detail, current, stageOf };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

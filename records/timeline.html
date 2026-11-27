@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>故事时间线 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#e67700;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1000px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#fff4e6,#fff 65%);border:1px solid #ffe8cc;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .sub{font-size:13px;color:var(--ink-3);margin-bottom:18px;line-height:1.7}
+        .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+        .f{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fbfcfe;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer}
+        .f.on{background:var(--accent);border-color:var(--accent);color:#fff}
+        .tl{position:relative;padding-left:28px}
+        .tl::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:#ffe0bd}
+        .ev{position:relative;margin-bottom:20px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fbfcfe}
+        .ev::before{content:'';position:absolute;left:-25px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 2px #ffe0bd}
+        .ev .head{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+        .ev .ch{font-size:11px;font-weight:800;color:var(--accent);background:#fff4e6;padding:3px 10px;border-radius:999px}
+        .ev .dt{font-size:11px;color:var(--ink-3)}
+        .ev .src{font-size:11px;color:var(--ink-3);margin-left:auto}
+        .ev h3{font-size:15px;color:var(--ink);margin-bottom:6px}
+        .ev p{font-size:13px;line-height:1.8}
+        .stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+        .st{flex:1;min-width:140px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;background:#fbfcfe}
+        .st b{display:block;font-size:22px;color:var(--accent)}
+        .st span{font-size:11px;color:var(--ink-3)}
+        .empty{padding:30px;text-align:center;color:var(--ink-3);font-size:14px;background:#fbfcfe;border-radius:12px}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.ev .src{margin-left:0}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-timeline"></i> 故事时间线</h1>
+        <p>书内档案里每一只精灵、每一位人物都可能记录里程碑。这里把「契约 → 进化 → 夺权 → 大战 → 放权」按章节串成一条时间轴，既是读者索引，也是作者检查剧情连续性的工具。</p>
+    </div>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-chart-simple"></i> 档案概览</h2>
+        <div class="stats">
+            <div class="st"><b>{{ individuals.length }}</b><span>在册御兽精灵</span></div>
+            <div class="st"><b>{{ characters.length }}</b><span>在册御兽人物</span></div>
+            <div class="st"><b>{{ events.length }}</b><span>时间线事件</span></div>
+        </div>
+        <div class="filters">
+            <div class="f" :class="{on:kind==='all'}" @click="kind='all'">全部事件</div>
+            <div class="f" :class="{on:kind==='契约'}" @click="kind='契约'">契约</div>
+            <div class="f" :class="{on:kind==='进化'}" @click="kind='进化'">进化 / 晋位</div>
+            <div class="f" :class="{on:kind==='权柄'}" @click="kind='权柄'">权柄 / 大战</div>
+            <div class="f" :class="{on:kind==='其他'}" @click="kind='其他'">其他</div>
+        </div>
+        <div class="tl" v-if="filtered.length">
+            <div class="ev" v-for="(e,i) in filtered" :key="i">
+                <div class="head">
+                    <span class="ch">{{ e.chapter || '未标章节' }}</span>
+                    <span class="dt" v-if="e.date">{{ e.date }}</span>
+                    <span class="src">{{ e.source }}</span>
+                </div>
+                <h3>{{ e.title }}</h3>
+                <p>{{ e.note }}</p>
+            </div>
+        </div>
+        <div class="empty" v-else>当前筛选下没有事件。可在后台「御兽精灵 / 御兽人物」的里程碑里添加章节与事件。</div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['individuals','characters']).then(function () {
+    createApp({
+        setup() {
+            const individuals = ref((typeof allIndividualsData !== 'undefined' && allIndividualsData) || []);
+            const characters = ref((typeof allCharactersData !== 'undefined' && allCharactersData) || []);
+            VowmonData.onChange('individuals', d => { individuals.value = (d && d.individuals) || []; });
+            VowmonData.onChange('characters', d => { characters.value = (d && d.characters) || []; });
+            const kind = ref('all');
+            const chapterNum = s => { const m = String(s || '').match(/\d+/); return m ? Number(m[0]) : 999999; };
+            const categoryOf = text => {
+                const s = String(text || '');
+                if (/契约|结下|收养|结伴|收服/.test(s)) return '契约';
+                if (/进化|晋位|升灵|族尊|突破|等级/.test(s)) return '进化';
+                if (/权柄|夺权|掌权|放权|大战|托举|解契|生态界/.test(s)) return '权柄';
+                return '其他';
+            };
+            const events = computed(() => {
+                const out = [];
+                const scan = (list, label, type) => {
+                    (list || []).forEach(item => {
+                        (item.milestones || []).forEach(m => {
+                            const text = [m.title, m.note].join(' ');
+                            out.push({
+                                chapter: m.chapter || '', date: m.date || '', title: m.title || '', note: m.note || '',
+                                source: label + ' · ' + (item.name || item.id || ''), category: categoryOf(text), type: type,
+                                sortKey: chapterNum(m.chapter)
+                            });
+                        });
+                    });
+                };
+                scan(individuals.value, '精灵', '个体');
+                scan(characters.value, '人物', '人物');
+                return out.sort((a, b) => a.sortKey - b.sortKey || String(a.chapter).localeCompare(String(b.chapter), 'zh-CN'));
+            });
+            const filtered = computed(() => kind.value === 'all' ? events.value : events.value.filter(e => e.category === kind.value));
+            return { individuals, characters, kind, events, filtered };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

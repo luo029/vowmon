@@ -1,0 +1,14 @@
+{
+    "name": "Vowmon Wiki · 御兽精灵设定图鉴",
+    "short_name": "Vowmon",
+    "description": "御兽精灵题材设定 Wiki：图鉴、技能、血脉、书内档案与世界观。",
+    "start_url": "/index.html",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#f6f8fc",
+    "theme_color": "#e8590c",
+    "lang": "zh-CN",
+    "icons": [
+        { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+    ]
+}

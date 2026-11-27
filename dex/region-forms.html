@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>地区形态对照 · Vowmon Wiki</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261126s">
+    <link rel="stylesheet" href="../css/navbar.css?v=20261127g">
+    <script src="../js/navbar.js?v=20261128" defer></script>
+    <style>
+        :root{--accent:#2b8a3e;--ink:#243044;--ink-2:#4a5872;--ink-3:#8593ad;--line:#e4e9f2}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','HarmonyOS Sans SC','MiSans','Source Han Sans SC','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#f6f8fc;color:var(--ink-2);min-height:100vh;overflow-x:hidden}
+        .page{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+        .hero{background:linear-gradient(135deg,#eaf7ed,#fff 65%);border:1px solid #d3efda;border-radius:20px;padding:32px 36px;margin-bottom:24px}
+        .hero h1{font-size:28px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .hero h1 i{color:var(--accent)}
+        .hero p{font-size:14px;line-height:1.9}
+        .sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 28px;margin-bottom:22px;box-shadow:0 2px 12px rgba(36,48,68,.03)}
+        .sec h2{font-size:19px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+        .sec h2 i{color:var(--accent)}
+        .sub{font-size:13px;color:var(--ink-3);margin-bottom:18px;line-height:1.7}
+        .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+        .f{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fbfcfe;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer}
+        .f.on{background:var(--accent);border-color:var(--accent);color:#fff}
+        .group{border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;background:#fbfcfe}
+        .ghead{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+        .ghead h3{font-size:16px;color:var(--ink)}
+        .ghead .tag{font-size:11px;color:var(--accent);background:#eaf7ed;padding:3px 10px;border-radius:999px;font-weight:700}
+        .forms{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+        .form{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;background:#fff;position:relative}
+        .form.primary{border-color:var(--accent);box-shadow:0 3px 14px rgba(43,138,62,.1)}
+        .form img{width:110px;height:110px;object-fit:contain}
+        .form h4{font-size:15px;color:var(--ink);margin:8px 0 4px}
+        .form .meta{font-size:11px;color:var(--ink-3);line-height:1.7}
+        .form .badge{position:absolute;top:8px;right:8px;font-size:10px;background:var(--accent);color:#fff;padding:3px 8px;border-radius:999px}
+        .stat{font-size:12px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+        .empty{padding:30px;text-align:center;color:var(--ink-3);font-size:14px;background:#fbfcfe;border-radius:12px}
+        .tip{margin-top:16px;font-size:12px;color:var(--ink-3);line-height:1.8}
+        @media(max-width:640px){.page{padding:18px 12px 60px}.hero{padding:22px 18px}.hero h1{font-size:23px}.sec{padding:18px 14px}.forms{grid-template-columns:repeat(2,1fr)}.form img{width:84px;height:84px}}
+    </style>
+</head>
+<body>
+<div id="site-navbar"></div>
+<div id="app" v-cloak>
+<div class="page">
+    <div class="hero">
+        <h1><i class="fa-solid fa-earth-asia"></i> 地区形态对照</h1>
+        <p>同一种精灵在不同地区，可能因环境、饮食与联盟区划而演化出不同形态。这里按「进化链 / 物种」聚合在册精灵，按地区（region）与形态（form）并排对照，便于设定管理与读者查阅。</p>
+    </div>
+
+    <section class="sec">
+        <h2><i class="fa-solid fa-filter"></i> 地区筛选</h2>
+        <div class="sub">「出现地区」为多选字段；未标记地区的精灵归入「未记录地区」。</div>
+        <div class="filters">
+            <div class="f" :class="{on:region===''}" @click="region=''">全部地区</div>
+            <div class="f" v-for="r in regions" :key="r" :class="{on:region===r}" @click="region=r">{{ r }}</div>
+        </div>
+
+        <template v-if="groups.length">
+            <div class="group" v-for="g in groups" :key="g.key">
+                <div class="ghead">
+                    <h3>{{ g.label }}</h3>
+                    <span class="tag">{{ g.list.length }} 个形态</span>
+                </div>
+                <div class="forms">
+                    <div class="form" v-for="v in g.list" :key="v.id" :class="{primary:v.form==='主形态'}">
+                        <span class="badge" v-if="v.form==='主形态'">主形态</span>
+                        <img v-if="v.image" :src="imgUrl(v.image)" :alt="v.name">
+                        <h4>{{ v.name }}</h4>
+                        <div class="meta">{{ v.id }} · {{ (v.types||[]).join(' / ') }}</div>
+                        <div class="meta">形态：{{ v.form || '未记录' }} ｜ 地区：{{ regionText(v) }}</div>
+                        <div class="stat">总和 {{ statTotal(v) }} ｜ {{ v.stage || '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <div class="empty" v-else>当前筛选下没有精灵。可在后台「精灵管理 → 出现地区 / 形态」里为精灵标记地区与形态。</div>
+        <div class="tip">提示：同一进化链上的精灵保存时会自动共用 taxonomy（域界门纲目科属种）。地区形态只改 form / region / image，不应新建图鉴编号。</div>
+    </section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="../js/type-config.js?v=20261126s"></script>
+<script src="../js/site-config.js?v=20261127a"></script>
+<script src="../js/vowmon-utils.js?v=20261126s"></script>
+<script src="../js/data-loader.js?v=20261128"></script>
+<link rel="stylesheet" href="../css/responsive.css?v=20261126u">
+<script>
+const { createApp, ref, computed } = Vue;
+VowmonData.ready(['vows']).then(function () {
+    createApp({
+        setup() {
+            const vows = ref(VowmonUtils.normalizeAll(allVowsData));
+            VowmonData.onChange('vows', d => { vows.value = VowmonUtils.normalizeAll((d && d.vows) || allVowsData); });
+            const region = ref('');
+            const regions = computed(() => {
+                const set = new Set();
+                vows.value.forEach(v => {
+                    const r = v.region;
+                    if (Array.isArray(r)) r.forEach(x => set.add(x));
+                    else if (r) set.add(r);
+                });
+                return Array.from(set).sort();
+            });
+            const inRegion = v => {
+                if (!region.value) return true;
+                const r = v.region;
+                return Array.isArray(r) ? r.includes(region.value) : r === region.value;
+            };
+            const baseOf = v => {
+                if (v.evoFrom && v.evoFrom.length) return v.evoFrom[0];
+                if (v.taxonomy && v.taxonomy.species) return 'sp:' + v.taxonomy.species;
+                return v.id;
+            };
+            const groups = computed(() => {
+                const map = {};
+                vows.value.filter(inRegion).forEach(v => {
+                    const key = baseOf(v);
+                    if (!map[key]) map[key] = { key, label: (v.name || v.id), list: [] };
+                    map[key].list.push(v);
+                });
+                return Object.keys(map)
+                    .map(k => map[k])
+                    .sort((a, b) => b.list.length - a.list.length || a.key.localeCompare(b.key, 'zh-CN'));
+            });
+            const regionText = v => {
+                const r = v.region;
+                if (Array.isArray(r)) return r.length ? r.join('、') : '未记录';
+                return r || '未记录';
+            };
+            const statTotal = v => {
+                const s = v.stats || {};
+                return ['hp','atk','def','spAtk','spDef','spd'].reduce((n, k) => n + (Number(s[k]) || 0), 0);
+            };
+            const getImgUrl = p => {
+                if (!p) return '';
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+                const cfg = window.VOWMON_SITE_CONFIG || {};
+                const base = String(cfg.imgCdnBase || '').replace(/\/+$/, '');
+                const ver = cfg.imgVer ? '?v=' + cfg.imgVer : '';
+                return (base ? base + '/' : '/img/') + String(p).replace(/^\/+/, '') + ver;
+            };
+            return { vows, region, regions, groups, regionText, statTotal, imgUrl: getImgUrl };
+        }
+    }).mount('#app');
+});
+</script>
+</body>
+</html>

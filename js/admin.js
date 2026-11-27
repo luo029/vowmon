@@ -554,6 +554,16 @@ createApp({
                 path, img.base64, `Upload sprite: ${fileName}`, true
             );
             uploadedImageCache.set(path, img.base64);
+            // 同步生成 WebP 副产物：CF 反代检测到同名 .webp 就优先返回它（体积约 1/6）
+            if (img.webpBase64) {
+                try {
+                    await GitHubSync.uploadFile(
+                        config.value.token, config.value.owner, firstImgRepo,
+                        path.replace(/\.(png|jpe?g|bmp)$/i, '.webp'), img.webpBase64,
+                        `Upload webp: ${fileName}`, true
+                    );
+                } catch (e) { /* WebP 上传失败不影响 PNG 主图 */ }
+            }
             return { path, img };
         };
 

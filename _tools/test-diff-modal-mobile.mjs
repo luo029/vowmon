@@ -38,7 +38,8 @@ const ok = (cond, msg) => { console.log((cond ? '✓ ' : '✗ ') + msg); if (!co
 
 // 1. push 场景（顶部视图）
 await send('Page.navigate', { url: `${BASE}/_tools/test-diff-modal.html?auto=push` });
-await sleep(1800);
+for (let i = 0; i < 100; i++) { if (await evalJs(`!!document.querySelector('.vwdiff-root.is-show')`)) break; await sleep(200); }
+await sleep(300);
 ok(await evalJs(`!!document.querySelector('.vwdiff-root.is-show')`), '移动端弹窗已渲染');
 const dims = await evalJs(`JSON.stringify({ vw: window.innerWidth, modalW: document.querySelector('.vwdiff-card').getBoundingClientRect().width, overflows: document.documentElement.scrollWidth > window.innerWidth })`);
 console.log('尺寸:', dims);

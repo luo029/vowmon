@@ -60,8 +60,17 @@ const ImageUtils = {
             else resolve(null);
         });
 
+        // WebP 副产物：同图同时上传 .webp，前台反代优先命中，体积约为 PNG 的 1/6。
+        // 浏览器不支持 WebP 编码时静默跳过，不影响原 PNG 上传。
+        let webpBase64 = '';
+        try {
+            const webpUrl = canvas.toDataURL('image/webp', 0.86);
+            if (webpUrl && webpUrl.indexOf('data:image/webp') === 0) webpBase64 = webpUrl.split(',')[1] || '';
+        } catch (e) { /* 不支持 WebP 编码 */ }
+
         return {
             base64: dataUrl.split(',')[1] || '',
+            webpBase64,
             blob,
             width: dw,
             height: dh,

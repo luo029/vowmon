@@ -16,7 +16,7 @@ for page in sorted(pages):
     if page == '404.html':
         continue
     url = '/' + page
-    root_prefix = '../' if re.search(r'/(admin|dex|reference|world|records|battle)/', url) else ''
+    root_prefix = '../' if re.search(r'/(admin|dex|reference|world|records|battle|tools)/', url) else ''
     curdir = '/' + os.path.dirname(page)
     for h in hrefs:
         joined = root_prefix + h

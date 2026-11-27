@@ -401,6 +401,16 @@ createApp({
                     config.value.token, config.value.owner, uploadRepo.value,
                     path, img.base64, `Upload image: ${path}`, true
                 );
+                // 同时上传 WebP 副产物，CF 反代优先返回（前台无需改 URL）
+                if (img.webpBase64) {
+                    try {
+                        await GitHubSync.uploadFile(
+                            config.value.token, config.value.owner, uploadRepo.value,
+                            path.replace(/\.(png|jpe?g|bmp)$/i, '.webp'), img.webpBase64,
+                            `Upload webp: ${path}`, true
+                        );
+                    } catch (e) { /* WebP 失败不影响主图 */ }
+                }
                 if (uploadVow.value) {
                     if (uploadMode.value === 'shiny') {
                         const added = addShinyToVow(uploadVow.value, path);

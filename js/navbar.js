@@ -26,7 +26,7 @@
     var SITE_NAME = 'Vowmon Wiki';
 
     // 站点根前缀：页面在 admin/ 或 dex/reference/world/records 子目录里时，链接从站点根出发需加 ../。
-    var ROOT = /\/(admin|dex|reference|world|records|battle)\//.test(window.location.pathname) ? '../' : '';
+    var ROOT = /\/(admin|dex|reference|world|records|battle|tools)\//.test(window.location.pathname) ? '../' : '';
     var HOME = ROOT + 'index.html';
 
     // 导航结构：改这里就能改全站（href 均为「站点根目录下的真实路径」，渲染时统一加 ROOT 前缀）
@@ -55,6 +55,8 @@
                         { label: '精灵图鉴', href: 'dex/vowdex.html' },
                         { label: '天地图鉴', href: 'dex/realm-dex.html' },
                         { label: '精灵列表', href: 'dex/list.html' },
+                        { label: '精灵对比器', href: 'dex/compare.html' },
+                        { label: '地区形态对照', href: 'dex/region-forms.html' },
                         { label: '技能图鉴', href: 'reference/skills.html' },
                         { label: '特性大全', href: 'reference/traits.html' },
                         { label: '性格大全', href: 'reference/natures.html' }
@@ -74,6 +76,10 @@
                         { label: '血脉图鉴', href: 'reference/bloodlines.html' },
                         { label: '御兽师图鉴', href: 'world/trainers.html' },
                         { label: '势力版图', href: 'world/factions.html' },
+                        { label: '权柄看板', href: 'world/authority.html' },
+                        { label: '阶元路径', href: 'world/ranks-path.html' },
+                        { label: '血脉共鸣', href: 'reference/bloodline-sim.html' },
+                        { label: '故事时间线', href: 'records/timeline.html' },
                         { label: '十八生态界', soon: true },
                         { label: '元域演化史', href: 'world/lore.html' }
                     ]
@@ -88,7 +94,9 @@
                     links: [
                         { label: '⚔️ 精灵对战', href: 'battle/' },
                         { label: '⚖️ 属性克制计算器', href: 'reference/calculator.html' },
-                        { label: '🎯 技能打击面计算器', href: 'reference/coverage.html' }
+                        { label: '🎯 技能打击面计算器', href: 'reference/coverage.html' },
+                        { label: '🔍 设定一致性检查', href: 'tools/consistency.html' },
+                        { label: '📡 数据源诊断', href: 'tools/diagnostics.html' }
                     ]
                 },
                 {
@@ -120,6 +128,14 @@
         'bloodlines.html': 'dex',
         'trainers.html': 'dex',
         'factions.html': 'dex',
+        'authority.html': 'dex',
+        'ranks-path.html': 'dex',
+        'bloodline-sim.html': 'dex',
+        'timeline.html': 'records',
+        'region-forms.html': 'dex',
+        'compare.html': 'dex',
+        'consistency.html': 'tools',
+        'diagnostics.html': 'tools',
         'items.html': 'dex',
         'calculator.html': 'tools',
         'coverage.html': 'tools',
@@ -256,18 +272,52 @@
         return window.matchMedia('(max-width: 900px)').matches;
     }
 
+    // 全局搜索按需注入（CSS/JS 各一次），任何页面都能 Ctrl/⌘+K
+    function ensureGlobalSearch() {
+        if (window.VowmonGlobalSearch) return;
+        if (!document.getElementById('gsScript')) {
+            var css = document.createElement('link');
+            css.rel = 'stylesheet'; css.href = ROOT + 'css/global-search.css?v=20261128';
+            document.head.appendChild(css);
+            var js = document.createElement('script');
+            js.id = 'gsScript'; js.src = ROOT + 'js/global-search.js?v=20261128';
+            document.head.appendChild(js);
+        }
+    }
+
     function goSearch() {
         var input = document.getElementById('siteSearchInput');
         if (!input) return;
         var keyword = input.value.trim();
-        if (!keyword) {
-            input.focus();
+        ensureGlobalSearch();
+        if (window.VowmonGlobalSearch) {
+            var box = document.getElementById('siteNavSearch');
+            if (box) box.classList.remove('open');
+            window.VowmonGlobalSearch.open(keyword);
             return;
         }
+        if (!keyword) { input.focus(); return; }
         window.location.href = ROOT + 'dex/list.html?q=' + encodeURIComponent(keyword);
     }
 
+    // PWA：前台统一注册 Service Worker + manifest（后台不注册，避免缓存草稿）
+    function registerPWA() {
+        if (/\/admin\//.test(window.location.pathname)) return;
+        if (!document.querySelector('link[rel="manifest"]')) {
+            var m = document.createElement('link');
+            m.rel = 'manifest'; m.href = ROOT + 'manifest.webmanifest';
+            document.head.appendChild(m);
+        }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register(ROOT + 'sw.js', { scope: ROOT }).catch(function () { /* 不支持时静默 */ });
+            });
+        }
+    }
+
     function bind() {
+        registerPWA();
+        ensureGlobalSearch();  // Ctrl/⌘+K 全站快捷键
         var navLinks = document.getElementById('siteNavLinks');
         var navToggle = document.getElementById('siteNavToggle');
         var searchBtn = document.getElementById('siteSearchBtn');
