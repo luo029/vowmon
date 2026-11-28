@@ -19,7 +19,7 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 - **性能**：异色图空闲预载（点「异色」从等 15 秒下载变成 5ms 秒切）；图片上传自动生成 WebP，反代优先返回；PWA Service Worker 离线缓存。
 - **视觉**：导航两级下拉（档案改名、工具 FA 图标统一）、首页三组卡片 + 统计条 + 快速搜索、系别筛选折叠、后台侧栏三组、后台审计日志。
 - **移动端**：全站 41 页 × 390/360px 审计，零横向溢出；安全区适配、触控目标 ≥ 20px。
-- **每日精灵灵感**（`tools/daily-pokemon.html`）：**四源合一卡**——宝可梦 1025 只 / 洛克王国世界 644 只 / 奥奇传说 1606 只 / 赛尔号 4978 只，卡片顶部有数据源开关（决定随机池），卡片下方标注「出自」来源。含中文名/属性（洛克用源站官方色）/地区/种族值/**进化链可视化**/最新世代图鉴介绍（赛尔号含六维种族值+外号+简介），配随机灵感提示帮助原创誓约精灵；可开「盲盒模式」隐藏参考只看提示；「排除已参照」读取图鉴 vow 的【原型】字段自动剔除已写过的精灵。数据由 `_tools/gen-{pokemon,rock,aoqi,seer}-data.mjs` 一次性抓取（不接 AI、不实时调外部站点，图片全部引用源站 URL 不落盘），纯静态可复现。
+- **每日精灵灵感**（`tools/daily-pokemon.html`）：**四源合一卡**——宝可梦 1025 只 / 洛克王国世界 644 只 / 奥奇传说 1606 只 / 赛尔号 4978 只，卡片顶部有数据源开关（决定随机池），卡片下方标注「出自」来源。各源自适配独有内容：宝可梦特性（含隐藏标记）、奥奇普通技/超杀技/成长故事、赛尔号**专属魂印/专属刻印**（图标直链 + 效果文本）+ 六维种族值/外号/简介，共同项含中文名/属性（洛克用源站官方色）/地区/种族值/进化链可视化/最新世代图鉴介绍，配随机灵感提示（特性改编、专属印记等按源自适应）帮助原创誓约精灵；可开「盲盒模式」隐藏参考只看提示；「排除已参照」读取图鉴 vow 的【原型】字段自动剔除已写过的精灵。数据由 `_tools/gen-{pokemon,rock,aoqi,seer}-data.mjs` 一次性抓取（不接 AI、不实时调外部站点，图片全部引用源站 URL 不落盘），纯静态可复现。
 - **同步安全**：push/pull 差异预览弹窗（每条可勾选）+ 三方合并防回滚；审计快照可恢复。
 
 ### 问题 → 修复前后对照
@@ -411,10 +411,10 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 | `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体）                                                                                                 |
 | `characters-data.json`  | `characters` → `allCharactersData`（书内档案：御兽人物）                                                                                                     |
 | `lore-data.json`        | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块）                                                                                      |
-| `pokemon-data.json`     | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
+| `pokemon-data.json`     | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链 + 284 个特性中文名/隐藏标记）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
 | `rock-data.json`        | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/六维种族值 生命·物攻·魔攻·物防·魔防·速度/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成                            |
 | `aoqi-data.json`        | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取：立绘 `dsrc` 直链 + 详情页图鉴大表三种版式自适应解析 → 属性/特长/普通技/超杀技/身高体重/爱好/成长故事/进化阶段名，技能 1574 只、成长故事 904 只、属性 253 只——新版页面属性由 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成                                 |
-| `seer-data.json`        | 赛尔号参考数据（wiki.biligame.com/seer 的 SMW 结构化属性批量查询 + `文件:立绘-{序号}.png` imageinfo 批量取图 → 属性/六维种族值+总能力值/身高体重/简介/外号/进化链，图片引用 patchwiki 直链）。`node _tools/gen-seer-data.mjs` 重新生成（biligame 有 WAF，脚本自带 4.5s 限速与 3 分钟退避，全量约 10 分钟）                                 |
+| `seer-data.json`        | 赛尔号参考数据（wiki.biligame.com/seer 的 SMW 结构化属性批量查询 → 属性/六维种族值+总能力值/身高体重/简介/外号/进化链 + **专属魂印**（`分类:魂印` 批量 ask，`?相关精灵` 关联精灵序号，2171 条）+ **专属刻印**（`分类:刻印` 且 `专属精灵::+` 批量 ask，2539 条），魂印/刻印图标引用 `文件:魂印-{图标}.png`/`文件:刻印-{ID}.png` 的 Special:FilePath 直链）。`node _tools/gen-seer-data.mjs` 重新生成（biligame 有 WAF，脚本自带 4.5s 限速与 3 分钟退避；ask 参数必须写在 `{{#ask:…}}` 花括号内，写在外面 limit 失效只剩 50 条）                                 |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
 

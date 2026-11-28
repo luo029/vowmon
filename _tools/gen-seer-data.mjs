@@ -131,6 +131,94 @@ for (const tr of allRows) {
 }
 console.log('有效精灵（有合法序号）: ' + pets.length + ' 只');
 
+/* ---------------- 第 1.5 步：魂印 & 刻印（SMW 批量对象查询，不逐页抓） ----------------
+ * 每个精灵页的「专属魂印&专属刻印」区块由模板 {{精灵-new}} 用 SMW ask 渲染：
+ *   魂印 = 分类:魂印 的页面，分类里带精灵序号补零 4 位（分类:0753），属性：
+ *          魂印ID（=精灵序号补零）/ 魂印图标（图文件名 base）/ 魂印效果 / kind（标签号）
+ *   刻印 = 分类:刻印 且有「专属精灵」属性（值 = 精灵数字序号），属性：ID / 名称 / 描述
+ * 图标文件名固定「魂印-{图标}.png」「刻印-{ID}.png」，可用 Special:FilePath 构造。
+ */
+async function askRows(cond, printouts, cacheName) {
+    let offset = 0;
+    const rows = [];
+    while (true) {
+        const cacheFile = path.join(CACHE, cacheName + '-' + offset + '.html');
+        let html;
+        try {
+            html = fs.readFileSync(cacheFile, 'utf8');
+            console.log('  ' + cacheName + ' offset=' + offset + '（缓存）');
+        } catch (e) {
+            // 参数必须写在 {{#ask:…}} 花括号内部，放在外面 limit 会失效（默认只有 50）
+            const q = encodeURIComponent('{{#ask:' + cond + '|limit=' + PAGE + '|offset=' + offset + '|mainlabel=页面' + printouts + '}}');
+            const j = await getJson(API + '?format=json&action=parse&text=' + q);
+            html = j.parse.text['*'];
+            fs.writeFileSync(cacheFile, html);
+            await sleep(GAP);
+            console.log('  ' + cacheName + ' offset=' + offset + ' -> ' + html.length + ' 字节');
+        }
+        const found = [...html.matchAll(/<tr data-row-number="\d+"[^>]*>([\s\S]*?)<\/tr>/g)];
+        if (!found.length) break;
+        rows.push(...found.map(m => m[1]));
+        if (found.length < PAGE) break;
+        offset += PAGE;
+    }
+    return rows;
+}
+
+function askCells(trHtml, props) {
+    const cells = {};
+    for (const m of trHtml.matchAll(/<td class="([^"]*)"[^>]*>([\s\S]*?)<\/td>/g)) {
+        for (const cls of m[1].split(/\s+/)) {
+            if (props.includes(cls)) cells[cls] = cells[cls] || m[2];
+        }
+    }
+    return cells;
+}
+
+console.log('SMW ask 批量拉取魂印…');
+const SEAL_ICON = 'https://wiki.biligame.com/seer/Special:FilePath/';
+const sealMap = new Map();
+// 相关精灵 = 所属精灵的数字序号（魂印ID 是魂印自己的编号，别拿它当精灵序号）
+const sealRows = await askRows('[[分类:魂印]]', '|?相关精灵|?魂印图标|?魂印效果', 'seal');
+for (const tr of sealRows) {
+    const c = askCells(tr, ['相关精灵', '魂印ID', '魂印图标', '魂印效果']);
+    const ownM = clean(c['相关精灵'] || '').match(/\d+/) || clean(c['魂印ID'] || '').match(/\d+/);
+    const effect = clean(c['魂印效果'] || '');
+    if (!ownM || !effect) continue;
+    const no = parseInt(ownM[0], 10);
+    if (!sealMap.has(no)) sealMap.set(no, []);
+    sealMap.get(no).push({ icon: clean(c['魂印图标'] || ''), effect: effect });
+}
+console.log('魂印: ' + [...sealMap.values()].flat().length + ' 条，覆盖精灵 ' + sealMap.size + ' 只');
+
+console.log('SMW ask 批量拉取刻印…');
+const enMap = new Map();
+const enRows = await askRows('[[分类:刻印]][[专属精灵::+]]', '|?ID|?名称|?描述|?专属精灵', 'engrave');
+for (const tr of enRows) {
+    const c = askCells(tr, ['ID', '名称', '描述', '专属精灵']);
+    const ownerM = clean(c['专属精灵'] || '').match(/\d+/);
+    const desc = clean(c['描述'] || '');
+    if (!ownerM || !desc) continue;
+    const no = parseInt(ownerM[0], 10);
+    if (!enMap.has(no)) enMap.set(no, []);
+    enMap.get(no).push({ id: clean(c['ID'] || ''), name: clean(c['名称'] || ''), desc: desc });
+}
+console.log('刻印: ' + [...enMap.values()].flat().length + ' 条，覆盖精灵 ' + enMap.size + ' 只');
+
+for (const p of pets) {
+    const no = parseInt(p.no, 10);
+    p.soulSeal = (sealMap.get(no) || []).map(s => ({
+        icon: s.icon ? SEAL_ICON + encodeURIComponent('魂印-' + s.icon + '.png') : '',
+        effect: s.effect
+    }));
+    p.engrave = (enMap.get(no) || []).map(g => ({
+        icon: g.id ? SEAL_ICON + encodeURIComponent('刻印-' + g.id + '.png') : '',
+        name: g.name, desc: g.desc
+    }));
+}
+console.log('已挂载: 魂印 ' + pets.filter(p => p.soulSeal.length).length +
+    ' 只 / 刻印 ' + pets.filter(p => p.engrave.length).length + ' 只');
+
 /* ---------------- 第二步：立绘 URL（可构造，不请求任何接口） ----------------
  * MediaWiki 内置 Special:FilePath/<文件名> 会 301/302 到真实文件 URL。
  * 立绘文件名固定格式「立绘-{序号}.png」，头像「头像-{序号}.png」作兜底。

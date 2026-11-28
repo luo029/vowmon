@@ -63,6 +63,12 @@
         .skill-item{font-size:13px;background:#fbf6e8;border:1px solid var(--line);border-radius:12px;padding:7px 12px;line-height:1.5}
         .skill-item b{color:var(--ink)}
         .skill-item span{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
+        .seal-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+        .seal-row{display:flex;gap:10px;align-items:flex-start;background:#f2f8fd;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+        .seal-icon{width:44px;height:44px;object-fit:contain;flex:none;background:#fff;border-radius:8px;border:1px solid var(--line)}
+        .seal-body{font-size:13px;line-height:1.5;min-width:0}
+        .seal-body b{color:var(--ink)}
+        .seal-body p{margin:3px 0 0;color:var(--ink-3);font-size:12px;white-space:pre-line;word-break:break-word}
         .src-line{margin-top:6px;font-size:11px;color:var(--ink-3);font-weight:700;text-align:center}
         .meta{font-size:13px;color:var(--ink-2);line-height:1.9;margin-bottom:12px}
         .meta b{color:var(--ink)}
@@ -183,10 +189,31 @@
                             <span class="chip plain" v-if="mon.talent">特长 · {{ mon.talent }}</span>
                             <span class="chip plain" v-if="mon.hobby">爱好 · {{ mon.hobby }}</span>
                         </div>
+                        <div class="chips" v-if="mon.abilities && mon.abilities.length" style="margin-top:10px">
+                            <span class="chip plain" v-for="a in mon.abilities" :key="'ab'+a.name">特性 · {{ a.name }}<i v-if="a.hidden" style="font-style:normal;color:var(--accent)">（隐藏）</i></span>
+                        </div>
                         <div class="skill-list" v-if="mon.skills && mon.skills.length">
                             <div class="skill-item" v-for="s in mon.skills" :key="s.k">
                                 <b>{{ s.k }}「{{ s.v }}」</b>
                                 <span v-if="s.fx">{{ s.fx }}</span>
+                            </div>
+                        </div>
+                        <div class="seal-list" v-if="mon.soulSeal && mon.soulSeal.length">
+                            <div class="seal-row" v-for="(ss,si) in mon.soulSeal" :key="'ss'+si">
+                                <img v-if="ss.icon" class="seal-icon" :src="ss.icon" alt="魂印" loading="lazy" @error="$event.target.style.display='none'">
+                                <div class="seal-body">
+                                    <b>专属魂印</b>
+                                    <p>{{ ss.effect }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="seal-list" v-if="mon.engrave && mon.engrave.length">
+                            <div class="seal-row" v-for="(eg,gi) in mon.engrave" :key="'eg'+gi">
+                                <img v-if="eg.icon" class="seal-icon" :src="eg.icon" alt="刻印" loading="lazy" @error="$event.target.style.display='none'">
+                                <div class="seal-body">
+                                    <b>专属刻印<template v-if="eg.name"> · {{ eg.name }}</template></b>
+                                    <p>{{ eg.desc }}</p>
+                                </div>
                             </div>
                         </div>
                         <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver" v-if="mon.dexSrc">——{{ mon.dexSrc }}</span></div>
@@ -266,9 +293,9 @@ const SRC_META = {
 const STAT_LABELS = {
     pk: { hp: 'HP', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' },
     rk: { hp: '生命', atk: '物攻', mag: '魔攻', def: '物防', res: '魔防', spe: '速度' },
-    se: { hp: '体力', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' }
+    se: { hp: '体力', atk: '攻击', def: '防御', sa: '特攻', sd: '特防', spe: '速度' }
 };
-const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','mag','def','res','spe'], se: ['hp','atk','def','spa','spd','spe'] };
+const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','mag','def','res','spe'], se: ['hp','atk','def','sa','sd','spe'] };
 /* 宝可梦 18 系配色 */
 const PK_TYPE_COLORS = {
     '一般':'#9FA19F','火':'#E62829','水':'#2980EF','电':'#FAC000','草':'#3FA129','冰':'#3DCEF3',
@@ -352,6 +379,14 @@ function buildTipPool(pet) {
     if (pet.talent) {
         pool.push({ title: '特长视角', text: '它的战斗特长是「' + pet.talent + '」。让你的原创精灵也走这个特长，再用完全不同的属性去演绎——同一套打法会有什么新花样？' });
     }
+    if (pet.abilities && pet.abilities.length) {
+        const an = pet.abilities.map(a => a.name).join('、');
+        pool.push({ title: '特性改编', text: '它的特性是「' + an + '」。给你的原创精灵设计一个全新特性：名字、触发条件、效果各一句话——特性往往比技能更能定义一只精灵。' });
+    }
+    if (pet.soulSeal && pet.soulSeal.length) {
+        const fx = String(pet.soulSeal[0].effect).replace(/\s+/g, ' ').slice(0, 60);
+        pool.push({ title: '专属印记', text: '它有一枚专属魂印：「' + fx + '…」。给你的原创精灵也设计一枚专属印记——不用多，一条刻进骨头里的特殊规则就够。' });
+    }
     if (pet.skills && pet.skills.length) {
         const s0 = pet.skills[0].v, s1 = pet.skills[pet.skills.length - 1].v;
         pool.push({
@@ -403,7 +438,7 @@ createApp({
             }
             return list;
         });
-        const mon = computed(() => pool.value[curIdx.value] || { src: '', types: [], stats: [], evo: [], talent: '', skills: [], hobby: '' });
+        const mon = computed(() => pool.value[curIdx.value] || { src: '', types: [], stats: [], evo: [], talent: '', skills: [], hobby: '', abilities: [], soulSeal: [], engrave: [] });
         const isDaily = computed(() => curIdx.value === dailyIdx.value);
         const tips = computed(() => {
             const p = buildTipPool(mon.value);
@@ -511,6 +546,7 @@ createApp({
                     src: 'pk', id: p.id, no: p.no, name: p.name, en: p.en, genus: p.genus,
                     types: p.types || [], typeColors: null, region: p.region || '',
                     stats: stats, total: p.total || 0,
+                    abilities: (p.abilities || []).map(a => ({ name: a.name, hidden: !!a.hidden })),
                     h: p.h ? (p.h / 10).toFixed(1) + ' m' : '', w: p.w ? (p.w / 10).toFixed(1) + ' kg' : '',
                     dex: p.dex || '', dexVer: p.dexVer || '', dexSrc: p.dex ? '《' + p.dexVer + '》图鉴介绍' : '',
                     img: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + p.id + '.png',
@@ -527,6 +563,7 @@ createApp({
                     src: 'rk', id: p.id, no: (p.no || '').replace(/^NO/, ''), name: p.name, en: p.en || '',
                     genus: '', types: p.types || [], typeColors: p.typeColors || {}, region: '',
                     stats: stats, total: p.total || 0, h: p.h || '', w: p.w || '',
+                    abilities: [], soulSeal: [], engrave: [],
                     dex: p.dex || '', dexVer: '', dexSrc: p.dex ? '图鉴描述' : '',
                     img: p.img || '', evo: p.evo || [], link: 'https://rocokingdomworld.org/zh/pokedex/' + p.id, full: ''
                 };
@@ -543,6 +580,7 @@ createApp({
                     src: 'aq', id: p.id, no: '', name: p.name, en: '', genus: '',
                     types: p.type ? [p.type] : [], typeColors: {}, region: '',
                     stats: [], total: 0, h: p.h || '', w: p.w || '',
+                    abilities: [], soulSeal: [], engrave: [],
                     dex: p.dex || '', dexSrc: p.dex ? '成长故事' : '',
                     talent: p.talent || '', skills: skills, hobby: p.hobby || '',
                     img: p.img || '', evo: (p.evo || []).map(n => ({ name: n, img: '' })),
@@ -560,6 +598,8 @@ createApp({
                     src: 'se', id: p.no, no: p.no, name: p.name, en: p.alias || '', genus: '',
                     types: p.type ? [p.type] : [], typeColors: {}, region: '',
                     stats: stats, total: p.total || 0,
+                    abilities: [], soulSeal: (p.soulSeal || []).map(s => ({ icon: s.icon || '', effect: s.effect || '' })),
+                    engrave: (p.engrave || []).map(g => ({ icon: g.icon || '', name: g.name || '', desc: g.desc || '' })),
                     h: p.h ? String(p.h).replace(/\s*cm\s*$/, '') + ' cm' : '', w: p.w ? String(p.w).replace(/\s*kg\s*$/, '') + ' kg' : '',
                     dex: p.dex || '', dexSrc: p.dex ? '简介' : '',
                     img: p.img || '', imgFallback: p.imgFallback || '',

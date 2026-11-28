@@ -186,7 +186,7 @@ function pickName(species) {
     };
 }
 
-function buildEntry(id, species, poke, evoIds) {
+function buildEntry(id, species, poke, evoIds, abilityZh) {
     if (species.__empty || poke.__empty) return null;
     const gen = GENERATIONS.find(g => g.key === (species.generation && species.generation.name));
     const types = (poke.types || [])
@@ -201,6 +201,14 @@ function buildEntry(id, species, poke, evoIds) {
     }
     const dex = pickFlavor(species);
     const name = pickName(species);
+    // 特性：zh 名查表，查不到兜底英文名；is_hidden 标隐藏特性
+    const abilities = (poke.abilities || [])
+        .sort((a, b) => a.slot - b.slot)
+        .map(a => {
+            const zh = abilityZh && abilityZh.get(a.ability && a.ability.url);
+            return { name: zh || (a.ability && a.ability.name) || '', hidden: !!a.is_hidden };
+        })
+        .filter(a => a.name);
     return {
         id: id,
         no: ('000' + id).slice(-3),
@@ -212,6 +220,7 @@ function buildEntry(id, species, poke, evoIds) {
         gen: gen ? gen.rank : 0,
         stats: stats,
         total: total,
+        abilities: abilities,
         h: poke.height,          // 分米，展示时 /10 = 米
         w: poke.weight,          // 百克，展示时 /10 = 千克
         dex: dex.text,
@@ -305,11 +314,42 @@ const pokeArr = await pool(ids, async (id) => {
 
 const evoMap = await buildEvoMap(speciesArr);
 
+/* 特性中文名：收集全部去重的 ability url，逐条抓 /ability/{id} 取 zh-hans 名（缓存） */
+console.log('抓取特性中文名…');
+const abilityUrlSet = new Set();
+for (const pk of pokeArr) {
+    if (!pk || pk.__empty) continue;
+    for (const a of (pk.abilities || [])) {
+        if (a.ability && a.ability.url) abilityUrlSet.add(a.ability.url);
+    }
+}
+const abilityUrls = [...abilityUrlSet];
+console.log('共 ' + abilityUrls.length + ' 个特性，开始抓取…');
+const abilityZh = new Map();
+await pool(abilityUrls, async (url) => {
+    const aid = url.match(/\/(\d+)\/?$/)[1];
+    let obj = readCache('ability', aid);
+    if (!obj) {
+        try {
+            obj = await fetchJson(url);
+            writeCache('ability', aid, obj);
+        } catch (e) {
+            console.warn('ability ' + aid + ' 失败: ' + e.message);
+            obj = { __empty: true };
+        }
+    }
+    if (!obj || obj.__empty) return;
+    const zh = (obj.names || []).find(n => n.language.name === 'zh-hans')
+        || (obj.names || []).find(n => n.language.name === 'zh-Hans');
+    if (zh) abilityZh.set(url, zh.name);
+});
+console.log('特性中文名: ' + abilityZh.size + '/' + abilityUrls.length);
+
 const pokemon = [];
 for (let i = 0; i < ids.length; i++) {
     const sp = speciesArr[i];
     const evoIds = (sp && !sp.__empty && sp.evolution_chain && evoMap.get(sp.evolution_chain.url)) || [];
-    const entry = buildEntry(ids[i], sp, pokeArr[i], evoIds);
+    const entry = buildEntry(ids[i], sp, pokeArr[i], evoIds, abilityZh);
     if (entry) pokemon.push(entry);
 }
 // 补抓失败的（__empty 的）
