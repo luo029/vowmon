@@ -18,9 +18,10 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 - **10 个新页面**：权柄看板、阶元路径、血脉共鸣模拟器、地区形态对照、故事时间线、设定一致性检查、全局搜索（Ctrl/⌘+K）、精灵对比器、数据源诊断、后台操作审计。
 - **性能**：异色图空闲预载（点「异色」从等 15 秒下载变成 5ms 秒切）；图片上传自动生成 WebP，反代优先返回；PWA Service Worker 离线缓存。
 - **视觉**：导航两级下拉（档案改名、工具 FA 图标统一）、首页三组卡片 + 统计条 + 快速搜索、系别筛选折叠、后台侧栏三组、后台审计日志。
-- **移动端**：全站 41 页 × 390/360px 审计，零横向溢出；安全区适配、触控目标 ≥ 20px。
+- **移动端**：全站 42 页 × 390/360px 审计，零横向溢出；安全区适配、触控目标 ≥ 20px。
 - **每日精灵灵感**（`tools/daily-pokemon.html`）：**四源合一卡 + 每日特性卡 + 每日技能卡**——宝可梦 1025 只 / 洛克王国世界 644 只 / 奥奇传说 1606 只 / 赛尔号 4978 只，卡片顶部有数据源开关（决定三个随机池），卡片下方标注「出自」来源。各源自适配独有内容：宝可梦特性（含隐藏标记）、奥奇普通技/超杀技/成长故事、赛尔号**专属魂印/专属刻印**（图标直链 + 效果文本）+ 六维种族值/外号/简介，共同项含中文名/属性（洛克用源站官方色）/地区/种族值/进化链可视化/最新世代图鉴介绍；**特性库** 3000+ 条、**技能库** 5000+ 条，每条带「哪些精灵拥有/能学会」名单，点名字可跳精灵卡。配随机灵感提示（特性改编、专属印记等按源自适应）帮助原创誓约精灵；可开「盲盒模式」隐藏参考只看提示；「排除已参照」读取图鉴 vow 的【原型】字段自动剔除已写过的精灵。数据由 `_tools/gen-{pokemon,rock,aoqi,seer}-data.mjs` + `_tools/gen-inspire-extra.mjs` 一次性抓取（不接 AI、不实时调外部站点，图片全部引用源站 URL 不落盘），纯静态可复现。
 - **同步安全**：push/pull 差异预览弹窗（每条可勾选）+ 三方合并防回滚；审计快照可恢复。
+- **全站体检**（同日晚）：逐页渲染 / 手机审计 / 交互 E2E 跑完后修了 5 个真 bug（未编译模板闪现、Vue 版本漂移、审计页缺侧栏、lore iframe 路径靠 301 兜底、lore 死块），另补 1 处漏版本号、修了 5 个测试脚本自身的误报，见下表 16–21。
 
 ### 问题 → 修复前后对照
 
@@ -41,14 +42,20 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 | 13 | 首页「世界观」卡片是空链接                    | 补全 4 组入口 + 统计条 + Ctrl+K 搜索         |
 | 14 | 同步可能把云端修复回滚成旧值                   | 三方合并 + 差异逐条勾选                      |
 | 15 | 后台改了内容点别处静默还原                    | 点别处自动保存，Esc 才还原                    |
+| 16 | 10 个前台页数据加载前闪 `{{ }}` 未编译模板          | `v-cloak` 隐藏规则补进 `style.css`（原先只在 admin.css 里） |
+| 17 | 10 个页面用未锁版本的 `vue@3`，与其余页 3.5.13 不一致 | 全站统一锁 `vue@3.5.13`                    |
+| 18 | 操作审计页没有侧栏，从侧栏点进去成死路                 | 改成标准 topbar + layout + `.side-nav` 布局   |
+| 19 | 页面内容管理 iframe 请求 `/ranks.html`，靠 301 兜底   | 直接指向 `../world/ranks.html`，少一跳、子路径部署也稳 |
+| 20 | lore-data 里 20 个文本块对应元素早已删除，列表模式显示"死块" | 清掉孤立键，382 → 362 块                 |
+| 21 | `world/lore.html` 引 `../js/type-config.js` 没带 `?v=`，改版后可能读旧缓存 | 补 `?v=20261126s`，与其余页一致            |
 
 ### 验证工具（改完必跑）
 
 ```text
 node _tools/test-site-e2e.mjs          21 项真实交互
-node _tools/assert-render.mjs <url> local   全站渲染断言
+node _tools/assert-render.mjs <url> local   41 项渲染断言（除 404 外每页都查）
 node _tools/test-admin-modal.mjs <url> local 后台弹窗
-node _tools/audit-mobile.mjs           41 页 × 2 视口审计
+node _tools/audit-mobile.mjs           42 页 × 2 视口审计
 node _tools/test-diff-modal.mjs        差异弹窗 E2E
 ```
 
@@ -172,7 +179,7 @@ vowmon/
 │   ├── global-search.js        # Ctrl/⌘+K 全站搜索面板
 │   ├── audit-log.js            # 后台操作审计
 │   ├── card-export.js          # 精灵 / 个体 / 人物 / 物品渲染成 TCG 卡 PNG
-│   ├── vow-select.js           # 自绘下拉组件（禁原生 select）
+│   ├── vow-select.js           # 自绘下拉组件（选项多/要搜索时用它；简单筛选可用原生 select 但必须有样式）
 │   ├── vow-textarea.js         # 长文本编辑器组件
 │   ├── vow-tip.js              # 即时 tooltip（替代原生 title）
 │   └── admin*.js               # 各后台页逻辑（admin / admin-skills / … 共 11 个）
@@ -406,7 +413,7 @@ vowmon/
   - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
   - 它不复用 `.modal-overlay`，遮罩与键盘（Esc 取消 / Enter 确认）逻辑自管，因此 Esc 关弹窗时不会把后面的表单弹窗一起关掉；同时遵循 `vowmon_anim_on` 开关。
 - **表格列宽**：`admin/admin-items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
-- **后台搜索框**：图片管理工具栏统一用 `.search-field`（放大镜图标 + 内嵌清空按钮，清空按钮 `v-if` 只在有内容时出现）与 `.filter-select`（`appearance: none` + SVG 箭头），两者都是 40px 高 / 11px 圆角。不要再退回 `input-with-btn` + 独立 `btn` 的写法，也不要用默认 `<select>`。
+- **后台搜索框**：图片管理工具栏统一用 `.search-field`（放大镜图标 + 内嵌清空按钮，清空按钮 `v-if` 只在有内容时出现）与 `.filter-select`（`appearance: none` + SVG 箭头），两者都是 40px 高 / 11px 圆角。不要再退回 `input-with-btn` + 独立 `btn` 的写法，也不要出现**没有任何样式的默认 `<select>`**（固定几个选项的筛选可以继续用 `<select class="filter-select">`，选项多/要搜索的用 `vow-select`）。
 - **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `reference/items.html` 的 Tab 与筛选胶囊、后台 `admin/admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。

@@ -134,7 +134,10 @@ const app = createApp({
             activePage.value = id;
             const keys = Object.keys(data.value.blocks).filter(k => k.indexOf(id + '.') === 0);
             if (!keys.some(k => k === activeKey.value)) activeKey.value = keys.length ? keys[0] : '';
-            iframeSrc.value = '../' + pageFile(id);
+            // lore 页都在 world/ 下（数据里 page.file 只写文件名），这里补全目录，
+            // 否则会去请求 /ranks.html 再靠 _redirects 301 兜底——多一跳，子路径部署还会 404
+            const file = pageFile(id);
+            iframeSrc.value = '../' + (file.indexOf('/') === -1 ? 'world/' + file : file);
         };
         const pickBlock = (key) => { activeKey.value = key; };
 

@@ -135,7 +135,7 @@
 | `individuals-data.json` | `{individuals[],fieldTemplates[]}` | `allIndividualsData` | 书内御兽精灵个体 |
 | `characters-data.json` | `{characters[],factions,groups,fieldTemplates[]}` | `allCharactersData` | 书内御兽人物 |
 | `bloodline-skills-data.json` | `{skills[],families{}}` | — | 血脉技能（如「本心一击」）+ 族群技能包 |
-| `lore-data.json` | `{pages[],blocks{}}` | `allLoreBlocks` | 世界观五页正文文本块（键 `页.c序`，382 块） |
+| `lore-data.json` | `{pages[],blocks{}}` | `allLoreBlocks` | 世界观五页正文文本块（键 `页.c序`，362 块） |
 | `realm-data.json` | `{labels{},descs{}}` | — | 天地图鉴四类精灵定位的名称与描述 |
 | `pokemon-data.json` | `{pokemon[],count}` | — | 宝可梦参考（1025 只，PokeAPI；特性/进化链/**tags 分类标签**） |
 | `rock-data.json` | `{pets[],count}` | — | 洛克王国世界（644 只，rocokingdomworld.org；六维种族值 hp/atk/mag/def/res/spe） |
@@ -146,7 +146,7 @@
 
 体积参考（用户对体积敏感）：`inspiration-skills.json` 4.8MB、`seer-data.json` 4.2MB、`aoqi-data.json` 1.1MB、`inspiration-abilities.json` 1.15MB、其余都在 0.6MB 以内。**新增数据先瘦身再提交**（§10.0）。
 
-当前站点自有数据规模：16 精灵 / 2 技能 / 1 特性 / 25 性格 / 8 境界 / 1 个体 / 1 人物 / 18 血脉技能 / 382 文本块。**站点按千只规模设计压测过**，别担心容量，只 worry 缓存和分页（README §3）。
+当前站点自有数据规模：16 精灵 / 2 技能 / 1 特性 / 25 性格 / 8 境界 / 1 个体 / 1 人物 / 18 血脉技能 / 362 文本块。**站点按千只规模设计压测过**，别担心容量，只 worry 缓存和分页（README §3）。
 
 ---
 
@@ -275,7 +275,9 @@ vowmon/
 ## 5. 后台页面逐页手册
 
 后台统一：不加载全站 navbar（自带 topbar + `admin/sidebar.js` 侧栏，侧栏按「图鉴数据 / 书内档案 / 内容与系统」三组）；弹窗用 `js/dialog.js`；
-下拉用 `js/vow-select.js` 组件（**禁止原生 select**，会弹系统菜单）；长文本用 `js/vow-textarea.js`；
+下拉：选项多 / 需要搜索的选择器用 `js/vow-select.js` 组件；只有固定几个选项的筛选、排序可以用原生 `<select>`，
+但**必须套页面级样式**（`.filter-select` / `.sort-select` 或 `.field select`，`appearance:none` + 自绘箭头），
+不能出现没有任何样式、直接弹系统默认菜单的裸 `<select>`；长文本用 `js/vow-textarea.js`；
 提示气泡用 `js/vow-tip.js`；同步/拉取全部带 **diff 预览弹窗**（见 §7）。
 
 | 页面 | 功能 | 特别机制 |
@@ -305,7 +307,7 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 | `data-loader.js` | **唯一取数入口**。FILES 键表、三源回退、镜像/reconcile、onChange、markDirty/markSynced/replace |
 | `site-config.js` | `imgCdnBase` / `dataCdnBase` / 全局 `imgVer`（图片 URL 版本号，注意必须透传到 out 对象） |
 | `navbar.js` | 全站导航唯一来源（NAV 数组 + ROOT 前缀 + 动效开关 + 搜索跳转 + isActive 补 .html——CF 会 308 去扩展名） |
-| `admin/sidebar.js` | 后台侧栏唯一来源（12 项；`.html` 补齐；data-tab 仅 index 页拦截） |
+| `admin/sidebar.js` | 后台侧栏唯一来源（13 个页面入口 / 15 行含 3 个分组标题；`.html` 补齐；data-tab 仅 index 页拦截；**每个后台页都要挂 `.side-nav` + 引这个脚本**） |
 | `type-config.js` | 18 属性图标/颜色唯一来源 |
 | `css/type-filter.css` + `css/global-search.css` | 折叠式系别筛选（vowdex/list/skills/traits 四页共用，18 系别默认收起可搜索）+ Ctrl/⌘+K 搜索面板样式 |
 | `type-chart.js` | 18×18 克制表 + `getTypeMultiplier` / `getComboMultiplier` |
@@ -386,17 +388,16 @@ CF Pages 会把 `*.html` 308 到无扩展名路径——**所有 isActive 判断
 语法检查   node --check js/xxx.js
 绑定审计   抽 HTML 内 <script> 用 new Function 验语法 + 三向核对（模板绑定 vs return 清单 vs 定义），
            $event 是 Vue 内置、v-for 局部变量是合法缺失——脚本模板见 .workbuddy/memory/2026-11-28.md
-渲染断言   node _tools/assert-render.mjs http://127.0.0.1:8765 local   （29 项全站检查）
+渲染断言   node _tools/assert-render.mjs http://127.0.0.1:8765 local   （41 项断言，42 页里除 404 全在内）
 后台弹窗   node _tools/test-admin-modal.mjs http://127.0.0.1:8765 local （6 项）
-侧栏       node _tools/test-sidebar.mjs （10 项）
+侧栏       node _tools/test-sidebar.mjs （11 项，含操作审计页）
 diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
            node _tools/test-diff-modal.mjs（桌面 E2E 15 项）
            node _tools/test-diff-modal-mobile.mjs（390/360px 移动端 6 项）
 对战引擎   node _tools/test-battle.mjs
 异色预载   node _tools/test-shiny-preload.mjs（图片基址指本地 1×1 fixture，测"点击前已预载/秒切/只预载1张"）
-手机审计   node _tools/audit-mobile.mjs（清单内 41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
-           注意：站点实际 42 页（前台 31 + 后台 11），**`tools/daily-pokemon.html` 还没进审计清单**
-           （该页是新加的重页，下次跑审计前先把它补进 audit-mobile.mjs 的 PAGES）
+手机审计   node _tools/audit-mobile.mjs（42 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
+           新增页面要手动补进 audit-mobile.mjs 的 PAGES（清单是手写的，不会自动发现）
 功能 E2E   node _tools/test-site-e2e.mjs（21 项：筛选/排序/异色/Ctrl+K/个体源/血脉默认/审计等）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
 数据生成   node _tools/gen-pokemon-data.mjs / gen-rock-data.mjs / gen-aoqi-data.mjs
@@ -543,7 +544,9 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 | 文档说"后台别传 fresh"，打开后台却每次转圈 | 7 个后台脚本实际传了 `{fresh:true}` | 文档已按现状重写（要秒开就不传，要最新就传） |
 | 文档里的后台路径 `admin-reference/xxx` 打不开 | 目录树是重组前的旧结构 | 已全部改为平铺的 `admin/admin-xxx.html` |
 | 按文档算境界（升灵 16-36）与站内推导不符 | README 写 16-36/37-50，`stages-data.json` 是 16-35/36-50 | 以数据文件为准；文档已修正 |
-| 新页跑不进手机审计 | `audit-mobile.mjs` 的 PAGES 是手写清单，新增页不会自动加入 | 新增页面当天补进 PAGES（`daily-pokemon.html` 目前仍未加） |
+| 新页跑不进手机审计 | `audit-mobile.mjs` 的 PAGES 是手写清单，新增页不会自动加入 | 新增页面当天补进 PAGES（42 页现已齐全）；审计读 `innerText` 判「未编译模板」时要排除 `#vowmon-boot` 加载遮罩，否则数据没回来时会误报 |
+| 数据回来前闪一下 `{{ }}` 未编译模板 | `[v-cloak]{display:none}` 原先只写在 `css/admin.css`，前台只引 `style.css` 的页面没有这条规则 | `css/style.css` 已补全局 `[v-cloak]{display:none!important}`；新页 `#app` 建议直接加 `v-cloak`（Vue 挂载后会自动摘掉，不会把页面藏死） |
+| 同款组件在不同页行为不一致 | 10 个页面引的是 `vue@3` 裸版本（会随 CDN 漂移），其余页锁 `3.5.13` | 全站统一锁 `vue@3.5.13/dist/vue.global.prod.js`，新增页照抄这条 |
 
 ---
 
@@ -552,7 +555,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 > **重要概念区分**：**御兽精灵（individuals-data.json 的个体）** 才是书里正式存在的精灵，权柄 / 血脉 / 契约状态等只属于个体；**精灵图鉴（vow-data.json）** 只是种族图谱，展示所有可能的精灵，不承载个体属性。两者靠 `speciesId` 关联。做功能时先想清楚数据属于哪一层——把权柄挂在图鉴种族上是概念错误（曾发生过，现已修正）。
 
 > 以下内容是**小说的世界观设定**，站点的数据结构、页面、文案全部围绕它构建。
-> 正文原文存于 `lore-data.json`（382 块），本节是结构化摘要 + AI 理解用的解读。
+> 正文原文存于 `lore-data.json`（362 块），本节是结构化摘要 + AI 理解用的解读。
 
 ### 12.1 世界基础：元域与三律
 
@@ -728,7 +731,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 | 奥奇传说大全 | http://aoqi.100bt.com | 奥奇数据源；图片在 `dsrc` 属性 |
 | 赛尔号 BWIKI | https://wiki.biligame.com/seer | 赛尔数据源；SMW ask 批量；有 WAF（4.5s 限速）；`Special:FilePath` 构造图片直链 |
 | 洛克王国 4399 | https://news.4399.com/luoke/ | `vow-detail.html` / `skill-detail.html` 的 wiki 布局参照来源（展示台+种族值+进化链+克制卡的版式观感） |
-| Vue 3 文档 | https://vuejs.org/guide/ | CDN 全量包 `vue@3/dist/vue.global.prod.js`（jsDelivr，prod 版）；**内联模板运行时编译，遵守 §5 白屏铁律** |
+| Vue 3 文档 | https://vuejs.org/guide/ | CDN 全量包固定锁 **`vue@3.5.13/dist/vue.global.prod.js`**（全站统一，禁止写 `vue@3` 裸版本）；**内联模板运行时编译，遵守 §5 白屏铁律** |
 | Font Awesome 6.4 | https://fontawesome.com/v6/search | 全站图标唯一来源（`fa-solid fa-*`） |
 | Inter 字体 | jsDelivr CDN | 变量字体；中文交给系统字体栈（HarmonyOS/MiSans/思源黑体/苹方/雅黑），**禁 Google Fonts Nunito（被墙）** |
 | Cloudflare Pages 文档 | https://developers.cloudflare.com/pages/ | Functions（`functions/`）、`_routes.json`、`_headers`、Custom domain 登记 |

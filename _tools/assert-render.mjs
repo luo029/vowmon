@@ -37,6 +37,18 @@ const CASES = [
   ['admin/admin-images.html', `document.body.innerText.length`, 100],
   ['admin/admin-lore.html', `document.body.innerText.length`, 150],
   ['admin/admin-bloodline-skills.html', `document.body.innerText.length`, 150],
+  ['admin/admin-audit.html', `document.body.innerText.length`, 100],
+  ['dex/compare.html', `document.body.innerText.length`, 300],
+  ['dex/region-forms.html', `document.body.innerText.length`, 300],
+  ['records/timeline.html', `document.body.innerText.length`, 300],
+  ['reference/bloodline-sim.html', `document.body.innerText.length`, 200],
+  ['world/authority.html', `document.body.innerText.length`, 500],
+  ['world/ranks-path.html', `document.body.innerText.length`, 300],
+  ['battle/index.html', `document.body.innerText.length`, 120],
+  ['battle/rules.html', `document.body.innerText.length`, 500],
+  ['tools/consistency.html', `document.body.innerText.length`, 200],
+  ['tools/diagnostics.html', `document.body.innerText.length`, 200],
+  ['tools/daily-pokemon.html', `document.body.innerText.length`, 150],
 ];
 
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, '--disable-gpu',
@@ -78,3 +90,4 @@ for (const [p, expr, min] of CASES) {
 ws.close(); chrome.kill();
 console.log(`\n[${TAG}] ${CASES.length - fail}/${CASES.length} 通过`);
 process.exit(fail ? 1 : 0);
+

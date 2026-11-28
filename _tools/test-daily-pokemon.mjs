@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 
-const BASE = 'http://127.0.0.1:8791';
+const BASE = process.argv[2] || 'http://127.0.0.1:8791';
 const PORT = 9313;
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, '--disable-gpu', '--no-first-run',
@@ -39,7 +39,7 @@ ok(name.length > 0, '今日精灵名渲染（' + (name.split(' ')[0] || '') + '�
 ok(await ev(`document.querySelectorAll('.stat-row').length`) === 6, '种族值 6 行');
 ok(await ev(`document.querySelectorAll('.tip').length`) === 3, '灵感提示 3 条');
 ok((await ev(`[...document.querySelectorAll('.chip')].length`)) >= 1, '属性/地区 chips 渲染');
-ok(String(await ev(`(()=>{const i=document.querySelector('.art-wrap img');return i?i.getAttribute('src'):''})()`)).includes('official-artwork'), '立绘指向 PokeAPI sprites');
+ok(String(await ev(`(()=>{const i=[...document.querySelectorAll('.art-wrap img')].find(x=>x.getAttribute('alt'));return i?i.getAttribute('src'):''})()`)).includes('official-artwork'), '立绘指向 PokeAPI sprites');
 ok(/No\.\d{3}/.test(String(await ev(`document.querySelector('.no-tag')?.textContent||''`))), '编号显示');
 
 // 盲盒开关

@@ -13,7 +13,7 @@ const PAGES = [
     'reference/items.html', 'reference/bloodlines.html', 'reference/bloodline-sim.html',
     'reference/calculator.html', 'reference/coverage.html',
     'world/ranks.html', 'world/ranks-path.html', 'world/authority.html', 'world/trainers.html', 'world/factions.html', 'world/lore.html',
-    'battle/index.html', 'battle/rules.html', 'tools/consistency.html', 'tools/diagnostics.html',
+    'battle/index.html', 'battle/rules.html', 'tools/consistency.html', 'tools/diagnostics.html', 'tools/daily-pokemon.html',
     'admin/index.html', 'admin/admin-skills.html', 'admin/admin-traits.html', 'admin/admin-items.html',
     'admin/admin-images.html', 'admin/admin-lore.html', 'admin/admin-individuals.html', 'admin/admin-characters.html',
     'admin/admin-stages.html', 'admin/admin-bloodline-skills.html', 'admin/admin-audit.html'
@@ -59,7 +59,9 @@ for (const width of [390, 360]) {
                     if (worst.length>=4) break;
                 }
             }
-            return JSON.stringify({over:over, unrendered:(b.innerText||'').includes('{{'), worst:worst});
+            // 数据没回来时 data-loader 会盖一层不透明加载遮罩（#vowmon-boot），
+            // 此时 innerText 里能读到模板但用户看不到，不算渲染问题
+            return JSON.stringify({over:over, unrendered:(b.innerText||'').includes('{{') && !document.getElementById('vowmon-boot'), worst:worst});
         })()`);
         const o = JSON.parse(r || '{}');
         if (o.over > 2 || o.unrendered) {

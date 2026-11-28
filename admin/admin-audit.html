@@ -35,33 +35,41 @@
     </style>
 </head>
 <body>
-<div class="wrap">
-    <a href="index.html" class="back"><i class="fa-solid fa-arrow-left"></i> 返回后台</a>
-    <div id="app" v-cloak>
-        <div class="bar">
-            <h1><i class="fa-solid fa-clock-rotate-left"></i> 操作审计日志</h1>
-            <button class="btn" @click="exportAll">导出 JSON</button>
-            <button class="btn danger" @click="clearAll">清空</button>
-        </div>
-        <div class="sub" style="font-size:12px;color:#8593ad;margin-bottom:14px">记录本机后台的保存 / 同步 / 拉取操作（最多 200 条）。带快照的记录可一键恢复当时的本机镜像与脏标记。</div>
-        <div class="card">
-            <table v-if="logs.length">
-                <tr><th>时间</th><th>操作</th><th>详情</th><th>页面</th><th>恢复</th></tr>
-                <tr v-for="(e,i) in logs" :key="i">
-                    <td class="time">{{ fmt(e.time) }}</td>
-                    <td class="act">{{ e.action }}</td>
-                    <td>{{ e.detail }}</td>
-                    <td class="time">{{ e.page }}</td>
-                    <td><button class="btn" v-if="e.snapshot" @click="restore(i)">恢复快照</button><span v-else style="color:#adb5bd">—</span></td>
-                </tr>
-            </table>
-            <div class="empty" v-else>暂无操作记录。在任意后台页保存或同步数据后，这里会自动记录。</div>
-        </div>
+<header class="topbar">
+    <h1><i class="fa-solid fa-clock-rotate-left"></i> 操作审计日志</h1>
+    <div class="topbar-actions">
+        <a class="btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> 返回后台</a>
     </div>
+</header>
+<div class="layout">
+    <aside class="sidebar"><div class="side-nav"></div></aside>
+    <main class="main-content">
+        <div id="app" v-cloak style="max-width:1080px">
+            <div class="bar">
+                <button class="btn" @click="exportAll">导出 JSON</button>
+                <button class="btn danger" @click="clearAll">清空</button>
+            </div>
+            <div class="sub" style="font-size:12px;color:#8593ad;margin-bottom:14px">记录本机后台的保存 / 同步 / 拉取操作（最多 200 条）。带快照的记录可一键恢复当时的本机镜像与脏标记。</div>
+            <div class="card">
+                <table v-if="logs.length">
+                    <tr><th>时间</th><th>操作</th><th>详情</th><th>页面</th><th>恢复</th></tr>
+                    <tr v-for="(e,i) in logs" :key="i">
+                        <td class="time">{{ fmt(e.time) }}</td>
+                        <td class="act">{{ e.action }}</td>
+                        <td>{{ e.detail }}</td>
+                        <td class="time">{{ e.page }}</td>
+                        <td><button class="btn" v-if="e.snapshot" @click="restore(i)">恢复快照</button><span v-else style="color:#adb5bd">—</span></td>
+                    </tr>
+                </table>
+                <div class="empty" v-else>暂无操作记录。在任意后台页保存或同步数据后，这里会自动记录。</div>
+            </div>
+        </div>
+    </main>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
 <script src="../js/audit-log.js?v=20261128"></script>
 <script src="../js/dialog.js?v=20261126s"></script>
+<script src="sidebar.js?v=20261128c"></script>
 <script>
 const { createApp, ref, onMounted } = Vue;
 createApp({
