@@ -5,7 +5,9 @@
 >
 > 配套文件：`README.md`（面向使用者的详细功能手册与开发规范，本文有大量引用）。
 > 两者冲突时，以**仓库实际代码**为准，其次本文，再次 README。
-> 交接版本：2026-11-28 深夜（含每日精灵灵感四源模块、外部参考数据库、已参照名录弹窗）。
+> 交接版本：2026-11-28 深夜（含每日精灵灵感四源模块、外部参考数据库、已参照名录弹窗）；
+> **同日晚已做一轮文档↔代码对齐**（目录树、境界区间、图片缓存天数、后台 fresh 策略、导航 soon 数量、后台页清单），
+> 之后若再发现文档与代码不一致，按 §0.5.1 第 33 条处理：改文档 + 记日志。
 
 ---
 
@@ -33,6 +35,7 @@
 6. 每次 css/js 改动必须升 `?v=YYYYMMDD[字母]` 版本号，否则缓存错位白屏。
 7. **能构造 URL 绝不请求接口，能引用的绝不下载**——外部数据采集的第一哲学（§10）。
 8. 数据文件体积敏感：GitHub 仓库会被用户检查，新增数据先想瘦身（§10.0）。
+9. 文档（README / AI-GUIDE）与代码不一致时，**改文档对齐代码并记日志**，别让下一任 AI 按错的口径干活。
 
 ---
 
@@ -92,6 +95,9 @@
 30. 用户用**截图**纠错（迪莫六维、奥奇加载不出、奈克洛兹玛标签），看到截图先复现再改。
 31. 用户给链接就是让你去读（52poke 分类页、biligame wiki），读的时候把定义/判定标准弄准确，别想当然。
 32. "再查查还有没有别的错误"→ 主动做全面数据体检（进化链、属性取值、stats 完整性），把真错误和"源站本来就没有"区分开汇报。
+33. **要你先"读整个代码库（尤其 README 和 AI-GUIDE）"再干活**：读完必须核对文档与代码是否一致，
+    有偏差就**改文档**（README + AI-GUIDE 一起改），**每次修改都要记日志**（`.workbuddy/memory/YYYY-MM-DD.md`）。
+    用户原话（2026-11-28）："读取整个代码库，特别是 readme 和 ai readme" → "有偏差的，修改一下" → "记得每次修改都要有日志"。
 
 ### 0.5.2 隐性要求（AI 总结的用户偏好与行事风格）
 
@@ -166,16 +172,18 @@ vowmon/
 │               admin-lore / admin-individuals / admin-characters
 │               admin-stages / admin-bloodline-skills / admin-audit   sidebar.js（后台侧栏唯一来源）
 ├── css/        style.css  navbar.css  admin.css  common-ui.css  dialog.css
-│               diff-modal.css  responsive.css（必须最后引入）
+│               diff-modal.css  type-filter.css（折叠系别筛选）  global-search.css（Ctrl+K）
+│               responsive.css（必须最后引入）
 ├── js/         （见 §6 全清单）
-├── functions/  img/[[path]].js（图片反代，缓存 7 天）  data/[[path]].js（数据反代，缓存 60s）
+├── functions/  img/[[path]].js（图片反代，优先 WebP，缓存 7 天）  data/[[path]].js（数据反代，缓存 60s）
 ├── _tools/     测试脚本 + 外部数据生成器（见 §9/§10）
 └── .github/workflows/deploy-cloudflare.yml（push → CF Pages）
 ```
 
-> ⚠️ README §1 的目录树写的是 `admin/admin-reference/skills.html` 这类子目录结构，**已过时**。
-> 2026-11-24 起后台页面**全部平铺在 `admin/` 下**，互链用同目录相对路径（如 `admin-skills.html`），
-> 跳前台用 `../xxx.html`。README 其余内容（功能说明 §1.05、规范）仍准确。
+> ✅ README §1 的目录树已于 2026-11-28 同步为**平铺结构**（与本文一致）。2026-11-24 起后台页面
+> **全部平铺在 `admin/` 下**，互链用同目录相对路径（如 `admin-skills.html`），跳前台用 `../xxx.html`；
+> 前台页面按模块进 `dex/` `records/` `reference/` `world/` `battle/` `tools/`，根目录只留 `index.html` 与 `404.html`。
+> 两文若再出现不一致，以代码为准，**并且要顺手把文档改掉 + 记日志**（用户 2026-11-28 的明确要求）。
 
 ---
 
@@ -193,8 +201,13 @@ vowmon/
   页内 fetchSource() 按同样的三源顺序直接 fetch 6 个参考 JSON（带 ?_=时间戳戳穿缓存）。
   VowmonData 只用 softReady(['vows']) 静默拿图鉴 vow 扫【原型】字段。
 
-后台页面（本机镜像优先）：
-  ① localStorage['vowmon_mirror_<key>'] 有镜像 → 秒开（不发遮罩）
+后台页面（分两种，取决于页面有没有传 fresh）：
+  A. 强制回源（传了 {fresh:true}）：admin.js 精灵(vows+traits) / admin-skills(skills+vows)
+     / admin-items / admin-images(vows) / admin-individuals(8 个 key) / admin-characters / admin-stages
+     → 打开就等网络、显示「正在加载数据…」遮罩，好处是打开即最新
+  B. 镜像优先（没传 fresh）：admin-traits(vows+traits) / admin-bloodline-skills(bloodlineSkills+individuals+vows)
+     → 有镜像就秒开（不发遮罩）+ 后台静默对账
+  ① localStorage['vowmon_mirror_<key>'] 有镜像 → 先用它渲染（A 类页面跳过这步，直接回源）
   ② 后台静默 reconcile：fetchRemote 带 ?_=时间戳 戳穿 60s 边缘缓存回源对账
      - 云端与镜像一致 → 无事
      - 不一致且本地无脏标记（vowmon_dirty_keys）→ 云端覆盖镜像，页面自动刷新
@@ -205,7 +218,8 @@ vowmon/
 ```
 
 **铁律**：localStorage 草稿**永远优先于远端**（改回远端优先会丢用户未同步的修改）。
-后台 `VowmonData.ready()` 不要传 `fresh: true`。
+`fresh` 两种都合法：要秒开就别传（需要最新数据点顶栏「从仓库拉取」），要打开即最新就传。
+**现状是 7 个后台页传、2 个不传**——改页面时按上面的清单同步更新，别写「一律不要传 fresh」这种与代码相反的话（README 曾在这一点上写反，2026-11-28 已修正）。
 
 相关 localStorage 键（部分）：`vowmon_vows_data`、`vowmon_mirror_*`、`vowmon_dirty_keys`、
 `vowmon_anim_on`（'false'=关动画）、`vowmon_sync_config`（Token/仓库名，仅本机）、
@@ -254,7 +268,7 @@ vowmon/
 去后台「页面内容」编辑；**改页面结构**才需要重跑 `_tools/lore_gen.py`（extend 合并模式，勿用 --fresh）。
 
 **导航**：唯一来源 `js/navbar.js` 的 `NAV` 数组（ROOT 前缀按 pathname 自动判断子目录）；
-后台侧栏唯一来源 `admin/sidebar.js`。当前导航里有两个 `soon: true` 占位：**精灵果实页**、**十八生态界页**。
+后台侧栏唯一来源 `admin/sidebar.js`。当前导航里共有 **3 个 `soon: true` 占位**：**精灵果实页**（挂在物品图鉴下）、**十八生态界页**（挂在元域演化史下）、**地图**（一级菜单 `key: 'map'`）。
 
 ---
 
@@ -293,7 +307,7 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 | `navbar.js` | 全站导航唯一来源（NAV 数组 + ROOT 前缀 + 动效开关 + 搜索跳转 + isActive 补 .html——CF 会 308 去扩展名） |
 | `admin/sidebar.js` | 后台侧栏唯一来源（12 项；`.html` 补齐；data-tab 仅 index 页拦截） |
 | `type-config.js` | 18 属性图标/颜色唯一来源 |
-| `css/type-filter.css` | 折叠式系别筛选（vowdex/list/skills/traits 四页共用，18 系别默认收起可搜索） |
+| `css/type-filter.css` + `css/global-search.css` | 折叠式系别筛选（vowdex/list/skills/traits 四页共用，18 系别默认收起可搜索）+ Ctrl/⌘+K 搜索面板样式 |
 | `type-chart.js` | 18×18 克制表 + `getTypeMultiplier` / `getComboMultiplier` |
 | `category-config.js` | 技能分类（物理/特殊/变化）图标颜色 |
 | `tag-config.js` | 技能标签内置库 23 个 + hash 兜底配色 |
@@ -380,7 +394,9 @@ diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
            node _tools/test-diff-modal-mobile.mjs（390/360px 移动端 6 项）
 对战引擎   node _tools/test-battle.mjs
 异色预载   node _tools/test-shiny-preload.mjs（图片基址指本地 1×1 fixture，测"点击前已预载/秒切/只预载1张"）
-手机审计   node _tools/audit-mobile.mjs（41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
+手机审计   node _tools/audit-mobile.mjs（清单内 41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
+           注意：站点实际 42 页（前台 31 + 后台 11），**`tools/daily-pokemon.html` 还没进审计清单**
+           （该页是新加的重页，下次跑审计前先把它补进 audit-mobile.mjs 的 PAGES）
 功能 E2E   node _tools/test-site-e2e.mjs（21 项：筛选/排序/异色/Ctrl+K/个体源/血脉默认/审计等）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
 数据生成   node _tools/gen-pokemon-data.mjs / gen-rock-data.mjs / gen-aoqi-data.mjs
@@ -523,6 +539,11 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 | 下拉点外面不关 | 事件时序 | vow-select 捕获阶段 pointerdown |
 | 自定义境界名后 RANK_SCOPE 失配 | 权柄阶元映射按名字写死（初灵↔初生…元灵↔掌元） | scopeNote 字段兜底；改名时提醒用户填 scopeNote |
 | 生成数据体积暴涨 | learners 全量存储 / 冗余字段 | 截 80、去 src、截断描述（§10.0） |
+| 文档说图片缓存 1 小时，换图却半小时不变 | `functions/img` 实际是 `CACHE_TTL=604800`（7 天 immutable），README 写错 | 文档已改成 7 天；换图改 `imgVer` 或加 `?v=` |
+| 文档说"后台别传 fresh"，打开后台却每次转圈 | 7 个后台脚本实际传了 `{fresh:true}` | 文档已按现状重写（要秒开就不传，要最新就传） |
+| 文档里的后台路径 `admin-reference/xxx` 打不开 | 目录树是重组前的旧结构 | 已全部改为平铺的 `admin/admin-xxx.html` |
+| 按文档算境界（升灵 16-36）与站内推导不符 | README 写 16-36/37-50，`stages-data.json` 是 16-35/36-50 | 以数据文件为准；文档已修正 |
+| 新页跑不进手机审计 | `audit-mobile.mjs` 的 PAGES 是手写清单，新增页不会自动加入 | 新增页面当天补进 PAGES（`daily-pokemon.html` 目前仍未加） |
 
 ---
 

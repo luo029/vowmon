@@ -58,7 +58,7 @@ node _tools/test-diff-modal.mjs        差异弹窗 E2E
 
 1. **命名规范**：官方英文名 **Vowmon**，图鉴英文 **Vowdex**。**「精灵」的英文统一叫 Vowmon**（数据源即数据仓库里的 `vow-data.json`，代码里的全局变量仍为 `allVowsData`）。禁止使用 Pokedex / Pokemon / vows 作为对外名称。
 2. **代码输出格式**：所有生成的代码必须使用 ` ```text ` 代码块，**禁止使用高亮**。代码文件名写在代码块上方。严禁使用省略号。
-3. **目录规范**：**按文件类型分文件夹**——`css/`、`js/`；前台 `.html` 页面留在根目录，**后台页面统一放 `admin/` 子目录**；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
+3. **目录规范**：**先按功能模块、再按文件类型分文件夹**——前台页面按模块进 `dex/`、`records/`、`reference/`、`world/`、`battle/`、`tools/`（根目录只留 `index.html` 与 `404.html`）；**后台页面全部平铺在 `admin/` 子目录**（不再分子目录）；样式统一 `css/`、脚本统一 `js/`；`functions/` 只放 Cloudflare Pages Functions。**站点仓库不存数据**（数据在 `vowmon_data`），禁止再新增 `assets/`、`pages/`、`data/` 之类的目录。
 4. **性能与动效**：全站默认开启过渡动画，但必须受 `localStorage.getItem('vowmon_anim_on')` 控制。当值为 `'false'` 时，不应有任何动画。
 5. **属性统一**：所有属性的图标和颜色存放在 `js/type-config.js`，全局引用。
 6. **禁止系统弹窗**：任何 `alert()` / `confirm()` / `prompt()` 都不允许出现，统一换成自定义弹窗 `VowmonDialog`（`js/dialog.js` + `css/dialog.css`，用法见 1.2）。
@@ -70,74 +70,121 @@ node _tools/test-diff-modal.mjs        差异弹窗 E2E
 
 ```text
 vowmon/
-├── index.html              # 首页
-├── dex/vowdex.html             # 精灵图鉴
-├── dex/vow-detail.html         # 精灵详情（?id=精灵id，洛克王国 wiki 风格：浮动展示台 + 种族值 + 进化链 + 系别克制）
-├── records/individuals.html        # 御兽精灵档案（书中精灵个体：性格/技能熟练度/血脉/主人/经历，?id=直达详情）
-├── records/characters.html         # 御兽人物档案（书中角色：势力/头衔/联盟币存款/物品栏/持有精灵，?id=直达详情）
-├── world/factions.html           # 势力版图（联盟制度 / 九牧地区·九牧联盟 / 权职体系 / 三大协会，已纳入页面内容 CMS）
-├── dex/list.html               # 精灵列表
-├── reference/skills.html             # 技能图鉴
-├── reference/skill-detail.html       # 技能详情（?id=技能id，列出可学精灵：自学 / 技能石）
-├── world/lore.html               # 元域演化史（世界观史诗页面，纯静态文本 + 星空卷轴风）
-├── reference/traits.html             # 特性大全
-├── reference/natures.html            # 性格大全
-├── reference/items.html              # 物品图鉴（列表 + 详情）
-├── reference/calculator.html         # 属性克制计算器
-├── reference/coverage.html           # 打击面计算器
-├── README.md               # 本文件
-├── .nojekyll               # 让 GitHub Pages 跳过 Jekyll 处理
-├── _headers                # Cloudflare Pages 响应头（静态资源缓存策略）
-├── _routes.json            # Cloudflare Pages：只让 /img/* 进 Functions
+├── index.html                  # 首页
+├── 404.html                    # 404 兜底页
+├── README.md                   # 本文件（功能手册 + 开发规范）
+├── AI-GUIDE.md                 # 给 AI 的总纲（速览 / 逐页手册 / 世界观 / 踩坑史）
+├── .nojekyll                   # 让 GitHub Pages 跳过 Jekyll 处理
+├── _headers                    # Cloudflare Pages 响应头（静态资源缓存策略）
+├── _routes.json                # Cloudflare Pages：只让 /img/* 进 Functions
+├── _redirects                  # 旧地址 301 跳转（2026-11-26 目录重组前的老链接）
+├── manifest.webmanifest        # PWA 清单（只在前台注册 sw.js）
+├── sw.js                       # PWA Service Worker
+├── .github/workflows/          # push 到 main 自动部署 Cloudflare Pages
 │
-├── .github/workflows/      # push 到 main 自动部署 Cloudflare Pages
-├── functions/img/[[path]].js  # CF Pages Function：图片反向代理（见 §4.3）
+├── dex/                        # 精灵与图鉴数据页
+│   ├── vowdex.html             # 精灵图鉴（卡片墙，搜索 + 阶数/形态/系别筛选 + 分页 30）
+│   ├── vow-detail.html         # 精灵详情（?id=精灵id，浮动展示台 + 种族值 + 进化链 + 系别克制）
+│   ├── list.html               # 精灵列表（表格视图，自定义列 + 排序）
+│   ├── realm-dex.html          # 天地图鉴（权柄 / 遥世 / 伙伴 / 晚熟 四类定位）
+│   ├── compare.html            # 精灵对比器（并排六维雷达图）
+│   └── region-forms.html       # 地区形态对照（按进化链聚合、按地区并排）
 │
-├── admin/                  # 后台（子目录，资源引用带 ../ 前缀）
-│   ├── index.html          # 后台 - 精灵管理（原 admin.html，网址 /admin/）
-│   ├── admin-reference/skills.html   # 后台 - 技能管理
-│   ├── admin-reference/traits.html   # 后台 - 特性管理
-│   ├── admin-reference/items.html    # 后台 - 物品管理
-│   ├── admin-world/lore.html     # 后台 - 页面内容管理（可视化 + 列表双模式，世界观文本块）
-│   ├── admin-records/individuals.html # 后台 - 御兽精灵档案管理（书中个体）
-│   ├── admin-records/characters.html  # 后台 - 御兽人物档案管理（书中角色）
-│   └── admin-images.html   # 后台 - 图片管理
+├── records/                    # 书内档案（小说里的个体与人物）
+│   ├── individuals.html        # 御兽精灵（书中个体：习性/技能熟练度/血脉/主人/经历，?id=直达）
+│   ├── characters.html         # 御兽人物（书中角色：势力/头衔/联盟币/物品栏/持有精灵，?id=直达）
+│   └── timeline.html           # 故事时间线（按章节串联契约/进化/权柄事件）
 │
-├── css/                    # 所有样式
-│   ├── style.css           # 前台统一样式
-│   ├── navbar.css          # 全站导航栏样式（唯一来源）
-│   ├── common-ui.css       # 通用组件样式（弹窗、表单、选择器）
-│   ├── dialog.css          # 自定义弹窗 / 轻提示样式（配套 js/dialog.js）
-│   ├── admin.css           # 后台布局样式
-│   └── responsive.css      # 全站移动端适配（最后引入，唯一来源）
+├── reference/                  # 资料与计算工具
+│   ├── skills.html             # 技能图鉴（四组筛选，组内 OR 组间 AND）
+│   ├── skill-detail.html       # 技能详情（?id=技能id，可学精灵：自学 / 技能石）
+│   ├── traits.html             # 特性大全
+│   ├── natures.html            # 性格大全（25 性格 5×5 速查矩阵）
+│   ├── items.html              # 物品图鉴（列表 + 详情同页，?id=物品id）
+│   ├── calculator.html         # 属性克制计算器（防守面 / 进攻面 / 18×18 全表）
+│   ├── coverage.html           # 打击面计算器（最多 5 属性覆盖 171 种组合）
+│   ├── bloodlines.html         # 血脉图鉴（先天 / 后天四类血脉 + 四大血脉之石）
+│   └── bloodline-sim.html      # 血脉共鸣模拟器（选书内个体，读档案已记录的血脉）
 │
-├── js/                     # 所有脚本
-│   ├── navbar.js           # 全站导航栏内容与交互（唯一来源）
-│   ├── type-config.js      # 属性配置（名称 / 图标 / 颜色）
-│   ├── category-config.js  # 技能分类配置（物理 / 特殊 / 变化：名称 / 图标 / 颜色，唯一来源）
-│   ├── tag-config.js       # 技能标签配置（回血 / 先手 / 异常…：名称 / 图标 / 颜色，唯一来源）
-│   ├── item-config.js      # 物品配置（大类 Tab + 分组胶囊：名称 / 图标 / 颜色，唯一来源）
-│   ├── type-chart.js       # 18×18 属性克制表 + 组合倍率计算
-│   ├── vowmon-utils.js     # 前台数据规整（normalizeAll / total）
-│   ├── github-api.js       # GitHub API 封装
-│   ├── image-utils.js      # 图片上传前处理：压缩 / 等比缩放 / 统一输出 PNG
-│   ├── dialog.js           # 自定义弹窗 + 轻提示（window.VowmonDialog，替代 alert/confirm）
-│   ├── admin.js            # 精灵后台逻辑
-│   ├── admin-skills.js     # 技能后台逻辑
-│   ├── admin-traits.js     # 特性后台逻辑
-│   ├── admin-items.js      # 物品后台逻辑
-│   ├── admin-images.js     # 图片管理逻辑
-│   ├── admin-individuals.js # 御兽精灵档案管理逻辑（individuals-data.json）
-│   ├── admin-characters.js  # 御兽人物档案管理逻辑（characters-data.json）
-│   ├── admin-lore.js       # 页面内容管理逻辑（可视化就地编辑 + 列表逐块编辑）
-│   └── data-loader.js      # 数据加载器（唯一的取数入口，见 §2）
+├── world/                      # 世界观页（正文全部走 lore CMS，改文案不用改代码）
+│   ├── ranks.html              # 等级体系（力位权三律 + 八阶对照表）
+│   ├── ranks-path.html         # 阶元路径（等级轴联动精灵八阶 / 御兽师八阶 / 权限）
+│   ├── authority.html          # 权柄看板（权柄沙盘选书内个体 + 循环五步 + 三大机制）
+│   ├── trainers.html           # 御兽师图鉴（三维立身 / 等级表 / 契约反噬 / 修炼三法）
+│   ├── factions.html           # 势力版图（联盟制度 / 九牧地区 / 权职体系 / 三大协会 / 荒野警示）
+│   └── lore.html               # 元域演化史（全站唯一深色页，传世石板 + 【X】胶囊）
 │
-└── functions/              # Cloudflare Pages Functions
-    ├── data/[[path]].js    # /data/* 反代 vowmon_data 的 JSON
-    └── img/[[path]].js     # /img/*  反代 vowmon_imgs 的图片
+├── battle/
+│   ├── index.html              # 对战模拟器（BattleEngine 纯逻辑引擎）
+│   └── rules.html              # 对战规则说明（伤害公式 / 能力阶 / 异常 / 天气场地 / 先制）
+│
+├── tools/
+│   ├── daily-pokemon.html      # 每日精灵灵感（精灵 / 特性 / 技能三卡，四源合一，见 §10）
+│   ├── consistency.html        # 设定一致性检查（只读扫描引用 / 等级 / 进化链 / 图片）
+│   └── diagnostics.html        # 数据源诊断（CF / jsDelivr / raw 三线路测速 + 本机状态）
+│
+├── admin/                      # 后台（全部平铺在本目录，资源引用带 ../ 前缀）
+│   ├── index.html              # 精灵管理 / 天地图鉴 / 同步配置（3 个 Tab，网址 /admin/）
+│   ├── admin-skills.html       # 技能管理
+│   ├── admin-traits.html       # 特性管理
+│   ├── admin-items.html        # 物品管理
+│   ├── admin-bloodline-skills.html # 血脉技能（skills 数组 + families 族群技能包）
+│   ├── admin-individuals.html  # 御兽精灵档案管理（individuals-data.json）
+│   ├── admin-characters.html   # 御兽人物档案管理（characters-data.json）
+│   ├── admin-stages.html       # 阶段境界（自定义八阶名字/区间/颜色）
+│   ├── admin-images.html       # 图片管理（仓库图片 + 精灵图片双标签）
+│   ├── admin-lore.html         # 页面内容管理（可视化就地编辑 + 列表逐块编辑）
+│   ├── admin-audit.html        # 操作审计（保存/同步/拉取日志 + 快照恢复）
+│   └── sidebar.js              # 后台侧栏内容唯一来源
+│
+├── css/                        # 所有样式
+│   ├── style.css               # 前台统一样式
+│   ├── navbar.css              # 全站导航栏样式（唯一来源）
+│   ├── common-ui.css           # 通用组件样式（弹窗、表单、选择器）
+│   ├── dialog.css              # 自定义弹窗 / 轻提示样式（配套 js/dialog.js）
+│   ├── diff-modal.css          # 同步差异预览弹窗样式（配套 js/diff-modal.js）
+│   ├── type-filter.css         # 折叠式系别筛选（图鉴 / 列表 / 技能 / 特性四页共用）
+│   ├── global-search.css       # Ctrl/⌘+K 全站搜索面板样式
+│   ├── admin.css               # 后台布局样式
+│   └── responsive.css          # 全站移动端适配（必须最后引入，唯一来源）
+│
+├── js/                         # 所有脚本（全清单见 §6 对照表与 AI-GUIDE §6）
+│   ├── data-loader.js          # 数据加载器（唯一取数入口，见 §2）
+│   ├── site-config.js          # imgCdnBase / dataCdnBase / imgVer
+│   ├── navbar.js               # 全站导航内容与交互（唯一来源）
+│   ├── type-config.js          # 属性配置（名称 / 图标 / 颜色）
+│   ├── type-chart.js           # 18×18 属性克制表 + 组合倍率
+│   ├── category-config.js      # 技能分类配置（物理 / 特殊 / 变化）
+│   ├── tag-config.js           # 技能标签配置（内置 23 个 + hash 兜底）
+│   ├── item-config.js          # 物品配置（大类 / 分组 / 细分类 / 货币）
+│   ├── stage-config.js         # 阶段境界（StageConfig.bands / stageName / stageColor）
+│   ├── authority-config.js     # 权柄看板 / 阶元路径规则
+│   ├── bloodline-config.js     # 血脉共鸣规则
+│   ├── battle-engine.js        # 对战引擎纯逻辑（rng 注入可测）
+│   ├── consistency-check.js    # 一致性检查纯逻辑（可在 Node 跑）
+│   ├── vowmon-utils.js         # 前台数据规整（normalizeAll / total）
+│   ├── github-api.js           # GitHub API 封装（含 1000 条上限兜底）
+│   ├── image-utils.js          # 图片上传前处理：压缩 / 等比缩放 / PNG + WebP
+│   ├── dialog.js               # 自定义弹窗 + 轻提示（替代 alert/confirm）
+│   ├── diff-modal.js           # 同步差异预览（VowmonDiff.review）
+│   ├── common-ui.js            # 后台通用 UI + 应用 .no-anim
+│   ├── lore-apply.js           # 用 lore-data.json 覆盖 [data-lore] 元素
+│   ├── global-search.js        # Ctrl/⌘+K 全站搜索面板
+│   ├── audit-log.js            # 后台操作审计
+│   ├── card-export.js          # 精灵 / 个体 / 人物 / 物品渲染成 TCG 卡 PNG
+│   ├── vow-select.js           # 自绘下拉组件（禁原生 select）
+│   ├── vow-textarea.js         # 长文本编辑器组件
+│   ├── vow-tip.js              # 即时 tooltip（替代原生 title）
+│   └── admin*.js               # 各后台页逻辑（admin / admin-skills / … 共 11 个）
+│
+├── functions/                  # Cloudflare Pages Functions
+│   ├── data/[[path]].js        # /data/* 反代 vowmon_data 的 JSON（缓存 60s）
+│   └── img/[[path]].js         # /img/*  反代 vowmon_imgs 的图片（优先 WebP，缓存 7 天）
+│
+└── _tools/                     # 本地测试脚本 + 外部参考数据生成器（见 §9 / §10）
 ```
 
-**引用路径举例**（前台页面在根目录，带文件夹前缀；后台页面在 `admin/` 里，本地资源带 `../` 前缀）：
+**引用路径举例**（根目录页面（`index.html` / `404.html`）用裸前缀，子目录页面（`dex/`、`reference/`、`world/`、`records/`、`battle/`、`tools/`）统一加 `../`，后台页面在 `admin/` 里同样加 `../` 前缀）：
 
 ```text
 
@@ -150,12 +197,18 @@ vowmon/
 <script src="js/data-loader.js"></script>
 
 
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/navbar.css">
+<script src="../js/navbar.js" defer></script>
+<script src="../js/data-loader.js"></script>
+
+
 <link rel="stylesheet" href="../css/admin.css">
 <script src="../js/data-loader.js"></script>
 
 ```
 
-> 新增前台页面放根目录，新增后台页面放 `admin/`；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
+> 新增前台页面按模块放进 `dex/` / `records/` / `reference/` / `world/` / `battle/` / `tools/`（根目录只留首页与 404），新增后台页面直接平铺进 `admin/`（不再建子目录）；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
 
 ---
 
@@ -191,10 +244,10 @@ vowmon/
   - **入口**：dex/vowdex.html 图鉴卡片点击、reference/skill-detail.html 可学精灵卡片点击；
   - **动效开关**：浮动、流动背景全部跟随 `vowmon_anim_on`，关 = 完全静止（body 加 `.no-anim`）；其他标签页切换开关时本页实时响应（监听 `vowmon:anim-changed`）。
 - **书内档案（御兽精灵 records/individuals.html / 御兽人物 records/characters.html）**：存放小说里的精灵**个体**与**人物**，和精灵图鉴（种族百科）相互独立，通过编号/ID 互相引用：
-  - **御兽精灵**：昵称、性别、种族（引用图鉴编号，自动带出立绘/属性）、性格、特性（引用特性库）、技能+熟练度（入门/熟练/专精[皆传：迅疾/刚猛]/完美）、血脉（异变/黑暗/光明/属性+血脉技能）、等级与阶段（**阶段由等级自动推导**：初灵1-15 / 升灵16-36 / 族尊37-50 / 基座51-60 / 灵相61-70 / 律冠71-89 / 元灵90-99 / 元100）、主人（引用人物 id）、携带道具、经历；
+  - **御兽精灵**：昵称、性别、种族（引用图鉴编号，自动带出立绘/属性）、性格、特性（引用特性库）、技能+熟练度（入门/熟练/专精[皆传：迅疾/刚猛]/完美）、血脉（异变/黑暗/光明/属性+血脉技能）、等级与阶段（**阶段由等级自动推导**，取 `stages-data.json`：初灵1-15 / 升灵16-35 / 族尊36-50 / 基座51-60 / 灵相61-70 / 律冠71-89 / 元灵90-99 / 元100）、主人（引用人物 id）、携带道具、经历；
   - **御兽人物**：姓名、头衔/称号、所属势力、存款（联盟币）、物品栏、持有精灵（引用御兽精灵 id）、人物简介；
   - 列表页支持按主人 / 阶段 / 血脉 / 势力筛选与关键词搜索；详情页 `?id=` 直达，人物与精灵双向跳转，种族可跳 `dex/vow-detail.html`；
-  - 后台对应 `admin-records/individuals.html` / `admin-records/characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
+  - 后台对应 `admin/admin-individuals.html` / `admin/admin-characters.html`，数据文件 `individuals-data.json` / `characters-data.json`。
 - **势力版图 world/factions.html**：世界观设定页（联盟制度 / 九牧地区·九牧联盟 / 权职体系：盟主、戎枢、大冠、太宰、首座、大君与古今叫法对照 / 三大协会 / 荒野警示），已纳入页面内容 CMS（lore-data.json 中的 `factions.*` 文本块）。
 - **特性大全 reference/traits.html**：表格展示全部特性（ abilities ）。支持搜索与按关联属性筛选，并列出每个特性「拥有该特性的精灵」。
 - **性格大全 reference/natures.html**（布局参照洛克王国 wiki，数据采用宝可梦 25 性格，仅保留能力修正部分）：
@@ -216,37 +269,56 @@ vowmon/
   - 该页是全站唯一的深色底页面，是有意为之（史诗氛围），不算风格破坏；新增世界观类页面可沿用这套模板结构。
 - **打击面计算器 reference/coverage.html**：组队/配招研究工具。最多选 5 个技能属性，统计这套组合能覆盖 18 单系 + 153 双系共 **171 种属性组合**中的多少种，并分档报告（4 倍克制 / 2 倍克制 / 免疫 / 双重抵抗 / 抵抗）。
 
+**2026-11-25 之后新增的前台页面**（上面的条目是早期页面，下面这批是后续陆续加的，详细说明见 AI-GUIDE §4）：
+
+- **天地图鉴 dex/realm-dex.html**：按 `realmTags` 分四类定位（权柄 / 遥世 / 伙伴 / 晚熟）浏览图鉴，四类的中文名与说明来自 `realm-data.json`（后台「天地图鉴」Tab 可改）。
+- **精灵对比 dex/compare.html**：任选两只精灵并排对比六维雷达图、总和、属性、身高体重。
+- **地区形态对照 dex/region-forms.html**：按进化链 / 物种聚合，再按 `region` 筛选并排看不同地区形态。
+- **故事时间线 records/timeline.html**：把个体与人物档案里的 `milestones` 按章节串成时间线，支持按事件分类筛选。
+- **权柄看板 world/authority.html**：力位权三律 + 权柄沙盘（**选择源是书内个体**，图鉴只提供种族图/名）+ 权柄循环五步 + 三大机制 + 书内纪事（从里程碑文案按关键词筛出权柄事件）。
+- **阶元路径 world/ranks-path.html**：一条等级轴联动「精灵八阶 / 御兽师八阶 / 掌权权限 / 联盟名号」，数据取 `stages-data.json` + `authority-config.js`。
+- **血脉共鸣模拟器 reference/bloodline-sim.html**：选书内个体（默认读档案里已记录的血脉），演示「血脉之石 → 共鸣 → 形态/技能变化」，同时强调**血脉不渡克制**。
+- **对战模拟器 battle/index.html + battle/rules.html**：双精灵对战，引擎在 `js/battle-engine.js`（宝可梦官方伤害公式 + ±6 能力阶 + 6 种异常 + 天气/场地/先制），机制由技能效果文案关键词解析；`rules.html` 是图文说明。
+- **设定一致性检查 tools/consistency.html**：只读扫描等级↔阶元、进化链 taxonomy、引用完整性、图片缺失、region 冲突、血脉技能、重复 ID，结果分 error / warn / info 三档。
+- **数据源诊断 tools/diagnostics.html**：CF 反代 / jsDelivr / raw 三线路测速，外加本机镜像、脏标记、动画开关、SW 注册状态。
+- **每日精灵灵感 tools/daily-pokemon.html**：全站最重的一页——每日精灵卡 / 每日特性卡 / 每日技能卡三卡，四源（宝可梦 1025 / 洛克 644 / 奥奇 1606 / 赛尔 4978）合一随机池，另配特性库 2460 条、技能库 10263 条。不走 data-loader，直接 fetch 六个参考 JSON，细节见 §10 与 AI-GUIDE §10。
+
 
 ### 1.05.2 后台页面（维护数据用的）
 
 > 四个数据编辑弹窗（精灵 / 技能 / 特性 / 物品）末尾都有一个 **「原型」** 输入框，用来写「取材自哪里」，自由文本、**默认留空**，不填不影响任何功能。
 
-- **index.html（网址 `/admin/`）**：精灵管理 + 同步配置（同一页两个 Tab）。增删改精灵、配置「显示列」、一键同步数据到 GitHub。
+- **index.html（网址 `/admin/`）**：**三个 Tab**——精灵管理（`?tab=sprites`，默认）/ 天地图鉴（`?tab=realm`）/ 同步配置（`?tab=settings`）。增删改精灵、维护天地图鉴四类定位、配置「显示列」、一键同步数据到 GitHub。
   - **上传即压缩 + 自动命名**：本地选图后先经 `js/image-utils.js` 处理——等比缩放（最长边不超过「同步配置 → 上传压缩尺寸」，默认 512，可选 256 / 512 / 768 / 1024），统一转成 **PNG**（保留透明底），小图不放大、不裁切（非正方形补透明边）。文件名强制按编号生成：主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png`、`_s2`、`_s3`…；原文件名与后缀一概忽略。保存时若改过编号，会把本次上传的图按新编号重传并删掉旧文件（仅限本次会话上传过的图，手填路径/刷新过页面则保持原路径）。
   - **异色图片**：表单里「精灵图片」下方多一个「异色图片」区块，可**多张**维护。支持一次选多个文件上传（串行上传），也支持手填外链 / 路径后点「添加」；缩略图按 #1、#2… 排序，可单张移除。异色图存在精灵对象的 `shiny` 数组里，**不占编号、不生成独立条目**，后台列表也不额外显示。
   - **特性槽位**：一只精灵可填「特性 1 / 特性 2（多特性随机）/ 隐藏特性」，每个都有独立的效果说明框，不填即为空。
   - **进化链**：表单里有「进化自 / 进化为」两个多选（一阶 → 二阶 → 三阶）。保存时会**双向自动补链**——A 填了「进化为 B」，B 的「进化自」自动出现 A，反之亦然；存的是精灵 `id`（旧数据里的单个 id 字符串会自动转成数组）。
   - **编号规则**：新建时默认编号 = 现有编号里的**最大数字 + 1**，但允许任意跳号（比如 001–009 之后直接填 401，下一个默认就是 402，中间空号不会自动补）。只做唯一性校验，不要求连续。
-- **admin-reference/skills.html**：技能管理。增删改技能（属性单选胶囊、分类下拉、标签选择器）、配置「显示列」（含「标签」列）、一键同步。
+- **admin/admin-skills.html**：技能管理。增删改技能（属性单选胶囊、分类下拉、标签选择器）、配置「显示列」（含「标签」列）、一键同步。
   - **可学精灵选择器**：编辑弹窗里可勾选「能学会这个技能的精灵」。工具栏是「搜索框（名称 / 编号）+ 全选 / 取消全选」，下面一排属性胶囊做筛选，再下面是可滚动的勾选网格（上千只精灵也不会卡）。已选数量实时显示。
   - **学习方式（自学 / 技能石）**：勾选后默认归**自学**（`learners[]`，自我觉醒领悟）；已勾选的行右侧有「自 / 石」小按钮可一键切换成**技能石**（`stoneLearners[]`，必须靠技能石学会）。全选只加入自学，取消全选两组一起清。表格「可学精灵」列显示总数 + 💎 石学数量徽标。
   - **标签选择器**：不再平铺全部标签，而是「已选胶囊 + 搜索框 + 候选下拉」。输入关键字搜索标签并点选；搜不到时可按回车 / 点「新建」直接创建自定义标签；每个候选标签右侧的垃圾桶图标可删除该标签（会同时从所有技能中移除）。标签库变动会即时持久化。
-- **admin-reference/traits.html**：特性管理。增删改特性、配置「显示列」、一键同步。
+- **admin/admin-traits.html**：特性管理。增删改特性、配置「显示列」、一键同步。
   - **拥有精灵（芯片式）**：选精灵弹窗里勾选后，以芯片形式列在表单中，每片可切「普通 / 隐藏」（★）。普通存 `pokemons[]`、隐藏存 `hiddenPokemons[]`。
   - **与精灵库双向互通**：特性管理里选精灵 → 保存时反向写入该精灵的 `ability2` / `hiddenAbility`；精灵管理里改特性 → 保存时反向写入特性库的 `pokemons` / `hiddenPokemons`。两边读写同一份数据，不会各说各话。
-- **admin-reference/items.html**：物品管理。表格展示图标 / 名称 / 类型 / 分组 / 获取方式 / 描述，支持「显示列」（状态存在 `localStorage['vowmon_items_visible_cols']`）、增删改、一键同步 `items-data.js`。
+- **admin/admin-items.html**：物品管理。表格展示图标 / 名称 / 类型 / 分组 / 获取方式 / 描述，支持「显示列」（状态存在 `localStorage['vowmon_items_visible_cols']`）、增删改、一键同步 `items-data.json`（类别/分组/细分类/货币/物品五段一起推）。
   - 表单字段：名称、类型（大类 Tab）、分组（筛选胶囊）、细分类、图标（图片 / 图标字体 + 主题色二选一）、描述、获取方式（**一行一条**，保存时拆成数组）。
   - 图标上传走和精灵图一致的压缩流程（`js/image-utils.js`），存为 `items/{id}.png`；不传图片就用图标字体，`颜色` 决定图标颜色。
   - 名称会做重复校验；新建时 id 自动生成为 `i001`、`i002`…，仅用于深链和图标命名，不在前台显示。
-- **admin-images.html**：图片管理。双标签设计——「仓库图片」扫描并管理所有图片仓库里的图（异色图会计入使用方，标注为「某某（异色）」，不会误报成未使用）；「精灵图片」核对每只精灵的图片是否真实存在，卡片标题上会带「异色 ×N」角标，支持上传 / 删除 / 绑定到精灵。
-- **admin-world/lore.html**：页面内容管理，**双模式**（右上角切换，默认可视化），世界观四页（ranks / bloodlines / trainers / lore）的正文文本块都在这里编辑：
-  - **可视化模式（所见即所得，默认）**：iframe 直接渲染真实前台页（四个页签切换），悬停任意文本块显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；
+- **admin/admin-bloodline-skills.html**：血脉技能管理。`skills` 数组（每个属性一技，如「本心一击」）+ `families` 族群技能包（map 段，键为族群名）两段一起 diff / 同步；个体的 `bloodlineSkill` 从这里选。
+- **admin/admin-individuals.html**：御兽精灵档案管理。昵称选填（空则回退种族名）、种族 / 主人引用、技能只存 `name + level`（**不存皆传模式**）、熟练度四档、血脉（类型 + 血脉技能 + 血脉属性）、等级（阶段由 `StageConfig` 推导）、携带道具、经历、里程碑；支持自定义属性（`fieldTemplates`）。
+- **admin/admin-characters.html**：御兽人物档案管理。姓名 / 头衔 / 势力 / 联盟币 / 物品栏 / 持有精灵（`vowIds` 引用个体）/ 简介等扩展字段，与个体双向跳转。
+- **admin/admin-stages.html**：阶段境界管理。自定义八阶的个数、名字、区间、颜色（`max = null` 表示不封顶），带重叠 / 空洞校验、上下移、恢复默认；存 `stages-data.json`。
+- **admin/admin-images.html**：图片管理。双标签设计——「仓库图片」扫描并管理所有图片仓库里的图（异色图会计入使用方，标注为「某某（异色）」，不会误报成未使用）；「精灵图片」核对每只精灵的图片是否真实存在，卡片标题上会带「异色 ×N」角标，支持上传 / 删除 / 绑定到精灵。两个网格都按 60 条/页分页渲染。
+- **admin/admin-lore.html**：页面内容管理，**双模式**（右上角切换，默认可视化），世界观五页（ranks / bloodlines / trainers / factions / lore）的正文文本块都在这里编辑：
+  - **可视化模式（所见即所得，默认）**：iframe 直接渲染真实前台页（五个页签切换），悬停任意文本块显示蓝色虚线框，**点击即就地编辑**（contenteditable），顶部浮条「保存 / 取消」，`Esc` 取消、`Ctrl+Enter` 保存；「保存」= `VowmonStore.save('lore', …)` 写镜像 + iframe 自动重载（保留滚动位置），前台立即生效；
   - **列表模式**：左侧按页签列出文本块（带中文标签与键名），右侧 textarea 编辑 + 实时预览；支持按标题 / 内容 / 键名搜索；适合批量调整 / 查找替换；
   - 「一键同步」= 推 `lore-data.json` 到数据仓库（其他设备 / 协作者可见）；「从仓库拉取」覆盖本机草稿；两种模式共用同一份数据；
   - 文本里可用 `<b>加粗</b>`、`<br/>` 换行、`<i class="fa-…"></i>` 图标；元域演化史里的【属性】关键词在替换后会自动重新渲染成属性胶囊（监听 `vowmon:lore-applied`）；
-  - **可编辑范围**：四页正文里带 `data-lore="页.序"` 键的元素——段落、表格单元格、列表、**各级标题（h1-h4）**、机制卡 / 提示框 / 血脉行、banner 标语、数值等基本全覆盖；图标、装饰序号（壹贰 / 英文饰条）不可编辑；`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容，数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
+  - **可编辑范围**：五页正文里带 `data-lore="页.序"` 键的元素——段落、表格单元格、列表、**各级标题（h1-h4）**、机制卡 / 提示框 / 血脉行、banner 标语、数值等基本全覆盖；图标、装饰序号（壹贰 / 英文饰条）不可编辑；`js/lore-apply.js` 用 JSON 里的 html 覆盖其内容，数据加载失败时保留 HTML 内置文本兜底，页面永远不会白屏；
   - **改页面结构必须重跑 `_tools/lore_gen.py`**（需要 `pip install beautifulsoup4`）：默认 **extend 合并模式**——已有 `data-lore` 的元素保持旧键不动（内容以现有 JSON 为准），只给新出现的元素续号新键，**不会错位**；`--fresh` 才全量重编号（慎用）。脚本会自动清理嵌套标记（内层块会被外层块整体覆盖导致编辑丢失）。
   - 实现要点：可视化模式由 `js/admin-lore.js` 给 iframe 文档注入样式 + 捕获阶段拦截点击（链接 / 按钮不跳转；`.vw-edit-bar` 浮条内部和 lore 页「触摸石板」按钮放行）。
+- **admin/admin-audit.html**：操作审计。保存 / 同步 / 拉取自动埋点（`js/audit-log.js`，挂在 `VowmonStore`），可导出 JSON、恢复镜像快照、清空；排查"改了又变回去"时先看这里的快照。
 
 ### 1.05.3 数据里的分类口径
 
@@ -291,11 +363,15 @@ vowmon/
 顶部导航栏已经抽成公共文件，**任何页面都不再自带导航 HTML**：
 
 - 样式：`css/navbar.css`　结构 + 交互：`js/navbar.js`
-- 每个前台页面 `<head>` 末尾只需两行：
+- 每个前台页面 `<head>` 末尾只需两行（**根目录页面用裸路径，子目录页面（`dex/`、`reference/`、`world/`、`records/`、`battle/`、`tools/`）统一加 `../`**）：
 
 ```text
 <link rel="stylesheet" href="css/navbar.css">
 <script src="js/navbar.js" defer></script>
+
+
+<link rel="stylesheet" href="../css/navbar.css">
+<script src="../js/navbar.js" defer></script>
 ```
 
 - 页面 `<body>` 内放一个占位容器，不要写任何导航内容：
@@ -304,7 +380,8 @@ vowmon/
 <div id="site-navbar"></div>
 ```
 
-- **修改菜单**：只改 `js/navbar.js` 里的 `NAV` 数组（分组 + 子项 + `soon` 标记），全站所有页面同步生效。
+- **修改菜单**：只改 `js/navbar.js` 里的 `NAV` 数组（分组 + 子项 + `soon` 标记），全站所有页面同步生效。`href` 一律写「站点根下的完整路径」（如 `dex/vowdex.html`），`navbar.js` 会按当前目录自动加 `ROOT` 前缀。
+- **`soon` 占位**：目前有 3 个——**精灵果实**（挂在物品图鉴下）、**十八生态界**（挂在元域演化史下）、**地图**（一级菜单）。它们渲染成不可点的「敬请期待」，做完页面就把该项的 `soon` 去掉并补 `href`。
 - **修改样式**：只改 `css/navbar.css`。
 - **当前页高亮**：`js/navbar.js` 的 `ACTIVE_MAP` 按文件名自动判断，新增页面时补一行映射即可。
 - 注意：`navbar.js` 用 `defer` 注入，晚于各页 Vue 的 `mount('#app')`，所以不会被 Vue 覆盖；不要去掉 `defer`。
@@ -315,9 +392,9 @@ vowmon/
 
 - **属性克制表**：只在 `js/type-chart.js` 维护一份（全局 `typeChart` + `getTypeMultiplier` / `getComboMultiplier` / `buildDefenderCombos`），`reference/calculator.html` 与 `reference/coverage.html` 直接引用，禁止再复制一份。
 - **属性颜色/图标**：只在 `js/type-config.js` 维护，禁止在页面里写死色值。
-- **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `reference/skills.html` 与后台 `admin-reference/skills.html` 都引用它，禁止在页面里写死分类图标或色值。
+- **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `reference/skills.html` 与后台 `admin/admin-skills.html` 都引用它，禁止在页面里写死分类图标或色值。
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
-- **弹窗组件**：后台五个页面（`index.html`、`admin-reference/skills.html`、`admin-reference/traits.html`、`admin-reference/items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
+- **弹窗组件**：**全部 11 个后台页面**（`admin/index.html`、`admin-skills`、`admin-traits`、`admin-items`、`admin-bloodline-skills`、`admin-individuals`、`admin-characters`、`admin-stages`、`admin-images`、`admin-lore`、`admin-audit`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式；带同步/拉取入口的页面还要引入 `css/diff-modal.css`。
 - **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。  
   |  |  |  
   | --- | --- |
@@ -328,9 +405,9 @@ vowmon/
   - 选项：`type`（`info` / `success` / `warning` / `danger`）、`title`、`okText`、`cancelText`、`detail`（长错误信息，等宽小字块）、`html`（消息里要用 `<strong>` 时必须开，变量用 `VowmonDialog.esc()` 转义）、`duration`（仅 toast）。
   - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
   - 它不复用 `.modal-overlay`，遮罩与键盘（Esc 取消 / Enter 确认）逻辑自管，因此 Esc 关弹窗时不会把后面的表单弹窗一起关掉；同时遵循 `vowmon_anim_on` 开关。
-- **表格列宽**：`admin-reference/items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
+- **表格列宽**：`admin/admin-items.html` 的物品表是 `table-layout: fixed`，`width` 对 `th` / `td` 按 border-box 计算（含左右各 16px 内边距）。列宽给小了，`text-overflow: ellipsis` 会把内容裁成「…」——典型现象是图标列显示「星…」、操作列按钮只剩「…」。图标列 78px（42px 图标框 + 内边距）、操作列 176px 并加 `.col-actions` 放开裁切，改列宽时按这个算。
 - **后台搜索框**：图片管理工具栏统一用 `.search-field`（放大镜图标 + 内嵌清空按钮，清空按钮 `v-if` 只在有内容时出现）与 `.filter-select`（`appearance: none` + SVG 箭头），两者都是 40px 高 / 11px 圆角。不要再退回 `input-with-btn` + 独立 `btn` 的写法，也不要用默认 `<select>`。
-- **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `reference/items.html` 的 Tab 与筛选胶囊、后台 `admin-reference/items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
+- **物品大类 / 分组**：只在 `js/item-config.js` 维护（`itemKinds` + `itemGroups` + `normalizeItemKind` / `getItemGroupIcon` / `getItemGroupColor`）。前台 `reference/items.html` 的 Tab 与筛选胶囊、后台 `admin/admin-items.html` 的下拉都引用它，禁止在页面里写死分组名或配色；数据里没用到的分组不会显示。
 - **图片上传**：所有「选本地文件 → 传到图片仓库」的入口都必须先过 `js/image-utils.js` 的 `ImageUtils.compressToPng(file, size)`，不要直接读 `FileReader` 原图上传。它负责等比缩放、输出 PNG、返回 `{ base64, blob, bytes, canvasSize }`；尺寸上限取 `localStorage['vowmon_sync_config'].imgSize`（缺省 512）。引入顺序：`github-api.js` → `image-utils.js` → `common-ui.js` → 页面脚本。
 - **图片命名**：仓库里的精灵图只按编号命名——主图 `sprites/{编号}.png`，异色 `sprites/{编号}_s.png` / `_s2` / `_s3`；物品图标存 `items/{id}.png`。禁止再用原文件名或原后缀（jpg/webp 会与压缩后的 PNG 不一致）。
 - **主图 / 异色图要分清**：图片管理页的「设为精灵图」和「上传图片」弹窗里都有「存到哪个位置」开关——`主图（替换原图）` 写 `vow.image`，`异色图（追加）` 写 `vow.shiny[]`（数组，不占编号）。文件名带 `_s` / `_s2` 的图会**自动预选「异色图」**，避免一按就把主图覆盖掉。判断函数是 `js/admin-images.js` 的 `looksShiny(path)`。
@@ -351,7 +428,10 @@ vowmon/
   - **后台页不加载 `navbar.js`**，改由 `js/common-ui.js` 读取并应用 `.no-anim`。
   - 切换开关时统一 `window.dispatchEvent(new CustomEvent('vowmon:anim-changed', { detail: { on } }))` 广播，页内开关（图鉴 / 列表页）与导航栏按钮互相监听；同时监听 `storage` 事件做跨标签页同步。**不要再各写一套私有状态**——曾经因为不广播，关掉动效后图鉴的异色轮播定时器还在跑。
   - 关掉时还必须主动清掉 JS 定时器（`dex/vowdex.html` 的异色轮播 `stopShiny()`），CSS 规则管不了 `setInterval`。
-- **后台加载策略**：后台页调 `VowmonData.ready([...])` **不要传 `fresh: true`**——本机有镜像就秒开（后台静默对账），要拉仓库最新数据点顶栏「从仓库拉取」。`data-loader.js` 在「非 fresh 且请求的所有 key 都有本机镜像」时会跳过「正在加载数据…」遮罩，避免闪屏。`localStorage` 草稿**优先于**远端，别改成远端优先（会丢未同步修改）。
+- **后台加载策略（现状：多数页强制回源）**：后台页调 `VowmonData.ready([...])` 时，**7 个页面传了 `{ fresh: true }`**——`admin.js`（精灵 `vows` + `traits`）、`admin-skills.js`（`skills` + `vows`）、`admin-items.js`、`admin-images.js`（`vows`）、`admin-individuals.js`（8 个 key）、`admin-characters.js`、`admin-stages.js`。传了 fresh 就**一定等网络**并显示「正在加载数据…」遮罩，好处是打开即最新，代价是首屏慢一档（后台标签页还会因为定时器节流看起来像卡住）。
+  - 只有 `admin-traits.js`、`admin-bloodline-skills.js` **不传 fresh**，走「本机镜像优先」：`data-loader.js` 在「非 fresh 且请求的所有 key 都有本机镜像」时会跳过遮罩，秒开 + 后台静默对账。
+  - 改页面时要明确选一种：想要秒开就去掉 `fresh: true`（需要最新数据点顶栏「从仓库拉取」）；想要打开即最新就保留。**两种都可以，但别在文档里写「一律不要传 fresh」而与代码相反**。
+  - 无论哪种，`localStorage` 草稿**永远优先于**远端，别改成远端优先（会丢未同步修改）。
 
 
 ---
@@ -363,7 +443,7 @@ vowmon/
 | 仓库            | 放什么                              | 谁读它                           |
 | ------------- | -------------------------------- | ----------------------------- |
 | `vowmon`      | 站点本体（HTML / CSS / JS），**不含任何数据** | GitHub Pages、Cloudflare Pages |
-| `vowmon_data` | 唯一数据源，5 个 JSON                   | 前台运行时拉取、后台读写                  |
+| `vowmon_data` | 唯一数据源，**17 个 JSON**（11 个走 data-loader + 6 个外部参考） | 前台运行时拉取、后台读写                  |
 | `vowmon_imgs` | 按编号命名的 PNG                       | 前台通过 `/img/*` 反代读取            |
 
 **前台怎么读**：页面里没有 `<script src="data/xxx.js">` 了，统一走 `js/data-loader.js`：
@@ -380,7 +460,7 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 
 ```text
 ① 本机镜像 localStorage: vowmon_mirror_<key>
-   ← 后台每次保存都会写这里（精灵/技能/特性/物品）
+   ← 后台每次保存都会写这里（精灵 / 技能 / 特性 / 物品 / 个体 / 人物 / 阶段 / 血脉技能 / 页面内容…）
 ② 云端数据仓库（三个源依次兜底）
 ③ 两边比对：
    - 一样 → 什么都不做
@@ -396,7 +476,7 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 **后台怎么读写**：
 
 - 编辑 → 写 `localStorage` 草稿 → 点「一键同步」把 JSON 推到数据仓库根目录；
-- 打开后台时先按 `?fresh` 拉远端 JSON，本机有草稿则优先用草稿（避免丢未同步的改动）；
+- 打开后台时的取数方式分两种（清单见 §1.2「后台加载策略」）：**传了 `fresh` 的页**（精灵 / 技能 / 物品 / 图片 / 个体 / 人物 / 阶段）直接强制回源、用远端数据渲染；**没传的页**（特性 / 血脉技能）先用本机镜像秒开，再带 `?_=时间戳` 静默回源对账（戳穿 60 秒边缘缓存）。两种方式下，本机未同步的草稿都不会被覆盖——`data-loader.js` 检测到 `vowmon_dirty_keys` 里有该 key 就不回写镜像；
 - 想用远端覆盖本机，点顶栏的「从仓库拉取」（会弹确认框）。
 
 **JSON 结构**（每份是一个对象，字段名与全局变量一一对应）：
@@ -406,11 +486,14 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 | `vow-data.json`         | `vows` → `allVowsData`                                                                                                                            |
 | `skills-data.json`      | `skills` → `allSkillsData`                                                                                                                        |
 | `traits-data.json`      | `traits` → `allTraitsData`                                                                                                                        |
-| `items-data.json`       | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData`                                |
+| `items-data.json`       | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`currencies` → `itemCurrenciesData`、`items` → `allItemsData`                                |
 | `natures-data.json`     | `natures` → `allNaturesData`、`stats` → `natureStats`                                                                                              |
+| `stages-data.json`      | `stages` → `allStagesData`（阶段境界八阶表，`{name,min,max,color}`，`max:null` 不封顶；读取走 `js/stage-config.js`）                                              |
 | `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体）                                                                                                 |
-| `characters-data.json`  | `characters` → `allCharactersData`（书内档案：御兽人物）                                                                                                     |
-| `lore-data.json`        | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块）                                                                                      |
+| `characters-data.json`  | `characters` → `allCharactersData`、`factions` → `allCharFactions`、`groups` → `allCharGroups`（书内档案：御兽人物）                                              |
+| `bloodline-skills-data.json` | `skills` → `allBloodlineSkillsData`、`families` → `allBloodlineFamiliesData`（血脉技能 + 族群技能包）                                                     |
+| `lore-data.json`        | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块，键为 `页.序`）                                                                        |
+| `realm-data.json`       | `labels` → `allRealmLabels`、`descs` → `allRealmDescs`（天地图鉴四类定位的中文名与说明）                                                                  |
 | `pokemon-data.json`     | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链 + 284 个特性中文名/隐藏标记）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
 | `rock-data.json`        | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/六维种族值 生命·物攻·魔攻·物防·魔防·速度/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成                            |
 | `aoqi-data.json`        | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取：立绘 `dsrc` 直链 + 详情页图鉴大表三种版式自适应解析 → 属性/特长/普通技/超杀技/身高体重/爱好/成长故事/进化阶段名，技能 1574 只、成长故事 904 只、属性 253 只——新版页面属性由 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成                                 |
@@ -552,7 +635,8 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 要点：
 
 - **只在第一次回源**，之后由 CF 边缘节点直接返回（响应头 `CF-Cache-Status: HIT`），国内访问不再依赖 GitHub 的连通性；
-- 缓存 **1 小时**。后台覆盖上传同名图片后，最迟 1 小时生效；想立刻看到新图，在图片地址后面加个 `?v=任意值` 即可破缓存（缓存键带 query）；
+- 缓存 **7 天**（`CACHE_TTL = 604800`，`immutable`）。后台覆盖上传同名图片后不会自动变，要立刻看到新图有两条路：① 改 `js/site-config.js` 的 `imgVer`（全站生效，推荐）；② 在图片地址后面加 `?v=任意值` 破缓存（缓存键带 query，但只对带了 query 的这个 URL 有效）；
+- **WebP 优先**：函数先试同名 `.webp`（后台上传时由 `js/image-utils.js` 生成，体积约为 PNG 的 1/6），存在就返回 WebP，不存在回落原图。响应头 `x-img-format` / `x-img-source` 会标出来自哪个源；
 - 只代理图片后缀（png/jpg/webp/gif/svg/avif/bmp/ico），并且拦掉 `..` 路径，不会变成通用代理；
 - `_routes.json` 把 Functions 的触发范围限制成 `/img/*`，其余静态文件不消耗函数调用额度（免费额度 10 万次/天）；
 - 前台取值在 `js/site-config.js` 的 `imgCdnBase`。想换回 jsDelivr 直连，改成 `https://cdn.jsdelivr.net/gh/luo029/vowmon_imgs@main` 即可；后台「同步配置」里的 `imgCdnBase` 优先级更高，只影响你自己这台浏览器。
@@ -578,17 +662,19 @@ npx wrangler pages deploy . --project-name=vowmon --branch=main
 
 | 路径               | Cache-Control  | 说明                  |
 | ---------------- | -------------- | ------------------- |
-| `/img/*`         | `max-age=3600` | 由函数设置，图换了最多 1 小时后生效 |
+| `/img/*`         | `max-age=604800`（7 天，`immutable`） | 由函数设置；换图改 `imgVer` 或加 `?v=` 破缓存 |
 | `/css/*`、`/js/*` | `max-age=1800` | 改版 30 分钟内全量生效       |
 | `/data/*`        | `max-age=60`   | 后台一保存就能很快被访客看到      |
 | `*.html`         | 不显式设置          | 每次协商缓存，保证页面结构改动立刻生效 |
+
+> `_headers` 里声明的只有 `/css/*`、`/js/*`、`/data/*` 三条；`/img/*` 的缓存头由函数自己写，所以别在 `_headers` 里重复声明（会冲突）。
 
 改样式/脚本后如果自己看不到变化，`Ctrl+F5` 强刷一次即可（访客最多等 30 分钟）。
 
 ### 4.6 出问题时先看这里
 
 - **图 404**：先在浏览器直接打开 `https://raw.githubusercontent.com/luo029/vowmon_imgs/main/<路径>` 确认文件真的在仓库里；再试 `https://vowmon.pages.dev/img/<路径>`。都正常说明是数据里的路径写错了（少了 `sprites/` 之类）。
-- **图不更新**：CF 缓存 1 小时，加 `?v=2` 破缓存，或等一小时。
+- **图不更新**：CF 与浏览器都按 **7 天** 强缓存（`immutable`），加 `?v=2` 破缓存，或改 `site-config.js` 的 `imgVer` 让全站换新 URL。
 - **Cloudflare 部署失败**：看 Actions 日志；最常见是 Secret 过期/被删（`CLOUDFLARE_API_TOKEN`），去 Cloudflare「我的个人资料 → API 令牌」重新建一个并更新 Secret。
 - **GitHub Pages 404**：确认 Settings → Pages 里的分支还是 `main` / `(root)`，以及 `index.html` 在仓库根目录。
 - **自建域名报 Error 1001（Please enable cookies）**：DNS 通了但 CF 不认这个主机名。查 `GET /accounts/{id}/pages/projects/vowmon/domains`，没有这条就补登记；有但 `status` 不是 `active` 就再等一两分钟。用 `curl -sS -o /dev/null https://<域名>/` 若报 `SEC_E_ILLEGAL_MESSAGE`/handshake failed，也是同一个原因（没有证书）。
