@@ -1,5 +1,6 @@
 # 项目数据 / 记忆目录（本地专用，不上传）
 .workbuddy/
+.doubao/
 
 # 系统与编辑器杂项
 .DS_Store

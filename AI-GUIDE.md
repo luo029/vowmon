@@ -96,8 +96,12 @@
 31. 用户给链接就是让你去读（52poke 分类页、biligame wiki），读的时候把定义/判定标准弄准确，别想当然。
 32. "再查查还有没有别的错误"→ 主动做全面数据体检（进化链、属性取值、stats 完整性），把真错误和"源站本来就没有"区分开汇报。
 33. **要你先"读整个代码库（尤其 README 和 AI-GUIDE）"再干活**：读完必须核对文档与代码是否一致，
-    有偏差就**改文档**（README + AI-GUIDE 一起改），**每次修改都要记日志**（`.workbuddy/memory/YYYY-MM-DD.md`）。
+    有偏差就**改文档**（README + AI-GUIDE 一起改），**每次修改都要记日志**（`.doubao/memory/agents/<agent>/YYYY-MM-DD.md`，
+    全局流水另记 `CHANGELOG.md`）。
     用户原话（2026-11-28）："读取整个代码库，特别是 readme 和 ai readme" → "有偏差的，修改一下" → "记得每次修改都要有日志"。
+34. **多个 agent 协作时各写各的日志**（用户 2026-11-29 拍板）：一个 agent 一个目录 `agents/<agent>/`，目录名用角色
+    （`doubao-main` / `sub-<任务>`）不用会话 ID；跨 agent 改动汇总在 `.doubao/memory/CHANGELOG.md`，一行一条
+    （日期 / Agent / 范围 / 改了什么 / 短 commit），"这行代码是谁改的"只查这张表。规则全文见 `.doubao/memory/README.md`。
 
 ### 0.5.2 隐性要求（AI 总结的用户偏好与行事风格）
 
@@ -110,7 +114,7 @@
 7. **提交信息写详细**：本仓库的 git log 是活的历史，新 AI 排查问题时先看 log。
 8. **遇到 WAF/限速**：限速 + 缓存续抓 + 降级不阻断（部分数据拿不到先落盘其余，下次续抓）。
 9. **中文回复**、直接、不绕弯；用户风格是"给方向 + 主动纠错"，期待 AI 有自己的想法并变通执行。
-10. **每完成一件事记日志**到 `.workbuddy/memory/YYYY-MM-DD.md`，长期约定沉淀到 `MEMORY.md`。
+10. **每完成一件事记日志**到 `.doubao/memory/agents/<agent>/YYYY-MM-DD.md`（长期约定沉淀到同目录 `MEMORY.md`，跨 agent 流水进 `CHANGELOG.md`）。
 
 ---
 
@@ -387,7 +391,7 @@ CF Pages 会把 `*.html` 308 到无扩展名路径——**所有 isActive 判断
            点击后的检查要用微任务 Promise.resolve().then）
 语法检查   node --check js/xxx.js
 绑定审计   抽 HTML 内 <script> 用 new Function 验语法 + 三向核对（模板绑定 vs return 清单 vs 定义），
-           $event 是 Vue 内置、v-for 局部变量是合法缺失——脚本模板见 .workbuddy/memory/2026-11-28.md
+           $event 是 Vue 内置、v-for 局部变量是合法缺失——脚本模板见 .doubao/memory/agents/doubao-main/2026-11-28.md
 渲染断言   node _tools/assert-render.mjs http://127.0.0.1:8765 local   （41 项断言，42 页里除 404 全在内）
 后台弹窗   node _tools/test-admin-modal.mjs http://127.0.0.1:8765 local （6 项）
 侧栏       node _tools/test-sidebar.mjs （11 项，含操作审计页）
@@ -754,7 +758,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 5. 用户在谈世界观/写小说 → 查 §12；改世界观正文走后台 admin-lore 或直接编辑 lore-data.json
    （注意三方合并快照 `vowmon_lore_lastpush` 只在用户浏览器里，改仓库不会冲突）。
 6. 改完 → 本地 `dev-server.py` + 相关 test 脚本验证（或按用户授权跳过）→ 升 `?v=` →
-   commit+push（两仓分别推）→ 追加工作日志 → 报告用户。
+   commit+push（两仓分别推）→ 追加工作日志（自己 `agents/<agent>/` + `CHANGELOG.md` 一行）→ 报告用户。
 7. 拿不准时看 `git log --oneline` 最近的提交信息——本仓库提交信息写得非常详细，是活的历史；
-   再看 `.workbuddy/memory/` 下的日志与 `MEMORY.md`。
+   再看 `.doubao/memory/` 下的 `MEMORY.md`、`CHANGELOG.md` 与各 agent 日志（规则见该目录 `README.md`）。
 8. 遇到没见过的怪现象 → 先查 §11 踩坑史速查表，九成问题都发生过。
