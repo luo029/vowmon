@@ -91,6 +91,30 @@
         .stat-num{width:36px;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex-shrink:0}
         .stat-total{margin-top:10px;font-size:13px;color:var(--ink-2);text-align:right}
         .stat-total b{color:var(--ink);font-size:15px}
+        /* 特性 / 技能卡 */
+        .ex-card{display:flex;gap:20px;align-items:flex-start}
+        .ex-icon{flex:none;width:86px;height:86px;border-radius:18px;background:radial-gradient(circle at 50% 40%,#fdeec2,#f7ead0 75%);border:1px solid #f2e3b8;display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;position:relative}
+        .ex-icon img{width:100%;height:100%;object-fit:contain}
+        .ex-icon .ex-src{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+        .ex-body{flex:1;min-width:0}
+        .ex-name{font-size:21px;font-weight:800;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+        .ex-name small{font-size:12px;font-weight:600;color:var(--ink-3)}
+        .ex-desc{margin-top:8px;font-size:13px;line-height:1.9;color:var(--ink-2);background:#fbf6e8;border-left:4px solid var(--accent-2);border-radius:0 12px 12px 0;padding:10px 14px;white-space:pre-line;word-break:break-word}
+        .ex-empty{color:var(--ink-3);font-style:italic}
+        .learners{margin-top:14px}
+        .learners h3{font-size:13px;color:var(--ink-3);font-weight:700;margin-bottom:8px}
+        .learner-list{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow-y:auto;padding-right:4px}
+        .learner{padding:4px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer;transition:.15s}
+        .learner:hover{border-color:var(--accent);color:var(--accent)}
+        .learner.static{cursor:default}.learner.static:hover{border-color:var(--line);color:var(--ink-2)}
+        .ex-note{margin-top:10px;font-size:11px;color:var(--ink-3)}
+        .ex-attrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .ex-attrs span{font-size:12px;font-weight:700;color:var(--ink-2);background:#fbf6e8;border:1px solid var(--line);padding:4px 11px;border-radius:999px}
+        .ex-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+        @media(max-width:640px){
+            .ex-card{flex-direction:column;gap:12px}
+            .ex-icon{margin:0 auto}
+        }
         /* 灵感提示 */
         .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
         .tip{background:#fbf6e8;border:1px solid #f2e3b8;border-radius:14px;padding:16px 18px}
@@ -121,7 +145,7 @@
 <div class="page">
     <div class="hero">
         <h1><i class="fa-solid fa-lightbulb"></i> 每日精灵灵感</h1>
-        <p>每天从宝可梦、洛克王国、奥奇传说、赛尔号里随机抽一只做参考——看它的属性、种族值、图鉴介绍和进化链，再根据随机提示原创一只属于你的誓约精灵。数据全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。</p>
+        <p>每天从宝可梦、洛克王国、奥奇传说、赛尔号里各抽一只精灵、一个特性、一个技能做参考——看它们的属性、种族值、效果、可学精灵和进化链，再根据随机提示原创一只属于你的誓约精灵。数据全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。点特性/技能下的精灵名，可跳到那只精灵的卡片。</p>
     </div>
 
     <div class="loading" v-if="state==='loading'"><i class="fa-solid fa-spinner"></i>正在加载精灵数据库…</div>
@@ -251,6 +275,89 @@
             <div class="loading" v-else style="padding:24px 0">当前选中的数据源里没有精灵，去上面点亮至少一个。</div>
         </section>
 
+        <!-- 每日特性卡 -->
+        <section class="sec">
+            <h2><i class="fa-solid fa-sparkles"></i> 每日特性
+                <span style="font-size:11px;color:var(--ink-3);font-weight:600;margin-left:6px">来自四源 · {{ abCount }} 条 · 点精灵名可跳它的卡</span>
+            </h2>
+            <div class="toolbar">
+                <button class="btn primary" @click="randomAbility"><i class="fa-solid fa-dice"></i> 随机特性</button>
+                <button class="btn" @click="backTodayAbility" v-if="!isDailyAbility"><i class="fa-regular fa-calendar"></i> 回到今日特性</button>
+            </div>
+            <div class="ex-card" v-if="ability.src">
+                <div class="ex-icon">
+                    <img v-if="showRef && ability.icon" :src="ability.icon" alt="" @error="$event.target.style.display='none'">
+                    <span v-else-if="!showRef" style="color:#c9b98d;font-weight:800">?</span>
+                    <i v-else class="fa-solid fa-sparkles" style="color:#c9b98d"></i>
+                    <span class="ex-src" :style="{background:srcMeta[ability.src].color}">{{ srcMeta[ability.src].label }}</span>
+                </div>
+                <div class="ex-body">
+                    <template v-if="showRef">
+                        <div class="ex-name">{{ ability.name }}<small v-if="ability.en">{{ ability.en }}</small></div>
+                        <div class="ex-desc" v-if="ability.desc">{{ ability.desc }}</div>
+                        <div class="ex-desc ex-empty" v-else>这个特性暂无文字描述。</div>
+                        <div class="learners" v-if="ability.learners && ability.learners.length">
+                            <h3>哪些精灵拥有它（{{ ability.learners.length }}）<span style="font-weight:600;margin-left:6px">点击名字查看精灵卡</span></h3>
+                            <div class="learner-list">
+                                <span class="learner" v-for="(l,li) in ability.learners.slice(0,80)" :key="'al'+li" @click="jumpLearner(l)">{{ l.name }}<i v-if="l.hidden" style="font-style:normal;color:var(--accent)">（隐藏）</i></span>
+                            </div>
+                            <div class="ex-note" v-if="ability.learners.length > 80">仅显示前 80 只</div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="ex-name">？？？<small>隐藏的特性</small></div>
+                        <div class="ex-desc">它属于{{ srcMeta[ability.src].label }}。先想想：如果你的原创精灵有这样一个特性，它会怎样改变战斗方式？</div>
+                    </template>
+                </div>
+            </div>
+            <div class="loading" v-else style="padding:24px 0">当前选中的数据源里没有特性，去上面点亮至少一个。</div>
+        </section>
+
+        <!-- 每日技能卡 -->
+        <section class="sec">
+            <h2><i class="fa-solid fa-bolt"></i> 每日技能
+                <span style="font-size:11px;color:var(--ink-3);font-weight:600;margin-left:6px">来自四源 · {{ skCount }} 条 · 点精灵名可跳它的卡</span>
+            </h2>
+            <div class="toolbar">
+                <button class="btn primary" @click="randomSkill"><i class="fa-solid fa-dice"></i> 随机技能</button>
+                <button class="btn" @click="backTodaySkill" v-if="!isDailySkill"><i class="fa-regular fa-calendar"></i> 回到今日技能</button>
+            </div>
+            <div class="ex-card" v-if="skill.src">
+                <div class="ex-icon">
+                    <img v-if="showRef && skill.icon" :src="skill.icon" alt="" @error="$event.target.style.display='none'">
+                    <span v-else-if="!showRef" style="color:#c9b98d;font-weight:800">?</span>
+                    <i v-else class="fa-solid fa-bolt" style="color:#c9b98d"></i>
+                    <span class="ex-src" :style="{background:srcMeta[skill.src].color}">{{ srcMeta[skill.src].label }}</span>
+                </div>
+                <div class="ex-body">
+                    <template v-if="showRef">
+                        <div class="ex-name">{{ skill.name }}<small v-if="skill.en">{{ skill.en }}</small></div>
+                        <div class="ex-attrs">
+                            <span v-if="skill.type">属性 · {{ skill.type }}</span>
+                            <span v-if="skill.cat">分类 · {{ skill.cat }}</span>
+                            <span v-if="skill.power">威力 · {{ skill.power }}</span>
+                            <span v-if="skill.acc">命中 · {{ skill.acc }}</span>
+                            <span v-if="skill.pp">PP · {{ skill.pp }}</span>
+                        </div>
+                        <div class="ex-desc" v-if="skill.desc">{{ skill.desc }}</div>
+                        <div class="ex-desc ex-empty" v-else>这个技能暂无文字描述。</div>
+                        <div class="learners" v-if="skill.learners && skill.learners.length">
+                            <h3>哪些精灵能学会（{{ skill.learners.length }}）<span style="font-weight:600;margin-left:6px">点击名字查看精灵卡</span></h3>
+                            <div class="learner-list">
+                                <span class="learner" v-for="(l,li) in skill.learners.slice(0,80)" :key="'sl'+li" @click="jumpLearner(l)">{{ l.name }}<i v-if="l.lv" style="font-style:normal;color:var(--ink-3)"> Lv.{{ l.lv }}</i></span>
+                            </div>
+                            <div class="ex-note" v-if="skill.learners.length > 80">仅显示前 80 只</div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="ex-name">？？？<small>隐藏的技能</small></div>
+                        <div class="ex-desc">它属于{{ srcMeta[skill.src].label }}。先别看答案，给你的原创精灵设计一个同样定位的招牌技能吧。</div>
+                    </template>
+                </div>
+            </div>
+            <div class="loading" v-else style="padding:24px 0">当前选中的数据源里没有技能，去上面点亮至少一个。</div>
+        </section>
+
         <section class="sec">
             <h2><i class="fa-solid fa-wand-magic-sparkles"></i> 灵感提示 <span style="font-size:12px;color:var(--ink-3);font-weight:600">（根据这只精灵随机生成）</span></h2>
             <div class="tips">
@@ -270,7 +377,7 @@
             <a href="https://rocokingdomworld.org/zh/pokedex/" target="_blank" rel="noopener">洛克王国世界图鉴</a>（{{ srcMeta.rk.count }} 只）·
             <a href="http://aoqi.100bt.com/jingling/daquan_list.html" target="_blank" rel="noopener">奥奇传说精灵大全</a>（{{ srcMeta.aq.count }} 只）·
             <a href="https://wiki.biligame.com/seer/%E7%B2%BE%E7%81%B5%E5%9B%BE%E9%89%B4" target="_blank" rel="noopener">赛尔号 BWIKI</a>（{{ srcMeta.se.count }} 只）·
-            每日精灵由日期决定，同一台设备上今天看到的永远是同一只；数据源与「排除已参照」变化后会重新抽取。
+            每日精灵/特性/技能均由日期决定，同一台设备上今天看到的永远是同一组；数据源与「排除已参照」变化后会重新抽取。
         </div>
     </template>
 </div>
@@ -418,7 +525,8 @@ createApp({
         const excludedNames = ref(new Set());
         // 数据源开关（默认只开宝可梦；洛克/奥奇数据是外部来源，由用户自己点亮）
         const srcOn = ref(JSON.parse(localStorage.getItem('vowmon_daily_src') || '{"pk":true,"rk":false,"aq":false,"se":false}'));
-        const srcMeta = ref({ pk: { count: 0 }, rk: { count: 0 }, aq: { count: 0 }, se: { count: 0 } });
+        // 初始化必须带 SRC_META 的 label/color/favicon，否则卡片「出自 ·」和徽章是空的
+        const srcMeta = ref(Object.fromEntries(Object.entries(SRC_META).map(([k, v]) => [k, { ...v, count: 0 }])));
         const srcList = computed(() => ['pk', 'rk', 'aq', 'se'].map(k => ({
             key: k, label: SRC_META[k].label, color: SRC_META[k].color,
             loaded: srcMeta.value[k].count > 0, count: srcMeta.value[k].count
@@ -428,8 +536,21 @@ createApp({
         const tipSeed = ref(0);
         const artFallbackUsed = ref(false);
         const allPets = ref([]);        // 归一化后的全部精灵（三源合并）
+        const allAbilities = ref([]);   // 特性库（四源）
+        const allSkills = ref([]);      // 技能库（四源）
+        const abIdx = ref(0), skIdx = ref(0);
+        const dailyAbIdx = ref(0), dailySkIdx = ref(0);
 
         const excludedCount = computed(() => allPets.value.filter(p => excludedNames.value.has(p.name)).length);
+        /* 特性/技能随机池：按数据源开关过滤 */
+        const abPool = computed(() => allAbilities.value.filter(a => srcOn.value[a.src]));
+        const skPool = computed(() => allSkills.value.filter(s => srcOn.value[s.src]));
+        const abCount = computed(() => abPool.value.length);
+        const skCount = computed(() => skPool.value.length);
+        const ability = computed(() => abPool.value[abIdx.value] || { src: '', name: '', desc: '', learners: [] });
+        const skill = computed(() => skPool.value[skIdx.value] || { src: '', name: '', desc: '', learners: [] });
+        const isDailyAbility = computed(() => abIdx.value === dailyAbIdx.value);
+        const isDailySkill = computed(() => skIdx.value === dailySkIdx.value);
         const pool = computed(() => {
             const on = srcOn.value;
             let list = allPets.value.filter(p => on[p.src]);
@@ -493,6 +614,43 @@ createApp({
             curIdx.value = dailyIdx.value;
             tipSeed.value = hashStr('daily-' + todayStr() + '-' + sig());
             artFallbackUsed.value = false;
+            const na = abPool.value.length, ns = skPool.value.length;
+            if (na) {
+                const ra = mulberry32(hashStr('vowmon-daily-ab-' + todayStr() + '-' + sig()));
+                dailyAbIdx.value = Math.floor(ra() * na); abIdx.value = dailyAbIdx.value;
+            }
+            if (ns) {
+                const rs = mulberry32(hashStr('vowmon-daily-sk-' + todayStr() + '-' + sig()));
+                dailySkIdx.value = Math.floor(rs() * ns); skIdx.value = dailySkIdx.value;
+            }
+        }
+        function randomAbility() {
+            const n = abPool.value.length;
+            if (!n) return;
+            let next = abIdx.value;
+            while (next === abIdx.value && n > 1) next = Math.floor(Math.random() * n);
+            abIdx.value = next;
+        }
+        function randomSkill() {
+            const n = skPool.value.length;
+            if (!n) return;
+            let next = skIdx.value;
+            while (next === skIdx.value && n > 1) next = Math.floor(Math.random() * n);
+            skIdx.value = next;
+        }
+        function backTodayAbility() { abIdx.value = dailyAbIdx.value; }
+        function backTodaySkill() { skIdx.value = dailySkIdx.value; }
+        /* 点特性/技能的可学精灵：跳到对应精灵卡（跨池按名字/编号找） */
+        function jumpLearner(l) {
+            let i = pool.value.findIndex(p => p.name === l.name || p.id === l.id || p.no === l.id);
+            if (i < 0) {
+                const strip = s => String(s || '').replace(/^\[[^\]]*\]/, '').trim();
+                i = pool.value.findIndex(p => p.full && strip(p.full) === l.name);
+            }
+            if (i < 0) return;
+            curIdx.value = i;
+            tipSeed.value = (Math.random() * 4294967296) >>> 0;
+            document.querySelector('.mon-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         /* 扫描图鉴 vow 的【原型】字段，找出已被参照的精灵名（三源通用） */
@@ -615,11 +773,13 @@ createApp({
 
         async function loadData() {
             state.value = 'loading'; errMsg.value = '';
-            const [pk, rk, aq, se] = await Promise.all([
+            const [pk, rk, aq, se, abData, skData] = await Promise.all([
                 fetchSource('pokemon-data.json'),
                 fetchSource('rock-data.json'),
                 fetchSource('aoqi-data.json'),
-                fetchSource('seer-data.json')
+                fetchSource('seer-data.json'),
+                fetchSource('inspiration-abilities.json'),
+                fetchSource('inspiration-skills.json')
             ]);
             const pets = [];
             if (pk) { pets.push(...normalizePk(pk)); srcMeta.value.pk.count = (pk.pokemon || []).length; }
@@ -632,6 +792,8 @@ createApp({
                 return;
             }
             allPets.value = pets;
+            allAbilities.value = abData && Array.isArray(abData.items) ? abData.items : [];
+            allSkills.value = skData && Array.isArray(skData.items) ? skData.items : [];
             state.value = 'ok';
             reseedDaily();
             // 静默加载图鉴数据，扫描【原型】字段构建「已参照」名单
@@ -682,7 +844,9 @@ createApp({
         return {
             state, errMsg, showRef, skipRef, srcOn, srcMeta, srcList,
             mon, isDaily, tips, excludedCount,
-            typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc, jumpEvo
+            ability, skill, isDailyAbility, isDailySkill, abCount, skCount,
+            typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc,
+            jumpEvo, randomAbility, randomSkill, backTodayAbility, backTodaySkill, jumpLearner
         };
     }
 }).mount('#app');
