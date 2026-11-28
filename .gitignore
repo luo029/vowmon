@@ -33,3 +33,8 @@ _tools/.aoqi-cache/
 
 # 赛尔号 SMW 抓取缓存（本地专用）
 _tools/.seer-cache/
+
+# 赛尔号技能 SMW 缓存 + 灵感调研临时文件（本地专用）
+_tools/.seer-skill-cache/
+.*-tmp.html
+.*-tmp.json
