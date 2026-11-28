@@ -1,10 +1,11 @@
 # Vowmon Wiki · AI 总纲
 
 > **本文档是给 AI 看的**。目标：任何 AI（换了模型、换了人、新开对话）读完这一份文件，
-> 就能立刻接手这个项目的**代码、数据、世界观设定与工作习惯**，不需要重新摸索。
+> 就能立刻接手这个项目的**代码、数据、世界观设定、工作习惯与用户要求**，不需要重新摸索。
 >
 > 配套文件：`README.md`（面向使用者的详细功能手册与开发规范，本文有大量引用）。
-> 两者冲突时，以**仓库实际代码**为准，其次本文，再次 README（README 个别目录描述已过时，见 §0.3）。
+> 两者冲突时，以**仓库实际代码**为准，其次本文，再次 README。
+> 交接版本：2026-11-28 深夜（含每日精灵灵感四源模块、外部参考数据库、已参照名录弹窗）。
 
 ---
 
@@ -13,15 +14,16 @@
 ```text
 项目     = 一个"御兽精灵"题材的小说设定 Wiki + 数据管理后台（纯静态，无后端服务器）
 代码仓库 = D:/novels/vowmon        → github.com/luo029/vowmon      （站点本体，不含数据）
-数据仓库 = D:/novels/vowmon_data   → github.com/luo029/vowmon_data （唯一数据源，11 个 JSON）
+数据仓库 = D:/novels/vowmon_data   → github.com/luo029/vowmon_data （唯一数据源，17 个 JSON）
 图片仓库 =                            github.com/luo029/vowmon_imgs （按编号命名的 PNG）
-线上主站 = https://vowmon.pages.dev/（Cloudflare Pages，push 自动部署）
-备用镜像 = https://luo029.github.io/vowmon/（GitHub Pages，301 到自定义域名）
+线上主站 = https://keeptrue.ren/vowmon/（CF Pages 自定义域名，注意是子路径！根路径是旧站"养真斋"）
+备用地址 = https://vowmon.pages.dev/（CF Pages 默认域） / https://luo029.github.io/vowmon/（301 到主站）
 技术栈   = 原生 HTML + Vue3 CDN 生产版（运行时编译内联模板）+ Font Awesome 6.4，零构建零打包
 数据流   = 后台页面改 localStorage 镜像 → 一键同步推 JSON 到 vowmon_data → 前台 /data/* 反代（60s 缓存）读取
+外部参考 = PokeAPI/洛克/奥奇/赛尔四站数据由 _tools 生成器一次性抓取成静态 JSON（不接 AI、不实时调外部站）
 ```
 
-**AI 接手任何任务前必读的硬规范**（详见 README §「核心开发规范」+ §13 踩坑史）：
+**AI 接手任何任务前必读的硬规范**（详见 §0.5 用户要求全记录 + §11 踩坑史）：
 
 1. 「精灵」英文统一 **Vowmon**，图鉴英文 **Vowdex**。禁止 Pokemon / Pokedex / pet(s) 作为对外名称。
 2. 给用户的代码输出必须用 ` ```text ` 代码块、无高亮、无省略号，文件名写在代码块上方。
@@ -29,6 +31,80 @@
 4. 组件本身有问题要修组件文件，不要在页面里打补丁。
 5. 用户质疑"不生效"时必须实测查到根因，不许口头解释了事（用户会明确授权实测）。
 6. 每次 css/js 改动必须升 `?v=YYYYMMDD[字母]` 版本号，否则缓存错位白屏。
+7. **能构造 URL 绝不请求接口，能引用的绝不下载**——外部数据采集的第一哲学（§10）。
+8. 数据文件体积敏感：GitHub 仓库会被用户检查，新增数据先想瘦身（§10.0）。
+
+---
+
+## 0.5 用户对 AI 的要求全记录（交接必读）
+
+> 这是用户在全部协作过程中**明确说过的要求**与 AI **总结出的隐性要求**。
+> 新 AI 必须把这一节当作"用户手册"来执行——这些不是建议，是命令。
+
+### 0.5.1 显式要求（用户原话级指令，按主题归档）
+
+**命名与代码输出**
+
+1. 「精灵」的英文名统一为 **Vowmon**；图鉴英文为 **Vowdex**；禁止使用 Pokedex / Pokemon / pet(s) 作为对外名称（标识符、CSS 类、文件名、存储键、数据字段全量执行过改名）。
+2. 代码输出用 ` ```text ` 代码块、**无高亮、无省略号**，文件名写在代码块上方。
+3. 回复用简体中文。
+
+**目录与架构**
+
+4. 后台 HTML 统一放 `admin/` 子目录，前台 HTML 留根目录；按文件类型分 `css/`、`js/`；禁止新增 assets/pages/data 之类的目录；站点仓库**不存数据**。
+5. 三仓硬分工：站点仓不放数据、数据仓只放 JSON、图片仓只放按编号命名的图片。
+6. 站点本体（vowmon 仓）**不存任何数据**，`data/` 目录已删除，别再建回来。
+
+**工作流**
+
+7. 改完代码**立即提交推送**，推送完毕就结束任务（不要拖着问"还要做什么吗"）。
+8. 每次 css/js 改动手动升级 `?v=YYYYMMDD[字母]` 版本号（防缓存错位白屏）。
+9. 组件问题修组件文件本身，不在页面里打补丁。
+10. 用户质疑"不生效"时，必须实测查到根因，不许口头解释了事。
+11. 修改后要验证：语法 + 模板绑定审计 + 无头浏览器冒烟测试（用户有时会说"不需要测试尽快完成"——那是授权跳过测试直接交付，但数据类改动仍至少验数据）。
+
+**每日精灵灵感页（tools/daily-pokemon.html，2026-11-28 全天迭代）**
+
+12. 每日随机精灵卡片：**不用 AI**，静态数据 + 规则模板生成灵感提示。
+13. 多数据源开关：宝可梦 / 洛克王国 / 奥奇传说 / 赛尔号四源合一卡，卡片**标注出处**（「出自 ·」徽标）。
+14. 排除已参照开关：读取图鉴 vow 的【原型】字段，已写过的精灵不进随机池。
+15. 盲盒模式：隐藏参考只看提示。
+16. 进化链要显示、**成员可点击跳转**到对应精灵卡。
+17. 种族值该有几维就几维：洛克是六维（含魔攻/魔防），赛尔是六维（含特攻/特防），少一维都是 bug（用户拿截图纠错过两次）。
+18. 「要学会变通」：外部站的数据不一定在预想的字段/版式里，奥奇详情页三种版式自适应解析；别轻易下"数据是 JS 动态抓不到"的结论——**先实测再下结论**。
+19. 特殊内容自适配：四源各自独有的东西都要展示（宝可梦特性/奥奇技能+成长故事/赛尔魂印+刻印），用户原话"这四个网站都检查一下，要自适应，自适配！"
+20. 特性卡片、技能卡片也要做（同样四源取材），要**详细**：名称、描述、参数、**哪些精灵能学会/拥有**，都属于每日灵感栏目。
+21. 表格解析防"串台"：只取紧跟表头的连续数据行（奥奇技能表尾部混过推广行）。
+22. 分类标签按 52poke 定义：**大器晚成 = 准神 600 族 10 条进化线**（不是 slow 成长！传说宝可梦同样是 slow，曾因此误标奈克洛兹玛）；最初的伙伴 = 历代御三家基础形态；传说/幻之按 PokeAPI is_legendary/is_mythical。
+23. 已参照名录：按钮 + 弹窗，先列全部被参照精灵，点击后展示**誓约精灵 ↔ 参照原型双卡对比**（含图像）。
+24. 「出自」标注不能空白——初始化配置对象时要整体带过来（曾因只带 count 漏 label 导致徽标空白）。
+25. UI 细节用户会盯：徽标被裁切、字号太小、名字看不清都会被截图指出，**修就要修到完整可见**。
+
+**数据采集与体积（用户最强烈的偏好之一）**
+
+26. **"能构造 URL 的绝不请求接口，能引用的绝不下载"**——赛尔号图片用 `Special:FilePath` 构造 302 直链、洛克图片直接引用源站 URL，零图片请求零落盘。
+27. `_tools` 体积要小："不应该每只精灵一个 html？不应该变成一个数据文件类似 json 这样么……精灵图片不要下载放在本地，直接引用网站上的图片就可以！你这样文件太大了！"→ 缓存目录全部进 `.gitignore`，用完即删，线上仓库只有 JSON。
+28. 数据 JSON 不希望太大：inspiration-skills.json 曾 7.6MB，已瘦身到 4.8MB（learners 截 80、去冗余字段、截断超长文本）。**新增数据文件前先想体积**。
+29. 会问"数据会上传 GitHub 吗？我不希望文件太大"——要如实报告文件体积。
+
+**验收习惯**
+
+30. 用户用**截图**纠错（迪莫六维、奥奇加载不出、奈克洛兹玛标签），看到截图先复现再改。
+31. 用户给链接就是让你去读（52poke 分类页、biligame wiki），读的时候把定义/判定标准弄准确，别想当然。
+32. "再查查还有没有别的错误"→ 主动做全面数据体检（进化链、属性取值、stats 完整性），把真错误和"源站本来就没有"区分开汇报。
+
+### 0.5.2 隐性要求（AI 总结的用户偏好与行事风格）
+
+1. **数据准确性 > 一切**。用户对精灵数据非常熟，任何维度缺失/串台/乱码都会被发现；交付前自检字段的完整性与正确性。
+2. **能批量不逐页**：SMW ask 分页批量、页面内嵌 JSON 一次拿全、构造直链——所有采集先找"批量通道"。
+3. **先查数据层再查展示层**：显示错了先看 JSON 里对不对（赛尔六维 bug 就是一个键名错位）。
+4. **根因修复**：不打补丁绕过（ex-src 徽标被裁切就改定位，不是加 padding 遮掩）。
+5. **诚实的降级**：源站没有的数据（洛克无静态技能文本、赛尔技能无归属精灵）如实标注"源站未公布/暂无名单"，不编造。
+6. **任务闭环**：改完 → 验证 → commit（两仓分别）→ push → 汇报 → 追加工作日志。
+7. **提交信息写详细**：本仓库的 git log 是活的历史，新 AI 排查问题时先看 log。
+8. **遇到 WAF/限速**：限速 + 缓存续抓 + 降级不阻断（部分数据拿不到先落盘其余，下次续抓）。
+9. **中文回复**、直接、不绕弯；用户风格是"给方向 + 主动纠错"，期待 AI 有自己的想法并变通执行。
+10. **每完成一件事记日志**到 `.workbuddy/memory/YYYY-MM-DD.md`，长期约定沉淀到 `MEMORY.md`。
 
 ---
 
@@ -36,11 +112,11 @@
 
 | 仓库 | 本地路径 | 内容 | 谁读 |
 |---|---|---|---|
-| `vowmon` | D:/novels/vowmon | HTML/CSS/JS + `functions/`，**禁止放数据**（`data/` 目录已删除） | CF Pages / GH Pages |
-| `vowmon_data` | D:/novels/vowmon_data | 仓库根目录 11 个 JSON（唯一数据源） | 前台运行时拉取、后台读写 |
+| `vowmon` | D:/novels/vowmon | HTML/CSS/JS + `functions/` + `_tools/` 生成器，**禁止放数据**（`data/` 目录已删除） | CF Pages / GH Pages |
+| `vowmon_data` | D:/novels/vowmon_data | 仓库根目录 17 个 JSON（唯一数据源） | 前台运行时拉取、后台读写 |
 | `vowmon_imgs` | — | `sprites/{编号}.png`、`sprites/{编号}_s.png`（异色）、`items/{id}.png` | 前台经 `/img/*` 反代 |
 
-数据仓库文件清单（**新增文件必须同步进本清单**）：
+数据仓库文件清单（**新增文件必须同步进本清单**，前 11 个走 `data-loader.js`，后 6 个是外部参考数据仅供 `tools/daily-pokemon.html` 直接 fetch、**不走 data-loader**）：
 
 | 文件 | 结构 | 全局变量 | 内容 |
 |---|---|---|---|
@@ -55,8 +131,16 @@
 | `bloodline-skills-data.json` | `{skills[],families{}}` | — | 血脉技能（如「本心一击」）+ 族群技能包 |
 | `lore-data.json` | `{pages[],blocks{}}` | `allLoreBlocks` | 世界观五页正文文本块（键 `页.c序`，382 块） |
 | `realm-data.json` | `{labels{},descs{}}` | — | 天地图鉴四类精灵定位的名称与描述 |
+| `pokemon-data.json` | `{pokemon[],count}` | — | 宝可梦参考（1025 只，PokeAPI；特性/进化链/**tags 分类标签**） |
+| `rock-data.json` | `{pets[],count}` | — | 洛克王国世界（644 只，rocokingdomworld.org；六维种族值 hp/atk/mag/def/res/spe） |
+| `aoqi-data.json` | `{pets[],count}` | — | 奥奇传说（1606 只，100bt；普通技/超杀技+特效/特长/成长故事） |
+| `seer-data.json` | `{pets[],count}` | — | 赛尔号（4978 只，biligame BWIKI SMW；六维 sa/sd/**专属魂印 2171 条/专属刻印 2539 条**/进化链 2262 条） |
+| `inspiration-abilities.json` | `{items[],count,kind:'ability'}` | — | 每日特性库 2460 条（pk284/rk224/se魂印1943/aq9），每条含 desc + learners |
+| `inspiration-skills.json` | `{items[],count,kind:'skill'}` | — | 每日技能库 10263 条（pk920/rk586/se6000/aq2757），每条含参数 + learners |
 
-当前数据规模：16 精灵 / 2 技能 / 1 特性 / 25 性格 / 8 境界 / 1 个体 / 1 人物 / 18 血脉技能 / 382 文本块。**站点按千只规模设计压测过**，别担心容量，只 worry 缓存和分页（README §3）。
+体积参考（用户对体积敏感）：`inspiration-skills.json` 4.8MB、`seer-data.json` 4.2MB、`aoqi-data.json` 1.1MB、`inspiration-abilities.json` 1.15MB、其余都在 0.6MB 以内。**新增数据先瘦身再提交**（§10.0）。
+
+当前站点自有数据规模：16 精灵 / 2 技能 / 1 特性 / 25 性格 / 8 境界 / 1 个体 / 1 人物 / 18 血脉技能 / 382 文本块。**站点按千只规模设计压测过**，别担心容量，只 worry 缓存和分页（README §3）。
 
 ---
 
@@ -67,22 +151,25 @@ vowmon/
 ├── index.html / 404.html
 ├── dex/        vowdex.html（精灵图鉴）  list.html（列表）  vow-detail.html（精灵详情）
 │               realm-dex.html（天地图鉴：权柄/遥世/伙伴/晚熟四类定位）
-├── records/    individuals.html（御兽精灵个体）  characters.html（御兽人物）
+│               compare.html（对比器）  region-forms.html（地区形态对照）
+├── records/    individuals.html（御兽精灵个体）  characters.html（御兽人物）  timeline.html（故事时间线）
 ├── reference/  skills.html  skill-detail.html  traits.html  natures.html
 │               items.html  calculator.html（克制计算器）  coverage.html（打击面）
-│               bloodlines.html（血脉图鉴，世界观页但在 reference/ 目录）
-├── world/      ranks.html（等级体系）  trainers.html（御兽师图鉴）
-│               factions.html（势力版图）  lore.html（元域演化史）
+│               bloodlines.html（血脉图鉴）  bloodline-sim.html（血脉共鸣模拟器）
+├── world/      authority.html（权柄看板）  ranks-path.html（阶元路径）  ranks.html（等级体系）
+│               trainers.html（御兽师图鉴）  factions.html（势力版图）  lore.html（元域演化史）
 ├── battle/     index.html（对战模拟器）  rules.html（对战规则说明）
+├── tools/      daily-pokemon.html（每日精灵灵感）  consistency.html（设定一致性检查）
+│               diagnostics.html（数据源诊断）
 ├── admin/      index.html（精灵管理+天地图鉴+同步配置，3 个 Tab）
 │               admin-skills / admin-traits / admin-items / admin-images
 │               admin-lore / admin-individuals / admin-characters
-│               admin-stages / admin-bloodline-skills   sidebar.js（后台侧栏唯一来源）
+│               admin-stages / admin-bloodline-skills / admin-audit   sidebar.js（后台侧栏唯一来源）
 ├── css/        style.css  navbar.css  admin.css  common-ui.css  dialog.css
 │               diff-modal.css  responsive.css（必须最后引入）
 ├── js/         （见 §6 全清单）
 ├── functions/  img/[[path]].js（图片反代，缓存 7 天）  data/[[path]].js（数据反代，缓存 60s）
-├── _tools/     测试与生成脚本（见 §11）
+├── _tools/     测试脚本 + 外部数据生成器（见 §9/§10）
 └── .github/workflows/deploy-cloudflare.yml（push → CF Pages）
 ```
 
@@ -102,6 +189,10 @@ vowmon/
         → raw.githubusercontent.com
   加载后把 JSON 字段赋给全局变量（allVowsData 等），才允许挂载 Vue。
 
+每日精灵灵感页（tools/daily-pokemon.html）不走 data-loader：
+  页内 fetchSource() 按同样的三源顺序直接 fetch 6 个参考 JSON（带 ?_=时间戳戳穿缓存）。
+  VowmonData 只用 softReady(['vows']) 静默拿图鉴 vow 扫【原型】字段。
+
 后台页面（本机镜像优先）：
   ① localStorage['vowmon_mirror_<key>'] 有镜像 → 秒开（不发遮罩）
   ② 后台静默 reconcile：fetchRemote 带 ?_=时间戳 戳穿 60s 边缘缓存回源对账
@@ -109,6 +200,8 @@ vowmon/
      - 不一致且本地无脏标记（vowmon_dirty_keys）→ 云端覆盖镜像，页面自动刷新
      - 不一致且本地有未同步修改 → 保留本地，等用户点「一键同步」
   ③ 保存：写 localStorage + markDirty；同步：推 JSON 到 GitHub（见 §7）
+  ④ 注意：后台保存会直接向 vowmon_data 推提交（提交信息 "Admin Panel: Update xxx"），
+     生成器重跑/改数据仓前先 git pull --rebase，否则 push 被拒。
 ```
 
 **铁律**：localStorage 草稿**永远优先于远端**（改回远端优先会丢用户未同步的修改）。
@@ -116,7 +209,8 @@ vowmon/
 
 相关 localStorage 键（部分）：`vowmon_vows_data`、`vowmon_mirror_*`、`vowmon_dirty_keys`、
 `vowmon_anim_on`（'false'=关动画）、`vowmon_sync_config`（Token/仓库名，仅本机）、
-`vowmon_tags_library`、`vowmon_vows_visible_cols`（及 skills/traits/items 同名键）、`vowmon_lore_lastpush`。
+`vowmon_tags_library`、`vowmon_vows_visible_cols`（及 skills/traits/items 同名键）、`vowmon_lore_lastpush`、
+每日精灵灵感页专属：`vowmon_daily_src`（四源开关）/ `vowmon_daily_show`（盲盒）/ `vowmon_daily_skip_ref`（排除已参照）。
 
 ---
 
@@ -127,6 +221,7 @@ vowmon/
 | 页面 | URL | 功能要点 | 关键文件 |
 |---|---|---|---|
 | 首页 | `index.html` | Hero 横幅 + 三组入口卡（图鉴与资料 / 世界观 / 研究工具），卡片下挂小字快捷链接 | 静态 |
+| **每日精灵灵感** | `tools/daily-pokemon.html` | **三卡合一页**：每日精灵卡（四源 1025+644+1606+4978 只）+ 每日特性卡（2460 条）+ 每日技能卡（10263 条），各自独立日期种子 + 随机按钮；顶部四源数据源开关决定随机池；卡片**标注出处**；精灵卡含中文名/属性/地区/**分类标签（传说/幻之/最初的伙伴/大器晚成）**/六维种族值/进化链可视化（可点击跳转）/特性chips/奥奇技能/赛尔魂印刻印；特性/技能卡含详细描述+参数+**可学精灵名单**（点击 `jumpLearner()` 跳精灵卡）；「已参照名录」弹窗（誓约↔原型双卡对比）；盲盒/排除已参照双开关；灵感提示按源自适应（含特性改编/专属印记模板）。**详见 §10** | 页内 Vue + 6 个参考 JSON |
 | 权柄看板 | `world/authority.html` | 力位权三律、权柄沙盘（**选书内御兽精灵个体**，图鉴仅取种族图/名）、权柄循环五步、三大机制、书内纪事 | `authority-config.js` |
 | 阶元路径 | `world/ranks-path.html` | 等级轴联动精灵八阶/御兽师八阶/权限/联盟名号，两条铁律 | `authority-config.js` + `StageConfig` |
 | 血脉共鸣模拟器 | `reference/bloodline-sim.html` | **选书内个体**（默认读档案已记录的血脉）+ 血脉之石→形态/技能/克制不变演示 | `bloodline-config.js` |
@@ -226,7 +321,7 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 
 ---
 
-## 7. 同步 / 拉取与 diff 弹窗（2026-11-28 新增，重点）
+## 7. 同步 / 拉取与 diff 弹窗（重点）
 
 **所有后台页的「一键同步」和「从仓库拉取」都先弹 `VowmonDiff.review` 差异预览**：
 
@@ -252,14 +347,20 @@ return 清单；`v-for` 与 `v-if` 不能同元素（用 `<template>` 包裹）�
 
 | 平台 | 地址 | 发布 |
 |---|---|---|
-| Cloudflare Pages（主站） | `https://vowmon.pages.dev/`（别名 `vowmon.keeptrue.ren`，新网 CNAME） | `.github/workflows/deploy-cloudflare.yml` + Secret `CLOUDFLARE_API_TOKEN`，push 即部署 |
-| GitHub Pages（备用） | `luo029.github.io/vowmon/`（当前 301 到自定义域名） | Settings → Pages，`main` /(root)，push 即发布；**不要加 Pages 工作流**（PAT 缺 pages=write） |
+| Cloudflare Pages（主站） | **`https://keeptrue.ren/vowmon/`（用户日常入口，子路径！）** 与 `https://vowmon.pages.dev/`（别名 `vowmon.keeptrue.ren`） | `.github/workflows/deploy-cloudflare.yml` + Secret `CLOUDFLARE_API_TOKEN`，push 即部署，实测约 2~5 分钟上线 |
+| GitHub Pages（备用） | `luo029.github.io/vowmon/`（301 到 keeptrue.ren/vowmon/） | Settings → Pages，`main` /(root)，push 即发布；**不要加 Pages 工作流**（PAT 缺 pages=write） |
+
+> ⚠️ **`keeptrue.ren` 的根路径是另一个旧站「养真斋」（7 月的静态页），与本项目无关！**
+> 排查"线上是旧版"时先对比 `keeptrue.ren/vowmon/` 与本地，**别看根路径**；
+> 用户截图里的旧导航多半是浏览器缓存，让用户 Ctrl+F5。
 
 缓存：`/img/*` 7 天（`functions/img`，换图加 `?v=imgVer` 或等 7 天）；`/css/*` `/js/*` 30 分钟；
 `/data/*` 60 秒；HTML 协商缓存。**本地 css/js 引用统一带 `?v=YYYYMMDD`，每次改版手动升号**。
 
 CF Pages 会把 `*.html` 308 到无扩展名路径——**所有 isActive 判断必须补 `.html`**（navbar.js 与 sidebar.js 都修过此 bug）。
 图片上传时 `image-utils.js` 同时生成 `.webp` 副产物（压缩画布 `toDataURL('image/webp', 0.86)`），`/img/*` 反代优先返回同名 webp，不存在则回落原 PNG；换图靠 `imgVer` 破缓存。PWA SW 只在前台注册（后台不注册，避免缓存草稿）。
+
+**数据仓库远端有后台面板的自动提交**（"Admin Panel: Update xxx"）——对 vowmon_data 做任何本地操作前先 `git pull --rebase`，否则 push 被拒（非 fast-forward）。
 
 ---
 
@@ -269,6 +370,8 @@ CF Pages 会把 `*.html` 308 到无扩展名路径——**所有 isActive 判断
 本地服务   python _tools/dev-server.py 8765（后台标签页定时器会被节流：sleep 轮询假挂死，
            点击后的检查要用微任务 Promise.resolve().then）
 语法检查   node --check js/xxx.js
+绑定审计   抽 HTML 内 <script> 用 new Function 验语法 + 三向核对（模板绑定 vs return 清单 vs 定义），
+           $event 是 Vue 内置、v-for 局部变量是合法缺失——脚本模板见 .workbuddy/memory/2026-11-28.md
 渲染断言   node _tools/assert-render.mjs http://127.0.0.1:8765 local   （29 项全站检查）
 后台弹窗   node _tools/test-admin-modal.mjs http://127.0.0.1:8765 local （6 项）
 侧栏       node _tools/test-sidebar.mjs （10 项）
@@ -280,8 +383,13 @@ diff 弹窗  node _tools/test-diff-logic.js（合并单测 15 项）
 手机审计   node _tools/audit-mobile.mjs（41 页 × 390/360px，检查横溢/未编译模板，结果写 _tools/mobile-audit.json）
 功能 E2E   node _tools/test-site-e2e.mjs（21 项：筛选/排序/异色/Ctrl+K/个体源/血脉默认/审计等）
 lore 结构  python _tools/lore_gen.py（extend 合并模式重编号；--fresh 全量重编号慎用）
+数据生成   node _tools/gen-pokemon-data.mjs / gen-rock-data.mjs / gen-aoqi-data.mjs
+           / gen-seer-data.mjs / gen-inspire-extra.mjs（见 §10）
 iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.title（PASS-click-open / FAIL-…）
            _tools/test-frontend-check.html?page=xxx.html（前台挂载检查，查 {{ }} 残留）
+冒烟测试   无头 Chrome：chrome.exe --headless=new --no-sandbox --disable-gpu
+           --virtual-time-budget=30000 --dump-dom --user-data-dir=<系统临时目录新 profile> <URL>
+           （user-data-dir 必须用绝对路径；检查 {{ mon./ability./skill. 未编译残留、关键文案、ex-card 数量）
 ```
 
 无头浏览器 E2E 的写法参考 `test-diff-modal.mjs`：CDP WebSocket + `Emulation.setDeviceMetricsOverride`；
@@ -290,14 +398,122 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 
 ---
 
-## 10. 踩坑史速查（同类问题先查这里）
+## 10. 外部参考数据与生成器手册（每日精灵灵感页的数据底座）
+
+> **采集哲学（用户原话级铁律）**：能构造 URL 绝不请求接口，能引用的绝不下载。
+> 图片全部引用源站 URL，从不落盘；缓存目录全部 gitignore、用完可删；线上仓库只有 JSON。
+> 不接 AI、不实时调外部站点——纯静态、可复现。
+
+### 10.0 体积纪律（用户明确要求）
+
+- 新增 JSON 前先估算体积；超过 1MB 就想瘦身手段：learners/拥有者名单截断（前端只显示前 80）、
+  去冗余字段（如 learners 里的 src）、超长描述截断、同名条目合并。
+- `inspiration-skills.json` 从 7.6MB 瘦到 4.8MB 的手段就是上面三条，可复用。
+- 生成器的临时 HTML/JSON 一律放 `_tools/.xx-cache/`（点开头），**当天同步加进 .gitignore**。
+
+### 10.1 四个参考数据源速览
+
+| 源 | key | 站点 | 数量 | 图 | 独有内容 |
+|---|---|---|---|---|---|
+| 宝可梦 | `pk` | PokeAPI | 1025 | jsDelivr sprites 官方美术图 | 特性（284 个中文名+隐藏标记）、tags 分类标签、地区、世代图鉴介绍 |
+| 洛克王国 | `rk` | rocokingdomworld.org | 644 | 源站直链 webp | 六维（hp/atk/**mag**/def/**res**/spe，注意键名与宝可梦不同） |
+| 奥奇传说 | `aq` | aoqi.100bt.com | 1606 | 源站直链 png（**列表页图片在 `dsrc` 属性**，src 是懒加载占位图 loading28.gif） | 特长/普通技+特效/超杀技+特效/成长故事 |
+| 赛尔号 | `se` | wiki.biligame.com/seer | 4978 | `Special:FilePath/立绘-{序号}.png` 构造 302 直链（零请求） | 六维 sa/sd、外号、简介、**专属魂印（`分类:魂印` + `?相关精灵` 关联，图标 `文件:魂印-{图标}.png`）**、**专属刻印（`[[分类:刻印]][[专属精灵::+]]`，`?专属精灵`=数字序号）**、进化链 2262 条 |
+
+### 10.2 生成器逐个说明（_tools/gen-*.mjs）
+
+**gen-pokemon-data.mjs**（→ pokemon-data.json）
+- 抓 PokeAPI species+pokemon（缓存 `_tools/.pokemon-cache/species-*` 与 `pokemon-*`，中断重跑只抓缺的）。
+- evolution_chain 端点建 540 条链映射 → 每只 `evo[]`（链上全部成员 id，按进化顺序）。
+- 特性：ability 端点缓存（284 个），中文名查表，`abilities:[{name,hidden}]`。
+- **tags 分类标签**（§0.5.1-22）：传说=is_legendary / 幻之=is_mythical / 最初的伙伴=STARTERS 硬编码
+  （27 个御三家基础形态 id）/ 大器晚成=LATE_BLOOMERS 硬编码（准神 600 族 10 条线 32 只：
+  147-149/246-248/371-373/374-376/443-445/633-635/702-706/782-784/885-887/996-998）。
+  **绝不能用 growth_rate==='slow' 判定大器晚成——传说宝可梦同样是 slow（奈克洛兹玛事故）**。
+- PokeAPI 语言代码是小写 `zh-hans`；图鉴版本字段取 `scarlet` 单版本。
+
+**gen-rock-data.mjs**（→ rock-data.json）
+- 列表页 `/zh/pokedex/` data-* 属性 + 详情页 `/zh/pokedex/{slug}`。
+- 立绘锚定 `data-spirit-art` 属性（正则会误抓系别小图标）。
+- 种族值标签带点（M.ATK/M.DEF）注意正则行首锚定的 alternation 要覆盖。
+- 3 只地区形态（地鼠/遁鼠/遁地鼠）源站页面**本身没有六维表**（只公布 Total）——stats 空是诚实数据，
+  前端有兜底提示，别试图"补抓"。
+
+**gen-aoqi-data.mjs**（→ aoqi-data.json）
+- 列表页单页全量 3547 条去重 1606；**真实图在 `dsrc` 属性**（src 是 loading28.gif 懒加载占位）。
+- 详情页**三种版式自适应**：`aoqi__table01` 旧大表 / `tujianTable` 新表 / 无 class 手写表；
+  tableRows 同时抓 `<td>` 和 `<th>`（新版表行标签在 th）。
+- 只取**紧跟表头的连续数据行**（碰到 推荐/获得方式/速递 等栏目词停，防推广行串台技能）。
+- `html.indexOf('精灵名')` 会命中 meta description——要遍历 table 找表头。
+- clean() 必须补全 HTML 实体：&middot;/希腊字母 αβγπ/&hellip;（机甲小诺α是正经名字，不是乱码）。
+
+**gen-seer-data.mjs**（→ seer-data.json）
+- SMW 结构化属性：`api.php?action=parse&text={{#ask:[[分类:精灵]]|?序号|…}}`，limit 上限 1000，
+  offset 分页，**4.5s 间隔防 WAF**；5 请求拿全 4978 只。
+- **ask 参数必须写在 `{{#ask:…}}` 花括号内部**：把 |limit 追加到 `}}` 之后会静默失效（默认 limit=50，只拿到 50 条——要数行数才能发现）。
+- biligame EdgeOne WAF：连发请求进惩罚期（HTTP 567，几分钟起），退避 180/360/540s 无效；
+  正确姿势 = 4.5s 限速 + 缓存续抓 + 失败降级不阻断。
+- 图片零请求：`https://wiki.biligame.com/seer/Special:FilePath/立绘-{序号}.png` 直接构造。
+- 页面标题是 `精灵:{序号}`（特殊名如 神代·伊优 是 DisplayTitle）。
+- **进化链**：wiki「进化链」属性是**空格分隔序号串**（`0010 0011 0012`）→ 按 `/[\s，,、]+/` 切分 →
+  **去前导零**（0108 对齐 no=108，否则前端 byNo 反查失败）→ 过滤模板占位符（`{{{一阶段形态}}}`、
+  `[[文件:…]]`）→ 单元素链视为无链。修复后 2262 只全可反查。
+- **属性列剔除混入的精灵名**（「机械地面系 北冥·玄武」→ 截到第一个「系」）。
+- 魂印/刻印批量：魂印 = `[[分类:魂印]]` + `?相关精灵`（**魂印ID 是魂印自己的编号，别当精灵序号用**）；
+  刻印 = `[[分类:刻印]][[专属精灵::+]]` + `?专属精灵`（取值就是精灵数字序号）。
+- wiki 的「技能名称」属性存的是序号文本——技能名用**效果第一小句截 10 字**做可读名。
+
+**gen-inspire-extra.mjs**（→ inspiration-abilities.json + inspiration-skills.json）
+- 宝可梦：ability/move 端点缓存（`_tools/.pokemon-cache/ability-*/move-*`）；move 可学精灵用
+  `learned_by_pokemon`（不是 `pokemon` 字段），**截 80**（前端只显示 80）。
+- 洛克：`/abilities/` 与 `/skills/` 页面**内嵌 `<script type="application/json">` 完整数据**
+  （traits 224 含描述+spiritIds、skills 586、spirits 的 skills=[[技能id,'skills',等级]]）——无需逐页抓。
+- 赛尔：技能 SMW 属性名是 `技能序号/技能名称/技能类型/技能属性/技能效果/威力/次数/先制/命中率`，
+  **不是** `ID/名称/效果`；归属精灵不在 SMW → learners 空（前端显示暂无名单）；desc 截 200 字控体积。
+- 奥奇：从 aoqi-data.json 直接提取，不新增请求。
+- **finish() 去重规则**：按 `src|name` 合并 learners，**但赛尔技能名是效果摘要易重名 → se 技能改按 id
+  去重**（否则 6000 合成 1279）；统一给 learners 去掉冗余 src 字段（模板只用 name/id/hidden/lv）。
+
+### 10.3 每日精灵灵感页前端要点（tools/daily-pokemon.html）
+
+- 归一化：normalizePk/normalizeRk/normalizeAq/normalizeSeer → 统一字段
+  `src/id/no/name/types/stats/h/w/dex/dexSrc/img/evo/link/full` + 各源独有字段（abilities/soulSeal/engrave/talent/skills/tags…）。
+- **STAT_LABELS/STAT_ORDER 按源映射**：pk=hp/atk/def/spa/spd/spe，rk=hp/atk/**mag**/def/**res**/spe，
+  se=hp/atk/def/**sa**/**sd**/spe——键名错位会静默少列（赛尔六维 bug 的根因就是写成 spa/spd）。
+- **mon 默认对象必须包含模板用到的所有字段**（防 Vue prod 静默炸）。
+- 三卡各自日期种子（精灵/特性/技能独立），`reseedDaily()` 同时播种；数据源开关变化 → 重抽。
+- jumpEvo/jumpLearner：按名字/序号在当前随机池找卡，兜底去 `[版本]` 前缀；找到后 scrollIntoView。
+- **PRNG 铁律**：mulberry32 等自实现随机必须返回 [0,1) 小数——漏 `/4294967296` 会产出 0~43 亿整数，
+  洗牌下标越界塞 undefined，Vue 生产版静默白屏（真实事故）。
+- 已参照名录：scanPrototypes 建 `refPairs[{vowId,vowName,vowImage,vowTypes,origin,pet}]`；
+  vow 图片 = site-config `imgCdnBase + vow.image + ?v=imgVer`（与 vowdex getImgUrl 同规则）。
+- `srcMeta` 初始化必须整体从 SRC_META 带 label/color/favicon（曾只带 count 导致「出自」空白）。
+- `.ex-icon` 有 overflow:hidden，内部绝对定位徽标（ex-src）不能用负 bottom——会被裁切一半。
+
+---
+
+## 11. 踩坑史速查（同类问题先查这里）
 
 | 症状 | 根因 | 修复 |
 |---|---|---|
 | 后台 Vue 页整页白屏/弹窗不开，无报错 | setup return 漏项 / 解构漏项（生产版静默失败） | 核对 return 清单；用 test-admin-modal 验证 |
+| 随机洗牌塞 undefined → 白屏 | 自实现 PRNG 漏 `/4294967296`，随机数是 0~43 亿整数 | PRNG 必须返回 [0,1) |
+| 每日精灵卡某两维种族值消失 | 前端 STAT_ORDER 键名与数据键错位（spa/spd vs sa/sd） | 按源核对 STAT_LABELS/STAT_ORDER |
+| 奥奇图片全是 loading28.gif | 列表页 src 是懒加载占位 | 真实图在 `dsrc` 属性 |
+| 奥奇技能"串台"显示别的精灵的技能 | 表格尾部混入推广行 | 只取紧跟表头的连续数据行 |
+| 进化链"乱码" | &middot;/希腊字母实体未解码 | clean() 补全解码表 |
+| 赛尔 SMW 只拿到 50 条 | \|limit 写在 `{{#ask:…}}` 花括号外，静默失效 | 参数写进花括号内 |
+| biligame 请求返回 HTTP 567 | EdgeOne WAF 惩罚期 | 4.5s 限速 + 缓存续抓 + 降级；退避等没用 |
+| 赛尔魂印挂到错误精灵上 | 魂印ID 被当精灵序号（实际是魂印自己编号） | 用 `?相关精灵` 属性关联 |
+| 赛尔进化链前端显示一坨数字 | wiki 存空格分隔序号串，生成器按顿号切 | 按空白切分 + 去前导零 + 过滤占位符 |
+| 赛尔技能名是一串数字 | wiki「技能名称」属性存序号 | 用效果第一小句截 10 字做名 |
+| 奈克洛兹玛误标「大器晚成」 | growth_rate==='slow' 对传说宝可梦同样成立 | 大器晚成 = 准神 600 族硬编码列表 |
+| 卡片「出自 ·」空白 | srcMeta 初始化只带 count 漏 label/color | 整体从 SRC_META 初始化 |
+| 特性卡徽标被裁一半 | ex-icon overflow:hidden + 徽标负 bottom 定位 | bottom:5px 移进容器内 |
 | 改版后本地白屏线上正常（或反之） | css/js 缓存错位 | 升 `?v=`，Ctrl+F5 |
 | 后台缩略图死活不更新 | jsDelivr 忽略 ?v= 且 @main 缓存 12h | 后台缩略图走 raw.githubusercontent.com |
 | 页面内容改了同步了又变回去（三轮） | ① reconcile 拿 60s 缓存旧值 ② 点外部静默还原 ③ stale dirty mirror 整包同步回滚云端 | ① fetch 带 `?_=时间戳` ② 点外部=自动保存 ③ 三方合并防回滚（§7） |
+| 数据仓 push 被拒 non-fast-forward | 远端有后台面板自动提交（Admin Panel: Update xxx） | `git pull --rebase` 再推 |
 | 后台侧栏点精灵管理/天地图鉴不跳转 | data-tab 项无条件 preventDefault | 仅 index 页拦截 |
 | 侧栏/导航高亮永远不亮 | CF 308 去掉 .html，isActive 匹配不上 | isActive 补 .html |
 | `Cannot read properties of undefined (reading 'memo')` 白屏 | CDN 全量包用了 v-memo | 禁 v-memo，抽子组件 |
@@ -306,17 +522,18 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 | 图片管理破千丢图 | Contents API 1000 条静默截断 | listDirectory 自动切 Git Trees API |
 | 下拉点外面不关 | 事件时序 | vow-select 捕获阶段 pointerdown |
 | 自定义境界名后 RANK_SCOPE 失配 | 权柄阶元映射按名字写死（初灵↔初生…元灵↔掌元） | scopeNote 字段兜底；改名时提醒用户填 scopeNote |
+| 生成数据体积暴涨 | learners 全量存储 / 冗余字段 | 截 80、去 src、截断描述（§10.0） |
 
 ---
 
-## 11. 御兽世界设定观（世界观正典）
+## 12. 御兽世界设定观（世界观正典）
 
 > **重要概念区分**：**御兽精灵（individuals-data.json 的个体）** 才是书里正式存在的精灵，权柄 / 血脉 / 契约状态等只属于个体；**精灵图鉴（vow-data.json）** 只是种族图谱，展示所有可能的精灵，不承载个体属性。两者靠 `speciesId` 关联。做功能时先想清楚数据属于哪一层——把权柄挂在图鉴种族上是概念错误（曾发生过，现已修正）。
 
 > 以下内容是**小说的世界观设定**，站点的数据结构、页面、文案全部围绕它构建。
 > 正文原文存于 `lore-data.json`（382 块），本节是结构化摘要 + AI 理解用的解读。
 
-### 11.1 世界基础：元域与三律
+### 12.1 世界基础：元域与三律
 
 世界名为**【元域】**，由最初的神明**【元】**创造。元创造了精灵与世界后留下三颗初始种子——
 【火】【草】【水】——说"去繁衍吧"就彻底失踪了（等级 100 的【元】是创世神位格，**不可达**，
@@ -331,7 +548,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 御兽空间里。状态组合：【力】【位】=常态契约；【力】【位】【权】=最强形态但御兽师承受不住
 （见托举机制）；仅【力】=最稀少（升灵的面板却没有生态位）。
 
-### 11.2 等级体系：八阶双轨（精灵 ↔ 御兽师一一对应）
+### 12.2 等级体系：八阶双轨（精灵 ↔ 御兽师一一对应）
 
 **形态不变原则**：高阶精灵形态不变（蟋蟀永远是蟋蟀），变的是权限、法则与技能特效。
 数据落点：`stages-data.json`（可后台自定义），默认八阶 `js/stage-config.js`。
@@ -360,7 +577,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 ② 生物形态保留——律冠的火鸟还是鸟，只是羽毛能引发核爆。
 （补充：若元灵沉睡不出手，大量低阶精灵的异常胜率会引发「生态界震动」，强制重写克制。）
 
-### 11.3 御兽师体系：三维立身
+### 12.3 御兽师体系：三维立身
 
 契约的承载是御兽师的三维，**三项全部达标**才能契约精灵或让精灵进化：
 
@@ -391,7 +608,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 **御兽天赋**：少数人特权，踏入职业级后才激活。
 **精神强度测试道具【榨精杯】**：短时间榨干精神，每坚持 1 秒 = 1 单位精神强度。
 
-### 11.4 血脉体系：石之共鸣
+### 12.4 血脉体系：石之共鸣
 
 精灵天生两条血脉：**先天血脉**（锁死主属性，双属性则交织，一般不讨论）与**后天血脉**。
 后天四类，各对应一颗**血脉之石**，御兽师持石与精灵共鸣唤醒（**原型参照仅助记，非世界设定**）：
@@ -408,7 +625,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 数据落点：`bloodline-skills-data.json`（skills + families 族群技能包），后台 admin-bloodline-skills。
 个体字段：`bloodline`（血脉类型）、`bloodlineSkill`、`bloodlineAttr`。
 
-### 11.5 势力版图：联盟治世
+### 12.5 势力版图：联盟治世
 
 - **地区划界**：世界按**地区**划分，每个地区有自己的**联盟**（政治军事分立）。已知主要地区：
   **九牧地区**（故事主舞台），由**九牧联盟**治理。
@@ -420,7 +637,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 - **三大协会**：精灵协会 / 御兽师协会 / 学术协会。
 - 数据落点：`characters-data.json` 的 factions/groups 自定义列表 + `characters[].faction`。
 
-### 11.6 十八生态界演化史（world/lore.html，传世石板）
+### 12.6 十八生态界演化史（world/lore.html，传世石板）
 
 创世叙事：元创造世界 → 三颗种子（火草水）→ 万物演化：草茂生**虫**、腐朽生**毒**；火烧山野，
 灰烬化**岩**与**地**，烟尘孕**飞行**；水极寒结**冰**、水面招**电**；岩石被地火熔炼成**钢**。
@@ -431,7 +648,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 **石板尾声伏笔**：界壁外有不属于自然演化的"异端"虎视眈眈；龙族真的毫无弱点吗？——等【元】归来的
 那一天，别交出不及格的答卷。（隐藏石板章节在页面里默认模糊锁定，点击解锁。）
 
-### 11.7 天地图鉴：精灵定位四类
+### 12.7 天地图鉴：精灵定位四类
 
 `realm-data.json`（页面 `dex/realm-dex.html`，后台在 admin/index 的「天地图鉴」Tab）：
 
@@ -444,7 +661,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 
 数据字段：`vow.realmTags`（数组，多选）。图鉴另有 `rank`（评级：初灵/升灵/族尊等设定内分级）。
 
-### 11.8 书内档案（数据模型对应）
+### 12.8 书内档案（数据模型对应）
 
 - **御兽精灵个体**（individuals-data.json）：`id / nickname(选填，空回退种族名) / speciesId(引图鉴) /
   gender / personality(习性，自由文本) / traits / skills[{name,level}] / bloodline / bloodlineSkill /
@@ -457,7 +674,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
   这两个词 UI 上不得混用。
 - **技能熟练度四档**：入门 / 熟练 / 专精（皆传时选迅疾或刚猛——**是出手时选的，档案不存**）/ 完美。
 
-### 11.9 术语表（写文案/代码注释时对齐）
+### 12.9 术语表（写文案/代码注释时对齐）
 
 元域（世界）· 元（创世神）· 力/位/权（三律）· 权柄（生态界管理员账号）· 托举/摇人/放权（三大机制）·
 血脉之石 · 共鸣 · 技能核心（精神构建）· 御兽空间 · 联盟币（货币）· 九牧地区/九牧联盟 · 荒野 ·
@@ -465,7 +682,7 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 
 ---
 
-## 12. 奇思妙想与待办池（对话中用户提过/预留的）
+## 13. 奇思妙想与待办池（对话中用户提过/预留的）
 
 - **地区形态精灵**：用户明确提过"后续可能还有地区形态的精灵"——`form` 字段已有
   主形态/地区形态/首领形态三值，region 字段（多选）已就位，做地区形态时可直接复用。
@@ -475,14 +692,20 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 - **卡片导出**：`card-export.js` 可把数据渲染成 TCG 卡 PNG（霞鹜文楷正文+思源宋体卡名）。
 - **taxonomy 进化链共用**：域界门纲目科属种——同一进化链上的精灵保存时 BFS 自动同步共用一套。
 - **榨精杯 / 修炼三法 / 御兽天赋**：世界观已有设定，尚未做成图鉴条目（可进物品图鉴/新页）。
+- **赛尔号技能归属精灵**：源站 SMW 没有结构化的归属数据（技能卡 learners 空，显示暂无名单）；
+  如果要补，可行路径是抓 4978 个精灵页 wikitext 的 `技能=` 字段反查（成本高，WAF 严格，先问用户）。
 
 ---
 
-## 13. 参考资料与外部链接（搜集整理）
+## 14. 参考资料与外部链接（搜集整理）
 
 | 用途 | 地址 | 说明 |
 |---|---|---|
-| 宝可梦机制百科 | https://wiki.52poke.com/wiki/首页 | 对战引擎的官方依据：伤害公式、能力变化 ±6、异常状态、天气场地、优先度、击中要害 1/24。**本站机制的权威参考** |
+| 宝可梦机制百科 | https://wiki.52poke.com/wiki/首页 | 对战引擎的官方依据：伤害公式、能力变化 ±6、异常状态、天气场地、优先度、击中要害 1/24。**本站机制的权威参考**；分类页（大器晚成/最初的伙伴/传说的宝可梦）是标签判定的权威依据 |
+| PokeAPI | https://pokeapi.co | 宝可梦参考数据源；语言代码小写 `zh-hans`；move 用 `learned_by_pokemon` 拿可学精灵 |
+| 洛克王国世界 | https://rocokingdomworld.org | 洛克数据源；`/abilities/` `/skills/` 页面内嵌完整 JSON |
+| 奥奇传说大全 | http://aoqi.100bt.com | 奥奇数据源；图片在 `dsrc` 属性 |
+| 赛尔号 BWIKI | https://wiki.biligame.com/seer | 赛尔数据源；SMW ask 批量；有 WAF（4.5s 限速）；`Special:FilePath` 构造图片直链 |
 | 洛克王国 4399 | https://news.4399.com/luoke/ | `vow-detail.html` / `skill-detail.html` 的 wiki 布局参照来源（展示台+种族值+进化链+克制卡的版式观感） |
 | Vue 3 文档 | https://vuejs.org/guide/ | CDN 全量包 `vue@3/dist/vue.global.prod.js`（jsDelivr，prod 版）；**内联模板运行时编译，遵守 §5 白屏铁律** |
 | Font Awesome 6.4 | https://fontawesome.com/v6/search | 全站图标唯一来源（`fa-solid fa-*`） |
@@ -497,13 +720,17 @@ iframe 检查 _tools/test-admin-modal.html?page=xxx.html 结果写 document.titl
 
 ---
 
-## 14. 给新 AI 的第一分钟清单
+## 15. 给新 AI 的第一分钟清单
 
-1. 读 §0–§3（是什么、仓库分工、数据链路）。
-2. 用户在谈某个页面 → 查 §4/§5 表格定位文件，再读对应 HTML/JS。
-3. 用户在谈数据不对 → 先分清是**站点代码**还是 **vowmon_data 数据**的问题；数据修复走
-   `git commit` 到 vowmon_data 仓库并推送（数据仓库与站点仓库是两个 git）。
-4. 用户在谈世界观/写小说 → 查 §11；改世界观正文走后台 admin-lore 或直接编辑 lore-data.json
+1. **先读 §0.5**（用户要求全记录）——那是这个项目的"用户手册"，所有显式命令与行事风格都在里面。
+2. 读 §0–§3（是什么、仓库分工、数据链路）。
+3. 用户在谈某个页面 → 查 §4/§5 表格定位文件，再读对应 HTML/JS。
+4. 用户在谈数据不对 → 先分清是**站点代码**还是 **vowmon_data 数据**的问题；再分清是**站点自有数据**
+   还是**外部参考数据**（外部参考数据改 `_tools/gen-*.mjs` 重跑，见 §10；注意生成前 `git pull --rebase`）。
+5. 用户在谈世界观/写小说 → 查 §12；改世界观正文走后台 admin-lore 或直接编辑 lore-data.json
    （注意三方合并快照 `vowmon_lore_lastpush` 只在用户浏览器里，改仓库不会冲突）。
-5. 改完 → 本地 `dev-server.py` + 相关 test 脚本验证 → 升 `?v=` → commit+push → 报告用户。
-6. 拿不准时看 `git log --oneline` 最近的提交信息——本仓库提交信息写得非常详细，是活的历史。
+6. 改完 → 本地 `dev-server.py` + 相关 test 脚本验证（或按用户授权跳过）→ 升 `?v=` →
+   commit+push（两仓分别推）→ 追加工作日志 → 报告用户。
+7. 拿不准时看 `git log --oneline` 最近的提交信息——本仓库提交信息写得非常详细，是活的历史；
+   再看 `.workbuddy/memory/` 下的日志与 `MEMORY.md`。
+8. 遇到没见过的怪现象 → 先查 §11 踩坑史速查表，九成问题都发生过。
