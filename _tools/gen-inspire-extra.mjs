@@ -211,7 +211,8 @@ console.log('宝可梦技能（PokeAPI /move）…');
         const flavor = (mv.flavor_text_entries || []).find(e => e.language.name === 'zh-hans');
         const effect = (mv.effect_entries || []).find(e => e.language.name === 'en');
         const learners = (mv.learned_by_pokemon || []).map(e => pkNameFromUrl(e.url))
-            .filter(id => id && idToName[id]).map(id => ({ id, name: idToName[id], src: 'pk' }));
+            .filter(id => id && idToName[id]).map(id => ({ id, name: idToName[id], src: 'pk' }))
+            .slice(0, 80);
         skillPool.push({
             id: 'pk-' + mv.id, src: 'pk', name: zh ? zh.name : mv.name, en: mv.name,
             type: TYPE_ZH[mv.type && mv.type.name] || (mv.type && mv.type.name) || '',
@@ -264,11 +265,11 @@ console.log('赛尔号技能（SMW ask）…');
             for (const cls of m[1].split(/\s+/)) if (PROPS.includes(cls)) cells[cls] = cells[cls] || m[2];
         }
         // wiki 的「技能名称」属性存的是序号文本（1/2/3…），直接用会显示成一串数字；
-        // 改用「效果前 16 字 + 序号」做可读名字，效果文本本身保留完整。
+        // 改用「效果第一小句（截 10 字）」做可读名字；desc 截 200 字控制文件体积。
         const no = clean(cells['技能序号'] || '').match(/\d+/);
         const fx = clean(cells['技能效果'] || '');
-        const name = fx ? (fx.slice(0, 16) + (fx.length > 16 ? '…' : '') + '（' + (no ? no[0] : '') + '）')
-            : ('技能 ' + (no ? no[0] : ''));
+        const firstClause = fx.split(/[,，。；;]/)[0].trim();
+        const name = firstClause ? firstClause.slice(0, 10) : ('技能 ' + (no ? no[0] : ''));
         const nums = s => String(s || '').match(/\d+/g) || [];
         const ownerNos = [...new Set([...nums(cells['归属精灵']), ...nums(cells['学习精灵'])])];
         const learners = ownerNos.map(n => byNo[n]).filter(Boolean).map(p => ({ id: p.no, name: p.name, src: 'se' }));
@@ -278,7 +279,7 @@ console.log('赛尔号技能（SMW ask）…');
             type: clean(cells['技能属性'] || ''), cat: clean(cells['技能类型'] || ''),
             power: powerM ? parseInt(powerM[0], 10) : 0,
             pp: (clean(cells['次数'] || '').match(/\d+/) || [0])[0],
-            desc: clean(cells['技能效果'] || ''), learners: learners
+            desc: fx.slice(0, 200), learners: learners
         });
     }
     console.log('  赛尔号技能 ' + skillPool.filter(s => s.src === 'se').length + ' 条（' + rows.length + ' 行）');
@@ -286,10 +287,11 @@ console.log('赛尔号技能（SMW ask）…');
 
 /* ================= 输出 ================= */
 function finish(pool, file, kind) {
-    // 去重（同 src 同名合并 learners）
+    // 去重：宝可梦/洛克/奥奇按「同 src 同名」合并 learners；
+    // 赛尔号技能名是效果摘要（易重名），改按 id（技能序号）去重避免误合。
     const map = new Map();
     for (const e of pool) {
-        const key = e.src + '|' + e.name;
+        const key = e.src + '|' + (kind === 'skill' && e.src === 'se' ? e.id : e.name);
         const old = map.get(key);
         if (old) {
             const names = new Set(old.learners.map(l => l.name));
@@ -298,6 +300,15 @@ function finish(pool, file, kind) {
         } else map.set(key, e);
     }
     const arr = [...map.values()].filter(e => e.name);
+    // learners 瘦身：去掉冗余 src 字段（模板只用 name/id/hidden/lv）
+    for (const e of arr) {
+        e.learners = (e.learners || []).map(l => {
+            const o = { id: l.id, name: l.name };
+            if (l.hidden) o.hidden = true;
+            if (l.lv) o.lv = l.lv;
+            return o;
+        });
+    }
     const out = { updated: new Date().toISOString().slice(0, 10), count: arr.length, kind: kind, items: arr };
     writeJson(path.join(DATA, file), out);
     const bySrc = {};

@@ -89,6 +89,12 @@ const STAT_KEYS = {
     'special-attack': 'spa', 'special-defense': 'spd', 'speed': 'spe'
 };
 
+// 历代御三家基础形态的 species id（「最初的伙伴」标签）
+const STARTERS = [
+    1, 4, 7, 152, 155, 158, 252, 255, 258, 387, 390, 393,
+    495, 498, 501, 650, 653, 656, 722, 725, 728, 810, 813, 816, 906, 909, 912
+];
+
 /* ------------------------- 请求小工具 ------------------------- */
 
 async function fetchJson(url) {
@@ -209,6 +215,12 @@ function buildEntry(id, species, poke, evoIds, abilityZh) {
             return { name: zh || (a.ability && a.ability.name) || '', hidden: !!a.is_hidden };
         })
         .filter(a => a.name);
+    // 标签：传说 / 幻之 / 最初的伙伴（御三家基础形态）/ 大器晚成（经验成长曲线 slow）
+    const tags = [];
+    if (species.is_legendary) tags.push('传说');
+    if (species.is_mythical) tags.push('幻之');
+    if (STARTERS.includes(id)) tags.push('最初的伙伴');
+    if (((species.growth_rate || {}).name || '') === 'slow') tags.push('大器晚成');
     return {
         id: id,
         no: ('000' + id).slice(-3),
@@ -218,6 +230,7 @@ function buildEntry(id, species, poke, evoIds, abilityZh) {
         types: types,
         region: gen ? gen.region : '',
         gen: gen ? gen.rank : 0,
+        tags: tags,
         stats: stats,
         total: total,
         abilities: abilities,

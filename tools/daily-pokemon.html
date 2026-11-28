@@ -59,6 +59,7 @@
         .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
         .chip{padding:4px 13px;border-radius:999px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.18)}
         .chip.plain{background:#c9b98d;text-shadow:none}
+        .chip.tag-chip{background:linear-gradient(135deg,#e8b23a,#d19a2b);text-shadow:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
         .skill-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
         .skill-item{font-size:13px;background:#fbf6e8;border:1px solid var(--line);border-radius:12px;padding:7px 12px;line-height:1.5}
         .skill-item b{color:var(--ink)}
@@ -95,7 +96,7 @@
         .ex-card{display:flex;gap:20px;align-items:flex-start}
         .ex-icon{flex:none;width:86px;height:86px;border-radius:18px;background:radial-gradient(circle at 50% 40%,#fdeec2,#f7ead0 75%);border:1px solid #f2e3b8;display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;position:relative}
         .ex-icon img{width:100%;height:100%;object-fit:contain}
-        .ex-icon .ex-src{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+        .ex-icon .ex-src{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-size:12px;font-weight:800;padding:3px 12px;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
         .ex-body{flex:1;min-width:0}
         .ex-name{font-size:21px;font-weight:800;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
         .ex-name small{font-size:12px;font-weight:600;color:var(--ink-3)}
@@ -200,9 +201,10 @@
                     <template v-if="showRef">
                         <div class="mon-name">{{ mon.name }}<small v-if="mon.en">{{ mon.en }}</small></div>
                         <div class="genus" v-if="mon.genus">{{ mon.genus }}</div>
-                        <div class="chips" v-if="mon.types.length || mon.region">
+                        <div class="chips" v-if="mon.types.length || mon.region || (mon.tags && mon.tags.length)">
                             <span class="chip" v-for="t in mon.types" :key="t" :style="{background:typeColor(mon,t)}">{{ t }}</span>
                             <span class="chip plain" v-if="mon.region">{{ mon.region }}地区</span>
+                            <span class="chip tag-chip" v-for="tg in mon.tags" :key="tg">{{ tg }}</span>
                         </div>
                         <div class="meta" v-if="mon.h || mon.w">
                             <template v-if="mon.h">身高 <b>{{ mon.h }}</b></template>
@@ -702,7 +704,7 @@ createApp({
                 const stats = order.filter(k => p.stats[k] != null).map(k => ({ zh: labels[k], v: p.stats[k] }));
                 return {
                     src: 'pk', id: p.id, no: p.no, name: p.name, en: p.en, genus: p.genus,
-                    types: p.types || [], typeColors: null, region: p.region || '',
+                    types: p.types || [], typeColors: null, region: p.region || '', tags: p.tags || [],
                     stats: stats, total: p.total || 0,
                     abilities: (p.abilities || []).map(a => ({ name: a.name, hidden: !!a.hidden })),
                     h: p.h ? (p.h / 10).toFixed(1) + ' m' : '', w: p.w ? (p.w / 10).toFixed(1) + ' kg' : '',
