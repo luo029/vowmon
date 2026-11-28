@@ -52,7 +52,8 @@ const seenBase = new Set();
 for (const li of items) {
     const idM = li.match(/href="http:\/\/aoqi\.100bt\.com\/jingling\/(\d+)\.html"/);
     const titleM = li.match(/title="([^"]+)"/);
-    const imgM = li.match(/<img[^>]*src="([^"]+)"/);
+    // 真实立绘在 dsrc 属性（src 是懒加载占位图 loading28.gif）
+    const imgM = li.match(/<img[^>]*dsrc="([^"]+)"/) || li.match(/<img[^>]*src="([^"]+)"/);
     if (!idM || !titleM) continue;
     const id = idM[1];
     const title = titleM[1].trim();

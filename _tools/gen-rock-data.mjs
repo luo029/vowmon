@@ -3,7 +3,7 @@
  *
  * 数据源：rocokingdomworld.org（洛克王国世界图鉴，静态 SSR HTML，对爬虫友好）
  *   - 列表页 /zh/pokedex/：每只精灵的编号/中英文名/属性(带官方色)/图片/种族值总和/家族/阶位
- *   - 详情页 /zh/pokedex/{slug}：图鉴描述 + 4 维种族值(HP/ATK/DEF/SPD) + 身高体重
+ *   - 详情页 /zh/pokedex/{slug}：图鉴描述 + 六维种族值(HP/ATK/M.ATK/DEF/M.DEF/SPD) + 身高体重
  * 进化链用列表页的 data-family + data-family-rank 拼出来（同 family 按阶位排序）。
  *
  * 用法：node _tools/gen-rock-data.mjs
@@ -94,12 +94,13 @@ function parseDetail(html) {
     // 图鉴描述：异色 badge 后的第一段
     const dexM = html.match(/<p class="mt-4 text-sm text-ink-muted leading-relaxed font-semibold">([^<]+)<\/p>/);
     if (dexM) out.dex = dexM[1].trim();
-    // 种族值：HP/ATK/DEF/SPD（SPD=速度，统一存成 spe，与宝可梦数据键对齐）
-    const statRe = /<div class="w-16 text-xs font-extrabold text-ink-muted">(HP|ATK|DEF|SPD)<\/div>[\s\S]*?text-ink">(\d+)<\/div>/g;
+    // 种族值：六维 HP/ATK/M.ATK/DEF/M.DEF/SPD
+    // 键名与宝可梦数据对齐：物攻=atk、魔攻=mag、物防=def、魔防=res、速度=spe
+    const statRe = /<div class="w-16 text-xs font-extrabold text-ink-muted">(HP|ATK|M\.ATK|DEF|M\.DEF|SPD)<\/div>[\s\S]*?text-ink">(\d+)<\/div>/g;
+    const KEY_MAP = { 'HP': 'hp', 'ATK': 'atk', 'M.ATK': 'mag', 'DEF': 'def', 'M.DEF': 'res', 'SPD': 'spe' };
     let sm;
     while ((sm = statRe.exec(html)) !== null) {
-        const key = sm[1] === 'SPD' ? 'spe' : sm[1].toLowerCase();
-        out.stats[key] = parseInt(sm[2], 10);
+        out.stats[KEY_MAP[sm[1]]] = parseInt(sm[2], 10);
     }
     // 身高体重
     const hM = html.match(/<dt class="text-ink-dim">身高<\/dt><dd class="text-ink">([^<]+)<\/dd>/);
@@ -177,5 +178,5 @@ const out = {
 fs.writeFileSync(OUT, JSON.stringify(out));
 console.log('完成：' + outPets.length + ' 条 -> ' + OUT + '（' + Math.round(fs.statSync(OUT).size / 1024) + ' KB）');
 const withDex = outPets.filter(p => p.dex).length;
-const withStats = outPets.filter(p => Object.keys(p.stats).length === 4).length;
+const withStats = outPets.filter(p => Object.keys(p.stats).length === 6).length;
 console.log('含图鉴描述: ' + withDex + ' / 含完整种族值: ' + withStats);

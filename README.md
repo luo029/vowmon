@@ -416,8 +416,8 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 | `characters-data.json` | `characters` → `allCharactersData`（书内档案：御兽人物） |
 | `lore-data.json` | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块） |
 | `pokemon-data.json` | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
-| `rock-data.json` | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/4 维种族值/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成 |
-| `aoqi-data.json` | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取，仅名字+立绘+出处链接；官网属性是 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成 |
+| `rock-data.json` | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/六维种族值 生命·物攻·魔攻·物防·魔防·速度/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成 |
+| `aoqi-data.json` | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取，名字+真实立绘 `dsrc` 直链+出处链接；官网属性是 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成 |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
 

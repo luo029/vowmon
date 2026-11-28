@@ -195,7 +195,7 @@
                         <div class="evo-items">
                             <template v-for="(ev,ei) in mon.evo" :key="ev.name+ei">
                                 <span class="evo-arrow" v-if="ei > 0">→</span>
-                                <span class="evo-item" :title="ev.name">
+                                <span class="evo-item" :title="'查看 ' + ev.name" @click="jumpEvo(ev)">
                                     <img :src="ev.img" :alt="ev.name" loading="lazy" @error="$event.target.style.display='none'">
                                     <span>{{ ev.name }}</span>
                                 </span>
@@ -247,9 +247,9 @@ const SRC_META = {
 /* 各源种族值标签 */
 const STAT_LABELS = {
     pk: { hp: 'HP', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' },
-    rk: { hp: '精力', atk: '攻击', def: '防御', spe: '速度' }
+    rk: { hp: '生命', atk: '物攻', mag: '魔攻', def: '物防', res: '魔防', spe: '速度' }
 };
-const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','def','spe'] };
+const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','mag','def','res','spe'] };
 /* 宝可梦 18 系配色 */
 const PK_TYPE_COLORS = {
     '一般':'#9FA19F','火':'#E62829','水':'#2980EF','电':'#FAC000','草':'#3FA129','冰':'#3DCEF3',
@@ -386,6 +386,15 @@ createApp({
             return (pet.typeColors && pet.typeColors[t]) || PK_TYPE_COLORS[t] || '#c9b98d';
         }
         function artFallback() { artFallbackUsed.value = true; }
+
+        /* 点进化链成员：切到那只精灵的卡片（在当前随机池里按名字找） */
+        function jumpEvo(ev) {
+            const i = pool.value.findIndex(p => p.name === ev.name);
+            if (i < 0) return;
+            curIdx.value = i;
+            tipSeed.value = (Math.random() * 4294967296) >>> 0;
+            artFallbackUsed.value = false;
+        }
 
         /* 当前开关组合的签名：决定今日精灵的随机种子 */
         function sig() {
@@ -549,7 +558,7 @@ createApp({
         return {
             state, errMsg, showRef, skipRef, srcOn, srcMeta, srcList,
             mon, isDaily, tips, excludedCount,
-            typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc
+            typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc, jumpEvo
         };
     }
 }).mount('#app');
