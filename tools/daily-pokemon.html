@@ -59,6 +59,10 @@
         .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
         .chip{padding:4px 13px;border-radius:999px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.18)}
         .chip.plain{background:#c9b98d;text-shadow:none}
+        .skill-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+        .skill-item{font-size:13px;background:#fbf6e8;border:1px solid var(--line);border-radius:12px;padding:7px 12px;line-height:1.5}
+        .skill-item b{color:var(--ink)}
+        .skill-item span{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
         .meta{font-size:13px;color:var(--ink-2);line-height:1.9;margin-bottom:12px}
         .meta b{color:var(--ink)}
         .dex-quote{background:#fbf6e8;border-left:4px solid var(--accent-2);border-radius:0 12px 12px 0;padding:12px 16px;font-size:13px;line-height:1.9;color:var(--ink-2)}
@@ -173,10 +177,15 @@
                             <template v-if="mon.h && mon.w"> ／ </template>
                             <template v-if="mon.w">体重 <b>{{ mon.w }}</b></template>
                         </div>
-                        <div class="chips" v-if="mon.talent || (mon.skills && mon.skills.length) || mon.hobby" style="margin-top:10px">
+                        <div class="chips" v-if="mon.talent || mon.hobby" style="margin-top:10px">
                             <span class="chip plain" v-if="mon.talent">特长 · {{ mon.talent }}</span>
-                            <span class="chip plain" v-for="s in mon.skills" :key="s.k">{{ s.k }}「{{ s.v }}」</span>
                             <span class="chip plain" v-if="mon.hobby">爱好 · {{ mon.hobby }}</span>
+                        </div>
+                        <div class="skill-list" v-if="mon.skills && mon.skills.length">
+                            <div class="skill-item" v-for="s in mon.skills" :key="s.k">
+                                <b>{{ s.k }}「{{ s.v }}」</b>
+                                <span v-if="s.fx">{{ s.fx }}</span>
+                            </div>
                         </div>
                         <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver" v-if="mon.dexSrc">——{{ mon.dexSrc }}</span></div>
                         <div class="dex-quote" v-else style="margin-top:12px">这只精灵暂无图鉴介绍。<a v-if="mon.link" :href="mon.link" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">去来源页面查看 →</a></div>
@@ -196,7 +205,7 @@
                     </div>
 
                     <div class="evo-row" v-if="showRef && mon.evo.length > 1">
-                        <h3>进化链</h3>
+                        <h3>进化链 <span style="font-size:11px;color:var(--ink-3);font-weight:600;margin-left:6px">点击成员可查看它的卡片</span></h3>
                         <div class="evo-items">
                             <template v-for="(ev,ei) in mon.evo" :key="ev.name+ei">
                                 <span class="evo-arrow" v-if="ei > 0">→</span>
@@ -407,9 +416,15 @@ createApp({
         }
         function artFallback() { artFallbackUsed.value = true; }
 
-        /* 点进化链成员：切到那只精灵的卡片（在当前随机池里按名字找） */
+        /* 点进化链成员：切到那只精灵的卡片（在当前随机池里按名字找；奥奇本体名可能带版本前缀，做兜底匹配） */
         function jumpEvo(ev) {
-            const i = pool.value.findIndex(p => p.name === ev.name);
+            const n = ev.name;
+            let i = pool.value.findIndex(p => p.name === n);
+            if (i < 0) {
+                // 兜底：奥奇列表里的 full 名（去 [版本] 前缀）与表格阶段名相等
+                const strip = s => String(s || '').replace(/^\[[^\]]*\]/, '').trim();
+                i = pool.value.findIndex(p => p.full && strip(p.full) === n);
+            }
             if (i < 0) return;
             curIdx.value = i;
             tipSeed.value = (Math.random() * 4294967296) >>> 0;
@@ -505,10 +520,10 @@ createApp({
         }
         function normalizeAq(data) {
             return (data.pets || []).map(p => {
-                // 技能对（普通技/超杀技），「无」视为没有
+                // 技能对（普通技/超杀技，带特效文本），「无」视为没有
                 const skills = [
-                    { k: '普通技', v: p.skill && p.skill !== '无' ? p.skill : '' },
-                    { k: '超杀技', v: p.ult && p.ult !== '无' ? p.ult : '' }
+                    { k: '普通技', v: p.skill && p.skill !== '无' ? p.skill : '', fx: p.skillFx && p.skillFx !== '无' ? p.skillFx : '' },
+                    { k: '超杀技', v: p.ult && p.ult !== '无' ? p.ult : '', fx: p.ultFx && p.ultFx !== '无' ? p.ultFx : '' }
                 ].filter(x => x.v);
                 return {
                     src: 'aq', id: p.id, no: '', name: p.name, en: '', genus: '',

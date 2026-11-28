@@ -63,7 +63,12 @@ function clean(raw) {
         .replace(/<br\s*\/?>/gi, ' ')
         .replace(/<[^>]+>/g, '')
         .replace(/&hellip;|&mldr;/g, '…')
+        .replace(/&middot;|&centerdot;/g, '·')
+        .replace(/&bull;/g, '•')
+        .replace(/&times;/g, '×')
         .replace(/&mdash;/g, '—')
+        .replace(/&alpha;|&beta;|&gamma;|&pi;|&delta;|&omega;|&lambda;|&sigma;/g,
+            m => ({ '&alpha;': 'α', '&beta;': 'β', '&gamma;': 'γ', '&pi;': 'π', '&delta;': 'δ', '&omega;': 'ω', '&lambda;': 'λ', '&sigma;': 'σ' }[m]))
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
@@ -145,16 +150,27 @@ function parsePlainTable(html) {
     for (const tm of html.matchAll(/<table[^>]*>/g)) {
         const tstart = tm.index;
         const tbl = html.slice(tstart, html.indexOf('</table>', tstart));
-        if (!tbl.slice(0, 4000).includes('精灵名')) continue;
+        if (!tbl.includes('精灵名')) continue;
         const rows = tableRows(tbl);
-        const data = rows.filter(r => r.length >= 4 && r[0] && r[0] !== '精灵名' && !r[0].includes('图鉴') && !r[0].includes('推荐') && !r[0].includes('巨人技'));
-        if (data.length) {
-            const last = data[data.length - 1];
-            out.skill = last[1] || '';
-            out.skillFx = last[2] || '';
-            out.ult = last[3] || '';
-            out.ultFx = last[4] || '';
-            out.evo = data.map(r => r[0]);
+        const hi = rows.findIndex(r => r[0] && r[0].includes('精灵名'));
+        if (hi >= 0) {
+            // 只取紧跟表头的连续数据行；碰到推荐/获得方式/速递等栏目行立即停
+            // （表格尾部常混入「本周精灵速递」等其他精灵的推广行，不能全表扫描）
+            const junk = /推荐|获得方式|解析|速递|传送门|更多查看|工具/;
+            const evo = [];
+            for (let k = hi + 1; k < rows.length; k++) {
+                const r = rows[k];
+                if (r.length < 4 || !r[0] || junk.test(r[0]) || junk.test(r[1] || '') || junk.test(r[2] || '')) break;
+                evo.push(r[0]);
+            }
+            if (evo.length) {
+                const last = rows[hi + evo.length];
+                out.skill = last[1] || '';
+                out.skillFx = last[2] || '';
+                out.ult = last[3] || '';
+                out.ultFx = last[4] || '';
+                out.evo = evo;
+            }
         }
         break;
     }
