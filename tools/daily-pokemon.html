@@ -173,7 +173,12 @@
                             <template v-if="mon.h && mon.w"> ／ </template>
                             <template v-if="mon.w">体重 <b>{{ mon.w }}</b></template>
                         </div>
-                        <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver" v-if="mon.dexVer">——《{{ mon.dexVer }}》图鉴介绍</span></div>
+                        <div class="chips" v-if="mon.talent || (mon.skills && mon.skills.length) || mon.hobby" style="margin-top:10px">
+                            <span class="chip plain" v-if="mon.talent">特长 · {{ mon.talent }}</span>
+                            <span class="chip plain" v-for="s in mon.skills" :key="s.k">{{ s.k }}「{{ s.v }}」</span>
+                            <span class="chip plain" v-if="mon.hobby">爱好 · {{ mon.hobby }}</span>
+                        </div>
+                        <div class="dex-quote" v-if="mon.dex">「{{ mon.dex }}」<br><span class="ver" v-if="mon.dexSrc">——{{ mon.dexSrc }}</span></div>
                         <div class="dex-quote" v-else style="margin-top:12px">这只精灵暂无图鉴介绍。<a v-if="mon.link" :href="mon.link" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">去来源页面查看 →</a></div>
                     </template>
                     <template v-else>
@@ -196,7 +201,7 @@
                             <template v-for="(ev,ei) in mon.evo" :key="ev.name+ei">
                                 <span class="evo-arrow" v-if="ei > 0">→</span>
                                 <span class="evo-item" :title="'查看 ' + ev.name" @click="jumpEvo(ev)">
-                                    <img :src="ev.img" :alt="ev.name" loading="lazy" @error="$event.target.style.display='none'">
+                                    <img v-if="ev.img" :src="ev.img" :alt="ev.name" loading="lazy" @error="$event.target.style.display='none'">
                                     <span>{{ ev.name }}</span>
                                 </span>
                             </template>
@@ -330,6 +335,21 @@ function buildTipPool(pet) {
         const names = pet.evo.map(e => e.name).join(' → ');
         pool.push({ title: '进化推演', text: '它属于「' + names + '」这条进化链。你的原创精灵会长成什么样？倒推它的幼年形态或最终形态，往往就是一只新精灵的雏形。' });
     }
+    if (pet.talent) {
+        pool.push({ title: '特长视角', text: '它的战斗特长是「' + pet.talent + '」。让你的原创精灵也走这个特长，再用完全不同的属性去演绎——同一套打法会有什么新花样？' });
+    }
+    if (pet.skills && pet.skills.length) {
+        const s0 = pet.skills[0].v, s1 = pet.skills[pet.skills.length - 1].v;
+        pool.push({
+            title: '技能进阶',
+            text: s1 !== s0
+                ? '它的技能从「' + s0 + '」进阶到「' + s1 + '」——名字里能看到成长的痕迹。给你的原创精灵也设计一组普通技与超杀技，让技能名自己讲故事。'
+                : '它的招牌技能是「' + s0 + '」。给你的原创精灵设计一个技能名：两个字太直白，四个字太啰嗦，试试三个字或一个动作短语。'
+        });
+    }
+    if (pet.hobby) {
+        pool.push({ title: '反差萌', text: '战斗之外的它有个爱好：' + pet.hobby + '。给你的原创精灵也加一个与战斗力无关的小爱好——性格立刻就立体了。' });
+    }
     pool.push({ title: '场景法', text: '不看任何参考，直接写一个场景：清晨、废墟、暴雨。你的原创精灵就藏在这个场景里——它此刻在做什么？' });
     if (pool.length < 3) {
         pool.push({ title: '命名法', text: '从它的名字里挑一个字，配一个新字组成你的精灵名，再围绕新名字设计外形与习性。' });
@@ -369,7 +389,7 @@ createApp({
             }
             return list;
         });
-        const mon = computed(() => pool.value[curIdx.value] || { src: '', types: [], stats: [], evo: [] });
+        const mon = computed(() => pool.value[curIdx.value] || { src: '', types: [], stats: [], evo: [], talent: '', skills: [], hobby: '' });
         const isDaily = computed(() => curIdx.value === dailyIdx.value);
         const tips = computed(() => {
             const p = buildTipPool(mon.value);
@@ -463,7 +483,7 @@ createApp({
                     types: p.types || [], typeColors: null, region: p.region || '',
                     stats: stats, total: p.total || 0,
                     h: p.h ? (p.h / 10).toFixed(1) + ' m' : '', w: p.w ? (p.w / 10).toFixed(1) + ' kg' : '',
-                    dex: p.dex || '', dexVer: p.dexVer || '',
+                    dex: p.dex || '', dexVer: p.dexVer || '', dexSrc: p.dex ? '《' + p.dexVer + '》图鉴介绍' : '',
                     img: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + p.id + '.png',
                     evo: (p.evo || []).map(id => byId[id] ? { name: byId[id].name, img: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + id + '.png' } : null).filter(Boolean),
                     link: '', full: ''
@@ -478,17 +498,28 @@ createApp({
                     src: 'rk', id: p.id, no: (p.no || '').replace(/^NO/, ''), name: p.name, en: p.en || '',
                     genus: '', types: p.types || [], typeColors: p.typeColors || {}, region: '',
                     stats: stats, total: p.total || 0, h: p.h || '', w: p.w || '',
-                    dex: p.dex || '', dexVer: '',
+                    dex: p.dex || '', dexVer: '', dexSrc: p.dex ? '图鉴描述' : '',
                     img: p.img || '', evo: p.evo || [], link: 'https://rocokingdomworld.org/zh/pokedex/' + p.id, full: ''
                 };
             });
         }
         function normalizeAq(data) {
-            return (data.pets || []).map(p => ({
-                src: 'aq', id: p.id, no: '', name: p.name, en: '', genus: '',
-                types: [], typeColors: {}, region: '', stats: [], total: 0, h: '', w: '',
-                dex: '', dexVer: '', img: p.img || '', evo: [], link: p.link || '', full: p.full || ''
-            }));
+            return (data.pets || []).map(p => {
+                // 技能对（普通技/超杀技），「无」视为没有
+                const skills = [
+                    { k: '普通技', v: p.skill && p.skill !== '无' ? p.skill : '' },
+                    { k: '超杀技', v: p.ult && p.ult !== '无' ? p.ult : '' }
+                ].filter(x => x.v);
+                return {
+                    src: 'aq', id: p.id, no: '', name: p.name, en: '', genus: '',
+                    types: p.type ? [p.type] : [], typeColors: {}, region: '',
+                    stats: [], total: 0, h: p.h || '', w: p.w || '',
+                    dex: p.dex || '', dexSrc: p.dex ? '成长故事' : '',
+                    talent: p.talent || '', skills: skills, hobby: p.hobby || '',
+                    img: p.img || '', evo: (p.evo || []).map(n => ({ name: n, img: '' })),
+                    link: p.link || '', full: p.full || ''
+                };
+            });
         }
 
         async function loadData() {

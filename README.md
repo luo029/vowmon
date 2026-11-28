@@ -3,7 +3,7 @@
 Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。  
 纯静态站点，Vue 3 CDN 版驱动，GitHub Pages / Cloudflare Pages 托管。
 
-> **AI 速读入口**：给 AI 看的总纲文档是 [AI-GUIDE.md](AI-GUIDE.md)（项目速览 + 逐页手册 +
+> **AI 速读入口**：给 AI 看的总纲文档是 [AI-GUIDE.md](AI-GUIDE.md)（项目速览 + 逐页手册 +  
 > 御兽世界设定观 + 踩坑史 + 参考资料），新会话/新模型请先读它再读本文。
 
 ---
@@ -24,23 +24,23 @@ Vowmon（契约精灵）的非官方设定 Wiki 与数据工具站。
 
 ### 问题 → 修复前后对照
 
-| # | 问题（改前） | 修复（改后） |
-|---|---|---|
-| 1 | 权柄看板 / 血脉模拟器拿**图鉴种族**当选择源，权柄挂错对象 | 改为选**书内个体**；图鉴仅取种族图/名，血脉默认读个体档案 |
-| 2 | 人物档案里选精灵，昵称空 → 名称整行空白 | `indLabel()` 回退种族名 |
-| 3 | 血脉技能族尊选择器存成 `#008` 编号 | 加载图鉴，回退种族名并同步落库 |
-| 4 | 全局搜索个体结果显示编号，按种族名搜不到 | 建图鉴映射，标题回退种族名并纳入搜索 |
-| 5 | 权柄看板/时间线里程碑来源显示内部 ID | 扫个体时用 `indName()` |
-| 6 | 新建个体掌权标记默认值后台/前台不一致 | 统一 `quan:false, wei:true, li:true` |
-| 7 | 精灵管理 diff 命名器残留图鉴对象上的 `nickname` | 移除该回退 |
-| 8 | 两处图片 `alt` 取空昵称 | 改用回退显示名 |
-| 9 | 异色首次点击等 15.7 秒下载 | 落地后空闲预载，点击 5ms 秒切 |
-| 10 | 18 个系别按钮铺满首屏 | 折叠面板，默认收起、可搜索 |
-| 11 | 图鉴下拉三列 20 项过密 | 两列 11 主项 + 9 小字副链接 |
-| 12 | 后台侧栏 13 项平铺 | 三组：图鉴数据 / 书内档案 / 内容与系统 |
-| 13 | 首页「世界观」卡片是空链接 | 补全 4 组入口 + 统计条 + Ctrl+K 搜索 |
-| 14 | 同步可能把云端修复回滚成旧值 | 三方合并 + 差异逐条勾选 |
-| 15 | 后台改了内容点别处静默还原 | 点别处自动保存，Esc 才还原 |
+| #  | 问题（改前）                           | 修复（改后）                             |
+| -- | -------------------------------- | ---------------------------------- |
+| 1  | 权柄看板 / 血脉模拟器拿**图鉴种族**当选择源，权柄挂错对象 | 改为选**书内个体**；图鉴仅取种族图/名，血脉默认读个体档案    |
+| 2  | 人物档案里选精灵，昵称空 → 名称整行空白            | `indLabel()` 回退种族名                 |
+| 3  | 血脉技能族尊选择器存成 `#008` 编号            | 加载图鉴，回退种族名并同步落库                    |
+| 4  | 全局搜索个体结果显示编号，按种族名搜不到             | 建图鉴映射，标题回退种族名并纳入搜索                 |
+| 5  | 权柄看板/时间线里程碑来源显示内部 ID             | 扫个体时用 `indName()`                  |
+| 6  | 新建个体掌权标记默认值后台/前台不一致              | 统一 `quan:false, wei:true, li:true` |
+| 7  | 精灵管理 diff 命名器残留图鉴对象上的 `nickname` | 移除该回退                              |
+| 8  | 两处图片 `alt` 取空昵称                  | 改用回退显示名                            |
+| 9  | 异色首次点击等 15.7 秒下载                 | 落地后空闲预载，点击 5ms 秒切                  |
+| 10 | 18 个系别按钮铺满首屏                     | 折叠面板，默认收起、可搜索                      |
+| 11 | 图鉴下拉三列 20 项过密                    | 两列 11 主项 + 9 小字副链接                 |
+| 12 | 后台侧栏 13 项平铺                      | 三组：图鉴数据 / 书内档案 / 内容与系统             |
+| 13 | 首页「世界观」卡片是空链接                    | 补全 4 组入口 + 统计条 + Ctrl+K 搜索         |
+| 14 | 同步可能把云端修复回滚成旧值                   | 三方合并 + 差异逐条勾选                      |
+| 15 | 后台改了内容点别处静默还原                    | 点别处自动保存，Esc 才还原                    |
 
 ### 验证工具（改完必跑）
 
@@ -155,11 +155,7 @@ vowmon/
 
 ```
 
-
-
 > 新增前台页面放根目录，新增后台页面放 `admin/`；新增的 css 放 `css/`，js 放 `js/`。**数据不要放进来**——需要数据就在页面里用 `VowmonData.ready([...])` 拉取。
-
-
 
 ---
 
@@ -219,6 +215,7 @@ vowmon/
   - 章节卡片滚动进入视口时淡入（IntersectionObserver），受 `vowmon_anim_on` 控制：关闭时直接全部显示，不留 opacity:0。
   - 该页是全站唯一的深色底页面，是有意为之（史诗氛围），不算风格破坏；新增世界观类页面可沿用这套模板结构。
 - **打击面计算器 reference/coverage.html**：组队/配招研究工具。最多选 5 个技能属性，统计这套组合能覆盖 18 单系 + 153 双系共 **171 种属性组合**中的多少种，并分档报告（4 倍克制 / 2 倍克制 / 免疫 / 双重抵抗 / 抵抗）。
+
 
 ### 1.05.2 后台页面（维护数据用的）
 
@@ -312,8 +309,6 @@ vowmon/
 - **当前页高亮**：`js/navbar.js` 的 `ACTIVE_MAP` 按文件名自动判断，新增页面时补一行映射即可。
 - 注意：`navbar.js` 用 `defer` 注入，晚于各页 Vue 的 `mount('#app')`，所以不会被 Vue 覆盖；不要去掉 `defer`。
 
-
-
 ---
 
 ## 1.2 公共依赖约定
@@ -323,12 +318,12 @@ vowmon/
 - **技能分类图标/颜色**：只在 `js/category-config.js` 维护（`categoryData` 数组 + `getCategoryIcon` / `getCategoryColor`，图标用 Font Awesome，无需图片资源），前台 `reference/skills.html` 与后台 `admin-reference/skills.html` 都引用它，禁止在页面里写死分类图标或色值。
 - **技能标签**：内置库在 `js/tag-config.js` 的 `BUILTIN_TAG_DATA`，完整可变库在 `localStorage['vowmon_tags_library']`（由后台技能管理的标签选择器维护）。`getTagLibrary()` / `saveTagLibrary()` / `makeCustomTag()` 负责读写，`getTagInfo` / `getTagIcon` / `getTagColor` 实时查询并支持未知标签的 hash 兜底。图标用 Font Awesome，无需图片资源。
 - **弹窗组件**：后台五个页面（`index.html`、`admin-reference/skills.html`、`admin-reference/traits.html`、`admin-reference/items.html`、`admin-images.html`）都必须同时引入 `css/admin.css` 和 `css/common-ui.css`，否则弹窗、表单、选择器会没有样式。
-- **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。
-|  |  |
-| --- | --- |
-  - `VowmonDialog.confirm(消息, 选项)` → `Promise<boolean>`，`VowmonDialog.alert(消息, 选项)` → `Promise`，`VowmonDialog.prompt(消息, 选项)` → `Promise<string|null>`。
-|  |  |  |
-| --- | --- | --- |
+- **自定义弹窗（替代系统 alert / confirm）**：统一由 `js/dialog.js` + `css/dialog.css` 提供（全局 `window.VowmonDialog`，样式类名前缀 `vdlg-`）。删除确认、校验提示、同步结果全部走它，**禁止再用系统 `alert()` / `confirm()` / `prompt()`**。  
+  |  |  |  
+  | --- | --- |
+  - `VowmonDialog.confirm(消息, 选项)` → `Promise<boolean>`，`VowmonDialog.alert(消息, 选项)` → `Promise`，`VowmonDialog.prompt(消息, 选项)` → `Promise<string|null>`。  
+    |  |  |  |  
+    | --- | --- | --- |
   - `VowmonDialog.toast(消息, 'success' | 'warning' | 'danger')` 是右下角轻提示，用于「已保存 / 已删除 / 已同步」这类不需要用户确认的结果。
   - 选项：`type`（`info` / `success` / `warning` / `danger`）、`title`、`okText`、`cancelText`、`detail`（长错误信息，等宽小字块）、`html`（消息里要用 `<strong>` 时必须开，变量用 `VowmonDialog.esc()` 转义）、`duration`（仅 toast）。
   - 破坏性操作固定用 `type: 'danger'`：图标变红、Tab 焦点默认落在「取消」上防手滑。旧代码里带 ✅ / ❌ / ⚠️ 前缀的消息会被自动识别类型并去掉 emoji。
@@ -358,17 +353,18 @@ vowmon/
   - 关掉时还必须主动清掉 JS 定时器（`dex/vowdex.html` 的异色轮播 `stopShiny()`），CSS 规则管不了 `setInterval`。
 - **后台加载策略**：后台页调 `VowmonData.ready([...])` **不要传 `fresh: true`**——本机有镜像就秒开（后台静默对账），要拉仓库最新数据点顶栏「从仓库拉取」。`data-loader.js` 在「非 fresh 且请求的所有 key 都有本机镜像」时会跳过「正在加载数据…」遮罩，避免闪屏。`localStorage` 草稿**优先于**远端，别改成远端优先（会丢未同步修改）。
 
+
 ---
 
 ## 2. 数据与同步机制（站点与数据解耦）
 
 **三个仓库各管一件事**：
 
-| 仓库 | 放什么 | 谁读它 |
-|---|---|---|
-| `vowmon` | 站点本体（HTML / CSS / JS），**不含任何数据** | GitHub Pages、Cloudflare Pages |
-| `vowmon_data` | 唯一数据源，5 个 JSON | 前台运行时拉取、后台读写 |
-| `vowmon_imgs` | 按编号命名的 PNG | 前台通过 `/img/*` 反代读取 |
+| 仓库            | 放什么                              | 谁读它                           |
+| ------------- | -------------------------------- | ----------------------------- |
+| `vowmon`      | 站点本体（HTML / CSS / JS），**不含任何数据** | GitHub Pages、Cloudflare Pages |
+| `vowmon_data` | 唯一数据源，5 个 JSON                   | 前台运行时拉取、后台读写                  |
+| `vowmon_imgs` | 按编号命名的 PNG                       | 前台通过 `/img/*` 反代读取            |
 
 **前台怎么读**：页面里没有 `<script src="data/xxx.js">` 了，统一走 `js/data-loader.js`：
 
@@ -405,26 +401,25 @@ VowmonData.ready(['vows']).then(function () { createApp({...}).mount('#app'); })
 
 **JSON 结构**（每份是一个对象，字段名与全局变量一一对应）：
 
-| 文件 | 字段 → 全局变量 |
-|---|---|
-| `vow-data.json` | `vows` → `allVowsData` |
-| `skills-data.json` | `skills` → `allSkillsData` |
-| `traits-data.json` | `traits` → `allTraitsData` |
-| `items-data.json` | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData` |
-| `natures-data.json` | `natures` → `allNaturesData`、`stats` → `natureStats` |
-| `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体） |
-| `characters-data.json` | `characters` → `allCharactersData`（书内档案：御兽人物） |
-| `lore-data.json` | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块） |
-| `pokemon-data.json` | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
-| `rock-data.json` | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/六维种族值 生命·物攻·魔攻·物防·魔防·速度/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成 |
-| `aoqi-data.json` | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取，名字+真实立绘 `dsrc` 直链+出处链接；官网属性是 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成 |
+| 文件                      | 字段 → 全局变量                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vow-data.json`         | `vows` → `allVowsData`                                                                                                                            |
+| `skills-data.json`      | `skills` → `allSkillsData`                                                                                                                        |
+| `traits-data.json`      | `traits` → `allTraitsData`                                                                                                                        |
+| `items-data.json`       | `kinds` → `itemKindsData`、`groups` → `itemGroupsData`、`categories` → `itemCategoriesData`、`items` → `allItemsData`                                |
+| `natures-data.json`     | `natures` → `allNaturesData`、`stats` → `natureStats`                                                                                              |
+| `individuals-data.json` | `individuals` → `allIndividualsData`（书内档案：御兽精灵个体）                                                                                                 |
+| `characters-data.json`  | `characters` → `allCharactersData`（书内档案：御兽人物）                                                                                                     |
+| `lore-data.json`        | `pages` → `allLorePages`、`blocks` → `allLoreBlocks`（页面内容文本块）                                                                                      |
+| `pokemon-data.json`     | 宝可梦参考数据（1025 只，由 PokéAPI 一次性抓取生成，含进化链）。**不走 data-loader**：仅供 `tools/daily-pokemon.html` 每日灵感页直接 fetch，更新用 `node _tools/gen-pokemon-data.mjs` 重新生成 |
+| `rock-data.json`        | 洛克王国世界参考数据（644 只，rocokingdomworld.org 抓取，含属性官方色/六维种族值 生命·物攻·魔攻·物防·魔防·速度/图鉴描述/进化链）。`node _tools/gen-rock-data.mjs` 重新生成                            |
+| `aoqi-data.json`        | 奥奇传说参考数据（1606 只本体，aoqi.100bt.com 抓取：立绘 `dsrc` 直链 + 详情页图鉴大表三种版式自适应解析 → 属性/特长/普通技/超杀技/身高体重/爱好/成长故事/进化阶段名，技能 1574 只、成长故事 904 只、属性 253 只——新版页面属性由 JS 动态渲染抓不到）。`node _tools/gen-aoqi-data.mjs` 重新生成                                 |
 
 **缓存**：`/data/*` 代理缓存 60 秒，后台同步完一分钟内前台可见；jsDelivr 兜底源约 12 小时。
 
 **Token 安全**：后台填的 Fine-grained Token 只存在浏览器 `localStorage`，不会上传到任何仓库。
 
-**多数据仓库**：`dataRepos` 支持逗号分隔多个仓库，同步时逐个推送；但**前台只读 `dataCdnBase` 指向的那一个**，多仓只作备份用途，别指望前台自动合并。
----
+## **多数据仓库**：`dataRepos` 支持逗号分隔多个仓库，同步时逐个推送；但**前台只读 `dataCdnBase` 指向的那一个**，多仓只作备份用途，别指望前台自动合并。
 
 ## 3. 规模上限与性能（千只精灵）
 
@@ -469,17 +464,17 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 ### 3.5 实测数据（1000 条精灵 / 693KB 数据文件）
 
-| 项目 | 耗时 |
-|---|---|
-| 搜索过滤一次（全表 1000 条） | 0.04 ms |
-| 搜索 + 系别 + 阶数组合筛选 | 0.07 ms |
-| 全表排序 | 0.04 ms |
-| 图鉴渲染 30 张卡片（每页） | 3.7 ms |
-| 精灵列表渲染 10 行（每页） | 1.4 ms |
-| 渲染 100 张卡片 | 12.1 ms |
-| 渲染 1000 张卡片（不分页的极端情况） | 66 ms |
+| 项目                     | 耗时      |
+| ---------------------- | ------- |
+| 搜索过滤一次（全表 1000 条）      | 0.04 ms |
+| 搜索 + 系别 + 阶数组合筛选       | 0.07 ms |
+| 全表排序                   | 0.04 ms |
+| 图鉴渲染 30 张卡片（每页）        | 3.7 ms  |
+| 精灵列表渲染 10 行（每页）        | 1.4 ms  |
+| 渲染 100 张卡片             | 12.1 ms |
+| 渲染 1000 张卡片（不分页的极端情况）  | 66 ms   |
 | 后台保存：序列化 1000 条（677KB） | 3.86 ms |
-| 后台读取：反序列化 | 2.75 ms |
+| 后台读取：反序列化              | 2.75 ms |
 
 结论：**数据层和渲染层都不是瓶颈**，现有分页（图鉴 30 / 列表 10 / 后台 15）足够撑到几千只。真正的成本只有数据文件体积 —— 1000 条 693KB，gzip 后约 100–150KB，4G 下一两秒。
 
@@ -509,27 +504,26 @@ GitHub **Contents API 对单个目录最多只返回 1000 个条目**，超出�
 
 ### 4.1 线上地址
 
-| 平台 | 地址 | 发布方式 |
-|---|---|---|
-| Cloudflare Pages（**主站**） | https://vowmon.pages.dev/（主地址，分享/收藏用这个）<br>别名：https://vowmon.keeptrue.ren/（自定义域名，到期不影响主站） | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy`；`vowmon.keeptrue.ren` 是新网 DNS 上的 CNAME → `vowmon.pages.dev` |
-| Cloudflare Pages（裸地址） | https://vowmon.pages.dev/ | 同上，和上面是同一个项目 |
-| GitHub Pages（**备用镜像**，保留） | 裸地址 `luo029.github.io/vowmon/`；当前经自定义域名 301，keeptrue.ren 到期后需在 Settings → Pages 删除域名即可直连。图片/数据基址均指向 pages.dev，镜像完整可用 | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布** |
+| 平台                        | 地址                                                                                                                   | 发布方式                                                                                                                                             |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cloudflare Pages（**主站**）  | <https://vowmon.pages.dev/（主地址，分享/收藏用这个）><br />别名：<https://vowmon.keeptrue.ren/（自定义域名，到期不影响主站）>                      | GitHub Actions（`.github/workflows/deploy-cloudflare.yml`）或本地 `wrangler pages deploy`；`vowmon.keeptrue.ren` 是新网 DNS 上的 CNAME → `vowmon.pages.dev` |
+| Cloudflare Pages（裸地址）     | <https://vowmon.pages.dev/>                                                                                          | 同上，和上面是同一个项目                                                                                                                                     |
+| GitHub Pages（**备用镜像**，保留） | 裸地址 `luo029.github.io/vowmon/`；当前经自定义域名 301，keeptrue.ren 到期后需在 Settings → Pages 删除域名即可直连。图片/数据基址均指向 pages.dev，镜像完整可用 | 仓库 Settings → Pages → Deploy from a branch：`main` / `(root)`，**push 即发布**                                                                        |
 
 前两个是同一个 Pages 项目、同一份构建产物，只是域名不同。
 
 **资源基址不绑自定义域名**：`js/site-config.js` 里的 `imgCdnBase` / `dataCdnBase` 用的是 `https://vowmon.pages.dev/...` 这种固定裸域名。自定义域名只是一层访问入口——域名到期、换域名、临时解绑，都不会让全站数据和图片失效。想改基址有两个办法：
 
 1. 改仓库里的 `js/site-config.js`（对**所有访客**生效，需要提交 + 部署）；
-2. 后台「精灵管理 → 同步配置 → 数据仓库 / 图片仓库」里的 **数据公开地址 / 图片公开地址**（只对**你自己这台浏览器**生效，存在 `vowmon_sync_config`，留空即用默认值，输入框右边的 ↺ 就是一键恢复默认）。调试换源时用这个，不用改代码。
-
+2. 后台「精灵管理 → 同*步配置 → 数据仓库 / 图片仓库」里的&#x20;****数据公开地址 / 图片公开地址****（只对****你自己这台浏览器****生效，存在 `vowmon_sync_config`，留空即用默认值，输入框右边的 ↺ 就是一键恢复默认）。调试换源时用*这个，不用改代码。
 
 可填的值举例：
 
-| 用途 | 地址 |
-|---|---|
+| 用途               | 地址                                                             |
+| ---------------- | -------------------------------------------------------------- |
 | 走本站 CF 代理（默认，推荐） | `https://vowmon.pages.dev/data`、`https://vowmon.pages.dev/img` |
-| jsDelivr 直连仓库 | `https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main` |
-| GitHub raw 直连仓库 | `https://raw.githubusercontent.com/luo029/vowmon_data/main` |
+| jsDelivr 直连仓库    | `https://cdn.jsdelivr.net/gh/luo029/vowmon_data@main`          |
+| GitHub raw 直连仓库  | `https://raw.githubusercontent.com/luo029/vowmon_data/main`    |
 
 > 数据加载器自带三级回退：默认基址 → jsDelivr → raw.githubusercontent，前一个失败自动换下一个，所以基址写错一般也不至于白屏（只是会慢一点）。
 
@@ -580,12 +574,12 @@ npx wrangler pages deploy . --project-name=vowmon --branch=main
 
 ### 4.5 缓存策略（`_headers` + 函数头）
 
-| 路径 | Cache-Control | 说明 |
-|---|---|---|
-| `/img/*` | `max-age=3600` | 由函数设置，图换了最多 1 小时后生效 |
-| `/css/*`、`/js/*` | `max-age=1800` | 改版 30 分钟内全量生效 |
-| `/data/*` | `max-age=60` | 后台一保存就能很快被访客看到 |
-| `*.html` | 不显式设置 | 每次协商缓存，保证页面结构改动立刻生效 |
+| 路径               | Cache-Control  | 说明                  |
+| ---------------- | -------------- | ------------------- |
+| `/img/*`         | `max-age=3600` | 由函数设置，图换了最多 1 小时后生效 |
+| `/css/*`、`/js/*` | `max-age=1800` | 改版 30 分钟内全量生效       |
+| `/data/*`        | `max-age=60`   | 后台一保存就能很快被访客看到      |
+| `*.html`         | 不显式设置          | 每次协商缓存，保证页面结构改动立刻生效 |
 
 改样式/脚本后如果自己看不到变化，`Ctrl+F5` 强刷一次即可（访客最多等 30 分钟）。
 
