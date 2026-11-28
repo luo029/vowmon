@@ -95,6 +95,15 @@ const STARTERS = [
     495, 498, 501, 650, 653, 656, 722, 725, 728, 810, 813, 816, 906, 909, 912
 ];
 
+// 「大器晚成」= 准神 600 族（52poke 分类），10 条三段进化线全部成员；
+// 注意：不能按 growth_rate==='slow' 判定，传说宝可梦同样是 slow 成长，会误标。
+const LATE_BLOOMERS = [
+    // 迷你龙线 / 幼基拉斯线 / 宝贝龙线 / 铁哑铃线 / 圆陆鲨线
+    147, 148, 149, 246, 247, 248, 371, 372, 373, 374, 375, 376, 443, 444, 445,
+    // 单首龙线 / 黏美儿线（含洗翠） / 心鳞宝线 / 多龙线 / 凉脊龙线
+    633, 634, 635, 702, 703, 704, 705, 706, 782, 783, 784, 885, 886, 887, 996, 997, 998
+];
+
 /* ------------------------- 请求小工具 ------------------------- */
 
 async function fetchJson(url) {
@@ -220,7 +229,7 @@ function buildEntry(id, species, poke, evoIds, abilityZh) {
     if (species.is_legendary) tags.push('传说');
     if (species.is_mythical) tags.push('幻之');
     if (STARTERS.includes(id)) tags.push('最初的伙伴');
-    if (((species.growth_rate || {}).name || '') === 'slow') tags.push('大器晚成');
+    if (LATE_BLOOMERS.includes(id)) tags.push('大器晚成');
     return {
         id: id,
         no: ('000' + id).slice(-3),

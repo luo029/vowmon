@@ -116,6 +116,33 @@
             .ex-card{flex-direction:column;gap:12px}
             .ex-icon{margin:0 auto}
         }
+        /* 已参照名录弹窗 */
+        .ref-overlay{position:fixed;inset:0;background:rgba(61,50,34,.45);z-index:900;display:flex;align-items:center;justify-content:center;padding:18px}
+        .ref-panel{background:var(--card);border:1px solid var(--line);border-radius:18px;max-width:680px;width:100%;max-height:82vh;overflow-y:auto;padding:20px 22px;box-shadow:0 12px 40px rgba(61,50,34,.25)}
+        .ref-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-size:16px;color:var(--ink)}
+        .ref-head b{display:flex;align-items:center;gap:8px}
+        .ref-head b i{color:var(--accent)}
+        .ref-list{display:flex;flex-direction:column;gap:8px}
+        .ref-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;transition:.15s}
+        .ref-row:hover{border-color:var(--accent);background:#fffbef}
+        .ref-thumb{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#f7ead0;flex-shrink:0;border:1px solid var(--line)}
+        .ref-thumb-empty{display:inline-flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:16px}
+        .ref-row-main{flex:1;min-width:0}
+        .ref-row-main b{display:block;color:var(--ink);font-size:14px}
+        .ref-row-main small{color:var(--ink-3);font-size:12px;display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .ref-empty{padding:24px 0;text-align:center;color:var(--ink-3);font-size:13px}
+        .ref-duo{display:flex;align-items:stretch;justify-content:center;gap:16px;flex-wrap:wrap}
+        .ref-card{flex:1;min-width:180px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 14px;text-align:center;position:relative}
+        .ref-tag{position:absolute;top:10px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font-size:11px;font-weight:800;padding:3px 11px;border-radius:999px}
+        .ref-pic{display:block;width:130px;height:130px;margin:26px auto 10px;object-fit:contain}
+        .ref-pic-empty{display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:34px;background:#f7ead0;border-radius:14px}
+        .ref-name{font-size:17px;color:var(--ink);font-weight:800}
+        .ref-name small{font-size:12px;color:var(--ink-3);font-weight:600}
+        .ref-origin{margin-top:10px;font-size:12px;color:var(--ink-3);background:#fbf6e8;border-radius:10px;padding:7px 10px;line-height:1.5}
+        .ref-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--accent);font-size:22px}
+        .ref-arrow small{font-size:11px;font-weight:700;color:var(--ink-3)}
+        @media (max-width:640px){.ref-duo{flex-direction:column}.ref-arrow{flex-direction:row}.ref-arrow i{transform:rotate(90deg)}}
+
         /* 灵感提示 */
         .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
         .tip{background:#fbf6e8;border:1px solid #f2e3b8;border-radius:14px;padding:16px 18px}
@@ -181,6 +208,7 @@
                     <input type="checkbox" v-model="skipRef">
                     <span class="track"></span>
                 </label>
+                <button class="btn" v-if="refPairs.length" @click="openRefModal"><i class="fa-solid fa-book-open"></i> 已参照名录（{{ refPairs.length }}）</button>
             </div>
             <div class="genus" style="margin:0 0 16px">「排除已参照」依据图鉴里每只誓约精灵的【原型】字段：凡写了对应名字（如圆笙童子的原型「宝可梦-圆法师」），它就不会再出现在随机结果里，直到你清掉那行原型。</div>
 
@@ -381,6 +409,58 @@
             <a href="https://wiki.biligame.com/seer/%E7%B2%BE%E7%81%B5%E5%9B%BE%E9%89%B4" target="_blank" rel="noopener">赛尔号 BWIKI</a>（{{ srcMeta.se.count }} 只）·
             每日精灵/特性/技能均由日期决定，同一台设备上今天看到的永远是同一组；数据源与「排除已参照」变化后会重新抽取。
         </div>
+
+        <!-- 已参照名录弹窗 -->
+        <div class="ref-overlay" v-if="showRefModal" @click.self="showRefModal = false">
+            <div class="ref-panel">
+                <div class="ref-head">
+                    <b v-if="!selRef"><i class="fa-solid fa-book-open"></i> 已参照名录</b>
+                    <b v-else><i class="fa-solid fa-right-left"></i> 参照对比</b>
+                    <button class="btn" style="padding:5px 12px" @click="showRefModal = false"><i class="fa-solid fa-xmark"></i> 关闭</button>
+                </div>
+
+                <!-- 列表态：全部被参照的誓约精灵 -->
+                <div v-if="!selRef" class="ref-list">
+                    <div class="ref-row" v-for="(rp, ri) in refPairs" :key="ri" @click="openRefCompare(rp)">
+                        <img class="ref-thumb" v-if="rp.vowImage" :src="refImgUrl(rp.vowImage)" alt="" loading="lazy" @error="$event.target.style.visibility='hidden'">
+                        <span class="ref-thumb ref-thumb-empty" v-else><i class="fa-solid fa-paw"></i></span>
+                        <div class="ref-row-main">
+                            <b>{{ rp.vowName }}</b>
+                            <small>原型 · {{ rp.pet.name }}<span v-if="rp.origin">　（{{ rp.origin }}）</span></small>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="color:var(--ink-3)"></i>
+                    </div>
+                    <div class="ref-empty" v-if="!refPairs.length">图鉴里还没有精灵填写【原型】。</div>
+                </div>
+
+                <!-- 对比态：誓约精灵 ↔ 参照原型 -->
+                <div v-else class="ref-compare">
+                    <button class="btn" style="margin-bottom:14px;padding:6px 14px" @click="backRefList"><i class="fa-solid fa-arrow-left"></i> 返回名录</button>
+                    <div class="ref-duo">
+                        <div class="ref-card">
+                            <span class="ref-tag" style="background:var(--accent)">参照后 · 誓约精灵</span>
+                            <img class="ref-pic" v-if="selRef.vowImage" :src="refImgUrl(selRef.vowImage)" :alt="selRef.vowName" loading="lazy" @error="$event.target.style.visibility='hidden'">
+                            <span class="ref-pic ref-pic-empty" v-else><i class="fa-solid fa-paw"></i></span>
+                            <b class="ref-name">{{ selRef.vowName }}</b>
+                            <div class="chips" style="justify-content:center;margin-top:8px">
+                                <span class="chip plain" v-for="t in selRef.vowTypes" :key="t" style="font-size:11px;padding:3px 10px">{{ t }}</span>
+                            </div>
+                            <div class="ref-origin" v-if="selRef.origin">【原型】{{ selRef.origin }}</div>
+                        </div>
+                        <div class="ref-arrow"><i class="fa-solid fa-arrows-left-right"></i><small>原型参照</small></div>
+                        <div class="ref-card">
+                            <span class="ref-tag" :style="{background:srcMeta[selRef.pet.src] ? srcMeta[selRef.pet.src].color : '#999'}">参照原型 · {{ srcMeta[selRef.pet.src] ? srcMeta[selRef.pet.src].label : '' }}</span>
+                            <img class="ref-pic" v-if="selRef.pet.img" :src="selRef.pet.img" :alt="selRef.pet.name" loading="lazy" @error="$event.target.style.visibility='hidden'">
+                            <span class="ref-pic ref-pic-empty" v-else><i class="fa-solid fa-question"></i></span>
+                            <b class="ref-name">{{ selRef.pet.name }}<small v-if="selRef.pet.en"> {{ selRef.pet.en }}</small></b>
+                            <div class="chips" style="justify-content:center;margin-top:8px">
+                                <span class="chip" v-for="t in (selRef.pet.types || [])" :key="t" :style="{background:typeColor(selRef.pet, t), fontSize:'11px', padding:'3px 10px'}">{{ t }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </template>
 </div>
 </div>
@@ -525,6 +605,10 @@ createApp({
         // 排除已参照：图鉴 vow 的【原型】(origin) 写了对应名字的，不再随机出现
         const skipRef = ref(localStorage.getItem('vowmon_daily_skip_ref') !== 'false');
         const excludedNames = ref(new Set());
+        // 已参照名录：誓约精灵 ↔ 参照原型 的配对（供弹窗展示对比）
+        const refPairs = ref([]);
+        const showRefModal = ref(false);
+        const selRef = ref(null);       // 点开对比的那一条；null = 列表态
         // 数据源开关（默认只开宝可梦；洛克/奥奇数据是外部来源，由用户自己点亮）
         const srcOn = ref(JSON.parse(localStorage.getItem('vowmon_daily_src') || '{"pk":true,"rk":false,"aq":false,"se":false}'));
         // 初始化必须带 SRC_META 的 label/color/favicon，否则卡片「出自 ·」和徽章是空的
@@ -655,24 +739,51 @@ createApp({
             document.querySelector('.mon-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        /* 扫描图鉴 vow 的【原型】字段，找出已被参照的精灵名（三源通用） */
+        /* 扫描图鉴 vow 的【原型】字段，找出已被参照的精灵名（三源通用），并建「誓约 ↔ 原型」配对 */
         function scanPrototypes() {
             const vows = window.allVowsData || [];
             const found = new Set();
+            const pairs = [];
+            const seen = new Set();
             for (const v of vows) {
                 const o = String((v && (v.origin || v['原型'])) || '');
                 if (!o) continue;
                 const oLow = o.toLowerCase();
                 for (const p of allPets.value) {
-                    if (o.indexOf(p.name) !== -1 ||
+                    const hit = o.indexOf(p.name) !== -1 ||
                         (p.en && oLow.indexOf(p.en.toLowerCase()) !== -1) ||
-                        (p.full && o.indexOf(p.full) !== -1)) {
-                        found.add(p.name);
+                        (p.full && o.indexOf(p.full) !== -1);
+                    if (!hit) continue;
+                    found.add(p.name);
+                    const key = String(v && v.id) + '|' + p.name;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        pairs.push({
+                            vowId: String((v && v.id) || ''),
+                            vowName: String((v && v.name) || '未命名'),
+                            vowImage: String((v && v.image) || ''),
+                            vowTypes: Array.isArray(v && v.types) ? v.types : [],
+                            origin: o,
+                            pet: p
+                        });
                     }
                 }
             }
             excludedNames.value = found;
+            refPairs.value = pairs;
         }
+
+        /* 已参照名录弹窗 */
+        const IMG_CFG = window.VOWMON_SITE_CONFIG || {};
+        function refImgUrl(path) {
+            if (!path) return '';
+            if (/^(https?:)?\/\//i.test(path) || String(path).startsWith('data:')) return path;
+            const base = String(IMG_CFG.imgCdnBase || '').replace(/\/+$/, '');
+            return base ? base + '/' + String(path).replace(/^\/+/, '') + (IMG_CFG.imgVer ? '?v=' + IMG_CFG.imgVer : '') : String(path);
+        }
+        function openRefModal() { selRef.value = null; showRefModal.value = true; }
+        function openRefCompare(pair) { selRef.value = pair; }
+        function backRefList() { selRef.value = null; }
 
         /* 单个数据源的取数（三源顺序兜底），失败返回 null（不阻塞其它源） */
         async function fetchSource(file) {
@@ -848,7 +959,8 @@ createApp({
             mon, isDaily, tips, excludedCount,
             ability, skill, isDailyAbility, isDailySkill, abCount, skCount,
             typeColor, artFallback, statColor, loadData, randomOne, backToToday, reshuffleTips, toggleSrc,
-            jumpEvo, randomAbility, randomSkill, backTodayAbility, backTodaySkill, jumpLearner
+            jumpEvo, randomAbility, randomSkill, backTodayAbility, backTodaySkill, jumpLearner,
+            refPairs, showRefModal, selRef, refImgUrl, openRefModal, openRefCompare, backRefList
         };
     }
 }).mount('#app');
