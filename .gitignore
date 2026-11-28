@@ -27,3 +27,6 @@ _tools/.pokemon-cache/
 
 # 洛克王国抓取缓存（~77MB，本地专用）
 _tools/.rock-cache/
+
+# 奥奇抓取缓存（本地专用）
+_tools/.aoqi-cache/
