@@ -106,12 +106,20 @@ for (const tr of allRows) {
     const noM = clean(c['序号'] || '').match(/\d+/);
     const no = noM ? noM[0] : '';
     if (!no) continue;    // 没有合法序号的（测试页/杂页）跳过
-    const type = clean(c['属性'] || '');
+    // 属性列偶尔混入精灵名（如「机械地面系 北冥·玄武」），只保留到第一个「系」
+    let type = clean(c['属性'] || '');
+    if (type.includes('系')) type = type.slice(0, type.indexOf('系') + 1);
     const num = k => { const v = clean(c[k] || ''); const m = v.match(/\d+/); return m ? parseInt(m[0], 10) : null; };
     const stats = { hp: num('体力'), atk: num('攻击'), def: num('防御'), sa: num('特攻'), sd: num('特防'), spe: num('速度') };
-    // 进化链：顿号/逗号分隔的阶段名
+    // 进化链：wiki 的「进化链」属性是空格分隔的序号串（如 0010 0011 0012），
+    // 也可能有顿号/逗号写法，统一按空白+标点切分；只剩自己一条时视为无进化链
     const evoRaw = clean(c['进化链'] || '');
-    const evo = evoRaw ? evoRaw.split(/[，,、]+/).map(s => s.trim()).filter(Boolean) : [];
+    let evo = evoRaw ? evoRaw.split(/[\s，,、]+/).map(s => s.trim()).filter(Boolean) : [];
+    // 过滤 wiki 模板残缺占位符（如 {{{一阶段形态}}}、[[文件:…]]），只留纯序号/纯名字
+    evo = evo.filter(s => !/\{\{|\[\[|\}\}/.test(s));
+    // 去前导零，与序号字段（108）格式一致，前端按序号反查才能命中
+    evo = [...new Set(evo.map(s => s.replace(/^0+(?=\d)/, '')))];
+    if (evo.length < 2) evo = [];
     pets.push({
         id: name,
         name: name,

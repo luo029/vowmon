@@ -278,6 +278,10 @@
                         <div class="genus">下面的灵感提示就是根据它生成的——先别偷看，试着直接创作。</div>
                     </template>
 
+                    <div v-if="showRef && !mon.stats.length && mon.total" class="genus" style="margin-top:14px">
+                        该来源未公布六维种族值（总能力值 <b style="color:var(--ink)">{{ mon.total }}</b>）。
+                    </div>
+
                     <div v-if="showRef && mon.stats.length" style="margin-top:16px">
                         <div class="stat-row" v-for="s in mon.stats" :key="s.zh">
                             <span class="stat-label">{{ s.zh }}</span>
