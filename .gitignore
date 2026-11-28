@@ -30,3 +30,6 @@ _tools/.rock-cache/
 
 # 奥奇抓取缓存（本地专用）
 _tools/.aoqi-cache/
+
+# 赛尔号 SMW 抓取缓存（本地专用）
+_tools/.seer-cache/

@@ -63,6 +63,7 @@
         .skill-item{font-size:13px;background:#fbf6e8;border:1px solid var(--line);border-radius:12px;padding:7px 12px;line-height:1.5}
         .skill-item b{color:var(--ink)}
         .skill-item span{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
+        .src-line{margin-top:6px;font-size:11px;color:var(--ink-3);font-weight:700;text-align:center}
         .meta{font-size:13px;color:var(--ink-2);line-height:1.9;margin-bottom:12px}
         .meta b{color:var(--ink)}
         .dex-quote{background:#fbf6e8;border-left:4px solid var(--accent-2);border-radius:0 12px 12px 0;padding:12px 16px;font-size:13px;line-height:1.9;color:var(--ink-2)}
@@ -114,7 +115,7 @@
 <div class="page">
     <div class="hero">
         <h1><i class="fa-solid fa-lightbulb"></i> 每日精灵灵感</h1>
-        <p>每天从宝可梦、洛克王国、奥奇传说里随机抽一只做参考——看它的属性、种族值、图鉴介绍和进化链，再根据随机提示原创一只属于你的誓约精灵。数据全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。</p>
+        <p>每天从宝可梦、洛克王国、奥奇传说、赛尔号里随机抽一只做参考——看它的属性、种族值、图鉴介绍和进化链，再根据随机提示原创一只属于你的誓约精灵。数据全部离线生成、无需 AI。关掉「显示参考」可以玩盲盒模式：只看提示不剧透。</p>
     </div>
 
     <div class="loading" v-if="state==='loading'"><i class="fa-solid fa-spinner"></i>正在加载精灵数据库…</div>
@@ -163,6 +164,7 @@
                         <span v-else class="mystery">?</span>
                     </div>
                     <div class="no-tag">{{ mon.no ? 'No.' + mon.no : '编号 ' + mon.id }}</div>
+                    <div class="src-line">出自 · {{ srcMeta[mon.src].label }}</div>
                 </div>
                 <div class="info-side">
                     <template v-if="showRef">
@@ -240,6 +242,7 @@
             数据来源：<a href="https://pokeapi.co" target="_blank" rel="noopener">PokéAPI</a>（{{ srcMeta.pk.count }} 只）·
             <a href="https://rocokingdomworld.org/zh/pokedex/" target="_blank" rel="noopener">洛克王国世界图鉴</a>（{{ srcMeta.rk.count }} 只）·
             <a href="http://aoqi.100bt.com/jingling/daquan_list.html" target="_blank" rel="noopener">奥奇传说精灵大全</a>（{{ srcMeta.aq.count }} 只）·
+            <a href="https://wiki.biligame.com/seer/%E7%B2%BE%E7%81%B5%E5%9B%BE%E9%89%B4" target="_blank" rel="noopener">赛尔号 BWIKI</a>（{{ srcMeta.se.count }} 只）·
             每日精灵由日期决定，同一台设备上今天看到的永远是同一只；数据源与「排除已参照」变化后会重新抽取。
         </div>
     </template>
@@ -256,14 +259,16 @@ const { createApp, ref, computed, onMounted, watch } = Vue;
 const SRC_META = {
     pk: { label: '宝可梦',   color: '#e8a013', favicon: 'https://pokeapi.co/favicon.ico' },
     rk: { label: '洛克王国', color: '#3b82f6', favicon: 'https://rocokingdomworld.org/favicon.svg' },
-    aq: { label: '奥奇传说', color: '#8b5cf6', favicon: '' }
+    aq: { label: '奥奇传说', color: '#8b5cf6', favicon: '' },
+    se: { label: '赛尔号',   color: '#0ea5e9', favicon: 'https://wiki.biligame.com/seer/favicon.ico' }
 };
 /* 各源种族值标签 */
 const STAT_LABELS = {
     pk: { hp: 'HP', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' },
-    rk: { hp: '生命', atk: '物攻', mag: '魔攻', def: '物防', res: '魔防', spe: '速度' }
+    rk: { hp: '生命', atk: '物攻', mag: '魔攻', def: '物防', res: '魔防', spe: '速度' },
+    se: { hp: '体力', atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度' }
 };
-const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','mag','def','res','spe'] };
+const STAT_ORDER = { pk: ['hp','atk','def','spa','spd','spe'], rk: ['hp','atk','mag','def','res','spe'], se: ['hp','atk','def','spa','spd','spe'] };
 /* 宝可梦 18 系配色 */
 const PK_TYPE_COLORS = {
     '一般':'#9FA19F','火':'#E62829','水':'#2980EF','电':'#FAC000','草':'#3FA129','冰':'#3DCEF3',
@@ -377,9 +382,9 @@ createApp({
         const skipRef = ref(localStorage.getItem('vowmon_daily_skip_ref') !== 'false');
         const excludedNames = ref(new Set());
         // 数据源开关（默认只开宝可梦；洛克/奥奇数据是外部来源，由用户自己点亮）
-        const srcOn = ref(JSON.parse(localStorage.getItem('vowmon_daily_src') || '{"pk":true,"rk":false,"aq":false}'));
-        const srcMeta = ref({ pk: { count: 0 }, rk: { count: 0 }, aq: { count: 0 } });
-        const srcList = computed(() => ['pk', 'rk', 'aq'].map(k => ({
+        const srcOn = ref(JSON.parse(localStorage.getItem('vowmon_daily_src') || '{"pk":true,"rk":false,"aq":false,"se":false}'));
+        const srcMeta = ref({ pk: { count: 0 }, rk: { count: 0 }, aq: { count: 0 }, se: { count: 0 } });
+        const srcList = computed(() => ['pk', 'rk', 'aq', 'se'].map(k => ({
             key: k, label: SRC_META[k].label, color: SRC_META[k].color,
             loaded: srcMeta.value[k].count > 0, count: srcMeta.value[k].count
         })));
@@ -414,7 +419,16 @@ createApp({
         function typeColor(pet, t) {
             return (pet.typeColors && pet.typeColors[t]) || PK_TYPE_COLORS[t] || '#c9b98d';
         }
-        function artFallback() { artFallbackUsed.value = true; }
+        /* 立绘加载失败：赛尔号换头像兜底（只换一次，再失败就隐藏图片） */
+        function artFallback() {
+            const pet = pool.value[curIdx.value];
+            if (pet && pet.src === 'se' && pet.imgFallback) {
+                pet.img = pet.imgFallback;
+                pet.imgFallback = '';
+                return;
+            }
+            artFallbackUsed.value = true;
+        }
 
         /* 点进化链成员：切到那只精灵的卡片（在当前随机池里按名字找；奥奇本体名可能带版本前缀，做兜底匹配） */
         function jumpEvo(ev) {
@@ -433,7 +447,7 @@ createApp({
 
         /* 当前开关组合的签名：决定今日精灵的随机种子 */
         function sig() {
-            const on = ['pk', 'rk', 'aq'].filter(k => srcOn.value[k]).join('-');
+            const on = ['pk', 'rk', 'aq', 'se'].filter(k => srcOn.value[k]).join('-');
             return (on || 'none') + '|' + (skipRef.value ? 'skip' : 'all');
         }
         function reseedDaily() {
@@ -536,18 +550,42 @@ createApp({
                 };
             });
         }
+        function normalizeSeer(data) {
+            const byName = {}, byNo = {};
+            for (const p of (data.pets || [])) { byName[p.name] = p; byNo[p.no] = p; }
+            return (data.pets || []).map(p => {
+                const labels = STAT_LABELS.se, order = STAT_ORDER.se;
+                const stats = order.filter(k => p.stats[k] != null).map(k => ({ zh: labels[k], v: p.stats[k] }));
+                return {
+                    src: 'se', id: p.no, no: p.no, name: p.name, en: p.alias || '', genus: '',
+                    types: p.type ? [p.type] : [], typeColors: {}, region: '',
+                    stats: stats, total: p.total || 0,
+                    h: p.h ? String(p.h).replace(/\s*cm\s*$/, '') + ' cm' : '', w: p.w ? String(p.w).replace(/\s*kg\s*$/, '') + ' kg' : '',
+                    dex: p.dex || '', dexSrc: p.dex ? '简介' : '',
+                    img: p.img || '', imgFallback: p.imgFallback || '',
+                    // 进化链条目可能是阶段名也可能是序号，都能反查
+                    evo: (p.evo || []).map(n => {
+                        const m = byName[n] || byNo[n];
+                        return { name: m ? m.name : n, img: m ? m.img || '' : '' };
+                    }),
+                    link: p.link || '', full: ''
+                };
+            });
+        }
 
         async function loadData() {
             state.value = 'loading'; errMsg.value = '';
-            const [pk, rk, aq] = await Promise.all([
+            const [pk, rk, aq, se] = await Promise.all([
                 fetchSource('pokemon-data.json'),
                 fetchSource('rock-data.json'),
-                fetchSource('aoqi-data.json')
+                fetchSource('aoqi-data.json'),
+                fetchSource('seer-data.json')
             ]);
             const pets = [];
             if (pk) { pets.push(...normalizePk(pk)); srcMeta.value.pk.count = (pk.pokemon || []).length; }
             if (rk) { pets.push(...normalizeRk(rk)); srcMeta.value.rk.count = (rk.pets || []).length; }
             if (aq) { pets.push(...normalizeAq(aq)); srcMeta.value.aq.count = (aq.pets || []).length; }
+            if (se) { pets.push(...normalizeSeer(se)); srcMeta.value.se.count = (se.pets || []).length; }
             if (!pets.length) {
                 state.value = 'error';
                 errMsg.value = '三个数据源都拉取失败，请检查网络后重试';
